@@ -1,0 +1,33 @@
+type: object
+required:
+  - isActive
+  - pStatus
+  - createdBy
+  - createdAt
+  - tenantID
+  - missionID
+  - flightID
+properties:
+  isActive :  
+    type: boolean
+  pStatus:  
+    type: boolean
+  createdBy:  
+    type: string
+  createdAt:  
+    type: string  
+  streamKey: 
+    type: string 
+  tenantID:  
+    type: string
+  assetID:   
+    type: string
+  missionID:  
+    type: string
+  flightID:  
+    type: string
+  locationID: 
+    type: string 
+  updatedAt: 
+    type: string
+    

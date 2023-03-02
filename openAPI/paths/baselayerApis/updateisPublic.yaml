@@ -1,0 +1,55 @@
+patch:
+  tags:
+  - "Base Layer APIs"
+  description: "Make isPublic property false for all layers owned by current tenant"
+  operationId: "baselayer-updateisPublic"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  responses:
+    200:
+      description: "All layer documents modified"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No layer documents found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

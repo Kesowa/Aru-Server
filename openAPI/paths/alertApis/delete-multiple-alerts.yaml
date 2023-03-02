@@ -1,0 +1,56 @@
+delete:
+  tags:
+  - "Alert APIs"
+  description: "Delete alerts by ID"
+  operationId: "delete-multiple-alerts"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "The request body should contain an array of IDs of alerts to be deleted"
+    schema:
+      type: object
+      properties:
+        id:
+          type: array
+          description: "IDs of alerts to be deleted"
+          items:
+            type: string
+  responses:
+    200:
+      description: "Alerts, if found, deleted successfully" 
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    400:
+      description: "Alert ID not given or wrong"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

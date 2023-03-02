@@ -1,0 +1,79 @@
+post:
+  tags:
+  - "Base Layer APIs"
+  description: "Create base layer from geojson file"
+  operationId: "baselayer-create-base-vector-layer"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Body of the request"
+    schema: 
+      type: object
+      properties:
+        name: 
+          type: string
+        vectorId: 
+          type: string
+        geoJSON: 
+          type: object
+  responses:
+    201:
+      description: "Successfully created base layer"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            $ref: "./../../schemas/layer.yaml"   
+    400:
+      description: "Color selection error in geojson sent in request"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired OR Storage limit of package exceeded OR Number of layers exceeded package limit"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "File path to geojson file doesn't exist"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

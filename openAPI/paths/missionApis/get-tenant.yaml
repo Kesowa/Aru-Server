@@ -1,0 +1,63 @@
+get:
+  tags:
+  - "Mission APIs"
+  description: "Fetches advanced formatted results by tenant Id"
+  operationId: "mission-get-tenant"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "filter"
+    description: "Filters for advanced results"
+    type: string
+  - in: "query"
+    name: "missionType"
+    description: "Mission Type for advanced results"
+    type: string
+  - in: "query"
+    name: "client"
+    description: "Client"
+    type: string
+  - in: "query"
+    name: "sort"
+    description: "String of format <field>:<sorting order> used to get result sorted in some order by some field"
+    type: string
+  - in: "query"
+    name: "page"
+    description: "Page number for paginated results"
+    type: integer
+  - in: "query"
+    name: "limit"
+    description: "Number of items per page for paginated results"
+    type: integer
+  - in: "query"
+    name: "searchFilters"
+    description: "Search filters for advanced results"
+    type: string
+  responses:
+    200:
+      description: "Results fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/flightMission.yaml"
+          total:
+            type: integer
+          missionCount:
+            type: integer
+    500:
+      description: server error
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

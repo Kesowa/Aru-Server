@@ -1,0 +1,86 @@
+post:
+  tags:
+  - "Base Layer APIs"
+  description: "Filter Base Layers"
+  operationId: "baselayer-filter-base-layer"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+    - in: "body"
+      name: "body"
+      description: "Body of the request"
+      schema: 
+        type: object
+        properties:
+          createdAt:
+            type: string
+          name:
+            type: string
+          captureDate:
+            type: string
+          time:
+            type: string
+          rasterProps:
+            type: array
+            items:
+              type: string
+          vectorProps:
+            type: array
+            items:
+              type: string
+          vectorPropsType:
+            type: array
+            items:
+              type: string
+  responses:
+    200:
+      description: "Successfully filtered vector or raster data"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/layer.yaml"   
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No data found which satisfies given filter parameters"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

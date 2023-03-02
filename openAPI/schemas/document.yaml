@@ -1,0 +1,26 @@
+type: object
+properties:
+  name: 
+    type: string
+  modDate: 
+    type: string
+  fileSize: 
+    type: integer
+  filePath: 
+    type: string
+  fileType: 
+    type: string
+  folderName: 
+    type: string
+  missionId:  
+    type: string
+  tenantId:  
+    type: string
+  createdBy:  
+    type: string 
+  updatedBy:  
+    type: string
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string

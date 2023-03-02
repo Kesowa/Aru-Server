@@ -1,0 +1,19 @@
+get:
+  tags:
+  - "Tenant APIs"
+  summary: "Summary"
+  description: "Description"
+  operationId: "tenant-fetch-active-package-public"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      $ref: "./../../schemas/_index.yaml#/RequestPlaceholder"
+  responses:
+    "200":
+      description: "Success"

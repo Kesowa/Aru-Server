@@ -1,0 +1,58 @@
+get:
+  tags:
+  - "Document APIs"
+  description: "Fetch documents by mission ID"
+  operationId: "document-get-by-mission-Id"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "missionID"
+    description: "Mission Id whose documents to be fetched"
+    type: string
+  responses:
+    200:
+      description: "Documents fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: object
+            properties:
+              mission:
+                type: string
+              documents:
+                type: array
+                items:
+                  $ref: "./../../schemas/document.yaml"
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No documents found for given mission ID"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

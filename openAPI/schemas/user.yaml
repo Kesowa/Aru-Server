@@ -1,0 +1,62 @@
+type: object
+required:
+  - name
+  - phoneNo
+  - email
+  - userType
+  - isActive
+  - isBanned
+  - isTermsAccepted
+  - city
+  - country
+  - expiryDatee
+properties:
+  tenantId :  
+    type : string
+  userGroupId :  
+    type : string
+  name :  
+    type: string
+  phoneNo :  
+    type: string
+  email :  
+    type: string
+  password :  
+    type: string 
+  createdBy :  
+    type : string
+  updatedBy: 
+    type : string
+  userType :  
+    type: string
+  customPermissions : 
+    type: array
+    items:
+      type: string
+  dob :  
+    type : string
+  aadhaarNo: 
+    type: string
+  pilotLicenceNo: 
+    type: string
+  isActive :  
+    type : boolean
+  isBanned: 
+    type : boolean
+  isTermsAccepted: 
+    type: boolean
+  city: 
+    type: string
+  country: 
+    type: string
+  expiryDatee: 
+    type: string
+  avatar: 
+    type: string
+  passwordResetToken :  
+    type: string 
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+   

@@ -1,0 +1,570 @@
+# alert api paths 
+
+/alert/upload-alert-image:
+  $ref: "./alertApis/upload-alert-image.yaml"
+/alert/create:
+  $ref: "./alertApis/create.yaml"
+/alert/manual-upload-alert:
+  $ref: "./alertApis/manual-upload-alert.yaml"
+/alert/get-alerts-by-flight-or-location-ID:
+  $ref: "./alertApis/get-alerts-by-flight-or-location-ID.yaml"
+/alert/get-alert-by-ID:
+  $ref: "./alertApis/get-alert-by-ID.yaml"
+/alert/get-alerts-by-location-ID:
+  $ref: "./alertApis/get-alerts-by-location-ID.yaml"
+/alert/get-alert-by-location-ID-and-time:
+  $ref: "./alertApis/get-alert-by-location-ID-and-time.yaml"
+/alert/get-number-of-alerts-By-location-ID:
+  $ref: "./alertApis/get-number-of-alerts-By-location-ID.yaml"
+/alert/get-alerts-By-mission-ID:
+  $ref: "./alertApis/get-alerts-By-mission-ID.yaml"
+/alert/get-alerts-By-location-id-pagination:
+  $ref: "./alertApis/get-alerts-By-location-id-pagination.yaml"
+/alert/get-alerts-by-mission-mapref:
+  $ref: "./alertApis/get-alerts-by-mission-mapref.yaml"
+/alert/test-alert-inject:
+  $ref: "./alertApis/test-alert-inject.yaml"
+/alert/get-alerts-by-tenantid:
+  $ref: "./alertApis/get-alerts-by-tenantid.yaml"
+/alert/get-alerts-by-tenantid-advanced-result:
+  $ref: "./alertApis/get-alerts-by-tenantid-advanced-result.yaml"
+/alert/convert-all-image-to-thumbnail:
+  $ref: "./alertApis/convert-all-image-to-thumbnail.yaml"
+/alert/delete-multiple-alerts:
+  $ref: "./alertApis/delete-multiple-alerts.yaml"
+
+# asset api paths
+
+/asset/create:
+  $ref: "./assetApis/create.yaml"
+/asset/get:
+  $ref: "./assetApis/get.yaml"
+/asset/get-all-asset:
+  $ref: "./assetApis/get-all-asset.yaml"
+/asset/update:
+  $ref: "./assetApis/update.yaml"
+/asset/delete:
+  $ref: "./assetApis/delete.yaml"
+/asset/toggle-asset-status:
+  $ref: "./assetApis/toggle-asset-status.yaml"
+
+# asset class api paths
+
+/assetclass/create:
+  $ref: "./assetclassApis/create.yaml"
+/assetclass/get:
+  $ref: "./assetclassApis/get.yaml"
+/assetclass/update:
+  $ref: "./assetclassApis/update.yaml"
+/assetclass/get-asset-class-by-id:
+  $ref: "./assetclassApis/get-asset-class-by-id.yaml"
+/assetclass/delete:
+  $ref: "./assetclassApis/delete.yaml"
+
+# auth api paths
+
+/auth/login:
+  $ref: "./authApis/login.yaml"
+/auth/userdetails:
+  $ref: "./authApis/userdetails.yaml"
+/auth/reset-password/{token}:
+  $ref: "./authApis/reset-password.yaml"
+/auth/forgot-password:
+  $ref: "./authApis/forgot-password.yaml"
+
+# baselayer api paths
+
+/baselayer/get-meta-data:
+  $ref: "./baselayerApis/get-meta-data.yaml"
+/baselayer/create/{type}:
+  $ref: "./baselayerApis/create.yaml"
+/baselayer/get-meta-data-for-update:
+  $ref: "./baselayerApis/get-meta-data-for-update.yaml"
+/baselayer/set-prime-attr:
+  $ref: "./baselayerApis/set-prime-attr.yaml"
+/baselayer/create-by-layers:
+  $ref: "./baselayerApis/create-by-layers.yaml"
+/baselayer/filter-base-layer:
+  $ref: "./baselayerApis/filter-base-layer.yaml"
+/baselayer/update-by-layers:
+  $ref: "./baselayerApis/update-by-layers.yaml"
+/baselayer/fetch/{type}:
+  $ref: "./baselayerApis/fetch.yaml"
+/baselayer/upload-to-update-base-layer/{type}:
+  $ref: "./baselayerApis/upload-to-update-base-layer.yaml"
+/baselayer/update-base-layer-by-uploaded-layer:
+  $ref: "./baselayerApis/update-base-layer-by-uploaded-layer.yaml"
+/baselayer/create-base-raster-import-mission:
+  $ref: "./baselayerApis/create-base-raster-import-mission.yaml"
+/baselayer/delete-baseLayer-id:
+  $ref: "./baselayerApis/delete-baseLayer-id.yaml"
+/baselayer/create-base-raster-upload/{type}:
+  $ref: "./baselayerApis/create-base-raster-upload.yaml"
+/baselayer/updateRasterLayerUpload/{type}:
+  $ref: "./baselayerApis/updateRasterLayerUpload.yaml"
+/baselayer/updateRasterLayerImport:
+  $ref: "./baselayerApis/updateRasterLayerImport.yaml"
+/baselayer/updateisBase:
+  $ref: "./baselayerApis/updateisBase.yaml"
+/baselayer/create-base-vector-layer:
+  $ref: "./baselayerApis/create-base-vector-layer.yaml"
+/baselayer/publishBaseLayer:
+  $ref: "./baselayerApis/publishBaseLayer.yaml"
+/baselayer/getallpublicbaselayers:
+  $ref: "./baselayerApis/getallpublicbaselayers.yaml"
+/baselayer/updateisPublic:
+  $ref: "./baselayerApis/updateisPublic.yaml"
+/baselayer/searchPublicLayer:
+  $ref: "./baselayerApis/searchPublicLayer.yaml"
+
+# client api paths :
+
+/client/create:
+  $ref: "./clientApis/create.yaml"
+/client/get-mission-list-for-Id:
+  $ref: "./clientApis/get-mission-list-for-Id.yaml"
+/client/edit-client-details:
+  $ref: "./clientApis/edit-client-details.yaml"
+/client/get-list-client:
+  $ref: "./clientApis/get-list-client.yaml"
+/client/delete-client:
+  $ref: "./clientApis/delete-client.yaml"
+/client/insert-client-for-mission:
+  $ref: "./clientApis/insert-client-for-mission.yaml"
+/client/remove-client-from-mission:
+  $ref: "./clientApis/remove-client-from-mission.yaml"
+/client/geneate-client-csv:
+  $ref: "./clientApis/geneate-client-csv.yaml"
+/client/patch-api-clientarr:
+  $ref: "./clientApis/patch-api-clientarr.yaml"
+/client/get-client-mission-details/{id}:
+  $ref: "./clientApis/get-client-mission-details.yaml"
+/client/get-client-by-email:
+  $ref: "./clientApis/get-client-by-email.yaml"
+/client/invite-client-to-mission:
+  $ref: "./clientApis/invite-client-to-mission.yaml"
+/client/register/{token}:
+  $ref: "./clientApis/register.yaml"
+
+# common api paths :
+
+/common/check-email-available:
+  $ref: "./commonApis/check-email-available.yaml"
+
+# document api paths :
+
+/document/create:
+  $ref: "./documentApis/create.yaml"
+/document/delete:
+  $ref: "./documentApis/delete.yaml"
+/document/delete-multiple:
+  $ref: "./documentApis/delete-multiple.yaml"
+/document/getbymissionId:
+  $ref: "./documentApis/getbymissionId.yaml"
+/document/zipbyId:
+  $ref: "./documentApis/zipbyId.yaml"
+/document/gen_2x_documents:
+  $ref: "./documentApis/gen_2x_documents.yaml"
+/document/update-size-for-exist-doc:
+  $ref: "./documentApis/update-size-for-exist-doc.yaml"
+
+# flight api paths :
+
+/flight/create:
+  $ref: "./flightApis/create.yaml"
+/flight/edit:
+  $ref: "./flightApis/edit.yaml"
+/flight/delete:
+  $ref: "./flightApis/delete.yaml"
+/flight/mission-specific-view:
+  $ref: "./flightApis/mission-specific-view.yaml"
+/flight/all-flights:
+  $ref: "./flightApis/all-flights.yaml"
+/flight/flightswithoutmission:
+  $ref: "./flightApis/flightswithoutmission.yaml"
+/flight/get-flight-by-location-ID:
+  $ref: "./flightApis/get-flight-by-location-ID.yaml"
+/flight/assign-pilot-self:
+  $ref: "./flightApis/assign-pilot-self.yaml"
+/flight/assign-pilot:
+  $ref: "./flightApis/assign-pilot.yaml"
+
+# flight log api paths :
+
+/flightlog/create:
+  $ref: "./flightlogApis/create.yaml"
+/flightlog/get:
+  $ref: "./flightlogApis/get.yaml"
+/flightlog/last-flightlog-by-ID:
+  $ref: "./flightlogApis/last-flightlog-by-ID.yaml"
+/flightlog/last-flightlog-by-location-ID:
+  $ref: "./flightlogApis/last-flightlog-by-location-ID.yaml"
+
+# layer api paths :
+
+/layer/create/{type}:
+  $ref: "./layerApis/create.yaml"
+/layer/upload-file-to-layer:
+  $ref: "./layerApis/upload-file-to-layer.yaml"
+/layer/delete-file-geojson:
+  $ref: "./layerApis/delete-file-geojson.yaml"
+/layer/edit-layer:
+  $ref: "./layerApis/edit-layer.yaml"
+/layer/edit-geojson:
+  $ref: "./layerApis/edit-geojson.yaml"
+/layer/addFeature:
+  $ref: "./layerApis/addFeature.yaml"
+/layer/upload-file-geojson:
+  $ref: "./layerApis/upload-file-geojson.yaml"
+/layer/get-files-by-layerId-fIndex:
+  $ref: "./layerApis/get-files-by-layerId-fIndex.yaml"
+/layer/delete:
+  $ref: "./layerApis/delete.yaml"
+/layer/delete-layers:
+  $ref: "./layerApis/delete-layers.yaml"
+/layer/delete-geojson:
+  $ref: "./layerApis/delete-geojson.yaml"
+/layer/getbymissionId:
+  $ref: "./layerApis/getbymissionId.yaml"
+/layer/getrasterdetailsbyID:
+  $ref: "./layerApis/getrasterdetailsbyID.yaml"
+/layer/changecolorbyId:
+  $ref: "./layerApis/changecolorbyId.yaml"
+/layer/downloadassetbylayerId:
+  $ref: "./layerApis/downloadassetbylayerId.yaml"
+/layer/create-vector-layer:
+  $ref: "./layerApis/create-vector-layer.yaml"
+/layer/sort-all-layer:
+  $ref: "./layerApis/delete.yaml"
+/layer/filter-layer:
+  $ref: "./layerApis/filter-layer.yaml"
+/layer/get-feature-by-layerId:
+  $ref: "./layerApis/get-feature-by-layerId.yaml"
+/layer/set-cover-photo-by-layerFiles-Id:
+  $ref: "./layerApis/set-cover-photo-by-layerFiles-Id.yaml"
+/layer/get-feature-csv-by-layerIndex:
+  $ref: "./layerApis/get-feature-csv-by-layerIndex.yaml"
+/layer/auto-assign-uploaded-image:
+  $ref: "./layerApis/auto-assign-uploaded-image.yaml"
+/layer/assignLayerLabel:
+  $ref: "./layerApis/assignLayerLabel.yaml"
+/layer/images-review:
+  $ref: "./layerApis/images-review.yaml"
+/layer/fetch-to-be-reviwed-files:
+  $ref: "./layerApis/fetch-to-be-reviwed-files.yaml"
+/layer/all-layers-for-mission:
+  $ref: "./layerApis/all-layers-for-mission.yaml"
+/layer/download-asset-by-Id-to-kml:
+  $ref: "./layerApis/download-asset-by-Id-to-kml.yaml"
+/layer/gen_2x_layerfiles:
+  $ref: "./layerApis/gen_2x_layerfiles.yaml"
+/layer/add-isReview-to-layerFiles:
+  $ref: "./layerApis/add-isReview-to-layerFiles.yaml"
+/layer/pick-to-map-for-layer:
+  $ref: "./layerApis/pick-to-map-for-layer.yaml"
+/layer/delete-multipleLayerFiles:
+  $ref: "./layerApis/delete-multipleLayerFiles.yaml"
+/layer/inject_sysId:
+  $ref: "./layerApis/inject_sysId.yaml"
+/layer/inject_sysId_layerfiles:
+  $ref: "./layerApis/inject_sysId_layerfiles.yaml"
+
+# layer group api paths :
+
+/layergroup/create:
+  $ref: "./layergroupApis/create.yaml"
+/layergroup/edit:
+  $ref: "./layergroupApis/edit.yaml"
+/layergroup/fetch:
+  $ref: "./layergroupApis/fetch.yaml"
+/layergroup/delete:
+  $ref: "./layergroupApis/delete.yaml"
+/layergroup/delete-layerId:
+  $ref: "./layergroupApis/delete-layerId.yaml"
+
+# location api paths :
+
+/location/create:
+  $ref: "./locationApis/create.yaml"
+/location/get:
+  $ref: "./locationApis/get.yaml"
+/location/get-within-by-id:
+  $ref: "./locationApis/get-within-by-id.yaml"
+/location/get-by-id:
+  $ref: "./locationApis/get-by-id.yaml"
+/location/update:
+  $ref: "./locationApis/update.yaml"
+/location/get-locationID-By-lat-long:
+  $ref: "./locationApis/get-locationID-By-lat-long.yaml"
+/location/delete:
+  $ref: "./locationApis/delete.yaml"
+
+# manufacturer api paths :
+
+/manufacturer/create:
+  $ref: "./manufacturerApis/create.yaml"
+/manufacturer/get:
+  $ref: "./manufacturerApis/get.yaml"
+/manufacturer/get-by-id:
+  $ref: "./manufacturerApis/get-by-id.yaml"
+/manufacturer/update:
+  $ref: "./manufacturerApis/update.yaml"
+/manufacturer/delete:
+  $ref: "./manufacturerApis/delete.yaml"
+
+# mission api paths :
+
+/mission/create:
+  $ref: "./missionApis/create.yaml"
+/mission/edit:
+  $ref: "./missionApis/edit.yaml"
+/mission/delete:
+  $ref: "./missionApis/delete.yaml"
+/mission/mission-by-userid:
+  $ref: "./missionApis/mission-by-userid.yaml"
+/mission/get/tenant:
+  $ref: "./missionApis/get-tenant.yaml"
+/mission/get/user/{id}:
+  $ref: "./missionApis/get-user.yaml"
+/mission/get/{id}:
+  $ref: "./missionApis/get.yaml"
+/mission/filtered-mission:
+  $ref: "./missionApis/filtered-mission.yaml"
+/mission/update-status:
+  $ref: "./missionApis/update-status.yaml"
+/mission/autocomplete:
+  $ref: "./missionApis/autocomplete.yaml"
+/mission/get-total-number-of-mission-by-locationID:
+  $ref: "./missionApis/get-total-number-of-mission-by-locationID.yaml"
+/mission/get-missions-by-location-mapref:
+  $ref: "./missionApis/get-missions-by-location-mapref.yaml"
+/mission/get-missions-by-locationID:
+  $ref: "./missionApis/get-missions-by-locationID.yaml"
+/mission/get-mission-csv-for-tenant-Or-user:
+  $ref: "./missionApis/get-mission-csv-for-tenant-Or-user.yaml"
+/mission/get-alert-vod-count:
+  $ref: "./missionApis/get-alert-vod-count.yaml"
+/mission/insert-missiontype-by-Id:
+  $ref: "./missionApis/insert-missiontype-by-Id.yaml"
+/mission/insert-missionType-for-tenantId:
+  $ref: "./missionApis/insert-missionType-for-tenantId.yaml"
+/mission/convert-clientId-to-array:
+  $ref: "./missionApis/convert-clientId-to-array.yaml"
+/mission/memory-usage/{id}:
+  $ref: "./missionApis/memory-usage.yaml"
+
+# mission type api paths :
+
+/missiontype/create:
+  $ref: "./missiontypeApis/create.yaml"
+/missiontype/edit:
+  $ref: "./missiontypeApis/edit.yaml"
+/missiontype/delete:
+  $ref: "./missiontypeApis/delete.yaml"
+/missiontype/getall:
+  $ref: "./missiontypeApis/getall.yaml"
+
+# model api paths :
+
+/model/create:
+  $ref: "./modelApis/create.yaml"
+/model/get:
+  $ref: "./modelApis/get.yaml"
+/model/get-by-id:
+  $ref: "./modelApis/get-by-id.yaml"
+/model/update:
+  $ref: "./modelApis/update.yaml"
+/model/delete:
+  $ref: "./modelApis/delete.yaml"
+
+# organisation api paths :
+
+/tenantroot/fetch-organisation-details:
+  $ref: "./organisationApis/fetch-organisation-details.yaml"
+/tenantroot/update-organisation-details:
+  $ref: "./organisationApis/update-organisation-details.yaml"
+/tenantroot/request-otp-for-email-change:
+  $ref: "./organisationApis/request-otp-for-email-change.yaml"
+/tenantroot/resend-otp-for-email-change:
+  $ref: "./organisationApis/resend-otp-for-email-change.yaml"
+/tenantroot/validate-otp-update-email:
+  $ref: "./organisationApis/validate-otp-update-email.yaml"
+
+# package api paths :
+
+/package/upload-poster:
+  $ref: "./packageApis/upload-poster.yaml"
+/package/create:
+  $ref: "./packageApis/create.yaml"
+/package/fetchall:
+  $ref: "./packageApis/fetchall.yaml"
+/package/fetchactive:
+  $ref: "./packageApis/fetchactive.yaml"
+/package/edit-package-for-Id:
+  $ref: "./packageApis/edit-package-for-Id.yaml"
+/package/delete-package-for-Id:
+  $ref: "./packageApis/delete-package-for-Id.yaml"
+
+# payment api paths :
+
+/payment/generate-order:
+  $ref: "./paymentApis/generate-order.yaml"
+/payment/complete-order:
+  $ref: "./paymentApis/complete-order.yaml"
+/payment/payment-fail:
+  $ref: "./paymentApis/payment-fail.yaml"
+/payment/handle-webhook:
+  $ref: "./paymentApis/handle-webhook.yaml"
+/payment/get-payments/{tenantId}:
+  $ref: "./paymentApis/get-payments.yaml"
+
+# permission api paths :
+
+/permission/create:
+  $ref: "./permissionApis/create.yaml"
+/permission/admin-permission-list:
+  $ref: "./permissionApis/admin-permission-list.yaml"
+/permission/tenant-permission-list:
+  $ref: "./permissionApis/tenant-permission-list.yaml"
+
+# pilot api paths :
+
+/pilot/login:
+  $ref: "./pilotApis/login.yaml"
+/pilot/get-all-pilots:
+  $ref: "./pilotApis/get-all-pilots.yaml"
+
+# raster props api paths :
+
+/rasterProp/create:
+  $ref: "./rasterPropApis/create.yaml"
+/rasterProp/get-by-ID:
+  $ref: "./rasterPropApis/get-by-ID.yaml"
+/rasterProp/get-all-rasterProps:
+  $ref: "./rasterPropApis/get-all-rasterProps.yaml"
+
+# stream token api paths :
+
+/streamtoken/gen-stream-token:
+  $ref: "./streamtokenApis/gen-stream-token.yaml"
+/streamtoken/validate-token:
+  $ref: "./streamtokenApis/validate-token.yaml"
+/streamtoken/get-active-streams:
+  $ref: "./streamtokenApis/get-active-streams.yaml"
+/streamtoken/get-active-stream/flight:
+  $ref: "./streamtokenApis/get-active-stream-flight.yaml"
+/streamtoken/remove-token:
+  $ref: "./streamtokenApis/remove-token.yaml"
+
+# tenant api paths :
+
+/tenant/upload-avatar:
+  $ref: "./tenantApis/upload-avatar.yaml"
+/tenant/create:
+  $ref: "./tenantApis/create.yaml"
+/tenant/register-tenant:
+  $ref: "./tenantApis/register-tenant.yaml"
+/tenant/verify-tenant:
+  $ref: "./tenantApis/verify-tenant.yaml"
+/tenant/resend-verification-code:
+  $ref: "./tenantApis/resend-verification-code.yaml"
+/tenant/fetch-active-package-public:
+  $ref: "./tenantApis/fetch-active-package-public.yaml"
+/tenant/fetchall:
+  $ref: "./tenantApis/fetchall.yaml"
+/tenant/add-initial-package:
+  $ref: "./tenantApis/add-initial-package.yaml"
+/tenant/edit-tenant:
+  $ref: "./tenantApis/edit-tenant.yaml"
+/tenant/fetch-tenant-details:
+  $ref: "./tenantApis/fetch-tenant-details.yaml"
+/tenant/add-all-count-to-tenant:
+  $ref: "./tenantApis/add-all-count-to-tenant.yaml"
+/tenant/add-actualSize-to-tenant:
+  $ref: "./tenantApis/add-actualSize-to-tenant.yaml"
+/tenant/delete-tenant:
+  $ref: "./tenantApis/delete-tenant.yaml"
+/tenant/get-tenant-stats:
+  $ref: "./tenantApis/get-tenant-stats.yaml"
+/tenant/updatepublicMapRef:
+  $ref: "./tenantApis/updatepublicMapRef.yaml"
+
+# test api paths :
+
+/testt:
+  $ref: "./testApis/testt.yaml"
+/broadcast-test:
+  $ref: "./testApis/broadcast-test.yaml"
+/viewer-test:
+  $ref: "./testApis/viewer-test.yaml"
+
+# user api paths :
+
+/user/upload-profile-picture:
+  $ref: "./userApis/upload-profile-picture.yaml"
+/user/create-tenant-user:
+  $ref: "./userApis/create-tenant-user.yaml"
+/user/fetch-all-user:
+  $ref: "./userApis/fetch-all-user.yaml"
+/user/edit-user:
+  $ref: "./userApis/edit-user.yaml"
+/user/delete-user:
+  $ref: "./userApis/delete-user.yaml"
+/user/generate-userList-csv:
+  $ref: "./userApis/generate-userList-csv.yaml"
+/user/terms-conditions-check:
+  $ref: "./userApis/terms-conditions-check.yaml"
+/user/terms-insert:
+  $ref: "./userApis/terms-insert.yaml"
+
+# user group api paths :
+
+/usergroup/tenant-usergroup-create:
+  $ref: "./usergroupApis/tenant-usergroup-create.yaml"
+/usergroup/tenant-usergroup-list:
+  $ref: "./usergroupApis/tenant-usergroup-list.yaml"
+/usergroup/tenant-usergroup-edit:
+  $ref: "./usergroupApis/tenant-usergroup-edit.yaml"
+/usergroup/tenant-usergroup-delete:
+  $ref: "./usergroupApis/tenant-usergroup-delete.yaml"
+
+# vector props api paths :
+
+/vectorProp/create:
+  $ref: "./vectorPropApis/create.yaml"
+/vectorProp/get:
+  $ref: "./vectorPropApis/get.yaml"
+
+# vod api paths :
+
+/VOD/save-VOD:
+  $ref: "./vodApis/save-VOD.yaml"
+/VOD/save-vod-manual:
+  $ref: "./vodApis/save-vod-manual.yaml"
+/VOD/test-vod-inject:
+  $ref: "./vodApis/test-vod-inject.yaml"
+/VOD/get-by-missionID:
+  $ref: "./vodApis/get-by-missionID.yaml"
+/VOD/get-count-by-missionID:
+  $ref: "./vodApis/get-count-by-missionID.yaml"
+/VOD/get-by-flightID:
+  $ref: "./vodApis/get-by-flightID.yaml"
+/VOD/get-by-location-ID:
+  $ref: "./vodApis/get-by-location-ID.yaml"
+/VOD/delete-by-ID:
+  $ref: "./vodApis/delete-by-ID.yaml"
+/VOD/delete-multi-by-ID:
+  $ref: "./vodApis/delete-multi-by-ID.yaml"
+/VOD/insert-tenantID:
+  $ref: "./vodApis/insert-tenantID.yaml"
+/VOD/edit-by-ID:
+  $ref: "./vodApis/edit-by-ID.yaml"
+
+# webrtc api paths :
+
+/webrtc/broadcaster:
+  $ref: "./webrtcApis/broadcaster.yaml"
+/webrtc/consumer:
+  $ref: "./webrtcApis/consumer.yaml"
+/webrtc/get-active-streams:
+  $ref: "./webrtcApis/get-active-streams.yaml"

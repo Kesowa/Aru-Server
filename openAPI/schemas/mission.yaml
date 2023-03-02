@@ -1,0 +1,35 @@
+type: object
+required:
+  - name
+  - assetID
+  - missionType
+properties:
+  name:  
+    type: string
+  description:  
+    type: string
+  deliverables: 
+    type: array
+    items:
+      type: string
+  user:  
+    type: string 
+  assetID :  
+    type: string
+  clientId: 
+    type: array
+    items:
+      type: string
+  status:  
+    type: string
+  pilotAssigned:  
+    type: string 
+  tenantId:  
+    type: string 
+  missionType : 
+    type : string
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+   

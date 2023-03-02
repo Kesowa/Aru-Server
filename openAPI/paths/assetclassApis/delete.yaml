@@ -1,0 +1,64 @@
+delete:
+  tags:
+  - "Asset Class APIs"
+  description: "Delete an asset class"
+  operationId: "asset-class-delete"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Asset Class Id to be passed in request body"
+    schema:
+      type: object
+      properties:
+        id:
+          type: string
+  responses:
+    200:
+      description: "Asset Class deleted successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens OR user doesn't have required permissions"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Asset Class doesn't exist"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

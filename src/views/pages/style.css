@@ -1,0 +1,14 @@
+.wrapper {
+    min-height: calc(100vh - 150px);
+}
+.container2 {
+    width: 500px;
+    margin: auto;
+}
+.container3 {
+    width: 800px;
+    margin: auto;
+}
+.footer {
+    height: 50px;
+}

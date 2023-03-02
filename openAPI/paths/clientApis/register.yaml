@@ -1,0 +1,23 @@
+post:
+  tags:
+  - "Client APIs"
+  summary: "Summary"
+  description: "Description"
+  operationId: "client-register"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      $ref: "./../../schemas/_index.yaml#/RequestPlaceholder"
+  - in: "path"
+    name: "token"
+    required: true
+    type: "string"
+  responses:
+    "200":
+      description: "Success"

@@ -1,0 +1,76 @@
+type: object
+required:
+  - date
+  - name
+  - mission
+  - time 
+  - duration
+  - client
+  - tenant
+properties:
+  date:  
+    type: string
+  name:  
+    type: string
+  geoLocation:  
+    type: string 
+  mission:  
+    type: string
+  centerPoints :  
+    type : object
+    properties:
+      lat: 
+        type: integer 
+      lng: 
+        type: integer
+  locationID:  
+    type: string
+  assetID : 
+    type: string
+  time:  
+    type: string
+  duration:  
+    type: string
+  pilotID:  
+    type: string
+  geoFence:  
+    type: object
+    properties:
+      polygon: 
+        type: object
+        properties: 
+          points: 
+            type: array
+            items:
+              type: object
+              properties:
+                lat: 
+                  type: integer
+                lng: 
+                  type: integer
+          area:  
+            type: integer 
+          length:  
+            type: integer 
+      circle:
+        type: object
+        properties:
+          radius:  
+            type: integer 
+          area:  
+            type: integer 
+          center:
+            type: object
+            properties:
+              lat:  
+                type: integer 
+              lng:  
+                type: integer
+  client:  
+    type: string
+  tenant:  
+    type: string 
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string

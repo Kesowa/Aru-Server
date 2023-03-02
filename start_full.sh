@@ -1,0 +1,1 @@
+tar -vxf public.tar -C ./src && docker compose -f docker-compose.yaml -f docker-compose.full.yaml up --build -d

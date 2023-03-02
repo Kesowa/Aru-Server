@@ -1,0 +1,62 @@
+get:
+  tags:
+  - "Alert APIs"
+  description: "Get alerts and mission data by mission ID and tenant ID of current user"
+  operationId: "get-alerts-by-mission-mapref"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "id"
+    type: "string"
+    description: "Mission ID of the alert to be fetched"
+  responses:
+    200:
+      description: "Alerts and mission data fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                alertID: 
+                  type: string
+                alertImage: 
+                  type: string
+                coordinated: 
+                  type: string
+                missionName: 
+                  type: string
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No alert found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

@@ -1,0 +1,34 @@
+type: object
+properties:
+  date: 
+    type: string 
+  time: 
+    type: string 
+  missionID: 
+    type: string 
+  flightID: 
+    type: string 
+  assetID: 
+    type: string 
+  locationID:  
+    type: string
+  duration: 
+    type: string 
+  location: 
+    type: string 
+  geofence: 
+    type: object   
+  flightArea: 
+    type: string 
+  filePath: 
+    type: string 
+  pilotName: 
+    type: string 
+  jobType: 
+    type: string 
+  deliverables:
+    type: array
+    items:
+      type: string
+  tenantId: 
+    type: string 

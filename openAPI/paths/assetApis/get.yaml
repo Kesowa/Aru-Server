@@ -1,0 +1,60 @@
+get:
+  tags:
+  - "Asset APIs"
+  description: "Fetch an asset by assetID"
+  operationId: "asset-get"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "assetID"
+    description: "ID of the asset to be fetched"
+    type: string
+  responses:
+    200:
+      description: "Asset found and fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            $ref: "./../../schemas/asset.yaml"   
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Asset not found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

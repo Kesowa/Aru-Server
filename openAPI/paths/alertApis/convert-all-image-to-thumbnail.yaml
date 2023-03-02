@@ -1,0 +1,42 @@
+get:
+  tags:
+  - "Alert APIs"
+  description: "Converts all alert images of the current tenant into thumbnails and stores them in server"
+  operationId: "convert-all-image-to-thumbnail"
+  responses:
+    200:
+      description: "All alert images converted to thumbnail successfully!"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Alert not found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

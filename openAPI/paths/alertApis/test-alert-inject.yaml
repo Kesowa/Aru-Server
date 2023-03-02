@@ -1,0 +1,65 @@
+patch:
+  tags:
+  - "Alert APIs"
+  description: "Test API for injecting custom locationID, flightID and missionID on to specified number of alerts"
+  operationId: "test-alert-inject"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "New alert fields after modification"
+    schema:
+      type: object
+      properties:
+        userId:
+          type: string
+        locationId:
+          type: string
+        missionId:
+          type: string
+        flightId:
+          type: string
+        tenantId:
+          type: string
+  responses:
+    200:
+      description: "Injected successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/alert.yaml"
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Error in injecting"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

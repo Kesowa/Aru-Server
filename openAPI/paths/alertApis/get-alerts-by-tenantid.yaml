@@ -1,0 +1,62 @@
+get:
+  tags:
+  - "Alert APIs"
+  description: "Fetches alerts by tenant ID of current user which were created between given time and current time"
+  operationId: "get-alerts-by-tenantid"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "time"
+    type: "string"
+    description: "Alerts in timespan between this time and current time will be fetched"
+  responses:
+    200:
+      description: "Alerts fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                alertID: 
+                  type: string
+                alertImage: 
+                  type: string
+                coordinates: 
+                  type: string
+          count:
+            type: integer
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No alert found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

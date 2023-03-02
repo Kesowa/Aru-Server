@@ -1,0 +1,65 @@
+get:
+  tags:
+  - "Layer APIs"
+  description: "Fetches layers by mission Id"
+  operationId: "layer-getbymissionId"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "missionId"
+    description: "Mission Id whose layers to be fetched"
+    type: string
+  responses:
+    200:
+      description: "Layers fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: object
+            properties:
+              mission:
+                type: string
+              centerPoints :  
+                type : object
+                properties:
+                  lat: 
+                    type: integer 
+                  lng: 
+                    type: integer
+              layers:
+                type: array
+                items:
+                  $ref: "./../../schemas/layer.yaml"
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No layer exists for given mission ID"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

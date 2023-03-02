@@ -1,0 +1,97 @@
+post:
+  tags:
+  - "Base Layer APIs"
+  description: "Upload geojson to update base layer"
+  operationId: "baselayer-upload-to-update"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      type: object
+      properties:
+        baseLayer: 
+          type: string 
+  - in: "path"
+    name: "type"
+    required: true
+    type: "string"
+  responses:
+    200:
+      description: "Base Layer updated successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: object
+            properties:
+              primeAttributes: 
+                type: array
+                items:
+                  type: string
+              layerAttributes: 
+                type: array
+                items:
+                  type: object
+                  properties:
+                    attr: 
+                      type: string
+                    value: 
+                      type: string
+              filePath: 
+                type: string
+              baseLayer: 
+                type: string
+    400:
+      description: "The geojson file must be of same type as the base layer"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired OR Storage limit of package exceeded"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Geojson not saved, geojson filepath doesn't exist"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

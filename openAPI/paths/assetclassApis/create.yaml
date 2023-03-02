@@ -1,0 +1,68 @@
+post:
+  tags:
+  - "Asset Class APIs"
+  description: "Create an asset class"
+  operationId: "asset-class-create"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Data of the new asset class to be created"
+    schema: 
+      $ref: "./../../schemas/assetClass.yaml"
+  - in: "header"
+    name: "userid"
+    description: "ID of user who is creating the asset class"
+    type: string
+    required: true
+  responses:
+    201:
+      description: "New asset class created"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            $ref: "./../../schemas/assetClass.yaml"   
+    400:
+      description: "Invalid data sent in request"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens OR user doesn't have required permissions"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

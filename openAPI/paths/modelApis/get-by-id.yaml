@@ -1,0 +1,19 @@
+get:
+  tags:
+  - "Model APIs"
+  summary: "Summary"
+  description: "Description"
+  operationId: "model-get-by-id"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      $ref: "./../../schemas/_index.yaml#/RequestPlaceholder"
+  responses:
+    "200":
+      description: "Success"

@@ -1,0 +1,23 @@
+post:
+  tags:
+  - "Payment APIs"
+  summary: "Summary"
+  description: "Description"
+  operationId: "payment-get-payments"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      $ref: "./../../schemas/_index.yaml#/RequestPlaceholder"
+  - in: "path"
+    name: "tenantId"
+    required: true
+    type: "string"
+  responses:
+    "200":
+      description: "Success"

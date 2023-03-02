@@ -1,0 +1,71 @@
+get:
+  tags:
+  - "Alert APIs"
+  description: "Fetch alerts with multiple query options. Can either fetch alerts in given time range OR alerts after given time OR all alerts by current user's tenant Id if no time or timeRange query is given. Can filter these results by user Id. Finally, it provides paginated results."
+  operationId: "get-alerts-by-tenantid-advanced-result"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "timeRange"
+    type: "string"
+    description: "Optional query to get all alerts created in given time range"
+  - in: "query"
+    name: "time"
+    type: "string"
+    description: "Optional query to get all alerts created between given date and current date"
+  - in: "query"
+    name: "user"
+    type: "string"
+    description: "Optional query to filter results by specific user Id"
+  - in: "query"
+    name: "page"
+    type: "string"
+    description: "Page number for paginated results"
+  - in: "query"
+    name: "limit"
+    type: "string"
+    description: "Number of items per page of paginated results"
+  responses:
+    200:
+      description: "Alerts fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/alert.yaml" 
+          total:
+            type: integer
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No alert found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

@@ -1,0 +1,54 @@
+get:
+  tags:
+  - "Base Layer APIs"
+  description: "Fetch base layers by type : 'Vector' or 'Raster' or 'All'. All fetches all base layers."
+  operationId: "baselayer-fetch"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "path"
+    name: "type"
+    description: "Can have either of these three values: ['Vector', 'Raster', 'All']"
+    type: string
+    required: true
+  responses:
+    200:
+      description: "Base Layers fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/layer.yaml"
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Valid type not provided. Type must be either of these: ['Vector', 'Raster'. 'All']."
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

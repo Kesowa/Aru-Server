@@ -1,0 +1,23 @@
+type: object
+required:
+  - createdBy
+  - tenantId
+properties:
+  name: 
+    type: string
+  createdBy: 
+    type: string
+  tenantId: 
+    type: string
+  layers: 
+    type: array
+    items:
+      type: array
+      items:
+        type: string
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+   
+

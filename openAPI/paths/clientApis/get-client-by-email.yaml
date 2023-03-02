@@ -1,0 +1,17 @@
+get:
+  tags:
+  - "Client APIs"
+  summary: "Summary"
+  description: "Description"
+  operationId: "get-client-by-email"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      $ref: "./../../schemas/_index.yaml#/RequestPlaceholder"
+  responses:
+    "200":
+      description: "Success"

@@ -1,0 +1,42 @@
+type: object
+required:
+    - assetName
+    - assetOwner
+    - modelID
+    - manufactureID
+    - isActive
+    - createdBy
+    - createdAt
+    - userID
+    - tenantID
+    - manufactureDate
+properties:
+  assetName :  
+      type: string
+  assetOwner : 
+      type : string
+  modelID : 
+      type : string
+  manufactureID: 
+      type : string
+  isActive :  
+      type: boolean
+  createdBy:  
+      type: string
+  createdAt:  
+      type: string 
+  userID:  
+      type: string
+  tenantID:  
+      type: string
+  manufactureDate : 
+      type : string
+  assetInfo:
+    type: array
+    items:
+      type: object
+  updatedAt: 
+    type: string
+     
+  
+ 

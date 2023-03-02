@@ -1,0 +1,104 @@
+patch:
+  tags:
+  - "Base Layer APIs"
+  description: "Fetches metadata of a baselayer"
+  operationId: "baselayer-get-meta-data"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Body should contain an array of layer ids"
+    schema: 
+      type: object
+      properties:
+        layers:
+          type: array
+          items:
+            type: string
+  responses:
+    200:
+      description: "Meta Data fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                missionId:
+                  type: string
+                missionName:
+                  type: string
+                layers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      name:
+                        type: string
+                      fields:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            key:
+                              type: string
+                            value:
+                              type: string
+                            layerMatches:
+                              type: integer
+    400:
+      description: "Only one type of layers can be mapped. All layers whose IDs are provided are not of same type."
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Some of the layers whose ids were given, were not found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

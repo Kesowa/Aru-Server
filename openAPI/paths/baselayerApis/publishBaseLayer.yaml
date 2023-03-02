@@ -1,0 +1,69 @@
+patch:
+  tags:
+  - "Base Layer APIs"
+  summary: "Summary"
+  description: "Make base layer public by publishing it"
+  operationId: "baselayer-publishBaseLayer"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Body of request contains layerId"
+    schema: 
+      type: object 
+      properties: 
+        layerId: 
+          type: string 
+  responses:
+    200:
+      description: "Base layer has been made public"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            $ref: "./../../schemas/layer.yaml"
+          publicMapRef: 
+            type: string 
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Base layer not Found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

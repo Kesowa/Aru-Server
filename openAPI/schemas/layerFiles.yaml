@@ -1,0 +1,42 @@
+type: object
+required:
+  - fileType
+properties:
+  name:  
+    type: string
+  layerId:  
+    type: string
+  layers: 
+    type: array
+    items: 
+      type: string
+  sys_Id:  
+    type: string
+  featureLabel:  
+    type: string
+  coverPhoto: 
+    type: boolean 
+  fileSize:  
+      type: integer
+  centerPoints: 
+    type: object
+    properties: 
+      lat: 
+        type: integer 
+      lng: 
+        type: integer
+  filePath:  
+    type: string
+  fileType:  
+    type: string
+  tenantId:  
+    type: string
+  createdBy:  
+    type: string 
+  updatedBy:  
+    type: string
+  isReview:  
+    type: boolean
+     
+  
+ 

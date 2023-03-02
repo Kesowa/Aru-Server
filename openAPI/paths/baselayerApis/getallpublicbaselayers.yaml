@@ -1,0 +1,62 @@
+get:
+  tags:
+  - "Base Layer APIs"
+  description: "Fetch all public base layers"
+  operationId: "baselayer-getallpublicbaselayers"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "mapRef"
+    description: "MapRef of layers to be fetched"
+    type: string
+  responses:
+    200:
+      description: "Fetched all public base layers successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/layer.yaml"
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "No mapRef passed in query"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No map data found for given mapRef"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

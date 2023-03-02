@@ -1,0 +1,88 @@
+post:
+  tags:
+  - "Base Layer APIs"
+  description: "Create base layer by attributes"
+  operationId: "baselayer-create-by-layers"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+    - in: "body"
+      name: "body"
+      description: "Body should contain name, vectorTypeId, array of prime attributes, array of layers, and optionally color"
+      schema: 
+        type: object
+        required:
+        - name
+        - vectorTypeId
+        - layers 
+        - pattr 
+        properties:
+          name: 
+            type: string 
+          vectorTypeId:
+            type: string
+          color:
+            type: string
+          layers:
+            type: array
+            items:
+              type: object
+              properties: 
+                layerId:
+                  type: string 
+                attrMapping: 
+                  type: object 
+          pattr: 
+            type: array 
+            items:
+              type: string
+  responses:
+    201:
+      description: "Successfully created base layer"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            $ref: "./../../schemas/layer.yaml"   
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired OR Storage limit of package exceeded"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "File path to geojson file of any of the layers doesn't exist"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

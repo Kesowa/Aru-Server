@@ -1,0 +1,33 @@
+type: object
+required:
+  - name
+  - createdBy
+  - tenantID
+properties:
+  name:
+    type: string
+  address: 
+    type: string
+  nationality:
+    type: string
+  website: 
+    type: string
+  contacts:
+    type : array
+    items: 
+      type: object
+      properties:
+        name : 
+          type: string
+        designation : 
+          type: string
+        Mobile : 
+          type: string
+        email : 
+          type: string
+  createdAt:
+    type: string
+  createdBy:
+    type: string
+  tenantID:
+    type : string

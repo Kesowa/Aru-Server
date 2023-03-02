@@ -1,0 +1,74 @@
+RequestPlaceholder:
+  type: "object"
+  properties:
+    field1:
+      type: "string"
+    field2:
+      type: "string"
+  xml:
+    name: "RequestPlaceholder"
+
+response:
+  type: object
+  properties:
+    status: 
+      type: string
+    message:
+      type: string
+    data:
+      type: object
+
+alert:
+  $ref: "./alert.yaml"
+asset:
+  $ref: "./asset.yaml"
+assetClass:
+  $ref: "./assetClass.yaml"
+deliverableTypes:
+  $ref: "./deliverableTypes.yaml"
+document:
+  $ref: "./document.yaml"
+flight:
+  $ref: "./flight.yaml"
+flightLog:
+  $ref: "./flightLog.yaml"
+invite:
+  $ref: "./invite.yaml"
+layer:
+  $ref: "./layer.yaml"
+layerFiles:
+  $ref: "./layerFiles.yaml"
+layerGroup:
+  $ref: "./layerGroup.yaml"
+location:
+  $ref: "./location.yaml"
+manufacturer:
+  $ref: "./manufacturer.yaml"
+mission:
+  $ref: "./mission.yaml"
+missionType:
+  $ref: "./missionType.yaml"
+model:
+  $ref: "./model.yaml"
+package:
+  $ref: "./package.yaml"
+payment:
+  $ref: "./payment.yaml"
+permission:
+  $ref: "./permission.yaml"
+rasterprops:
+  $ref: "./rasterprops.yaml"
+session:
+  $ref: "./session.yaml"
+streamKey:
+  $ref: "./streamKey.yaml"
+tenant:
+  $ref: "./tenant.yaml"
+user:
+  $ref: "./user.yaml"
+usergroup:
+  $ref: "./usergroup.yaml"
+vectorprops:
+  $ref: "./vectorprops.yaml"
+vod:
+  $ref: "./vod.yaml"

@@ -1,0 +1,44 @@
+type: object
+required:
+  - name
+  - isFrontendRoute
+  - isSideNavOption
+  - isPilot
+  - isClient
+  - isVisibleToTenant
+  - isVisibleToSuperAdmin
+  - isActive
+properties:
+  name :  
+    type: string
+  isFrontendRoute: 
+    type : boolean
+  isSideNavOption: 
+    type : boolean
+  isPilot : 
+    type: boolean
+  isClient : 
+    type: boolean
+  frontendRoute: 
+    type: string
+  sideNavOptionIcon: 
+    type: string
+  sideNavOptionLabel: 
+    type: string
+  isVisibleToTenant: 
+    type : boolean
+  isVisibleToSuperAdmin: 
+    type : boolean
+  createdBy :  
+    type : string
+  updatedBy: 
+    type : string
+  isActive :  
+    type : boolean
+  description :  
+    type: string
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+   

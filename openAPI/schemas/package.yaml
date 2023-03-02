@@ -1,0 +1,56 @@
+type: object
+required:
+  - name
+  - bandwidth
+  - storage
+  - duration
+  - userCount
+  - missionCount
+  - alertCount
+  - vodCount
+  - layerCount
+  - clientCount
+  - locationCount
+  - userGroupCount
+  - poster
+  - isActive
+properties:
+  name :  
+    type: string
+  bandwidth :  
+    type : integer
+  storage :  
+    type : integer
+  duration: 
+    type : integer
+  userCount: 
+    type : integer
+  missionCount: 
+    type : integer
+  alertCount: 
+    type : integer
+  vodCount: 
+    type : integer
+  layerCount: 
+    type : integer
+  clientCount: 
+    type : integer
+  locationCount: 
+    type : integer
+  userGroupCount: 
+    type : integer
+  poster: 
+    type: string
+  price :  
+    type : integer
+  createdBy :  
+    type : string
+  updatedBy: 
+    type : string
+  isActive :  
+    type : boolean
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+   

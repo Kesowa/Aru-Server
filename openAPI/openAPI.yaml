@@ -1,0 +1,18 @@
+swagger: "2.0"
+info:
+  description: "This documentation is about the backend of Kesowa ARU webapp.  You can find out more about ARU at [https://kesowa.com/](https://kesowa.com/)"
+  version: "1.3.11"
+  title: "Kesowa API"
+  termsOfService: "https://kesowa.com/about-us/"
+  contact: 
+    name: "ARU Support"
+    url: "https://kesowa.com/contact-us/"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "localhost:5011"
+basePath: "/api/v1"
+paths:
+  $ref: "./paths/_index.yaml"
+definitions:
+  $ref: "./schemas/_index.yaml"

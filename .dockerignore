@@ -1,0 +1,9 @@
+node_modules
+openAPI
+public
+src/public
+dist
+log
+README.md
+.dockerignore
+README.md

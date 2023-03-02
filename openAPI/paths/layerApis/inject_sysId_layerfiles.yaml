@@ -1,0 +1,19 @@
+patch:
+  tags:
+  - "Layer APIs"
+  summary: "Summary"
+  description: "Description"
+  operationId: "layer-inject_sysId_layerfiles"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      $ref: "./../../schemas/_index.yaml#/RequestPlaceholder"
+  responses:
+    "200":
+      description: "Success"

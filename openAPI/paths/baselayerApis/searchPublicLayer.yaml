@@ -1,0 +1,81 @@
+get:
+  tags:
+  - "Base Layer APIs"
+  description: "Search for public layers having given key:value pairs in geojson feature properties"
+  operationId: "baselayer-searchPublicLayer"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "mapRef"
+    description: "Public mapref of tenant"
+    type: string
+  - in: "query"
+    name: "key"
+    description: "Key to search for in geojson feature properties"
+    type: string
+  - in: "query"
+    name: "value"
+    description: "Value to search for in geojson feature properties"
+    type: string
+  responses:
+    200:
+      description: "Layer with matching search parameters found"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          layerId: 
+            type: string
+          data:
+            type: array
+            items: 
+              type: object
+    400:
+      description: "Invalid PublicMapRef"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No public layers found OR No matching layer found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

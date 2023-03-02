@@ -1,0 +1,57 @@
+get:
+  tags:
+  - "Layer APIs"
+  description: "Fetch files by layer ID or sys_ID or both layer ID and sys_ID as per queries passed. Fetches only the layerFiles under review."
+  operationId: "layer-get-files-by-layerId-fIndex"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "layerId"
+    description: "Optional query used while searching by either only layer Id, or, both sys_id and layer Id"
+    type: string
+  - in: "query"
+    name: "sys_id"
+    description: "Optional query used while searching by either only sys_id, or, both sys_id and layer Id"
+    type: string
+  responses:
+    200:
+      description: "Layers fetched successfully by either layer Id or sys_id or both as per queries passed in request"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/layerFiles.yaml"
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No layers found with given layer ID or sys_ID or both"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

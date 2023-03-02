@@ -1,0 +1,21 @@
+get:
+  tags:
+  - "Client APIs"
+  summary: "Summary"
+  description: "Description"
+  operationId: "get-client-mission-details"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      $ref: "./../../schemas/_index.yaml#/RequestPlaceholder"
+  - in: "path"
+    name: "id"
+    required: true
+    type: "string"
+  responses:
+    "200":
+      description: "Success"

@@ -1,0 +1,97 @@
+post:
+  tags:
+  - "Base Layer APIs"
+  description: "Create new base layer"
+  operationId: "baselayer-create"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Details about the new layer to be created"
+    required: true
+    schema: 
+      type: object 
+      properties: 
+        name:
+          type: string
+        type:
+          type: string
+        vector:
+          type: string
+        captureDate:
+          type: string
+        color:
+          type: string
+        icon:
+          type: string
+        inHeritOriginalColorFromFile:
+          type: boolean
+  - in: path
+    name: "type"
+    required: true
+    type: string
+  responses:
+    201:
+      description: "New base layer created"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: object
+            properties:
+              layer:
+                $ref: "./../../schemas/layer.yaml"   
+              properties:
+                type: object
+    400:
+      description: "Color Selection Error OR Geojson doesn't have a color"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Geojson file path doesn't exist"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

@@ -1,0 +1,30 @@
+#!/bin/bash
+echo "Pre-commit hook running!"
+# BAECKEND ESLINT CHECK
+###########################
+BACKEND_STAGED_FILES=($(git diff --diff-filter=d --cached | grep -E '^.*src\/.*\.(js|jsx|tsx|ts)$'))
+echo "Linting backend"
+if [[ ${#BACKEND_STAGED_FILES[@]} > 0 ]]; then
+    echo ${BACKEND_STAGED_FILES[@]}
+    STAGED_FILES=()
+
+    for i in "${BACKEND_STAGED_FILES[@]}"; do
+        echo "doing $i"
+        STAGED_FILES+=($i)
+    done
+    echo ${STAGED_FILES[@]}
+    npm run lint -- "${STAGED_FILES[@]}" --fix
+    npm run format -- "${STAGED_FILES[@]}" --write
+
+    ESLINT_EXIT="$?"
+
+    # Re-add files since they may have been fixed
+    git add "${BACKEND_STAGED_FILES[@]}"
+
+    if [[ "${ESLINT_EXIT}" == 0 ]]; then
+    echo ""
+    else
+    printf "\n\033[41mCOMMIT FAILED:\033[0m Fix eslint errors and try again\n"
+    exit 1
+    fi
+fi

@@ -1,0 +1,26 @@
+import { Response } from "express";
+import { IUser } from "../schemas/user";
+import { LeanDocument } from "mongoose";
+import { IPermission } from "../schemas/permission";
+import { Log } from "./logUtils";
+
+export type AuthResponse = Response & {
+  locals: {
+    user: LeanDocument<
+      Omit<IUser, "customPermissions"> & { customPermissions: IPermission[] }
+    >;
+    log: logFace;
+    advancedResults: any;
+    logger: Log;
+  };
+};
+
+export interface logFace {
+  status: number;
+  route: string;
+  userID?: string;
+  ACTION?: string;
+  message: string;
+  timestamp: Date;
+  error?: Error;
+}

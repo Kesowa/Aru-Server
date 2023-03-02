@@ -1,0 +1,38 @@
+type: object
+required:
+  - modelName
+  - assetClassID
+  - manufacturerID
+  - createdBy
+  - tenantID
+properties:
+  modelName:  
+    type: string
+  modelinteger:  
+    type: string 
+  assetClassID:  
+    type: string
+  dimensions:  
+    type: object
+    properties:
+      length: 
+        type: integer 
+      breadth: 
+        type: integer 
+      height: 
+        type: integer
+  manufacturerID:
+    type: string
+  website: 
+    type: string 
+  createdBy:  
+    type: string
+  tenantID:  
+    type: string
+  props:
+    type: object
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+   

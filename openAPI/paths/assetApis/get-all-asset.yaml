@@ -1,0 +1,60 @@
+get:
+  tags:
+  - "Asset APIs"
+  description: "Fetch all the assets of the current tenant"
+  operationId: "get-all-asset"
+  produces:
+  - "application/json"
+  responses:
+    200:
+      description: "All assets of current tenant fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: object
+            properties:
+              gotDoc:
+                type: array
+                items:
+                  $ref: "./../../schemas/asset.yaml"   
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Current tenant has no assets"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

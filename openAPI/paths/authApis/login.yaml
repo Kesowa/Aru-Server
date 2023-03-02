@@ -1,0 +1,77 @@
+post:
+  tags:
+  - "Auth APIs"
+  description: "Login route for all users"
+  operationId: "login"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Login request body"
+    schema: 
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+  responses:
+    200:
+      description: "Log In Successful"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          token:
+            type: string
+          data:
+            $ref: "./../../schemas/user.yaml"
+    400:
+      description: "Invalid Inputs, validation checks failed"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+          errors:
+            type: array
+            items:
+              type: object
+              properties:
+                msg:
+                  type: string
+                param:
+                  type: string
+    401:
+      description: "User is not active OR Invalid password OR client expired OR expired credentials. Check the message for further details."
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "User doesn't exist"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

@@ -1,0 +1,8 @@
+node_modules/*
+build/*
+assets/*
+dist/*
+openAPI/*
+tmp/*
+public/*
+src/public/*

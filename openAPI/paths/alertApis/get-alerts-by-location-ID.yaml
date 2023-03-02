@@ -1,0 +1,62 @@
+get:
+  tags:
+  - "Alert APIs"
+  description: "Fetch alerts by location ID"
+  operationId: "get-alerts-by-location-ID"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "id"
+    type: "string"
+    description: "Location ID of the alert to be fetched"
+  responses:
+    200:
+      description: "Alert fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                id: 
+                  type: string
+                locationName: 
+                  type: string
+                location: 
+                  type: string
+                alertImage: 
+                  type: string 
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Alert not found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

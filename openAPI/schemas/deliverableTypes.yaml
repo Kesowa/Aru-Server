@@ -1,0 +1,21 @@
+type: object
+required:
+  - name
+  - description
+properties:
+  name :  
+    type: string
+  description: 
+    type: string
+  createdBy :  
+    type : string
+  updatedBy: 
+    type : string
+  imageURL:  
+    type: string
+  isActive: 
+    type: boolean
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string

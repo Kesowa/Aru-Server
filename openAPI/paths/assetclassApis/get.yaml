@@ -1,0 +1,48 @@
+get:
+  tags:
+  - "Asset Class APIs"
+  description: "Fetch all asset classes"
+  operationId: "asset-class-get"
+  produces:
+  - "application/json"
+  responses:
+    200:
+      description: "Asset Classes fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/assetClass.yaml"
+    401:
+      description: "Invalid user id or tokens OR user doesn't have required permissions"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

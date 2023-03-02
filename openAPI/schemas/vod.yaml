@@ -1,0 +1,33 @@
+type: object
+required:
+  - flightID
+  - missionID
+  - locationID
+  - videoPath
+  - thumbnail
+  - videoName
+properties:
+  flightID:  
+    type: string
+  missionID:  
+    type: string
+  locationID:  
+    type: string
+  videoPath:  
+    type: string
+  thumbnail:  
+    type: string 
+  tenantId:  
+    type: string
+  fileSize:  
+    type: number 
+  videoName:  
+    type: string
+  isSRT:  
+    type: boolean 
+    default: false
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+    

@@ -1,0 +1,72 @@
+put:
+  tags:
+  - "Base Layer APIs"
+  description: "Adds prime attributes to features of the geojson file of the base layer"
+  operationId: "baselayer-set-prime-attr"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+    - in: "body"
+      name: "body"
+      description: "Body should contain Id of base layer, path to geojson file of the layer, and array of prime attributes"
+      schema: 
+        type: object
+        properties:
+          path: 
+            type: string
+          id: 
+            type: string
+          pattr:
+            type: array
+            items: 
+              type: string
+  responses:
+    200:
+      description: "Prime attributes added successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            $ref: "./../../schemas/layer.yaml"   
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "File path doesn't exist"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

@@ -1,0 +1,75 @@
+delete:
+  tags:
+  - "Base Layer APIs"
+  description: "Delete base layer (and all layers on top of it) by id"
+  operationId: "baselayer-delete-baseLayer-id"
+  consumes:
+  - "application/json"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Body of the request should contain an array of ids of layers"
+    schema: 
+      type: object
+      properties: 
+        layers: 
+          type: array
+          items:
+            type: string 
+  responses:
+    200:
+      description: "Base layer successfully deleted"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+    400:
+      description: "Layer Id array is empty"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    401:
+      description: "Invalid user id or tokens"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    403:
+      description: "Package has expired"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Base Layer couldn't be found"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

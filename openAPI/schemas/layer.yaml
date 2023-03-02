@@ -1,0 +1,56 @@
+type: object
+properties:
+  name:  
+    type: string 
+  type:  
+    type: string
+  raster:  
+    type: string
+  vector:  
+    type: string
+  layerpath:  
+    type: string 
+  layerdataArr: 
+    type: array
+    items:
+      type: object
+  color: 
+    type: string
+  minp:  
+    type: integer
+  maxp:  
+    type: integer
+  featureCount:  
+    type: integer
+  layers :  
+    type : array
+    items:
+      type: string
+  layerLabel: 
+    type: string
+  isPublic: 
+    type: boolean
+  isBase: 
+    type: boolean
+  center:  
+    type: array
+    items:
+      type: object
+  fileSize: 
+    type: integer
+  capturestring:  
+    type: string 
+  missionId:  
+    type: string
+  tenantId:  
+    type: string
+  layerGroupId: 
+    type: string
+  createdBy:  
+    type: string 
+  upstringdBy:  
+    type: string
+  createdAt: 
+    type: string
+  upstringdAt: 
+    type: string

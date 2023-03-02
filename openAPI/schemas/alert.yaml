@@ -1,0 +1,50 @@
+type: object
+required:
+  - missionId
+  - locationName
+  - createdBy
+  - locationId
+  - flightId
+  - tenantId
+  - pcount
+  - image
+properties:
+  location: 
+    type: object
+    required:
+      - lat
+      - long
+    properties:
+      lat:
+        type: integer
+      long:
+        type: integer
+  fileSize:
+    type: integer
+  missionId:
+    type: string
+  locationName:
+    type: string
+  createdBy:
+    type: string
+  locationId:
+    type: string
+  flightId:
+    type: string
+  tenantId:
+    type: string
+  pcount:
+    type: integer
+  type:  
+    type: string 
+  image:  
+    type: string
+  note: 
+    type: string
+  onSite: 
+    type: boolean
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+ 

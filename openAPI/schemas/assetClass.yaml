@@ -1,0 +1,10 @@
+type: object
+properties:
+  typeName: 
+    type: string 
+  createdAt: 
+    type: string 
+  createdBy:  
+      type: string
+     
+ 

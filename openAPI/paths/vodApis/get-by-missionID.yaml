@@ -1,0 +1,63 @@
+get:
+  tags:
+  - "VOD APIs"
+  description: "Fetches VOD by mission Id"
+  operationId: "vod-get-by-missionid"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "query"
+    name: "missionID"
+    description: "Mission Id whose vods to be fetched"
+    type: string
+  - in: "query"
+    name: "page"
+    description: "Pagination page number for paginated results"
+    type: string
+  - in: "query"
+    name: "sort"
+    description: "String of form '<field>:<sorting order>' for sorted results"
+    type: string
+  responses:
+    200:
+      description: "VODs fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          TotalPages:
+            type: integer
+          data:
+            type: array
+            items:
+              $ref: "./../../schemas/vod.yaml"
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "No VOD found for given mission ID"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

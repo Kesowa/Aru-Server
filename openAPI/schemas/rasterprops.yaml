@@ -1,0 +1,21 @@
+type: object
+properties:
+  name:  
+    type: string
+  bidx:  
+    type: string
+  bandExp:  
+    type: string
+  colorMap:  
+    type: string
+  resamplingMethod:  
+    type: string
+  createdBy:  
+    type: string
+  updatedBy:  
+    type: string
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+    

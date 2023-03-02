@@ -1,0 +1,19 @@
+type: object
+required:
+  - tenantId
+properties:
+  geometry:  
+    type:  object
+    required:
+      - type
+      - coordinates
+    properties:
+      type:
+        type: string
+      coordinates:  
+        type: string
+  properties:
+      type: string 
+  tenantId:  
+      type: string
+ 

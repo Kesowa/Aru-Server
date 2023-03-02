@@ -1,0 +1,87 @@
+get:
+  tags:
+  - "Mission APIs"
+  description: "Fetches mission by mission Id and tenant Id of current user"
+  operationId: "mission-get"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "path"
+    name: "id"
+    description: "Id of mission to be fetched"
+    type: string
+    required: true
+  responses:
+    200:
+      description: "Mission fetched successfully"
+      schema:
+        type: object
+        properties:
+          status:
+            type: boolean
+          message:
+            type: string
+          data:
+            type: object
+            required:
+              - name
+              - assetID
+              - missionType
+            properties:
+              name:  
+                type: string
+              description:  
+                type: string
+              deliverables: 
+                type: array
+                items:
+                  type: string
+              user:  
+                type: string 
+              assetID :  
+                type: string
+              clientId: 
+                type: array
+                items:
+                  type: string
+              status:  
+                type: string
+              pilotAssigned:  
+                type: string 
+              tenantId:  
+                type: string 
+              missionType : 
+                type : string
+              createdAt: 
+                type: string
+              updatedAt: 
+                type: string
+              flight:
+                $ref: "./../../schemas/flight.yaml"
+    401:
+      description: "Invalid user id or token"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    404:
+      description: "Mission doesn't exist"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string
+    500:
+      description: "Server Error"
+      schema:
+        type: object
+        properties:
+          status: 
+            type: boolean
+          message:
+            type: string

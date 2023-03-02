@@ -1,0 +1,115 @@
+type: object
+required:
+  - name
+  - phoneNo
+  - email
+  - contactPerson
+  - gstNumber
+  - billingAddressLine1
+  - billingCity
+  - billingDistrict
+  - billingState
+  - billingPin
+  - isActive
+  - isActivated
+  - bandwidthUsed
+  - storageUsed
+  - actualSize
+  - actualUserCount
+  - actualMissionCount
+  - actualAlertCount
+  - actualVodCount
+  - actualLayerCount
+  - actualClientCount
+  - actualLocationCount
+  - actualUserGroupCount
+properties:
+  name :  
+    type: string
+  phoneNo :  
+    type: string
+  email :  
+    type: string
+  contactPerson: 
+    type: string
+  registrationNumber: 
+    type: string
+  officialWebsite: 
+    type: string
+  avatar: 
+    type: string
+  gstNumber: 
+    type: string
+  billingAddressLine1: 
+    type: string
+  billingAddressLine2: 
+    type: string
+  billingCity: 
+    type: string
+  billingDistrict: 
+    type: string
+  billingState: 
+    type: string
+  billingPin: 
+    type: string
+  createdBy :  
+    type: string
+  updatedBy: 
+    type: string
+  activePackage: 
+    type: string
+  upcomingPackages:
+    type: array
+    items:
+      type: string
+  publicMapRef: 
+    type: string
+  isActive :  
+    type : boolean
+  isActivated: 
+    type : boolean
+  modefiedEmailRequested: 
+    type: string
+  modefiedEmailRequestedOTPs:
+    type: array
+    items: 
+      type: integer
+  modefiedphoneNoRequested: 
+    type: string
+  modefiedphoneNoRequestedOTPs:
+    type: array
+    items:
+      type: integer
+  bandwidthUsed: 
+    type : integer
+  storageUsed: 
+    type : integer
+  packageStartDate: 
+    type : string
+  actualSize: 
+    type: number
+  actualUserCount: 
+    type : integer  
+  actualMissionCount: 
+      type : integer
+  actualAlertCount: 
+      type : integer
+  actualVodCount: 
+      type : integer
+  actualLayerCount: 
+      type : integer
+  actualClientCount: 
+      type : integer
+  actualLocationCount: 
+      type : integer
+  actualUserGroupCount: 
+      type : integer
+  verificationCode: 
+      type : integer
+  isVerified:  
+      type : boolean
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+    

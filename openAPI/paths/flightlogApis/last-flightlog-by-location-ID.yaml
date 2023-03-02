@@ -1,0 +1,17 @@
+get:
+  tags:
+  - "Flight Log APIs"
+  summary: "Summary"
+  description: "Description"
+  operationId: "get-last-flightlog-by-location-ID"
+  produces:
+  - "application/json"
+  parameters:
+  - in: "body"
+    name: "body"
+    description: "Description"
+    schema: 
+      $ref: "./../../schemas/_index.yaml#/RequestPlaceholder"
+  responses:
+    "200":
+      description: "Success"

@@ -1,0 +1,2485 @@
+{
+    "type": "FeatureCollection",
+    "name": "Solar_Phase01",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 0,
+                "AA": "AA-1",
+                "Solar_ID": "SP-001",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5778602,
+                "Longitude": 88.4820964,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 01",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149576",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4820964,
+                    22.5778602
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 1,
+                "AA": "AA-1",
+                "Solar_ID": "SP-002",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5779902,
+                "Longitude": 88.4818966,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 02",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149577",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4818966,
+                    22.5779902
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 2,
+                "AA": "AA-1",
+                "Solar_ID": "SP-003",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5782753,
+                "Longitude": 88.4815048,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 03",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149578",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4815048,
+                    22.5782753
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 3,
+                "AA": "AA-1",
+                "Solar_ID": "SP-004",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5769358,
+                "Longitude": 88.4802671,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 04",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149579",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4802671,
+                    22.5769358
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 4,
+                "AA": "AA-1",
+                "Solar_ID": "SP-005",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5777145,
+                "Longitude": 88.4802661,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 05",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514957a",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4802661,
+                    22.5777145
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 5,
+                "AA": "AA-1",
+                "Solar_ID": "SP-006",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5792968,
+                "Longitude": 88.4801542,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 06",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514957b",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4801542,
+                    22.5792968
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 6,
+                "AA": "AA-1",
+                "Solar_ID": "SP-007",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5788604,
+                "Longitude": 88.4825131,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 07",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514957c",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4825131,
+                    22.5788604
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 7,
+                "AA": "AA-1",
+                "Solar_ID": "SP-008",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5781915,
+                "Longitude": 88.4840229,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 08",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514957d",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4840229,
+                    22.5781915
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 8,
+                "AA": "AA-1",
+                "Solar_ID": "SP-009",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5802987,
+                "Longitude": 88.480308,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 09",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514957e",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.480308,
+                    22.5802987
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 9,
+                "AA": "AA-1",
+                "Solar_ID": "SP-010",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5772811,
+                "Longitude": 88.4739904,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 10",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514957f",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4739904,
+                    22.5772811
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 10,
+                "AA": "AA-1",
+                "Solar_ID": "SP-011",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5773459,
+                "Longitude": 88.4736253,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 11",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149580",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4736253,
+                    22.5773459
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 11,
+                "AA": "AA-1",
+                "Solar_ID": "SP-012",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5767042,
+                "Longitude": 88.4720166,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 12",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149581",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4720166,
+                    22.5767042
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 12,
+                "AA": "AA-1",
+                "Solar_ID": "SP-013",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5782235,
+                "Longitude": 88.475778,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 13",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149582",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.475778,
+                    22.5782235
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 13,
+                "AA": "AA-1",
+                "Solar_ID": "SP-014",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5789516,
+                "Longitude": 88.476274,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 14",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149583",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.476274,
+                    22.5789516
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 14,
+                "AA": "AA-1",
+                "Solar_ID": "SP-015",
+                "Placed_IN": "Park",
+                "Latitude": 22.5792785,
+                "Longitude": 88.474334,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 15",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149584",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.474334,
+                    22.5792785
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 15,
+                "AA": "AA-1",
+                "Solar_ID": "SP-016",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5794265,
+                "Longitude": 88.4761005,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 16",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149585",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4761005,
+                    22.5794265
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 16,
+                "AA": "AA-1",
+                "Solar_ID": "SP-017",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5800637,
+                "Longitude": 88.4755776,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 17",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149586",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4755776,
+                    22.5800637
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 17,
+                "AA": "AA-1",
+                "Solar_ID": "SP-018",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5801761,
+                "Longitude": 88.4752411,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 18",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149587",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4752411,
+                    22.5801761
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 18,
+                "AA": "AA-1",
+                "Solar_ID": "SP-019",
+                "Placed_IN": "Above Waterbody",
+                "Latitude": 22.5811788,
+                "Longitude": 88.4758202,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 19",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149588",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4758202,
+                    22.5811788
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 19,
+                "AA": "AA-1",
+                "Solar_ID": "SP-020",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5836674,
+                "Longitude": 88.4744109,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 20",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149589",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4744109,
+                    22.5836674
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 20,
+                "AA": "AA-1",
+                "Solar_ID": "SP-021",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5737347,
+                "Longitude": 88.4717609,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 21",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514958a",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4717609,
+                    22.5737347
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 21,
+                "AA": "AA-1",
+                "Solar_ID": "SP-022",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5695027,
+                "Longitude": 88.468456,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 22",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514958b",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.468456,
+                    22.5695027
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 22,
+                "AA": "AA-1",
+                "Solar_ID": "SP-023",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5738052,
+                "Longitude": 88.479479,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 23",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514958c",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.479479,
+                    22.5738052
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 23,
+                "AA": "AA-1",
+                "Solar_ID": "SP-024",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5756781,
+                "Longitude": 88.4824056,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 24",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514958d",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4824056,
+                    22.5756781
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 24,
+                "AA": "AA-1",
+                "Solar_ID": "SP-025",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5754145,
+                "Longitude": 88.4817407,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 25",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514958e",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4817407,
+                    22.5754145
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 25,
+                "AA": "AA-1",
+                "Solar_ID": "SP-026",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.574647,
+                "Longitude": 88.4823107,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 26",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514958f",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4823107,
+                    22.574647
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 26,
+                "AA": "AA-1",
+                "Solar_ID": "SP-027",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5754727,
+                "Longitude": 88.4626517,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 27",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149590",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4626517,
+                    22.5754727
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 27,
+                "AA": "AA-1",
+                "Solar_ID": "SP-028",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5774841,
+                "Longitude": 88.4667743,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 28",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149591",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4667743,
+                    22.5774841
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 28,
+                "AA": "AA-1",
+                "Solar_ID": "SP-029",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5776262,
+                "Longitude": 88.4656853,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 29",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149592",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4656853,
+                    22.5776262
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 29,
+                "AA": "AA-1",
+                "Solar_ID": "SP-030",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5780419,
+                "Longitude": 88.4609893,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 30",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149593",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4609893,
+                    22.5780419
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 30,
+                "AA": "AA-1",
+                "Solar_ID": "SP-031",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5778296,
+                "Longitude": 88.4617601,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 31",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149594",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4617601,
+                    22.5778296
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 31,
+                "AA": "AA-1",
+                "Solar_ID": "SP-032",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5793345,
+                "Longitude": 88.4612733,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 32",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149595",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4612733,
+                    22.5793345
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 32,
+                "AA": "AA-1",
+                "Solar_ID": "SP-033",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5797595,
+                "Longitude": 88.4616753,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 33",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149596",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4616753,
+                    22.5797595
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 33,
+                "AA": "AA-1",
+                "Solar_ID": "SP-034",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.579012,
+                "Longitude": 88.4635482,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 34",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149597",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4635482,
+                    22.579012
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 34,
+                "AA": "AA-1",
+                "Solar_ID": "SP-035",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.581505,
+                "Longitude": 88.4614786,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 35",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149598",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4614786,
+                    22.581505
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 35,
+                "AA": "AA-1",
+                "Solar_ID": "SP-036",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5823202,
+                "Longitude": 88.4597745,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 36",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff545149599",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4597745,
+                    22.5823202
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 36,
+                "AA": "AA-1",
+                "Solar_ID": "SP-037",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5810077,
+                "Longitude": 88.4611885,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 37",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514959a",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4611885,
+                    22.5810077
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 37,
+                "AA": "AA-1",
+                "Solar_ID": "SP-038",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5823216,
+                "Longitude": 88.4637752,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 38",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514959b",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4637752,
+                    22.5823216
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 38,
+                "AA": "AA-1",
+                "Solar_ID": "SP-039",
+                "Placed_IN": "Above Waterbody",
+                "Latitude": 22.5833887,
+                "Longitude": 88.4574927,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 39",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514959c",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4574927,
+                    22.5833887
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 39,
+                "AA": "AA-1",
+                "Solar_ID": "SP-040",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.583351,
+                "Longitude": 88.464562,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 40",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514959d",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.464562,
+                    22.583351
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 40,
+                "AA": "AA-3",
+                "Solar_ID": "SP-041",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5431966,
+                "Longitude": 88.5186538,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 41",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514959e",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5186538,
+                    22.5431966
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 41,
+                "AA": "AA-3",
+                "Solar_ID": "SP-042",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.542797,
+                "Longitude": 88.5120815,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 42",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff54514959f",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5120815,
+                    22.542797
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 42,
+                "AA": "AA-3",
+                "Solar_ID": "SP-043",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5574629,
+                "Longitude": 88.5204525,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 43",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a0",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5204525,
+                    22.5574629
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 43,
+                "AA": "AA-3",
+                "Solar_ID": "SP-044",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5454385,
+                "Longitude": 88.5119629,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 44",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a1",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5119629,
+                    22.5454385
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 44,
+                "AA": "AA-3",
+                "Solar_ID": "SP-045",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5572963,
+                "Longitude": 88.49625,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 45",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a2",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.49625,
+                    22.5572963
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 45,
+                "AA": "AA-3",
+                "Solar_ID": "SP-046",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5570964,
+                "Longitude": 88.4948502,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 46",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a3",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4948502,
+                    22.5570964
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 46,
+                "AA": "AA-3",
+                "Solar_ID": "SP-047",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5574056,
+                "Longitude": 88.4943578,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 47",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a4",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4943578,
+                    22.5574056
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 47,
+                "AA": "AA-3",
+                "Solar_ID": "SP-048",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5575926,
+                "Longitude": 88.4940784,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 48",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a5",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4940784,
+                    22.5575926
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 48,
+                "AA": "AA-3",
+                "Solar_ID": "SP-049",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5566726,
+                "Longitude": 88.4938899,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 49",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a6",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4938899,
+                    22.5566726
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 49,
+                "AA": "AA-3",
+                "Solar_ID": "SP-050",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5665256,
+                "Longitude": 88.5197523,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 50",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a7",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5197523,
+                    22.5665256
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 50,
+                "AA": "AA-3",
+                "Solar_ID": "SP-051",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5664317,
+                "Longitude": 88.5193846,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 51",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a8",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5193846,
+                    22.5664317
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 51,
+                "AA": "AA-3",
+                "Solar_ID": "SP-052",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5664291,
+                "Longitude": 88.518989,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 52",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495a9",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.518989,
+                    22.5664291
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 52,
+                "AA": "AA-3",
+                "Solar_ID": "SP-053",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5664642,
+                "Longitude": 88.5182965,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 53",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495aa",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5182965,
+                    22.5664642
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 53,
+                "AA": "AA-3",
+                "Solar_ID": "SP-054",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.566897,
+                "Longitude": 88.5199055,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 54",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495ab",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5199055,
+                    22.566897
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 54,
+                "AA": "AA-3",
+                "Solar_ID": "SP-055",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5674948,
+                "Longitude": 88.5197829,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 55",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495ac",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5197829,
+                    22.5674948
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 55,
+                "AA": "AA-3",
+                "Solar_ID": "SP-056",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5675659,
+                "Longitude": 88.5193896,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 56",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495ad",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5193896,
+                    22.5675659
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 56,
+                "AA": "AA-3",
+                "Solar_ID": "SP-057",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5706366,
+                "Longitude": 88.5159944,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 57",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495ae",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5159944,
+                    22.5706366
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 57,
+                "AA": "AA-3",
+                "Solar_ID": "SP-058",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5647883,
+                "Longitude": 88.5182866,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 58",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495af",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5182866,
+                    22.5647883
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 58,
+                "AA": "AA-3",
+                "Solar_ID": "SP-059",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.564125,
+                "Longitude": 88.5142217,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 59",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b0",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5142217,
+                    22.564125
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 59,
+                "AA": "AA-3",
+                "Solar_ID": "SP-060",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5565606,
+                "Longitude": 88.5022208,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 60",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b1",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5022208,
+                    22.5565606
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 60,
+                "AA": "AA-3",
+                "Solar_ID": "SP-061",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5717146,
+                "Longitude": 88.5069699,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 61",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b2",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.5069699,
+                    22.5717146
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 61,
+                "AA": "AA-3",
+                "Solar_ID": "SP-062",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5594371,
+                "Longitude": 88.4915051,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 62",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b3",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4915051,
+                    22.5594371
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 62,
+                "AA": "AA-3",
+                "Solar_ID": "SP-063",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5602537,
+                "Longitude": 88.4901355,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 63",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b4",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4901355,
+                    22.5602537
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 63,
+                "AA": "AA-3",
+                "Solar_ID": "SP-064",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5619456,
+                "Longitude": 88.4874492,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 64",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b5",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4874492,
+                    22.5619456
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 64,
+                "AA": "AA-3",
+                "Solar_ID": "SP-065",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.562572,
+                "Longitude": 88.4889082,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 65",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b6",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4889082,
+                    22.562572
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 65,
+                "AA": "AA-3",
+                "Solar_ID": "SP-066",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.565265,
+                "Longitude": 88.480817,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 66",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b7",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.480817,
+                    22.565265
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 66,
+                "AA": "AA-3",
+                "Solar_ID": "SP-067",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5656971,
+                "Longitude": 88.4820251,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 67",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b8",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4820251,
+                    22.5656971
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 67,
+                "AA": "AA-3",
+                "Solar_ID": "SP-068",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5668414,
+                "Longitude": 88.481748,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 68",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495b9",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.481748,
+                    22.5668414
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 68,
+                "AA": "AA-2",
+                "Solar_ID": "SP-069",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5802673,
+                "Longitude": 88.4980166,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 69",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495ba",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4980166,
+                    22.5802673
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 69,
+                "AA": "AA-2",
+                "Solar_ID": "SP-070",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5816504,
+                "Longitude": 88.4980774,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 70",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495bb",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4980774,
+                    22.5816504
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 70,
+                "AA": "AA-2",
+                "Solar_ID": "SP-071",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5810513,
+                "Longitude": 88.4982518,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 71",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495bc",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4982518,
+                    22.5810513
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 71,
+                "AA": "AA-2",
+                "Solar_ID": "SP-072",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5780176,
+                "Longitude": 88.4871677,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 72",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495bd",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4871677,
+                    22.5780176
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 72,
+                "AA": "AA-2",
+                "Solar_ID": "SP-073",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5813869,
+                "Longitude": 88.4921014,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 73",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495be",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4921014,
+                    22.5813869
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 73,
+                "AA": "AA-2",
+                "Solar_ID": "SP-074",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5960067,
+                "Longitude": 88.4877385,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 74",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495bf",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4877385,
+                    22.5960067
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 74,
+                "AA": "AA-2",
+                "Solar_ID": "SP-075",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5837799,
+                "Longitude": 88.483121,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 75",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c0",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.483121,
+                    22.5837799
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 75,
+                "AA": "AA-2",
+                "Solar_ID": "SP-076",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5823181,
+                "Longitude": 88.484783,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 76",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c1",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.484783,
+                    22.5823181
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 76,
+                "AA": "AA-2",
+                "Solar_ID": "SP-077",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5797889,
+                "Longitude": 88.4852649,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 77",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c2",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4852649,
+                    22.5797889
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 77,
+                "AA": "AA-2",
+                "Solar_ID": "SP-078",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5801659,
+                "Longitude": 88.4848495,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 78",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c3",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4848495,
+                    22.5801659
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 78,
+                "AA": "AA-2",
+                "Solar_ID": "SP-079",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5810561,
+                "Longitude": 88.4849543,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 79",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c4",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4849543,
+                    22.5810561
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 79,
+                "AA": "AA-2",
+                "Solar_ID": "SP-080",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5916113,
+                "Longitude": 88.4758197,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 80",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c5",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4758197,
+                    22.5916113
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 80,
+                "AA": "AA-2",
+                "Solar_ID": "SP-081",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5914703,
+                "Longitude": 88.4794613,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 81",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c6",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4794613,
+                    22.5914703
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 81,
+                "Solar_ID": "SP-082",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5882466,
+                "Longitude": 88.4999043,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 82",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c7",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4999043,
+                    22.5882466
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 82,
+                "Solar_ID": "SP-083",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5890961,
+                "Longitude": 88.4990561,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 83",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c8",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4990561,
+                    22.5890961
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 83,
+                "Solar_ID": "SP-084",
+                "Placed_IN": "Above Ground",
+                "Latitude": 22.5727291,
+                "Longitude": 88.4633644,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 84",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495c9",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4633644,
+                    22.5727291
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 84,
+                "Solar_ID": "SP-085",
+                "Placed_IN": "Designated Land",
+                "Latitude": 22.5917075,
+                "Longitude": 88.47485,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 85",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495ca",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.47485,
+                    22.5917075
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 85,
+                "Solar_ID": "SP-086",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.5919175,
+                "Longitude": 88.4755671,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 86",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495cb",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4755671,
+                    22.5919175
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 86,
+                "Solar_ID": "SP-087",
+                "Placed_IN": "Above Waterbody",
+                "Latitude": 22.609599,
+                "Longitude": 88.4615578,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 87",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495cc",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4615578,
+                    22.609599
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 87,
+                "Solar_ID": "SP-088",
+                "Placed_IN": "Above Waterbody",
+                "Latitude": 22.6097325,
+                "Longitude": 88.4620211,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 88",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495cd",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4620211,
+                    22.6097325
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 88,
+                "Solar_ID": "SP-089",
+                "Placed_IN": "Above Waterbody",
+                "Latitude": 22.6099405,
+                "Longitude": 88.4627219,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 89",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495ce",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4627219,
+                    22.6099405
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 89,
+                "Solar_ID": "SP-090",
+                "Placed_IN": "Above Waterbody",
+                "Latitude": 22.6100562,
+                "Longitude": 88.4631199,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 90",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495cf",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4631199,
+                    22.6100562
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 90,
+                "Solar_ID": "SP-091",
+                "Placed_IN": "Above Waterbody",
+                "Latitude": 22.6101855,
+                "Longitude": 88.4635569,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 91",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d0",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4635569,
+                    22.6101855
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 91,
+                "Solar_ID": "SP-092",
+                "Placed_IN": "Above Waterbody",
+                "Latitude": 22.6103138,
+                "Longitude": 88.4639734,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 92",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d1",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4639734,
+                    22.6103138
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 92,
+                "Solar_ID": "SP-093",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6208245,
+                "Longitude": 88.4662518,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 93",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d2",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4662518,
+                    22.6208245
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 93,
+                "Solar_ID": "SP-094",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6211837,
+                "Longitude": 88.4651601,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 94",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d3",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4651601,
+                    22.6211837
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 94,
+                "Solar_ID": "SP-095",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6203949,
+                "Longitude": 88.4614934,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 95",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d4",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4614934,
+                    22.6203949
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 95,
+                "Solar_ID": "SP-096",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6207689,
+                "Longitude": 88.4601606,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 96",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d5",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4601606,
+                    22.6207689
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 96,
+                "Solar_ID": "SP-097",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6275304,
+                "Longitude": 88.4594305,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 97",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d6",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4594305,
+                    22.6275304
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 97,
+                "Solar_ID": "SP-098",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6263172,
+                "Longitude": 88.4657609,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 98",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d7",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4657609,
+                    22.6263172
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 98,
+                "Solar_ID": "SP-099",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6335103,
+                "Longitude": 88.4585592,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 99",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d8",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4585592,
+                    22.6335103
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 99,
+                "Solar_ID": "SP-100",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.633619,
+                "Longitude": 88.4580501,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 100",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495d9",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4580501,
+                    22.633619
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 100,
+                "Solar_ID": "SP-101",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6235333,
+                "Longitude": 88.4560016,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 101",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495da",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4560016,
+                    22.6235333
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 101,
+                "Solar_ID": "SP-102",
+                "Placed_IN": "Top of Building",
+                "Latitude": 22.6221527,
+                "Longitude": 88.453417,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 102",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495db",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.453417,
+                    22.6221527
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 102,
+                "Solar_ID": "SP-103",
+                "Placed_IN": "Above Ground",
+                "Latitude": 22.5844273,
+                "Longitude": 88.4573659,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 103",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495dc",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4573659,
+                    22.5844273
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SL_NO": 103,
+                "Solar_ID": "SP-104",
+                "Placed_IN": "Above Ground",
+                "Latitude": 22.5811551,
+                "Longitude": 88.4597843,
+                "DoC": "26-08-2021",
+                "Phase": "Phase 104",
+                "color": "#02e6b3",
+                "icon": "MarkerIcon",
+                "sys_id": "6285fa40405ecff5451495dd",
+                "Nth": {}
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    88.4597843,
+                    22.5811551
+                ]
+            }
+        }
+    ]
+}

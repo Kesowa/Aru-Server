@@ -1,0 +1,24 @@
+type: object
+required:
+  - name
+  - isActive
+properties:
+  name:  
+    type: string
+  permissions: 
+    type: array
+    items:
+      type: string
+  tenantId:  
+    type: string
+  createdBy:  
+    type: string
+  updatedBy:  
+    type: string
+  isActive:  
+    type: boolean
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string
+    

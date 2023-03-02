@@ -1,0 +1,19 @@
+type: object
+required:
+  - valid
+  - creator
+  - missionID
+  - email
+properties:
+  valid:
+    type: boolean
+  creator:  
+    type: string
+  missionID:  
+    type: string
+  email:  
+    type: string
+  createdAt: 
+    type: string
+  updatedAt: 
+    type: string     
