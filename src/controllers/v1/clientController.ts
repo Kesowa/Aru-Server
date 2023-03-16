@@ -409,7 +409,7 @@ export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
         size = await getFileSize(docPath);
         await deletePublicFileUsingPath(doc.avatar);
       } catch (error) {
-        res.locals.logger.warn("failed to delete client avatar");
+        req.log.warn("failed to delete client avatar");
       }
       doc.userType = "standalone-user";
       doc.isActive = false;
@@ -576,7 +576,7 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
     const savedResult: any = [];
     if (result.length) {
       const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, res.locals.logger);
+      await createDirIfNotExists(ws, req.log);
       for (let i = 0; i < result.length; i++) {
         const d = {
           name: result[i].name,
@@ -632,7 +632,7 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
 //             message:"Data does not exist!"
 //         })
 //     } catch (error) {
-//         res.locals.logger.error(error);
+//         req.log.error(error);
 //         return res.status(500).json({
 //             status:false,
 //             message:"Server error!"
@@ -695,9 +695,9 @@ export const devApiClientArr = async (req: Request, res: AuthResponse) => {
             { _id: docs[i]._id },
             { $set: { clientId: [docs[i].clientId] } }
           );
-          res.locals.logger.info("updated");
+          req.log.info("updated");
         } else {
-          res.locals.logger.info("skipping");
+          req.log.info("skipping");
         }
       }
       return res.send("Updated");

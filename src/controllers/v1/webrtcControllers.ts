@@ -93,6 +93,6 @@ export const getActiveStreams = (req: Request, res: AuthResponse) => {
 };
 
 function handleTrackEvent(e: any, peer: any, missionId: string) {
-  console.log(`track handled for missionId : ${missionId}`);
+  console.info(`track handled for missionId : ${missionId}`);
   senderStreams.set(missionId, e.streams[0]);
 }

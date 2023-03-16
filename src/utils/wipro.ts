@@ -6,6 +6,7 @@ import { IStreamKey } from "../schemas/streamKey";
 import fetch from "node-fetch";
 import path from "path";
 import { BASE_SERVER, LIVE_URL, MODE, Mode } from "../constants";
+import { Logger } from "pino";
 
 export class WiproInterface {
   private static readonly ServerURL =
@@ -36,10 +37,13 @@ export class WiproInterface {
   };
   private static readonly LiveStreamURL = new URL(LIVE_URL);
 
-  public static async SendStatus(live: { flightID: string }, status: "Stop") {
+  public static async SendStatus(
+    live: { flightID: string },
+    status: "Disconnect"
+  ) {
     const data = {
       cameraID: live.flightID,
-      Status: status,
+      status: status,
     };
     try {
       const res = await fetch(WiproInterface.StatusURL, {
@@ -54,7 +58,7 @@ export class WiproInterface {
     }
   }
 
-  public static async SendAlert(alert: IAlert, ipAddr: string) {
+  public static async SendAlert(alert: IAlert, ipAddr: string, log: Logger) {
     const data = {
       cameraId: alert.flightId,
       camName: "Cam 4",
@@ -62,11 +66,11 @@ export class WiproInterface {
       eventName: alert.type,
       message: alert.note,
       location: alert.locationName,
-      alertTime: alert.createdAt.toLocaleString(),
-      snapshot: new URL(alert.image, WiproInterface.BaseURL).toString(),
+      alertTime: alert.createdAt,
+      snapshot: new URL(alert.image, WiproInterface.BaseURL),
       severity: "Low",
-      latitude: alert.location.lat?.toString(),
-      longitude: alert.location.long?.toString(),
+      latitude: alert.location.lat,
+      longitude: alert.location.long,
     };
     try {
       const res = await fetch(WiproInterface.AlertURL, {
@@ -74,9 +78,10 @@ export class WiproInterface {
         headers: this.Headers,
         body: JSON.stringify(data),
       });
-      console.info("Sent alert to wipro!", data);
+      log.info("Sent alert to wipro!");
       return res.ok;
     } catch (error) {
+      log.error(error);
       return false;
     }
   }
@@ -101,7 +106,7 @@ export class WiproInterface {
       camName: "Sample Camera 1",
       cameraId: live.flightID,
       ip: ipAddr,
-      status: live.pStatus || live.isActive ? "Connect" : "Disconnect",
+      status: "Connect",
       location: location?.properties.name,
       latitude: location?.geometry.coordinates.lat,
       longitude: location?.geometry.coordinates.lng,

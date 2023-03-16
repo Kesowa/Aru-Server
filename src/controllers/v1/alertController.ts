@@ -8,16 +8,16 @@ import resizer from "node-image-resizer";
 // sharp.cache({ files : 0 });
 import { Types } from "mongoose";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
-import { getAlertsCount } from "../../pipelines/alertPipelines";
 import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 
 import exifr from "exifr";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IFlight } from "../../schemas/flight";
-import { Directory, DirPath } from "../../constants";
+import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 import path from "path";
+import { WiproInterface } from "../../utils/wipro";
 // Create Alert Controlller
 type CreateAlert = {
   missionId: Types.ObjectId;
@@ -68,6 +68,9 @@ export const createAlert = async (
     });
 
     const data = await newAlert.save();
+    if (ARU_INSTANCE == Instance.NKDA) {
+      await WiproInterface.SendAlert(data, req.ip, req.log);
+    }
     notificationSocket
       .to(String(res.locals.user.tenantId._id))
       .emit("ALERT_CREATED", {
@@ -849,10 +852,10 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
         await sharp(req.file?.path)
           .resize(120, 120, { withoutEnlargement: true })
           .toFile(DirPath(Directory.ALERT_IMAGES, `1x_${req.file?.filename}`));
-        res.locals.logger.info("Image Resized Sucessfully");
+        req.log.info("Image Resized Sucessfully");
       } catch (err) {
-        res.locals.logger.warn("Image Resizing Failed");
-        res.locals.logger.error(err);
+        req.log.warn("Image Resizing Failed");
+        req.log.error(err);
       }
     }
     const ff: any = await exifr.parse(img_path);
@@ -935,7 +938,7 @@ export const updateMultiAlert = async (req: Request, res: AuthResponse) => {
       { $set: req.body.update },
       { multi: true }
     );
-    console.log(Ids, updatedDoc);
+    console.info(Ids, updatedDoc);
     const doc = await Alert.find({
       _id: { $in: Ids },
       tenantId: res.locals.user.tenantId._id,

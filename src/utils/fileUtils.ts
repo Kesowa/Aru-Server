@@ -1,6 +1,6 @@
 import fs from "fs";
+import { Logger } from "pino";
 import { Directory, DirPath } from "../constants";
-import { Log } from "./logUtils";
 
 export const getFileSize = async (filepath: string) => {
   const fileStats = await fs.promises.stat(filepath);
@@ -10,7 +10,10 @@ export const getFileSize = async (filepath: string) => {
   return fileSize;
 };
 
-export const createDirIfNotExists = async (filepath: string, logger: Log) => {
+export const createDirIfNotExists = async (
+  filepath: string,
+  logger: Logger
+) => {
   try {
     await fs.promises.access(filepath);
     logger.info("Directory exists...");

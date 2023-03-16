@@ -1,7 +1,7 @@
 import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
 import format from "date-fns/format";
-import path, { resolve } from "path";
+import path from "path";
 import fs from "fs";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
@@ -18,6 +18,7 @@ import {
   deleteHlsVodUsingIndex,
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
+import Flight from "../../models/flight";
 
 export const saveVOD = async (
   req: Request<
@@ -34,15 +35,15 @@ export const saveVOD = async (
     const streamKey = filename.split("-")[0];
     const temp = Buffer.from(streamKey, "base64").toString();
     const [missionID, flightID, locationID, tenantId] = temp.split("-");
-    res.locals.logger.info(
+    req.log.info(
       "++++++++++++++++++++++++++++SAVING VOD++++++++++++++++++++++++++++++++++++++++++"
     );
-    res.locals.logger.info(missionID + flightID + locationID + tenantId);
+    req.log.info(missionID + flightID + locationID + tenantId);
     if (ARU_INSTANCE == Instance.NKDA) {
-      res.locals.logger.info("Sending status info to Wipro...");
+      req.log.info("Sending status info to Wipro...");
       setTimeout(() => {
-        void WiproInterface.SendStatus({ flightID }, "Stop")
-          .then((sent) => console.log("Sent status info to Wipro!", sent))
+        void WiproInterface.SendStatus({ flightID }, "Disconnect")
+          .then((sent) => console.info("Sent status info to Wipro!", sent))
           .catch(console.error);
       }, 10_000);
     }
@@ -295,10 +296,20 @@ export const testApiinject = async (req: Request, res: AuthResponse) => {
 export const saveVODManual = async (req: Request, res: AuthResponse) => {
   {
     const tenantId = String(res.locals.user.tenantId._id);
-    const { missionID, flightID, locationID } = req.body;
+    let { missionID, flightID, locationID } = req.body;
     const token = generateToken(missionID, flightID, locationID, tenantId);
     const timestamp = format(new Date(), "dd-MMM-yy-hh-mm-ss");
     const filename = `${token}-${timestamp}`;
+    if (locationID == null || locationID == undefined) {
+      const flight = await Flight.findOne(
+        { _id: flightID, tenant: tenantId },
+        { locationID: 1 }
+      );
+      locationID = flight.locationID;
+      if (locationID == null || locationID == undefined) {
+        locationID = new Types.ObjectId("5f202f03b9225726102721b8");
+      }
+    }
     if (req.file) {
       const originalName = req.file.originalname;
       const fullPath = req.file.path;
@@ -347,9 +358,9 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
         path.parse(docpath).name + ".flv"
       );
       if (conf) {
-        res.locals.logger.info("Files deleted");
+        req.log.info("Files deleted");
       } else {
-        res.locals.logger.warn("Files does not exist");
+        req.log.warn("Files does not exist");
       }
     } else {
       res.status(404).json({
@@ -402,9 +413,9 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
         await deletePublicFileUsingPath(doc.thumbnail);
         await deletePublicFileUsingPath(path.parse(docpath).name + ".flv");
         if (conf) {
-          res.locals.logger.info("Files deleted");
+          req.log.info("Files deleted");
         } else {
-          res.locals.logger.warn("Files does not exist");
+          req.log.warn("Files does not exist");
           errors.push(doc._id.toString());
           continue;
         }

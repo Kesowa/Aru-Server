@@ -10,6 +10,7 @@ import DJISRTParser from "dji_srt_parser";
 import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
 import { Directory, DirPath } from "../constants";
+import Location from "../models/location";
 
 // import path from "node:path";
 
@@ -45,6 +46,20 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     if (json) {
       console.log("Set to true----------------------");
       srtFlag = true;
+      const metadata = DJIData.metadata();
+      const lat = metadata.stats.GPS.LATITUDE.avg;
+      const lng = metadata.stats.GPS.LONGITUDE.avg;
+      const newLocation = await Location.create({
+        properties: {
+          name: d.originalName,
+        },
+        tenantId: d.tenantID,
+        geometry: {
+          type: "Point",
+          coordinates: { lng, lat },
+        },
+      });
+      d.locationID = newLocation._id;
     }
     try {
       await fs.promises.writeFile(geoJSONoutPath, json);

@@ -1,3 +1,5 @@
+import pino, { Logger } from "pino";
+import pinoHttp from "pino-http";
 import express, { Application } from "express";
 import compression from "compression";
 import helmet from "helmet";
@@ -37,14 +39,21 @@ import PaymentApis from "./apis/v1/paymentApis";
 import baseLayerApis from "./apis/v1/baseLayerApis";
 import settingApis from "./apis/v1/settingApis";
 
-import { Mode, MODE, PUBLIC_DIR } from "./constants";
-import morgan from "morgan";
+import {
+  ARU_INSTANCE,
+  Mode,
+  MODE,
+  PUBLIC_DIR,
+  SEQ_API_KEY,
+  SEQ_SERVER_URL,
+} from "./constants";
 import cors from "cors";
-import { pid } from "process";
-import { ConsoleLogger } from "./utils/logUtils";
+import { randomUUID } from "crypto";
+import cookie from "cookie";
 
 const app: Application = express();
 
+app.use(compression());
 app.use(helmet());
 app.use(cors());
 
@@ -59,19 +68,75 @@ app.use(
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(compression());
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
 
-// Logging
-const combined = `${pid} :method :url :status :response-time ms - :res[content-length]`;
-const dev = `${pid} :method :url :status :response-time ms - :res[content-length]`;
-app.use(morgan(MODE == Mode.Dev ? dev : combined));
+export let logger: Logger;
+if (MODE == Mode.Prod) {
+  const seqConfig = {
+    serverUrl: SEQ_SERVER_URL,
+    apiKey: SEQ_API_KEY,
+  };
 
-app.use((_req, res, next) => {
-  res.locals.logger = new ConsoleLogger();
-  next();
-});
+  logger = pino({
+    name: ARU_INSTANCE,
+    transport: {
+      target: "@autotelic/pino-seq-transport",
+      options: {
+        loggerOpts: seqConfig,
+      },
+    },
+    redact: ["req.body.password"],
+  });
+} else {
+  logger = pino({
+    name: ARU_INSTANCE,
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+      },
+    },
+    redact: ["res.headers", "req.headers"],
+  });
+}
+
+app.use(
+  pinoHttp({
+    logger,
+
+    genReqId: function (req, _) {
+      const cookies = cookie.parse(req.headers.cookie || "");
+      return cookies["email"] || req.headers["authorization"] || randomUUID();
+    },
+    customLogLevel: function (_, res, err) {
+      if (res.statusCode >= 400 && res.statusCode < 500) {
+        return "warn";
+      } else if (res.statusCode >= 500 || err) {
+        return "error";
+      } else if (res.statusCode >= 300 && res.statusCode < 400) {
+        return "silent";
+      }
+      return "info";
+    },
+    serializers: {
+      req(req) {
+        req.body = req.raw.body;
+        return req;
+      },
+    },
+    quietReqLogger: true,
+    customErrorMessage: (req, _, err) => {
+      return `${req.method} ${req["originalUrl"]} ${err.message}`;
+    },
+    customReceivedMessage: (req, _) => {
+      return `${req.method} ${req["originalUrl"]}`;
+    },
+    customSuccessMessage: (req, _, responseTime) => {
+      return `${req.method} ${req["originalUrl"]} in ${responseTime}ms`;
+    },
+  })
+);
+
 //connecting APIs routes
 app.use("/apis/v1/auth", authApis);
 app.use("/apis/v1/admin/tenant", tenantApis);
@@ -109,15 +174,16 @@ app.use("/apis/v1/setting", settingApis);
 // 404 route
 app.use(function (req, res, next) {
   // if (req.url.startsWith("/socket.io")) return next();
-  console.warn("Trying to handle route, god help us all.");
+  if (res.headersSent) return;
+  req.log.warn("Trying to handle route, god help us all.");
   if (req.url.split("/").includes("raster")) {
     return res.sendStatus(404);
   }
   if (!req.url.startsWith("/apis/v1")) {
-    console.log("url does not starts with /apis/v1");
+    req.log.info("url does not starts with /apis/v1");
     res.sendFile(path.join(PUBLIC_DIR, "/index.html"), function (err) {
       if (err) {
-        console.error("error sending index.html", err);
+        req.log.error("error sending index.html", err);
         if (res.headersSent) return next();
         return next(err);
       }

@@ -29,8 +29,8 @@ import * as turf from "@turf/turf";
 import nearestPoint from "@turf/nearest-point";
 import { NearestPoint } from "@turf/nearest-point";
 import exifr from "exifr";
-import path, { resolve } from "path";
-import { subWeeks, subDays, subMonths, subYears, format } from "date-fns";
+import path from "path";
+import { subWeeks, subDays, subMonths, subYears } from "date-fns";
 import Flight from "../../models/flight";
 import archiver from "archiver";
 import { isSizeVector } from "../../utils/sizePermission";
@@ -39,9 +39,7 @@ import { IVector } from "../../schemas/vectorprops";
 import { IRaster } from "../../schemas/rasterprops";
 import { IPackage } from "../../schemas/package";
 import { ILayerGroup } from "../../schemas/layerGroup";
-import { removeExifData } from "../../utils/sharpUtils";
 import {
-  BASE_SERVER,
   Directory,
   DirPath,
   TITILER_SERVER,
@@ -184,13 +182,13 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
       //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      res.locals.logger.info("fetching metadata from titiler");
+      req.log.info("fetching metadata from titiler");
       let response = await fetch(metaDataURL, {
         method: "GET",
       });
-      res.locals.logger.info("getResponse data :  ", response);
+      req.log.info("getResponse data :  ", response);
       let metadata = await response.json();
-      res.locals.logger.info("get metadata data :  ", metadata);
+      req.log.info("get metadata data :  ", metadata);
       //-------handle for detail:not found----
       const minP = metadata["1"]["min"];
       const maxP = metadata["1"]["max"];
@@ -295,9 +293,9 @@ export const deleteLayer = async (req: Request, res: AuthResponse) => {
       } else {
         const conf = await deletePublicFileUsingPath(d.layerpath);
         if (conf) {
-          res.locals.logger.info("Files deleted");
+          req.log.info("Files deleted");
         } else {
-          res.locals.logger.warn("Files does not exist");
+          req.log.warn("Files does not exist");
         }
         const data = await d.delete();
         const tenant = await Tenant.findOne({
@@ -370,9 +368,9 @@ export const deleteMultipleLayers = async (req: Request, res: AuthResponse) => {
       if (d) {
         const conf = await deletePublicFileUsingPath(d.layerpath);
         if (conf) {
-          res.locals.logger.info("Files deleted");
+          req.log.info("Files deleted");
         } else {
-          res.locals.logger.warn("Files does not exist");
+          req.log.warn("Files does not exist");
         }
         const data = await d.delete();
         const tenant = await Tenant.findOne({
@@ -417,7 +415,7 @@ export const deleteMultipleLayers = async (req: Request, res: AuthResponse) => {
           );
         }
       } else {
-        res.locals.logger.warn("Layer id doesn't match");
+        req.log.warn("Layer id doesn't match");
       }
     }
 
@@ -1420,7 +1418,7 @@ export const getFeatureCsvByLayerIdx = async (
         });
       }
       const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, res.locals.logger);
+      await createDirIfNotExists(ws, req.log);
       const geoArray: any = [];
       const clone: any = [];
       if (req.body.featureIndex) {
@@ -1478,14 +1476,14 @@ export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
         .toFile(DirPath(Directory.LAYER_FILES, newFilename))
         .then((result) => {})
         .catch((err) => {
-          res.locals.logger.error(err);
+          req.log.error(err);
         });
       sharp(req.file?.path)
         .resize(1280, 720, { withoutEnlargement: true })
         .toFile(DirPath(Directory.LAYER_FILES, newFilename2))
         .then((result) => {})
         .catch((err) => {
-          res.locals.logger.error(err);
+          req.log.error(err);
         });
     }
     const size: number = Number(
@@ -1707,7 +1705,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           snapRadius = tmpRadius;
         }
       }
-      res.locals.logger.info("snapping radius", snapRadius);
+      req.log.info("snapping radius", snapRadius);
       const badImages = [];
       const dataa: Array<ILayerFile> = [];
       // Nearest point finder
@@ -1720,7 +1718,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         );
         const files = req.files as Express.Multer.File[];
         for (let j = 0; j < files.length; j++) {
-          res.locals.logger.info("file number", j);
+          req.log.info("file number", j);
           let closestPoint: NearestPoint;
           // catch bad image
           try {
@@ -1737,12 +1735,12 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
               throw new Error("image outside bounds!");
             }
           } catch (err) {
-            res.locals.logger.error(err);
+            req.log.error(err);
             badImages.push(files[j].originalname);
-            res.locals.logger.error("bad image", files[j].originalname);
+            req.log.error("bad image", files[j].originalname);
             continue;
           }
-          res.locals.logger.info("good image", files[j].originalname);
+          req.log.info("good image", files[j].originalname);
 
           // this is the original closest point
           const findex = geojson.features[closestPoint.properties.featureIndex];
@@ -1753,7 +1751,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
             lng: String(closestPoint.geometry.coordinates[0]),
           };
           const fpath = "/images/geojson/" + files[j].filename;
-          res.locals.logger.info("file path:", fpath);
+          req.log.info("file path:", fpath);
           const newFilename = `1x_${files[j].filename}`;
           if (
             files[j].mimetype == "image/jpeg" ||
@@ -1764,7 +1762,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
               .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
               .then((result) => {})
               .catch((err) => {
-                res.locals.logger.error("thumbnail creation failed");
+                req.log.error("thumbnail creation failed");
               });
             //? why not created both thumbnails at once
             if (
@@ -1794,7 +1792,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           const size: number = Number(
             (Number(files[j].size) / (1024 * 1024)).toFixed(5)
           );
-          res.locals.logger.info("file size", size);
+          req.log.info("file size", size);
           const featureFile = new layerFiles({
             name: files[j].originalname,
             layerId: layerId,
@@ -1827,7 +1825,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           missionSpecificSocket
             .to(missionId.toString())
             .emit("ASSIGNED SUCESSFULLY", message);
-          res.locals.logger.info("sent");
+          req.log.info("sent");
         } else {
           missionSpecificSocket.to(missionId.toString()).emit("ERR");
         }
@@ -1930,7 +1928,7 @@ export const imageReviewforLayerFileId = async (
             today.getMinutes() +
             ":" +
             today.getSeconds();
-          res.locals.logger.info("Match start time: " + time);
+          req.log.info("Match start time: " + time);
           if (geojson.features[j].properties.sys_id == sys_Id) {
             const centerPoints2 = {
               lat: String(geojson.features[j].geometry.coordinates[1]),
@@ -1958,9 +1956,9 @@ export const imageReviewforLayerFileId = async (
                   today.getMinutes() +
                   ":" +
                   today.getSeconds();
-                res.locals.logger.info("Match found time: " + time2);
+                req.log.info("Match found time: " + time2);
                 const elapsedT: any = time2 - time;
-                res.locals.logger.info("Elapsed time: " + elapsedT);
+                req.log.info("Elapsed time: " + elapsedT);
               }
             }
             break;
@@ -2015,7 +2013,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       });
       missionSpecificSocket.to(missionId).emit("LAYER_ZIP_START");
       const dir = DirPath(Directory.TEMP);
-      await createDirIfNotExists(dir, res.locals.logger);
+      await createDirIfNotExists(dir, req.log);
       const fname = `${req.query.missionId}_layers_${Date.now()}.zip`;
       const output = fs.createWriteStream(`${dir}${fname}`);
       const archive = archiver("zip", {
@@ -2032,8 +2030,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       }
 
       // output.on("close", function () {
-      //   res.locals.logger.info(archive.pointer() + " total bytes");
-      //   res.locals.logger.info(
+      //   req.log.info(archive.pointer() + " total bytes");
+      //   req.log.info(
       //     "archiver has been finalized and the output file descriptor has closed.",
       //   );
       // });
@@ -2043,7 +2041,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         const link = `temp/${fname}`;
         missionSpecificSocket.to(missionId).emit("LAYER_ZIP_COMPLETED", link);
       } catch (error) {
-        res.locals.logger.error(error);
+        req.log.error(error);
         missionSpecificSocket.to(missionId).emit("LAYER_ZIP_FAILED");
       }
     } else {
@@ -2120,7 +2118,7 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
           //   .toFile(DirPath(Directory.GEOJSON_IMAGES, newfileName))
           //   .then((result) => {
           //   }).catch((err) => {
-          //     res.locals.logger.error(err)
+          //     req.log.error(err)
           //   });
         }
       }
@@ -2404,7 +2402,7 @@ export const picktoMapUseForLayerCreate = async (
                   .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
                   .then((result) => {})
                   .catch((err) => {
-                    res.locals.logger.error(err);
+                    req.log.error(err);
                   });
                 await resizer(
                   DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename),
@@ -2425,7 +2423,7 @@ export const picktoMapUseForLayerCreate = async (
                 );
               }
             } catch (err) {
-              res.locals.logger.error(err);
+              req.log.error(err);
             }
             // }
             // }
@@ -2488,7 +2486,7 @@ export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
         if (geoJSON) {
           const modCheck = await modGeoJson(null, null, geoJSON, docpath);
         } else {
-          res.locals.logger.warn("Geojson Not found");
+          req.log.warn("Geojson Not found");
         }
       }
       res.send("Ok");
@@ -2533,10 +2531,6 @@ export const sys_id_Inject_to_layerfiles = async (
       }
     );
     if (docs) {
-      res.status(200).json({
-        status: true,
-        message: "Modifications started",
-      });
       if (docs.missionId) {
         const p = DirPath(Directory.DEFAULT, docs.layerpath);
         const gjson = await readGeoJson(p);
@@ -2563,15 +2557,22 @@ export const sys_id_Inject_to_layerfiles = async (
               },
               { sys_Id: gjson.features[j].properties.sys_id }
             );
-            res.locals.logger.info("Modified Doc");
+            req.log.info("Modified Doc");
           }
         }
         await Fs.writeFile(p, JSON.stringify(gjson));
-        res.locals.logger.info("modified geojson");
+        res.status(200).json({
+          status: true,
+          message: "Generated sysIds successfully",
+        });
+      } else {
+        res.status(404).json({
+          status: false,
+          message: "Layer not found",
+        });
       }
-      res.locals.logger.info("Operation done");
     } else {
-      res.status(200).json({
+      res.status(404).json({
         status: false,
         message: "No layer documents found",
       });

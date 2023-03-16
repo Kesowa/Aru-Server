@@ -18,6 +18,7 @@ import {
   MAP_KEY,
 } from "../../constants";
 import { getFileSize } from "../../utils/fileUtils";
+import { logger } from "../../app";
 const geoMapApi = "https://maps.googleapis.com/maps/api/geocode/json";
 
 /*
@@ -116,7 +117,8 @@ const alertSocketController = (alertSocket: Namespace) => {
                 if (ARU_INSTANCE == Instance.NKDA) {
                   await WiproInterface.SendAlert(
                     alert,
-                    socket.client.conn.remoteAddress
+                    socket.client.conn.remoteAddress,
+                    logger
                   );
                 }
                 // #endregion

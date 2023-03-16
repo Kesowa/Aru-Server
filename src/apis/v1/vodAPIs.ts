@@ -43,11 +43,7 @@ router.post(
   "/save-vod-manual",
   isAuthenticated,
   upload.single("video"),
-  body("locationID")
-    .optional({ nullable: true, checkFalsy: true })
-    .default("5f202f03b9225726102721b8")
-    .notEmpty()
-    .isMongoId(),
+  body("locationID").default("5f202f03b9225726102721b8").notEmpty().isMongoId(),
   body("missionID").notEmpty().isMongoId(),
   body("flightID").notEmpty().isMongoId(),
   validator,

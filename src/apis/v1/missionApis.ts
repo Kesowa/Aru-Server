@@ -32,9 +32,6 @@ import {
   onlySuperAdminAccess,
 } from "../../utils/authUtils";
 import { isMissionCount } from "../../utils/countPermission";
-import advancedResults from "../../utils/advanceResults";
-import Mission from "../../models/mission";
-import Flight from "../../models/flight";
 import { getMemoryUsage } from "../../controllers/v1/missionDataController";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 

@@ -23,7 +23,7 @@ export const isAlertCount = async (
         message: "Actual alertCount exceeded the Limit of Set alertCount!",
       });
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",
@@ -53,7 +53,7 @@ export const isUserCount = async (
         message: "Actual userCount exceeded the Limit of Set userCount!",
       });
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",
@@ -83,7 +83,7 @@ export const isClientCount = async (
         message: "Actual clientCount exceeded the Limit of Set clientCount!",
       });
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",
@@ -113,7 +113,7 @@ export const isMissionCount = async (
         message: "Actual missionCount exceeded the Limit of Set missionCount!",
       });
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",
@@ -138,7 +138,7 @@ export const isLayerCount = async (
         message: "Actual layerCount exceeded the Limit of Set layerCount!",
       });
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",
@@ -169,7 +169,7 @@ export const isLocationCount = async (
           "Actual locationCount exceeded the Limit of Set locationCount!",
       });
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",
@@ -198,7 +198,7 @@ export const isVodCount = async (
         message: "Actual vodCount exceeded the Limit of Set vodCount!",
       });
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",
@@ -229,7 +229,7 @@ export const isUserGroupCount = async (
           "Actual userGroupCount exceeded the Limit of Set userGroupCount!",
       });
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",

@@ -4,8 +4,10 @@ import {
   getActiveStreams,
   removeStreamKey,
   streamKeyGen,
+  channelCreationAWS,
   streamTokenValidator,
   getActiveStreamByFlightId,
+  removeChannelandInput,
 } from "../../controllers/v1/streamTokenController";
 import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
@@ -16,17 +18,16 @@ const router = express.Router();
 router.post(
   "/gen-stream-token",
   isAuthenticated,
-  body("missionID").isString().notEmpty().isMongoId(),
-  body("flightID").isString().notEmpty().isMongoId(),
-  body("assetID").isString().notEmpty().isMongoId(),
+  body("missionID").isString().notEmpty(),
+  body("flightID").isString().notEmpty(),
+  body("assetID").isString().notEmpty(),
   body("locationID")
     .default("5f202f03b9225726102721b8")
     .isString()
-    .notEmpty()
-    .isMongoId(),
+    .notEmpty(),
   validator,
   canFly,
-  RobustRunner(streamKeyGen)
+  RobustRunner(channelCreationAWS)
 );
 
 //+++++++++++++++++++++Stream Token Valiation ++++++++++++++++++++++++++++++
@@ -60,7 +61,7 @@ router.post(
   isAuthenticated,
   body("name").notEmpty().trim(),
   validator,
-  RobustRunner(removeStreamKey)
+  RobustRunner(removeChannelandInput)
 );
 
 export default router;

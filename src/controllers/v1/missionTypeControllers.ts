@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import MissionType from "../../models/missionType";
 import { AuthResponse } from "../../utils/interfaceUtils";
 

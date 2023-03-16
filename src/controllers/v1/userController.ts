@@ -1,8 +1,6 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import Tenant from "../../models/tenant";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import path from "path";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import ObjectsToCsv from "objects-to-csv";
@@ -13,7 +11,7 @@ import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
 import { BASE_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
-import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
+import { getFileSize } from "../../utils/fileUtils";
 // let saltRound = 10;
 //create user account
 export const createUser = async (req: Request, res: AuthResponse) => {
@@ -312,7 +310,7 @@ export const UserDelete = async (req: Request, res: AuthResponse) => {
         size = await getFileSize(docPath);
         await deletePublicFileUsingPath(doc.avatar);
       } catch (error) {
-        res.locals.logger.error("failed to delete user avatar");
+        req.log.error("failed to delete user avatar");
       }
       doc.userType = "standalone-user";
       doc.isActive = false;

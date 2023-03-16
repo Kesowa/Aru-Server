@@ -16,7 +16,7 @@ import {
   updateLocation,
 } from "../../controllers/v1/locationController";
 import { isLocationCount } from "../../utils/countPermission";
-import { body, oneOf, query } from "express-validator";
+import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();

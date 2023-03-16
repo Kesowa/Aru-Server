@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import Package from "../../models/package";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Tenant from "../../models/tenant";

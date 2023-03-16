@@ -1,12 +1,12 @@
 import { Request } from "express";
 import { Types } from "mongoose";
+import { Logger } from "pino";
 import { RAZORPAY_KEY_ID } from "../../constants";
 import Package from "../../models/package";
 import Payment from "../../models/payment";
 import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Log } from "../../utils/logUtils";
 import {
   RazorPayInstance,
   VerifyPaymentSignature,
@@ -75,7 +75,7 @@ export const generateOrder = async (
 const buyPackage = async (
   tenantID: Types.ObjectId,
   packageID: Types.ObjectId,
-  log: Log
+  log: Logger
 ) => {
   // const session = await mongoose.startSession();
   let success = false;
@@ -178,7 +178,7 @@ export const completeOrder = async (
     const success = await buyPackage(
       paymentObj.tenant,
       paymentObj.package,
-      res.locals.logger
+      req.log
     );
 
     if (!success) {
@@ -260,7 +260,7 @@ export const handleWebhook = async (
       const success = await buyPackage(
         paymentRecord.tenant,
         paymentRecord.package,
-        res.locals.logger
+        req.log
       );
       if (success) {
         res.status(200).json({

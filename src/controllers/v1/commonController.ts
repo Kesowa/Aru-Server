@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import path from "path";
@@ -122,7 +121,7 @@ export const uploadFileforUSer = async (req: Request, res: AuthResponse) => {
             .resize(250, 250, { withoutEnlargement: true })
             .toFile(DirPath(Directory.TEMP_IMAGES, newfileName));
         } catch (err) {
-          res.locals.logger.error(err);
+          req.log.error(err);
         }
       }
     }

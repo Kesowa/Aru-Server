@@ -1,10 +1,7 @@
 import { Request } from "express";
 import Flight from "../../models/flight";
-import Mission from "../../models/mission";
-import User from "../../models/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { Types } from "mongoose";
-import { logger } from "../../utils/logUtils";
 import { notificationSocket } from "../../socket";
 import { IUser } from "../../schemas/user";
 import { ILocation } from "../../schemas/location";
@@ -35,7 +32,7 @@ export const createFlight = async (req: Request, res: AuthResponse) => {
     const message = `A New flight[${data._id.toString()}] created by ${
       res.locals.user.name
     }[${res.locals.user._id.toString()}]`;
-    res.locals.log = logger(req, res, message, 200);
+    req.log.info(message);
     res.status(201).json({
       status: true,
       message: "New flight created",

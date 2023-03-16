@@ -11,7 +11,6 @@ import { uploadFileforUSer } from "../../controllers/v1/commonController";
 import { isAuthenticated, onlySuperAdminAccess } from "../../utils/authUtils";
 import multer from "multer";
 import { multerStorage } from "../../utils/fileUploadUtils";
-import mongoose from "mongoose";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 const upload = multer({ storage: multerStorage(Directory.TEMP_IMAGES) });

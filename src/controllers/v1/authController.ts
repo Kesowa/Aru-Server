@@ -65,6 +65,7 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
                 message: "Client has expired",
               });
             } else {
+              res.cookie("email", user.email);
               res.json({
                 status: true,
                 message: "login sucessfully",
@@ -73,6 +74,7 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
               });
             }
           } else {
+            res.cookie("email", user.email);
             res.json({
               status: true,
               message: "login sucessfully",
@@ -272,7 +274,7 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
 //         resetPassword(user, req)
 //           .then(info => {
 //             if (info) {
-//               res.locals.logger.info(info);
+//               req.log.info(info);
 //               return res.render("token", {
 //                 success: req.flash("success"),
 //                 error: req.flash("error"),
@@ -281,7 +283,7 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
 //             }
 //           })
 //           .catch(err => {
-//             res.locals.logger.error(err);
+//             req.log.error(err);
 //           });
 //       } else {
 //         req.flash("error", "User not found");
@@ -289,6 +291,6 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
 //       }
 //     })
 //     .catch(err => {
-//       res.locals.logger.error(err);
+//       req.log.error(err);
 //     });
 // })

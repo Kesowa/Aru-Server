@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import Tenant from "../../models/tenant";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { createTenantLevelrootUser } from "../../utils/tenantUtils";

@@ -8,7 +8,6 @@ import { sessionModel } from "../models/session";
 import { IPackage } from "../schemas/package";
 import PassReset from "../models/passwordReset";
 import { isObjectIdOrHexString } from "mongoose";
-import { Logger } from "./logUtils";
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,
@@ -77,7 +76,6 @@ export const isAuthenticated = (
         });
       } else {
         res.locals["user"] = data;
-        res.locals.logger = new Logger(req, res, data);
         next();
       }
     })
@@ -105,12 +103,12 @@ type permGuardType = {
 };
 
 function genPermissionGuard(perm: permGuardType) {
-  return (_: Request, res: AuthResponse, next: NextFunction) => {
+  return (req: Request, res: AuthResponse, next: NextFunction) => {
     let authorized = true;
     if (perm.userTypes.length > 0) {
       if (perm.userTypes.includes(res.locals.user.userType)) {
         authorized = true;
-        res.locals.logger.info("User type authorized!");
+        req.log.info("User type authorized!");
       } else {
         authorized = false;
       }
@@ -127,7 +125,7 @@ function genPermissionGuard(perm: permGuardType) {
           }
         );
         if (found !== -1) {
-          res.locals.logger.info("Permission found!", permission);
+          req.log.info("Permission found!", permission);
           authorized = true;
           break;
         }

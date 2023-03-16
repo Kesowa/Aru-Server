@@ -124,9 +124,9 @@ export const deleteLayerGroup = async (req: Request, res: AuthResponse) => {
         if (d) {
           const conf = await deletePublicFileUsingPath(d.layerpath);
           if (conf) {
-            res.locals.logger.info("Files deleted");
+            req.log.info("Files deleted");
           } else {
-            res.locals.logger.warn("Files does not exist");
+            req.log.warn("Files does not exist");
           }
           const data = await d.delete();
           const tenant = await Tenant.findOne({

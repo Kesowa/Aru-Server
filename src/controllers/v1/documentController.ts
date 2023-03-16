@@ -6,7 +6,7 @@ import Document from "../../models/document";
 import Mission from "../../models/mission";
 import fs from "fs";
 import archiver from "archiver";
-import path, { resolve } from "path";
+import path from "path";
 import sharp from "sharp";
 import rimraf from "rimraf";
 import { missionSpecificSocket } from "../../socket";
@@ -35,13 +35,11 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       const folderNamee = Date.now();
       const fileNamee = req.file?.originalname.split(/\.(?=[^\.]+$)/)[0];
       const doc_loc = DirPath(Directory.DOCUMENTS, req.file?.filename);
-      res.locals.logger.info("Prining point cloud file location" + doc_loc);
+      req.log.info("Prining point cloud file location" + doc_loc);
       const extract_loc = DirPath(Directory.DOCUMENTS, String(folderNamee));
-      await createDirIfNotExists(extract_loc, res.locals.logger);
-      res.locals.logger.info(
-        "Extract location ++++++++++++++++++" + extract_loc
-      );
-      res.locals.logger.info("Starting conversion");
+      await createDirIfNotExists(extract_loc, req.log);
+      req.log.info("Extract location ++++++++++++++++++" + extract_loc);
+      req.log.info("Starting conversion");
       //In the below line the first command is the path to the potree execuatble file after compiliation
       // For windows: `C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
       const ps = exec(
@@ -77,9 +75,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
             if (err) {
               throw err;
             } else {
-              res.locals.logger.info(
-                "Removed pointCloud data after extraction"
-              );
+              req.log.info("Removed pointCloud data after extraction");
             }
           });
           missionSpecificSocket
@@ -87,7 +83,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
             .emit("POINTCLOUD_EXTRACTION_FAILED");
         }
         await fs.promises.unlink(doc_loc);
-        res.locals.logger.info("Removed zip after extraction");
+        req.log.info("Removed zip after extraction");
       };
 
       ps.once("exit", onExit);
@@ -201,9 +197,9 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
 
       const conf = await deletePublicFileUsingPath(data.filePath);
       if (conf) {
-        res.locals.logger.info("Files deleted");
+        req.log.info("Files deleted");
       } else {
-        res.locals.logger.info("Files does not exist");
+        req.log.info("Files does not exist");
       }
       if (data) {
         res.status(200).json({
@@ -258,7 +254,7 @@ export const deletemultipleDocument = async (
 
       const conf = await deletePublicFileUsingPath(d.filePath);
       if (conf) {
-        res.locals.logger.info("Files Deleted");
+        req.log.info("Files Deleted");
       }
       const doc = await d.delete();
       if (doc) {
@@ -324,15 +320,15 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
         const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, res.locals.logger);
+        await createDirIfNotExists(dir, req.log);
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
         const output = fs.createWriteStream(`${dir}${fname}`);
         const archive = archiver("zip", {
           zlib: { level: 9 }, // Sets the compression level.
         });
         // output.on('close', function () {
-        //     res.locals.logger.info(archive.pointer() + ' total bytes');
-        //     res.locals.logger.info('archiver has been finalized and the output file descriptor has closed.');
+        //     req.log.info(archive.pointer() + ' total bytes');
+        //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
         // });
         archive.pipe(output);
         for (let i = 0; i < d.length; i++) {
@@ -347,7 +343,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
             .to(missionId)
             .emit("DOCUMENT_ZIP_COMPLETED", link);
         } catch (error) {
-          res.locals.logger.error(error);
+          req.log.error(error);
           missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_FAILED");
         }
       } else {
@@ -369,7 +365,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
         const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, res.locals.logger);
+        await createDirIfNotExists(dir, req.log);
 
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
         const output = fs.createWriteStream(`${dir}${fname}`);
@@ -377,8 +373,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           zlib: { level: 9 }, // Sets the compression level.
         });
         // output.on('close', function () {
-        //     res.locals.logger.info(archive.pointer() + ' total bytes');
-        //     res.locals.logger.info('archiver has been finalized and the output file descriptor has closed.');
+        //     req.log.info(archive.pointer() + ' total bytes');
+        //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
         // });
         archive.pipe(output);
         for (let i = 0; i < d.length; i++) {
@@ -393,7 +389,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
             .to(missionId)
             .emit("DOCUMENT_ZIP_COMPLETED", link);
         } catch (error) {
-          res.locals.logger.error(error);
+          req.log.error(error);
           missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_FAILED");
         }
       } else {

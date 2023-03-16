@@ -38,7 +38,7 @@ export const isSize = async (
       });
     }
   } catch (error) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: "Server Error!",
