@@ -90,6 +90,9 @@ export const MONGODB_CONNECTION_STRING = new EnvVar("MONGODB_CONNECTION_STRING")
   .isUrl()
   .toString();
 export const SMTP_PASSWORD = new EnvVar("SMTP_PASSWORD").toString();
+export const ACCESS_KEY = new EnvVar("ACCESS_KEY").toString();
+export const AWS_SECRET_KEY = new EnvVar("AWS_SECRET_KEY").toString();
+export const ENDPOINT = new EnvVar("ENDPOINT").toString();
 export const SMTP_USERNAME = new EnvVar("SMTP_USERNAME").toString();
 export const SMTP_SERVER = new EnvVar("SMTP_SERVER").isUrl().toString();
 export const SMTP_PORT = new EnvVar("SMTP_PORT").toNumeric();
@@ -164,4 +167,5 @@ export const DirPath = (dir: Directory, filename?: string | undefined) =>
 export const TITILER_PUBLIC = new EnvVar("TITILER_PUBLIC").isUrl().toString();
 export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();
 export const REDIS_URI = new EnvVar("REDIS_URI").isUrl().toString();
-export const LOG_DIR = "/var/log/aru";
+export const SEQ_SERVER_URL = new EnvVar("SEQ_URL").isUrl().toString();
+export const SEQ_API_KEY = new EnvVar("SEQ_KEY").isUrl().toString();

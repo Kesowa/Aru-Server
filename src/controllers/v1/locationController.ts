@@ -1,10 +1,7 @@
 import { Request } from "express";
 import { Types } from "mongoose";
 import Location from "../../models/location";
-import Flight from "../../models/flight";
-import Alert from "../../models/alert";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { logger } from "../../utils/logUtils";
 import { notificationSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import { GeometryObj } from "../../schemas/location";
@@ -32,7 +29,7 @@ export const createLocation = async (
     }
     if (newLocation) {
       const message = `New Location saved with ObjectId: ${newLocation._id}`;
-      res.locals.log = logger(req, res, message, 200);
+      req.log.info(message);
       notificationSocket
         .to(res.locals.user.tenantId._id.toString())
         .emit("CREATE_LOCATION", newLocation);
@@ -90,7 +87,7 @@ export const getLocation = async (req: Request, res: AuthResponse) => {
       data: locationInfo,
     });
   } catch (error: unknown) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     const message = "An error occured";
     res.status(500).json({
       status: false,
@@ -149,7 +146,7 @@ export const getwithinLocationByID = async (
         });
       } else {
         const message = `location with ObjectId : ${req.query.id} doesn't exist`;
-        res.locals.log = logger(req, res, message, 404);
+        req.log.warn(message);
         res.status(404).json({
           status: false,
           message: message,
@@ -157,7 +154,7 @@ export const getwithinLocationByID = async (
       }
     } else {
       const message = `location with ObjectId : ${req.query.id} doesn't exist`;
-      res.locals.log = logger(req, res, message, 404);
+      req.log.warn(message);
       res.status(404).json({
         status: false,
         message: message,
@@ -165,8 +162,7 @@ export const getwithinLocationByID = async (
     }
   } catch (error: any) {
     const message = "Internal Server error";
-    res.locals.logger.error(error);
-    res.locals.log = logger(req, res, message, 500, error);
+    req.log.error(error);
     res.status(500).json({
       status: false,
       message: message,
@@ -195,7 +191,7 @@ export const updateLocation = async (req: Request, res: AuthResponse) => {
     if (findDoc) {
       const message = `Location Id : ${findDoc._id} updated`;
 
-      res.locals.log = logger(req, res, message, 200);
+      req.log.info(message);
       notificationSocket
         .to(res.locals.user.tenantId._id.toString())
         .emit("UPDATE_LOCATION", findDoc);
@@ -206,7 +202,7 @@ export const updateLocation = async (req: Request, res: AuthResponse) => {
       });
     } else {
       const message = "Location not found";
-      res.locals.log = logger(req, res, message, 404);
+      req.log.info(message);
       res.status(404).json({
         status: true,
         message: message,
@@ -236,7 +232,7 @@ export const deleteLocation = async (req: Request, res: AuthResponse) => {
       notificationSocket
         .to(res.locals.user.tenantId._id.toString())
         .emit("DELETE_LOCATION", deletedDoc);
-      res.locals.log = logger(req, res, message, 200);
+      req.log.info(message);
       res.json({
         status: true,
         message: message,
@@ -244,14 +240,14 @@ export const deleteLocation = async (req: Request, res: AuthResponse) => {
       });
     } else {
       const message = `Location tenantId not match with user's tenantId`;
-      res.locals.log = logger(req, res, message, 404);
+      req.log.info(message);
       res.status(404).json({
         status: false,
         message: message,
       });
     }
   } catch (error: unknown) {
-    res.locals.logger.error(error);
+    req.log.error(error);
     const message = `Internal Server error`;
     res.status(500).json({
       status: false,

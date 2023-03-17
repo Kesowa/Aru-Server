@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import Mission from "../../models/mission";
 import Flight from "../../models/flight";
 import Layer from "../../models/layer";
@@ -1118,7 +1117,7 @@ export const getMissionCsvForTenantOrUser = async (
       .lean();
     if (result.length) {
       const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, res.locals.logger);
+      await createDirIfNotExists(ws, req.log);
       const csv = new ObjectsToCsv(result);
       const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
       await csv.toDisk(file);

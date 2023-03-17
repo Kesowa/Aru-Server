@@ -2031,7 +2031,7 @@ export const getallpublicbaselayer = async (
   res: AuthResponse
 ) => {
   {
-    res.locals.logger.info(req.query.mapRef);
+    req.log.info(req.query.mapRef);
     const tenant = await Tenant.findOne(
       {
         publicMapRef: req.query.mapRef,

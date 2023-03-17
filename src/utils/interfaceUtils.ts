@@ -2,7 +2,6 @@ import { Response } from "express";
 import { IUser } from "../schemas/user";
 import { LeanDocument } from "mongoose";
 import { IPermission } from "../schemas/permission";
-import { Log } from "./logUtils";
 
 export type AuthResponse = Response & {
   locals: {
@@ -11,7 +10,6 @@ export type AuthResponse = Response & {
     >;
     log: logFace;
     advancedResults: any;
-    logger: Log;
   };
 };
 

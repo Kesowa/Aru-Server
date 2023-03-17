@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import Tenant from "../../models/tenant";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { sendMail } from "../../utils/emailUtil";
@@ -119,7 +118,7 @@ export const updateOrganisationEmailGetOTP = async (
       });
     }
   } catch (err) {
-    res.locals.logger.error(err);
+    req.log.error(err);
     res.json({
       status: false,
       message: "server error.",

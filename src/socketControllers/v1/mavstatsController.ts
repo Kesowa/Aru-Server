@@ -414,7 +414,7 @@ export const consumerContoller = async (req: Request, res: AuthResponse) => {
 
     res.json(payload);
   } catch (err) {
-    res.locals.logger.error(err);
+    req.log.error(err);
     res.sendStatus(500);
   }
 };

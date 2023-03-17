@@ -516,7 +516,7 @@ const permissions = [
   ["6108f0d75b12f36fa9457bd2", "add_feature"],
   ["6108f0e75b12f36fa9457bd3", "upload_layer"],
   ["6108f11b5b12f36fa9457bd7", "download_layer"],
-  ["6108dfefe7147ec0fca69aed", "client_mission_list"],
+  ["6108dfefe7147ec0fca69aed", "client_mission_list", "Client Access", true],
   ["611691117df4e48a31c2adca", "edit_client"],
   ["611691677df4e48a31c2adcd", "client_data", "Client Data"],
   ["612a2d6bc7771209e4f0ea7c", "user_create", "Create User"],
@@ -563,25 +563,27 @@ const permissions = [
   ["620bbc67b65c7f3820f4e455", "flight_log_list"],
   ["620bbc67b65c7f3820f4e459", "webrtc_view"],
 ];
-db.permissions.insertMany(permissions.map(([id, perm, name]) => ({
-  _id: ObjectId(id),
-  isFrontendRoute: true,
-  isSideNavOption: true,
-  isVisibleToTenant: true,
-  isVisibleToSuperAdmin: false,
-  isActive: true,
-  name: perm,
-  createdBy: ObjectId("5f12572c3c19462d3673dbe9"),
-  updatedBy: ObjectId("5f12572c3c19462d3673dbe9"),
-  frontendRoute: "/dashboard/tenant/user/create",
-  sideNavOptionIcon: "PlusCircleOutlined",
-  sideNavOptionLabel: name,
-  createdAt: ISODate("2022-01-15T00:00:00Z"),
-  updatedAt: ISODate("2022-01-15T00:00:00Z"),
-  __v: 0,
-  isClient: false,
-  isPilot: false,
-})));
+db.permissions.insertMany(
+  permissions.map(([id, perm, name, isClient]) => ({
+    _id: ObjectId(id),
+    isFrontendRoute: true,
+    isSideNavOption: true,
+    isVisibleToTenant: true,
+    isVisibleToSuperAdmin: false,
+    isActive: true,
+    name: perm,
+    createdBy: ObjectId("5f12572c3c19462d3673dbe9"),
+    updatedBy: ObjectId("5f12572c3c19462d3673dbe9"),
+    frontendRoute: "/dashboard/tenant/user/create",
+    sideNavOptionIcon: "PlusCircleOutlined",
+    sideNavOptionLabel: name,
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0,
+    isClient: false || isClient,
+    isPilot: false,
+  }))
+);
 db.permissions.insertMany([
   {
     _id: ObjectId("6034c12d31621054e4c01de6"),

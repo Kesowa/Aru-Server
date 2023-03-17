@@ -1,6 +1,22 @@
 declare module "dji_srt_parser" {
   interface AllFunctions {
-    toGeoJSON(raw, waypoints, elevationOffset): string;
+    toGeoJSON(
+      raw: boolean,
+      waypoints: boolean,
+      elevationOffset: boolean
+    ): string;
+    metadata(): {
+      stats: {
+        GPS: {
+          LONGITUDE: {
+            avg: number;
+          };
+          LATITUDE: {
+            avg: number;
+          };
+        };
+      };
+    };
   }
   export default function (
     file: string | string[],

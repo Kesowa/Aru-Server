@@ -9,11 +9,10 @@ export const serverError = (res: Response) => {
 };
 
 export const validator: RequestHandler = (req, res, next) => {
-  console.debug({ path: req.url, query: req.query, body: req.body });
   const errs = validationResult(req);
   if (!errs.isEmpty()) {
     const errMap = errs.array();
-    console.error(errMap);
+    req.log.error(errMap);
     return res.status(400).json({
       status: false,
       message: "request validation failed",
@@ -35,11 +34,11 @@ export function sanitizeSort(query: string) {
 export const RobustRunner = <A, B, C, D, T extends Response>(
   handler: (req: Request<A, B, C, D>, res: T) => Promise<unknown>
 ) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response) => {
     handler(req as Request<A, B, C, D>, res as T)
-      .then(() => res.locals.logger.info("completed"))
+      .then()
       .catch((err) => {
-        res.locals.logger.error(err);
+        req.log.error(err);
         res.status(500).json({
           status: false,
           message: "Server error!",

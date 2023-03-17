@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import Permission from "../../models/permission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { IUser } from "../../schemas/user";

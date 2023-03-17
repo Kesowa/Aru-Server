@@ -1,12 +1,10 @@
 import { Request } from "express";
-import { formatRequestError } from "../../utils/errorFormaterUtils";
 import Permission from "../../models/permission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import User from "../../models/user";
 import UserGroup from "../../models/usergroup";
 import Tenant from "../../models/tenant";
 import { IPermission } from "../../schemas/permission";
-import { SortOrder } from "mongoose";
 import { sanitizeSort } from "../../utils/requestHelpers";
 import { IUserGroup } from "../../schemas/usergroup";
 
