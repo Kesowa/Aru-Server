@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 export interface IStreamKey {
   _id: mongoose.Types.ObjectId;
   isActive: boolean;
@@ -11,13 +10,9 @@ export interface IStreamKey {
   missionID: mongoose.Types.ObjectId;
   flightID: mongoose.Types.ObjectId; // index
   locationID?: mongoose.Types.ObjectId;
-  inputID?: String;
-  channelID?: String;
-  uuid?: String;
   createdAt: Date;
   updatedAt: Date;
 }
-
 const streamKeySchema = new mongoose.Schema<IStreamKey>(
   {
     isActive: {
@@ -61,20 +56,9 @@ const streamKeySchema = new mongoose.Schema<IStreamKey>(
       required: false,
       ref: "location",
     },
-    inputID: {
-      type: String,
-      required: false,
-    },
-    channelID: {
-      type: String,
-      required: false,
-    },
+
     updatedAt: {
       type: Date,
-    },
-    uuid: {
-      type: String,
-      required: false,
     },
   },
   {
@@ -88,5 +72,4 @@ streamKeySchema.index({
   flightID: 1,
   tenantID: 1,
 });
-
 export default streamKeySchema;
