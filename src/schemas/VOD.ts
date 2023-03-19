@@ -103,7 +103,7 @@ VODSchema.pre("save", async function () {
     { $inc: { actualSize: this.fileSize } }
   );
 });
-VODSchema.post("remove", async function (this: {missionID, fileSize, tenantId}) {
+VODSchema.post("remove", async function () {
   await Mission.updateOne(
     { _id: this.missionID },
     { $inc: { size: -this.fileSize } }

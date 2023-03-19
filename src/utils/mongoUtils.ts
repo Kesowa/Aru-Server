@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 export const findSize = async (
-  model: mongoose.Model<any & {
+  model: mongoose.Model<{
     fileSize: number;
     tenantId: mongoose.Types.ObjectId;
   }>,
@@ -27,7 +27,7 @@ export const findSize = async (
 };
 
 export const findCount = async (
-  model: mongoose.Model<any & { tenantId: mongoose.Types.ObjectId }>,
+  model: mongoose.Model<{ tenantId: mongoose.Types.ObjectId }>,
   tenantId: mongoose.Types.ObjectId,
   extra: Record<string, string> = {}
 ) => {
