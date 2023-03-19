@@ -84,7 +84,7 @@ documentSchema.pre("save", async function () {
     { $inc: { size: this.fileSize } }
   );
 });
-documentSchema.post("remove", async function (this: {tenantId, missionId, fileSize}) {
+documentSchema.post("remove", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
     { $inc: { actualSize: -this.fileSize } }

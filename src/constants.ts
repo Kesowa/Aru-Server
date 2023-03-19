@@ -90,9 +90,6 @@ export const MONGODB_CONNECTION_STRING = new EnvVar("MONGODB_CONNECTION_STRING")
   .isUrl()
   .toString();
 export const SMTP_PASSWORD = new EnvVar("SMTP_PASSWORD").toString();
-export const ACCESS_KEY = new EnvVar("ACCESS_KEY").toString();
-export const AWS_SECRET_KEY = new EnvVar("AWS_SECRET_KEY").toString();
-export const ENDPOINT = new EnvVar("ENDPOINT").toString();
 export const SMTP_USERNAME = new EnvVar("SMTP_USERNAME").toString();
 export const SMTP_SERVER = new EnvVar("SMTP_SERVER").isUrl().toString();
 export const SMTP_PORT = new EnvVar("SMTP_PORT").toNumeric();

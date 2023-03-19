@@ -8,7 +8,7 @@ import { Model } from "mongoose";
 
 // add models with missionId and fileSize here
 const ModelMap = new Array<
-  [string, Model<any & { fileSize: number; missionId: Types.ObjectId }>]
+  [string, Model<{ fileSize: number; missionId: Types.ObjectId }>]
 >();
 ModelMap.push(["document", Document]);
 ModelMap.push(["alert", Alert]);

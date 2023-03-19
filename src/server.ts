@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { createClient } from "redis";
 import { ioHandler } from "./socket";
+
 import { deletePublicFileUsingPath } from "./utils/fileDeleteUtils";
 import { promises as asyncFS } from "fs";
 import path from "path";
@@ -103,20 +104,12 @@ const worker = async () => {
     },
   });
 
-  const pubClient = createClient({
-    socket: {
-      host: REDIS_URI,
-      port: 6379,
-      tls: true,
-    },
-  });
-
+  const pubClient = createClient({ url: REDIS_URI });
   const subClient = pubClient.duplicate();
   await Promise.all([pubClient.connect(), subClient.connect()]);
   io.adapter(createAdapter(pubClient, subClient));
   //handle socket.io
   ioHandler(io);
-  console.log(pubClient, subClient);
 
   server.listen(PORT, () => logger.info(`server listening on port ${PORT}`));
 };
