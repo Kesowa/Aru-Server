@@ -28,6 +28,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 16
+          cache: 'npm'
 
       - name: Install Node.js dependencies
         run: npm ci

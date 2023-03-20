@@ -7,5 +7,5 @@ tmp/*
 public/*
 src/public/*
 .github/
-*.ts
-*.js
+/*.ts
+/*.js
