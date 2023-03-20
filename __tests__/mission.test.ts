@@ -1,4 +1,4 @@
-import { CurriedUrl, Login, LoginSuper } from "../config/utils";
+import { CurriedUrl, Login } from "../config/utils";
 import request from "supertest";
 import app from "../src/app";
 import { randomUUID } from "crypto";
