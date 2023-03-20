@@ -1,0 +1,8 @@
+{
+  "include": [
+    "jest.config.js",
+    "mongo-init.js",
+    "__tests__",
+    ".eslintrc.cjs"
+  ]
+}
