@@ -73,6 +73,7 @@
     "**/public"
   ],
   "include": [
-    "./src/**/*.ts"
+    "./src/**/*.ts",
+    "./__tests/**/*.ts"
   ]
 }
