@@ -1,0 +1,21 @@
+services:
+  server:
+    build: .
+    volumes:
+      - ./src:/app/src:rw
+      # - ./logs:/var/log/aru:rw
+      # - ./public:/app/src/public:rw
+    environment:
+      - TZ="Asia/Kolkata"
+      - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
+    env_file:
+      - ./server.env
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo@sha256:06cd2e814b2641d4c7ac6b093e870fe72c1ddbc7c6ddaaef16d4cb5a61c0ee6b
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=test

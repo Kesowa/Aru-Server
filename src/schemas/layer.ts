@@ -154,7 +154,7 @@ layerSchema.pre("save", async function () {
     { $inc: { size: this.fileSize } }
   );
 });
-layerSchema.post("remove", async function () {
+layerSchema.post("remove", async function (this: {tenantId: mongoose.Types.ObjectId, missionId: mongoose.Types.ObjectId, fileSize: number}) {
   await Tenant.updateOne(
     { _id: this.tenantId },
     { $inc: { actualSize: -this.fileSize } }
