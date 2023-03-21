@@ -1,6 +1,8 @@
 services:
   server:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile.dev
     volumes:
       - ./src:/app/src:rw
       # - ./logs:/var/log/aru:rw
