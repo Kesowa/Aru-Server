@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
 
 export const findSize = async (
-  model: mongoose.Model<any & {
-    fileSize: number;
-    tenantId: mongoose.Types.ObjectId;
-  }>,
+  model: mongoose.Model<
+    any & {
+      fileSize: number;
+      tenantId: mongoose.Types.ObjectId;
+    }
+  >,
   tenantId: mongoose.Types.ObjectId
 ) => {
   const data = await model.aggregate<{ totalSize: number }>([

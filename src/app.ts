@@ -54,9 +54,11 @@ import cookie from "cookie";
 const app: Application = express();
 
 app.use(compression());
-app.use(helmet({
-  frameguard: false,
-}));
+app.use(
+  helmet({
+    frameguard: false,
+  })
+);
 app.use(cors());
 
 //static files
