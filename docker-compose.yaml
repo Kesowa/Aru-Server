@@ -1,6 +1,6 @@
 services:
   server:
-    build: 
+    build:
       context: .
       dockerfile: dockerfile.dev
     volumes:
