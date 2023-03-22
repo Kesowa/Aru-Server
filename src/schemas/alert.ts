@@ -119,14 +119,21 @@ alertSchema.pre("save", async function () {
     { $inc: { size: this.fileSize } }
   );
 });
-alertSchema.post("remove", async function () {
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: -this.fileSize } }
-  );
-  await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: -this.fileSize } }
-  );
-});
+alertSchema.post(
+  "remove",
+  async function (this: {
+    tenantId: mongoose.Types.ObjectId;
+    fileSize: number;
+    missionId: mongoose.Types.ObjectId;
+  }) {
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: -this.fileSize } }
+    );
+    await Mission.updateOne(
+      { _id: this.missionId },
+      { $inc: { size: -this.fileSize } }
+    );
+  }
+);
 export default alertSchema;
