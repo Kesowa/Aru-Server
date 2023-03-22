@@ -1,12 +1,10 @@
 services:
   server:
-    build:
+    build: 
       context: .
       dockerfile: dockerfile.dev
     volumes:
       - ./src:/app/src:rw
-      # - ./logs:/var/log/aru:rw
-      # - ./public:/app/src/public:rw
     environment:
       - TZ="Asia/Kolkata"
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
@@ -21,3 +19,8 @@ services:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
       - MONGO_INITDB_DATABASE=test
+    ports:
+      - 27017:27017
+
+  redis:
+    image: redis@sha256:aeed51f49a6331df0cb2c1039ae3d1d70d882be3f48bde75cd240452a2348e88
