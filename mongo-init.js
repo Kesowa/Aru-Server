@@ -97,7 +97,7 @@ db.assets.insertOne({
   assetOwner: ObjectId("608e7b3ae11f711a34fb0476"),
   manufactureDate: ISODate("2022-01-15T00:00:00Z"),
   manufactureID: ObjectId("6091a0559c78264570101eb1"),
-  createdBy: ObjectId("608e7b3ae11f711a34fb0476")
+  createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
 });
 
 db.models.insertOne({
@@ -108,7 +108,7 @@ db.models.insertOne({
   dimensions: {
     length: 123,
     breadth: 23,
-    height: 34
+    height: 34,
   },
   manufacturerID: ObjectId("615acf24e5324204d8b97c84"),
   website: "https://www.dji.com/phantom-4-pro/info#specs",
@@ -116,10 +116,10 @@ db.models.insertOne({
   createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
   tenantID: ObjectId("5f204f03b9445726102781a8"),
   props: {
-    Payloads: "Megaphone, RGB sensor, Tharmal"
+    Payloads: "Megaphone, RGB sensor, Tharmal",
   },
   updatedAt: ISODate("2022-01-15T00:00:00Z"),
-  __v: 0
+  __v: 0,
 });
 
 db.assetclasses.insertOne({
@@ -127,7 +127,7 @@ db.assetclasses.insertOne({
   typeName: "drone",
   createdAt: ISODate("2022-01-15T00:00:00Z"),
   createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
-  __v: 0
+  __v: 0,
 });
 
 db.manufacturers.insertOne({
@@ -142,13 +142,13 @@ db.manufacturers.insertOne({
       name: "Shashi",
       designation: "Drone Engineer",
       Mobile: "9986342735",
-      email: "shashi@throttleaerospace.com"
-    }
+      email: "shashi@throttleaerospace.com",
+    },
   ],
   createdAt: ISODate("2022-01-15T00:00:00Z"),
   createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
   tenantID: ObjectId("5f204f03b9445726102781a8"),
-  __v: 0
+  __v: 0,
 });
 
 db.tenants.insertOne({
