@@ -9,21 +9,22 @@ export const GetThread = async (
   docId: mongoose.Types.ObjectId,
   tenantId: mongoose.Types.ObjectId
 ) => {
-  const thread = await Thread.findOneAndUpdate({
-    doc: docId,
-    tenant: tenantId,
-    docModel: docModel,
-  }, 
-  {
+  const thread = await Thread.findOneAndUpdate(
+    {
+      doc: docId,
+      tenant: tenantId,
+      docModel: docModel,
+    },
+    {
       $setOnInsert: {
         doc: docId,
         tenant: tenantId,
         docModel: docModel,
-      }
+      },
     },
     {
       returnOriginal: false,
-      upsert: true
+      upsert: true,
     }
   ).populate("doc");
   return thread;

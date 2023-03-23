@@ -1,6 +1,10 @@
 import express from "express";
 import expressValidator from "express-validator";
-import { AddAlertComment, GetAlertThread, RemoveAlertComment } from "../../controllers/v1/threadController";
+import {
+  AddAlertComment,
+  GetAlertThread,
+  RemoveAlertComment,
+} from "../../controllers/v1/threadController";
 import {
   isAuthenticated,
   canListAlert,
