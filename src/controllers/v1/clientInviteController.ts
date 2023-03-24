@@ -6,7 +6,7 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import { Request } from "express";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import mongoose from "mongoose";
-import { BASE_SERVER } from "../../constants";
+import { API_SERVER } from "../../constants";
 
 export const inviteClient = async (req: Request, res: AuthResponse) => {
   {
@@ -54,7 +54,7 @@ export const inviteClient = async (req: Request, res: AuthResponse) => {
         message: "failed to create invite",
       });
     }
-    const inviteLink = `${BASE_SERVER}/apis/v1/client/register/${invite._id}`;
+    const inviteLink = `${API_SERVER}/apis/v1/client/register/${invite._id}`;
 
     await sendMail(
       emailID,
@@ -124,7 +124,7 @@ export const registerClient = async (req: Request, res: AuthResponse) => {
     }
 
     const passwordResetToken = await generateResetPasswordToken(user.email);
-    const passwordRedirect = `${BASE_SERVER}/apis/v1/auth/reset-password/${passwordResetToken}`;
+    const passwordRedirect = `${API_SERVER}/apis/v1/auth/reset-password/${passwordResetToken}`;
     await sendMail(
       user.email,
       "Password Reset Request || Kesowa Infinite Ventures Pvt. Ltd",

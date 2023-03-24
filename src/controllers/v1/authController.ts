@@ -8,7 +8,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sessionModel } from "../../models/session";
 import { IPermission } from "../../schemas/permission";
-import { BASE_SERVER } from "../../constants";
+import { API_SERVER, PUBLIC_SERVER } from "../../constants";
 import PassReset from "../../models/passwordReset";
 
 //++++++++++++++++++++++++++ user login +++++++++++++++++++++++++++++++++++++++
@@ -176,7 +176,7 @@ export const sendForgotPasswordMail = async (
 
     const token = await generateResetPasswordToken(email);
 
-    const resetPasswordUrl = `${BASE_SERVER}/apis/v1/auth/reset-password/${token}`;
+    const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
 
     await sendMail(
       email,
@@ -251,7 +251,7 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
     );
     const deletedSession = await sessionModel.deleteMany({ owner: user._id });
     await pass.delete();
-    res.redirect(BASE_SERVER);
+    res.redirect(PUBLIC_SERVER);
   }
 };
 

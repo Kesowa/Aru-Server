@@ -5,7 +5,7 @@ import { IAlert } from "../schemas/alert";
 import { IStreamKey } from "../schemas/streamKey";
 import fetch from "node-fetch";
 import path from "path";
-import { BASE_SERVER, LIVE_URL, MODE, Mode } from "../constants";
+import { API_SERVER, LIVE_URL, MODE, Mode } from "../constants";
 import { Logger } from "pino";
 
 export class WiproInterface {
@@ -25,7 +25,7 @@ export class WiproInterface {
     "/newtown/insertcamerastatus",
     WiproInterface.ServerURL
   );
-  private static readonly BaseURL = new URL("/", BASE_SERVER);
+  private static readonly BaseURL = new URL("/", API_SERVER);
   private static readonly Headers = {
     Authorization:
       "Basic " +
