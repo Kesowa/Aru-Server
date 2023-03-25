@@ -40,7 +40,7 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
           });
           const createdSession = await sessionModel.create({ owner: user._id });
 
-          const token = tokenEncoder(createdSession._id.toJSON(), req.ip);
+          const token = tokenEncoder({session: createdSession._id.toJSON(), ip: req.ip, agent: req.headers["user-agent"]});
           const data = user.toObject();
 
           data.password = "secret";

@@ -15,19 +15,22 @@ enum InvalidAuth {
   PACKAGE_EXPIRED,
   INVALID_USER,
   INVALID_LOCATION,
+  INVALID_AGENT,
 }
 
 const hasher = crypto.createHash("MD5");
 hasher.update("somerandomkey", "utf8");
 const iv = hasher.digest();
 
-export const tokenEncoder = (session: string, ip: string) => {
-  const cipher = crypto.createCipheriv(
-    "aes192",
-    Buffer.from(SECRET_KEY, "base64"),
-    iv
-  );
-  let encrypted = cipher.update(`${session}@#$${ip}`, "utf8", "base64");
+type Payload = {
+  session: string,
+  ip: string,
+  agent: string,
+};
+
+export const tokenEncoder = (payload: Payload) => {
+  const cipher = crypto.createCipheriv("aes192", Buffer.from(SECRET_KEY, "base64"), iv);
+  let encrypted = cipher.update(JSON.stringify(payload), "utf8", "base64");
   encrypted += cipher.final("base64");
   return encrypted;
 };
@@ -41,16 +44,18 @@ const tokenDecoder = (token: string) => {
   try {
     let decrypted = decipher.update(token, "base64", "utf8");
     decrypted += decipher.final("utf8");
-    const [session, ip] = decrypted.split("@#$");
-    return { session, ip };
-  } catch {
-    return { session: null, ip: null };
+    const payload = JSON.parse(decrypted) as Payload;
+    return payload;
   }
-};
+  catch {
+    return { session: null, ip: null, agent: null };
+  }
+}
 
-const Authenticator = async (token: string, ip: string) => {
+const Authenticator = async (token: string, ip: string, agent: string) => {
   const payload = tokenDecoder(token);
   if (payload.ip != ip) return InvalidAuth.INVALID_LOCATION;
+  if (payload.agent != agent) return InvalidAuth.INVALID_AGENT;
   const session = await sessionModel.findById(new ObjectId(payload.session));
   const user = await User.findById(session?.owner)
     .populate("tenantId", "_id")
@@ -99,7 +104,7 @@ export const isAuthenticated = (
     });
     return;
   }
-  Authenticator(token, req.ip)
+  Authenticator(token, req.ip, req.headers["user-agent"])
     .then((data) => {
       if (data == InvalidAuth.PACKAGE_EXPIRED) {
         res.status(401).json({
@@ -115,7 +120,12 @@ export const isAuthenticated = (
         res.status(401).json({
           status: false,
           message: "Location not authorized",
-        });
+        })
+      } else if (data == InvalidAuth.INVALID_AGENT) {
+        res.status(401).json({
+          status: false,
+          message: "Agent not authorized",
+        })
       } else {
         res.locals["user"] = data;
         next();
@@ -134,13 +144,13 @@ type permGuardType = {
   userTypes: Array<string>;
   perm: Array<
     | {
-        permName: "name";
-        value: string;
-      }
+      permName: "name";
+      value: string;
+    }
     | {
-        permName: string;
-        value: boolean;
-      }
+      permName: string;
+      value: boolean;
+    }
   >;
 };
 
