@@ -103,7 +103,7 @@ if (MODE == Mode.Prod) {
         colorize: true,
       },
     },
-    // redact: ["res.headers", "req.headers"],
+    redact: ["res.headers", "req.headers"],
   });
 }
 
