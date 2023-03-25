@@ -60,6 +60,7 @@ app.use(
   })
 );
 app.use(cors());
+app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
 
 //static files
 if (MODE == Mode.Dev) {
