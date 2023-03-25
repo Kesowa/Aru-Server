@@ -23,13 +23,17 @@ hasher.update("somerandomkey", "utf8");
 const iv = hasher.digest();
 
 type Payload = {
-  session: string,
-  ip: string,
-  agent: string,
+  session: string;
+  ip: string;
+  agent: string;
 };
 
 export const tokenEncoder = (payload: Payload) => {
-  const cipher = crypto.createCipheriv("aes192", Buffer.from(SECRET_KEY, "base64"), iv);
+  const cipher = crypto.createCipheriv(
+    "aes192",
+    Buffer.from(SECRET_KEY, "base64"),
+    iv
+  );
   let encrypted = cipher.update(JSON.stringify(payload), "utf8", "base64");
   encrypted += cipher.final("base64");
   return encrypted;
@@ -46,11 +50,10 @@ const tokenDecoder = (token: string) => {
     decrypted += decipher.final("utf8");
     const payload = JSON.parse(decrypted) as Payload;
     return payload;
-  }
-  catch {
+  } catch {
     return { session: null, ip: null, agent: null };
   }
-}
+};
 
 const Authenticator = async (token: string, ip: string, agent: string) => {
   const payload = tokenDecoder(token);
@@ -120,12 +123,12 @@ export const isAuthenticated = (
         res.status(401).json({
           status: false,
           message: "Location not authorized",
-        })
+        });
       } else if (data == InvalidAuth.INVALID_AGENT) {
         res.status(401).json({
           status: false,
           message: "Agent not authorized",
-        })
+        });
       } else {
         res.locals["user"] = data;
         next();
@@ -144,13 +147,13 @@ type permGuardType = {
   userTypes: Array<string>;
   perm: Array<
     | {
-      permName: "name";
-      value: string;
-    }
+        permName: "name";
+        value: string;
+      }
     | {
-      permName: string;
-      value: boolean;
-    }
+        permName: string;
+        value: boolean;
+      }
   >;
 };
 
