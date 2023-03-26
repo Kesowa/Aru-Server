@@ -282,10 +282,30 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     }).select("name");
-    const doc = await Document.find({
+
+    const total = await Document.countDocuments({
       missionId: id,
       tenantId: res.locals.user.tenantId._id,
     });
+
+    let doc;
+    if(req.query.page && req.query.limit) {
+      const page = Number(req.query.page);
+      const limit = Number(req.query.limit);
+      const startIndex = (page - 1) * limit;
+      doc = await Document.find({
+        missionId: id,
+        tenantId: res.locals.user.tenantId._id,
+      })
+      .limit(limit)
+      .skip(startIndex);
+    }
+    else {
+      doc = await Document.find({
+        missionId: id,
+        tenantId: res.locals.user.tenantId._id,
+      });
+    }
     if (doc) {
       res.status(200).json({
         status: true,
@@ -294,11 +314,66 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
           mission: mission["name"],
           documents: doc,
         },
+        total: total
       });
     } else {
       res.status(200).json({
         status: false,
         message: `Document does not exist for ${id}`,
+      });
+    }
+  }
+};
+
+export const getImagesbymissionID = async (req: Request, res: AuthResponse) => {
+  {
+    const page = Number(req.query.page);
+    const limit = Number(req.query.limit);
+    const startIndex = (page - 1) * limit;
+
+    const sort: any = {};
+    if (req.query.sortBy) {
+      const parts = String(req.query.sortBy).split(":");
+      sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
+    }
+
+    const id = new Types.ObjectId(String(req.query.missionId));
+    const mission = await Mission.findOne({
+      _id: id,
+      tenantId: res.locals.user.tenantId._id,
+    }).select("name");
+
+    const query = {
+      missionId: id,
+      tenantId: res.locals.user.tenantId._id,
+      folderName: "photos"
+    };
+
+    if (req.query.isFlagged !== undefined) {
+      query["isFlagged"] = req.query.isFlagged;
+    }
+
+    const total = await Document.countDocuments(query);
+
+
+    const doc = await Document.find(query, null, { sort: sort })
+      .limit(limit)
+      .skip(startIndex);
+    
+    if (doc) {
+      res.status(200).json({
+        status: true,
+        message: "Images fetched successfully",
+        data: {
+          mission: mission["name"],
+          documents: doc,
+          total: total
+        },
+      });
+    } else {
+      res.status(200).json({
+        status: false,
+        message: `No images exist for ${id}`,
       });
     }
   }
