@@ -289,7 +289,7 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
     });
 
     let doc;
-    if(req.query.page && req.query.limit) {
+    if (req.query.page && req.query.limit) {
       const page = Number(req.query.page);
       const limit = Number(req.query.limit);
       const startIndex = (page - 1) * limit;
@@ -297,10 +297,9 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
         missionId: id,
         tenantId: res.locals.user.tenantId._id,
       })
-      .limit(limit)
-      .skip(startIndex);
-    }
-    else {
+        .limit(limit)
+        .skip(startIndex);
+    } else {
       doc = await Document.find({
         missionId: id,
         tenantId: res.locals.user.tenantId._id,
@@ -314,7 +313,7 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
           mission: mission["name"],
           documents: doc,
         },
-        total: total
+        total: total,
       });
     } else {
       res.status(200).json({
@@ -346,7 +345,7 @@ export const getImagesbymissionID = async (req: Request, res: AuthResponse) => {
     const query = {
       missionId: id,
       tenantId: res.locals.user.tenantId._id,
-      folderName: "photos"
+      folderName: "photos",
     };
 
     if (req.query.isFlagged !== undefined) {
@@ -355,11 +354,10 @@ export const getImagesbymissionID = async (req: Request, res: AuthResponse) => {
 
     const total = await Document.countDocuments(query);
 
-
     const doc = await Document.find(query, null, { sort: sort })
       .limit(limit)
       .skip(startIndex);
-    
+
     if (doc) {
       res.status(200).json({
         status: true,
@@ -367,7 +365,7 @@ export const getImagesbymissionID = async (req: Request, res: AuthResponse) => {
         data: {
           mission: mission["name"],
           documents: doc,
-          total: total
+          total: total,
         },
       });
     } else {
