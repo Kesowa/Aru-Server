@@ -236,7 +236,7 @@ const tenantschema = new mongoose.Schema<ITenant>(
     allLayerSize: {
       required: true,
       type: Number,
-      default: 0
+      default: 0,
     },
     allDocumentsSize: {
       type: Number,
@@ -247,7 +247,7 @@ const tenantschema = new mongoose.Schema<ITenant>(
       required: true,
       type: Number,
       default: 0,
-    }
+    },
   },
   {
     timestamps: true,
