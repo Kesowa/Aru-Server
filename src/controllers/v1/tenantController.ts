@@ -437,7 +437,7 @@ export const getTenantStats = async (req: Request, res: AuthResponse) => {
         message: "Tenant not found",
       });
       return;
-    };
+    }
     const actualSize = Number(data.actualSize.toString());
 
     res.json({
