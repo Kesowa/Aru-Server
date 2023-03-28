@@ -418,6 +418,11 @@ export const addActualSizeToTenant = async (
       { _id: res.locals.user.tenantId },
       {
         actualSize: ActualSize,
+        allVodSize: vodSum,
+        allAlertSize: alertSum,
+        allLayerSize: layerSum,
+        allDocumentsSize: documentSum,
+        allLayerFileSize: layerFileSum
       },
       { useFindAndModify: false }
     );
