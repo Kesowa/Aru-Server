@@ -45,6 +45,11 @@ export interface ITenant {
   isVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
+  allVodSize: number;
+  allAlertSize: number;
+  allLayerSize: number;
+  allDocumentsSize: number;
+  allLayerFileSize: number;
 }
 const tenantschema = new mongoose.Schema<ITenant>(
   {
@@ -218,6 +223,31 @@ const tenantschema = new mongoose.Schema<ITenant>(
     updatedAt: {
       type: Date,
     },
+    allVodSize: {
+      required: true,
+      type: Number,
+      default: 0,
+    },
+    allAlertSize: {
+      required: true,
+      type: Number,
+      default: 0,
+    },
+    allLayerSize: {
+      required: true,
+      type: Number,
+      default: 0
+    },
+    allDocumentsSize: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    allLayerFileSize: {
+      required: true,
+      type: Number,
+      default: 0,
+    }
   },
   {
     timestamps: true,
