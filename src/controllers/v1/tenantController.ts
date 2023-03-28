@@ -430,22 +430,15 @@ export const addActualSizeToTenant = async (
 
 export const getTenantStats = async (req: Request, res: AuthResponse) => {
   {
-    const data = await Tenant.findOne({ _id: res.locals.user.tenantId._id })
-      .select(
-        "actualSize actualAlertCount actualVodCount actualLayerCount actualClientCount actualLocationCount actualMissionCount actualUserCount actualUserGroupCount"
-      )
-      .populate<{ activePackage: IPackage }>("activePackage");
-    if (!data) throw Error("No data found");
+    const data = await Tenant.findOne({ _id: res.locals.user.tenantId._id });
+    if (!data) {
+      res.status(404).json({
+        status: false,
+        message: "Tenant not found",
+      });
+      return;
+    }
     const actualSize = Number(data.actualSize.toString());
-    const allVodSize = await findSize(VOD, res.locals.user.tenantId._id);
-    const allAlertSize = await findSize(Alert, res.locals.user.tenantId._id);
-    let allLayerSize = await findSize(Layer, res.locals.user.tenantId._id);
-    const allDocumentsSize = await findSize(
-      Document,
-      res.locals.user.tenantId._id
-    );
-
-    allLayerSize += await findSize(layerFiles, res.locals.user.tenantId._id);
 
     res.json({
       status: true,
@@ -459,10 +452,10 @@ export const getTenantStats = async (req: Request, res: AuthResponse) => {
         actualMissionCount: data.actualMissionCount,
         actualUserCount: data.actualUserCount,
         actualUserGroupCount: data.actualUserGroupCount,
-        allVodSize,
-        allAlertSize,
-        allLayerSize,
-        allDocumentsSize,
+        allVodSize: data.allVodSize,
+        allAlertSize: data.allAlertSize,
+        allLayerSize: data.allLayerSize + data.allLayerFileSize,
+        allDocumentsSize: data.allDocumentsSize,
       },
       packageData: data.activePackage,
     });

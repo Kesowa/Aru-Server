@@ -77,7 +77,7 @@ documentSchema.index({
 documentSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allDocumentsSize: this.fileSize } }
   );
   await Mission.updateOne(
     { _id: this.missionId },
@@ -93,7 +93,7 @@ documentSchema.post(
   }) {
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize } }
+      { $inc: { actualSize: -this.fileSize, allDocumentsSize: -this.fileSize } }
     );
     await Mission.updateOne(
       { _id: this.missionId },
