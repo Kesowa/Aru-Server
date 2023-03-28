@@ -422,7 +422,7 @@ export const addActualSizeToTenant = async (
         allAlertSize: alertSum,
         allLayerSize: layerSum,
         allDocumentsSize: documentSum,
-        allLayerFileSize: layerFileSum
+        allLayerFileSize: layerFileSum,
       },
       { useFindAndModify: false }
     );
