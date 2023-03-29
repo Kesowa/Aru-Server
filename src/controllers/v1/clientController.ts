@@ -17,7 +17,7 @@ import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
 import { IMission } from "../../schemas/mission";
 import { ILocation } from "../../schemas/location";
-import { BASE_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
+import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
 import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
 
@@ -107,7 +107,7 @@ export const createClientformissionGroup = async (
           // }
 
           const token = await generateResetPasswordToken(email);
-          const resetPasswordUrl = `${BASE_SERVER}/apis/v1/auth/reset-password/${token}`;
+          const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
 
           await sendMail(
             email,
@@ -188,7 +188,7 @@ export const createClientformissionGroup = async (
             // await tenant.save();
           }
           const token = await generateResetPasswordToken(email);
-          const resetPasswordUrl = `${BASE_SERVER}/apis/v1/auth/reset-password/${token}`;
+          const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
 
           await sendMail(
             email,

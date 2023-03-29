@@ -100,19 +100,23 @@ VODSchema.pre("save", async function () {
   );
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allVodSize: this.fileSize } }
   );
 });
 VODSchema.post(
   "remove",
-  async function (this: { missionID; fileSize; tenantId }) {
+  async function (this: {
+    missionID: mongoose.Types.ObjectId;
+    fileSize: number;
+    tenantId: mongoose.Types.ObjectId;
+  }) {
     await Mission.updateOne(
       { _id: this.missionID },
       { $inc: { size: -this.fileSize } }
     );
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize } }
+      { $inc: { actualSize: -this.fileSize, allVodSize: -this.fileSize } }
     );
   }
 );

@@ -77,7 +77,7 @@ documentSchema.index({
 documentSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allDocumentsSize: this.fileSize } }
   );
   await Mission.updateOne(
     { _id: this.missionId },
@@ -86,10 +86,14 @@ documentSchema.pre("save", async function () {
 });
 documentSchema.post(
   "remove",
-  async function (this: { tenantId; missionId; fileSize }) {
+  async function (this: {
+    tenantId: mongoose.Types.ObjectId;
+    fileSize: number;
+    missionId: mongoose.Types.ObjectId;
+  }) {
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize } }
+      { $inc: { actualSize: -this.fileSize, allDocumentsSize: -this.fileSize } }
     );
     await Mission.updateOne(
       { _id: this.missionId },

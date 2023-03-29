@@ -1,5 +1,5 @@
 import {
-  BASE_SERVER,
+  API_SERVER,
   LIVE_URL,
   RTMP_PUBLIC,
   TITILER_PUBLIC,
@@ -10,6 +10,6 @@ export const getSettings = () => {
     RTMP_URL: RTMP_PUBLIC,
     STREAM_URL: LIVE_URL,
     COG_URL: TITILER_PUBLIC,
-    SERVER_URL: BASE_SERVER,
+    SERVER_URL: API_SERVER,
   };
 };

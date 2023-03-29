@@ -97,6 +97,58 @@ db.assets.insertOne({
   assetOwner: ObjectId("608e7b3ae11f711a34fb0476"),
   manufactureDate: ISODate("2022-01-15T00:00:00Z"),
   manufactureID: ObjectId("6091a0559c78264570101eb1"),
+  createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+});
+
+db.models.insertOne({
+  _id: ObjectId("6091a6cb9c78264570101eb6"),
+  modelName: "MAVLINK Drone",
+  modelNumber: "ASASD112123123",
+  assetClassID: ObjectId("60ae07d5b4ed84014ad4ab28"),
+  dimensions: {
+    length: 123,
+    breadth: 23,
+    height: 34,
+  },
+  manufacturerID: ObjectId("615acf24e5324204d8b97c84"),
+  website: "https://www.dji.com/phantom-4-pro/info#specs",
+  createdAt: ISODate("2022-01-15T00:00:00Z"),
+  createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+  tenantID: ObjectId("5f204f03b9445726102781a8"),
+  props: {
+    Payloads: "Megaphone, RGB sensor, Tharmal",
+  },
+  updatedAt: ISODate("2022-01-15T00:00:00Z"),
+  __v: 0,
+});
+
+db.assetclasses.insertOne({
+  _id: ObjectId("60ae07d5b4ed84014ad4ab28"),
+  typeName: "drone",
+  createdAt: ISODate("2022-01-15T00:00:00Z"),
+  createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+  __v: 0,
+});
+
+db.manufacturers.insertOne({
+  _id: ObjectId("615acf24e5324204d8b97c84"),
+  name: "Throttle Aerospace Systems",
+  address: "bangalore, karnataka",
+  nationality: "India",
+  website: "https://www.throttleaerospace.com/",
+  contacts: [
+    {
+      _id: ObjectId("615acf24e5324204d8b97c85"),
+      name: "Shashi",
+      designation: "Drone Engineer",
+      Mobile: "9986342735",
+      email: "shashi@throttleaerospace.com",
+    },
+  ],
+  createdAt: ISODate("2022-01-15T00:00:00Z"),
+  createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+  tenantID: ObjectId("5f204f03b9445726102781a8"),
+  __v: 0,
 });
 
 db.tenants.insertOne({
