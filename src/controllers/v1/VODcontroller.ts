@@ -114,10 +114,11 @@ export const getVODByID = async (req: Request, res: AuthResponse) => {
 export const getByMissionID = async (req: Request, res: AuthResponse) => {
   {
     const missionID = new Types.ObjectId(String(req.query.missionID));
-    const page = Number(req.query.page) || 0;
+    const page = Number(req.query.page) || 1;
     const sortString = req.query.sort?.toString() || "createdAt:desc";
     const [sortBy, order] = sortString.split(":");
-    const limit = Number(req.query.limit) || 9;
+    const limit = Number(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
 
     const query = {
       missionID: missionID,
@@ -126,12 +127,12 @@ export const getByMissionID = async (req: Request, res: AuthResponse) => {
     if (req.query.isFlagged !== undefined) {
       query["isFlagged"] = req.query.isFlagged;
     }
-    const len = await VOD.countDocuments(query);
+    const total = await VOD.countDocuments(query);
     const doc = await VOD.find(query)
       .sort({ [sortBy]: order as SortOrder })
       .populate<{ flightId: IFlight }>("flightID")
       .populate<{ missionID: IMission }>("missionID")
-      .skip(page * 9)
+      .skip(startIndex)
       .limit(limit);
     if (doc.length) {
       missionSpecificSocket.to(String(missionID)).emit("VOD_FETCH", {
@@ -140,13 +141,14 @@ export const getByMissionID = async (req: Request, res: AuthResponse) => {
       res.json({
         status: true,
         message: "sucessfully fetched the VODs",
-        TotalPages: Math.ceil(len / 9),
+        TotalPages: Math.ceil(total / limit),
+        total: total,
         data: doc,
       });
     } else {
       res.status(404).json({
         status: false,
-        message: "No Document found",
+        message: "No Videos found",
       });
     }
   }
