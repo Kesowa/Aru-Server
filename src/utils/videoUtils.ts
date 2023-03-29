@@ -3,7 +3,6 @@ import { exec } from "child_process";
 import fs from "fs";
 export const VODEvents = new EventEmitter();
 import VOD from "../models/vod";
-import path from "path";
 import Tenant from "../models/tenant";
 import { missionSpecificSocket } from "../socket";
 import DJISRTParser from "dji_srt_parser";
@@ -146,15 +145,11 @@ const videoProcessHandler = (d: ProcessVideoData) => {
   const ps = exec(
     `/opt/ffmpeg/ffmpeg -i "${
       d.fullPath
-    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${path.join(
-      __dirname,
-      "../public/vod/",
+    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(Directory.VOD,
       d.filename + ".m3u8"
-    )}" -ss 00:00:05.000 -vframes 1 "${path.join(
-      __dirname,
-      "../public/vod/",
+    )}" -ss 00:00:05.000 -vframes 1 "${DirPath(Directory.VOD,
       d.filename + ".jpg"
-    )}" "${path.join(__dirname, "../public/vod/", d.filename + ".flv")}"`,
+    )}" "${DirPath(Directory.VOD, d.filename + ".flv")}"`,
     (error, stdout, stderr) => {
       if (error) console.error(error);
       if (stderr) console.error(stderr);
@@ -175,9 +170,7 @@ const videoProcessHandler = (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${path.join(
-            __dirname,
-            "../public/vod/",
+          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(Directory.VOD,
             d.filename + ".srt"
           )}"`,
           (error, stdout, stderr) => {
