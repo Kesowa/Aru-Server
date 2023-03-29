@@ -2,8 +2,6 @@ import express from "express";
 import { isAuthenticated, canFly } from "../../utils/authUtils";
 import {
   getActiveStreams,
-  removeStreamKey,
-  streamKeyGen,
   channelCreationAWS,
   streamTokenValidator,
   getActiveStreamByFlightId,

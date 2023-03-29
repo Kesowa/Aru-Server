@@ -1,7 +1,6 @@
 import { CurriedUrl, Login } from "../config/utils";
 import request from "supertest";
 import app from "../src/app";
-import { randomUUID } from "crypto";
 
 let token: string;
 beforeAll(async () => (token = await Login()));
