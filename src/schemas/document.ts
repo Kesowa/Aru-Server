@@ -84,14 +84,17 @@ documentSchema.pre("save", async function () {
     { $inc: { size: this.fileSize } }
   );
 });
-documentSchema.post("remove", async function (this: {tenantId, missionId, fileSize}) {
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: -this.fileSize } }
-  );
-  await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: -this.fileSize } }
-  );
-});
+documentSchema.post(
+  "remove",
+  async function (this: { tenantId; missionId; fileSize }) {
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: -this.fileSize } }
+    );
+    await Mission.updateOne(
+      { _id: this.missionId },
+      { $inc: { size: -this.fileSize } }
+    );
+  }
+);
 export default documentSchema;

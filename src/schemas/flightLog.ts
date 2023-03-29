@@ -56,14 +56,17 @@ flightLogSchema.pre("save", async function () {
     { $inc: { size: this.fileSize } }
   );
 });
-flightLogSchema.post("remove", async function (this: {tenantId, fileSize, missionID}) {
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: -this.fileSize } }
-  );
-  await Mission.updateOne(
-    { _id: this.missionID },
-    { $inc: { size: -this.fileSize } }
-  );
-});
+flightLogSchema.post(
+  "remove",
+  async function (this: { tenantId; fileSize; missionID }) {
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: -this.fileSize } }
+    );
+    await Mission.updateOne(
+      { _id: this.missionID },
+      { $inc: { size: -this.fileSize } }
+    );
+  }
+);
 export default flightLogSchema;

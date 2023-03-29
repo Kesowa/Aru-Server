@@ -19,10 +19,7 @@ router.post(
   body("missionID").isString().notEmpty(),
   body("flightID").isString().notEmpty(),
   body("assetID").isString().notEmpty(),
-  body("locationID")
-    .default("5f202f03b9225726102721b8")
-    .isString()
-    .notEmpty(),
+  body("locationID").default("5f202f03b9225726102721b8").isString().notEmpty(),
   validator,
   canFly,
   RobustRunner(channelCreationAWS)

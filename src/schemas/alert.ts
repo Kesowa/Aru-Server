@@ -119,14 +119,17 @@ alertSchema.pre("save", async function () {
     { $inc: { size: this.fileSize } }
   );
 });
-alertSchema.post("remove", async function (this: {tenantId, fileSize, missionId}) {
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: -this.fileSize } }
-  );
-  await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: -this.fileSize } }
-  );
-});
+alertSchema.post(
+  "remove",
+  async function (this: { tenantId; fileSize; missionId }) {
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: -this.fileSize } }
+    );
+    await Mission.updateOne(
+      { _id: this.missionId },
+      { $inc: { size: -this.fileSize } }
+    );
+  }
+);
 export default alertSchema;
