@@ -32,14 +32,8 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     console.log(
       "SRT Extraction successful, now Exiting!---------------------------------------------------------------------"
     );
-    const srtOutpath = DirPath(
-      Directory.VOD,
-      `${d.filename}/${d.filename}.srt`
-    );
-    const geoJSONoutPath = DirPath(
-      Directory.VOD,
-      `${d.filename}/${d.filename}.geojson`
-    );
+    const srtOutpath = DirPath(Directory.VOD, `${d.filename}/${d.filename}.srt`);
+    const geoJSONoutPath = DirPath(Directory.VOD, `${d.filename}/${d.filename}.geojson`);
     try {
       data = await fs.promises.readFile(srtOutpath, "utf8");
     } catch (err) {
@@ -148,23 +142,19 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
 };
 const videoProcessHandler = async (d: ProcessVideoData) => {
   console.log("Now Starting");
-  try {
-    await fs.promises.mkdir(DirPath(Directory.VOD, d.filename), {
-      recursive: true,
-    });
+  try{
+    await fs.promises.mkdir(DirPath(Directory.VOD, d.filename), { recursive: true });
   } catch (err) {
-    console.error("Failed to create directory for VOD:");
-    console.error(err);
+    console.error("Failed to create directory for VOD:")
+    console.error(err)
     return;
   }
   const ps = exec(
     `/opt/ffmpeg/ffmpeg -i "${
       d.fullPath
-    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(
-      Directory.VOD,
+    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(Directory.VOD,
       `${d.filename}/${d.filename}.m3u8`
-    )}" -ss 00:00:05.000 -vframes 1 "${DirPath(
-      Directory.VOD,
+    )}" -ss 00:00:05.000 -vframes 1 "${DirPath(Directory.VOD,
       `${d.filename}/${d.filename}.jpg`
     )}" "${DirPath(Directory.VOD, `${d.filename}/${d.filename}.flv`)}"`,
     (error, stdout, stderr) => {
@@ -187,8 +177,7 @@ const videoProcessHandler = async (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(
-            Directory.VOD,
+          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(Directory.VOD,
             `${d.filename}/${d.filename}.srt`
           )}"`,
           (error, stdout, stderr) => {

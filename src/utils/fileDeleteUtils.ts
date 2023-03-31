@@ -51,10 +51,7 @@ export const deleteDirFolderUsingName = async (
   }
 };
 
-export const deleteHlsVodUsingIndex = async (
-  vodDir: string,
-  indexFile: string
-) => {
+export const deleteHlsVodUsingIndex = async (vodDir: string, indexFile: string) => {
   const indexPath = DirPath(Directory.VOD, `${vodDir}/${indexFile}`);
   const index = await fs.promises.readFile(indexPath, "utf8");
   const vodFiles = index
@@ -62,9 +59,7 @@ export const deleteHlsVodUsingIndex = async (
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   vodFiles.push(indexFile);
   const result = await Promise.allSettled(
-    vodFiles.map((file) =>
-      deleteDirFileUsingName(Directory.VOD, `${vodDir}/${file}`)
-    )
+    vodFiles.map((file) => deleteDirFileUsingName(Directory.VOD, `${vodDir}/${file}`))
   );
   return result.every((res) => res);
 };
