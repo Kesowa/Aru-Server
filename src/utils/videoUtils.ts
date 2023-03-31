@@ -145,9 +145,11 @@ const videoProcessHandler = (d: ProcessVideoData) => {
   const ps = exec(
     `/opt/ffmpeg/ffmpeg -i "${
       d.fullPath
-    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(Directory.VOD,
+    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(
+      Directory.VOD,
       d.filename + ".m3u8"
-    )}" -ss 00:00:05.000 -vframes 1 "${DirPath(Directory.VOD,
+    )}" -ss 00:00:05.000 -vframes 1 "${DirPath(
+      Directory.VOD,
       d.filename + ".jpg"
     )}" "${DirPath(Directory.VOD, d.filename + ".flv")}"`,
     (error, stdout, stderr) => {
@@ -170,7 +172,8 @@ const videoProcessHandler = (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(Directory.VOD,
+          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(
+            Directory.VOD,
             d.filename + ".srt"
           )}"`,
           (error, stdout, stderr) => {
