@@ -32,15 +32,15 @@ export const checkFileExists = async (filepath: string) => {
   }
 };
 
-export const findHlsSize = async (vodDir: string, indexFile: string) => {
-  const indexPath = DirPath(Directory.VOD, `${vodDir}/${indexFile}`);
+export const findHlsSize = async (indexFile: string) => {
+  const indexPath = DirPath(Directory.VOD, indexFile);
   const index = await fs.promises.readFile(indexPath, "utf8");
   const vodFiles = index
     .split("\n")
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
     await fs.promises.stat(
-      DirPath(Directory.VOD, `${vodDir}/${vodFiles[Math.floor(vodFiles.length / 2)]}`)
+      DirPath(Directory.VOD, vodFiles[Math.floor(vodFiles.length / 2)])
     )
   ).size;
   const hlsSize = index.length + vodFiles.length * partSize;
