@@ -19,6 +19,7 @@ import layerFiles from "../../models/layerFiles";
 import layerGroupModel from "../../models/layerGroup";
 import {
   deleteDirFileUsingName,
+  deleteDirFolderUsingName,
   deleteHlsVodUsingIndex,
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
@@ -352,9 +353,14 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           const doc = deletedVodData[i];
           const docpath = doc.videoPath;
           const indexFile = path.parse(docpath).base;
-          await deleteHlsVodUsingIndex(indexFile);
+          const vodDir = path.parse(docpath).name;
+          await deleteHlsVodUsingIndex(vodDir, indexFile);
           await deletePublicFileUsingPath(doc.thumbnail);
-          await deletePublicFileUsingPath(path.parse(docpath).name + ".flv");
+          await deleteDirFileUsingName(
+            Directory.VOD,
+            `${vodDir}/${vodDir}.flv`
+          );
+          await deleteDirFolderUsingName(Directory.VOD, vodDir);
         }
       }
       if (deletedDocumetnsData.length) {

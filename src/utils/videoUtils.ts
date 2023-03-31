@@ -32,8 +32,8 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     console.log(
       "SRT Extraction successful, now Exiting!---------------------------------------------------------------------"
     );
-    const srtOutpath = DirPath(Directory.VOD, d.filename + ".srt");
-    const geoJSONoutPath = DirPath(Directory.VOD, d.filename + ".geojson");
+    const srtOutpath = DirPath(Directory.VOD, `${d.filename}/${d.filename}.srt`);
+    const geoJSONoutPath = DirPath(Directory.VOD, `${d.filename}/${d.filename}.geojson`);
     try {
       data = await fs.promises.readFile(srtOutpath, "utf8");
     } catch (err) {
@@ -71,14 +71,14 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     srtFlag = false;
   }
   if (srtFlag == true) {
-    const size1 = await findHlsSize(d.filename + ".m3u8");
+    const size1 = await findHlsSize(d.filename, d.filename + ".m3u8");
 
     const VODdoc = new VOD({
       flightID: d.flightID,
       missionID: d.missionID,
       locationID: d.locationID,
-      videoPath: `/vod/${d.filename}.m3u8`,
-      thumbnail: `/vod/${d.filename}.jpg`,
+      videoPath: `/vod/${d.filename}/${d.filename}.m3u8`,
+      thumbnail: `/vod/${d.filename}/${d.filename}.jpg`,
       fileSize: size1,
       tenantId: d.tenantID,
       videoName: d.originalName.slice(0, -4),
@@ -103,14 +103,14 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     };
     await saveToDb();
   } else {
-    const size1: number = await findHlsSize(d.filename + ".m3u8");
+    const size1: number = await findHlsSize(d.filename, d.filename + ".m3u8");
 
     const VODdoc = new VOD({
       flightID: d.flightID,
       missionID: d.missionID,
       locationID: d.locationID,
-      videoPath: `/vod/${d.filename}.m3u8`,
-      thumbnail: `/vod/${d.filename}.jpg`,
+      videoPath: `/vod/${d.filename}/${d.filename}.m3u8`,
+      thumbnail: `/vod/${d.filename}/${d.filename}.jpg`,
       fileSize: size1,
       tenantId: d.tenantID,
       videoName: d.originalName.slice(0, -4),
@@ -140,16 +140,23 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       );
   }
 };
-const videoProcessHandler = (d: ProcessVideoData) => {
+const videoProcessHandler = async (d: ProcessVideoData) => {
   console.log("Now Starting");
+  try{
+    await fs.promises.mkdir(DirPath(Directory.VOD, d.filename), { recursive: true });
+  } catch (err) {
+    console.error("Failed to create directory for VOD:")
+    console.error(err)
+    return;
+  }
   const ps = exec(
     `/opt/ffmpeg/ffmpeg -i "${
       d.fullPath
     }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(Directory.VOD,
-      d.filename + ".m3u8"
+      `${d.filename}/${d.filename}.m3u8`
     )}" -ss 00:00:05.000 -vframes 1 "${DirPath(Directory.VOD,
-      d.filename + ".jpg"
-    )}" "${DirPath(Directory.VOD, d.filename + ".flv")}"`,
+      `${d.filename}/${d.filename}.jpg`
+    )}" "${DirPath(Directory.VOD, `${d.filename}/${d.filename}.flv`)}"`,
     (error, stdout, stderr) => {
       if (error) console.error(error);
       if (stderr) console.error(stderr);
@@ -171,7 +178,7 @@ const videoProcessHandler = (d: ProcessVideoData) => {
         console.log("Now Starting SRT extraction");
         const pss = exec(
           `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(Directory.VOD,
-            d.filename + ".srt"
+            `${d.filename}/${d.filename}.srt`
           )}"`,
           (error, stdout, stderr) => {
             if (error) console.error(error);

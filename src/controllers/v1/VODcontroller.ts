@@ -15,6 +15,7 @@ import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
 import { WiproInterface } from "../../utils/wipro";
 import {
   deleteDirFileUsingName,
+  deleteDirFolderUsingName,
   deleteHlsVodUsingIndex,
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
@@ -353,12 +354,14 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       const docpath = doc.videoPath;
       // TODO: Put HLS chunks for a video in a single folder, then replace this
       const indexFile = path.parse(docpath).base;
-      const conf = await deleteHlsVodUsingIndex(indexFile);
+      const vodDir = path.parse(docpath).name;
+      const conf = await deleteHlsVodUsingIndex(vodDir, indexFile);
       await deletePublicFileUsingPath(doc.thumbnail);
       await deleteDirFileUsingName(
         Directory.VOD,
-        path.parse(docpath).name + ".flv"
+        `${vodDir}/${vodDir}.flv`
       );
+      await deleteDirFolderUsingName(Directory.VOD, vodDir);
       if (conf) {
         req.log.info("Files deleted");
       } else {
@@ -411,9 +414,14 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
         const doc = docs[index];
         const docpath = doc.videoPath;
         const indexFile = path.parse(docpath).base;
-        const conf = await deleteHlsVodUsingIndex(indexFile);
+        const vodDir = path.parse(docpath).name;
+        const conf = await deleteHlsVodUsingIndex(vodDir, indexFile);
         await deletePublicFileUsingPath(doc.thumbnail);
-        await deletePublicFileUsingPath(path.parse(docpath).name + ".flv");
+        await deleteDirFileUsingName(
+          Directory.VOD,
+          `${vodDir}/${vodDir}.flv`
+        );
+        await deleteDirFolderUsingName(Directory.VOD, vodDir);
         if (conf) {
           req.log.info("Files deleted");
         } else {
