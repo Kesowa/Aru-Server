@@ -357,10 +357,7 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       const vodDir = path.parse(docpath).name;
       const conf = await deleteHlsVodUsingIndex(vodDir, indexFile);
       await deletePublicFileUsingPath(doc.thumbnail);
-      await deleteDirFileUsingName(
-        Directory.VOD,
-        `${vodDir}/${vodDir}.flv`
-      );
+      await deleteDirFileUsingName(Directory.VOD, `${vodDir}/${vodDir}.flv`);
       await deleteDirFolderUsingName(Directory.VOD, vodDir);
       if (conf) {
         req.log.info("Files deleted");
@@ -417,10 +414,7 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
         const vodDir = path.parse(docpath).name;
         const conf = await deleteHlsVodUsingIndex(vodDir, indexFile);
         await deletePublicFileUsingPath(doc.thumbnail);
-        await deleteDirFileUsingName(
-          Directory.VOD,
-          `${vodDir}/${vodDir}.flv`
-        );
+        await deleteDirFileUsingName(Directory.VOD, `${vodDir}/${vodDir}.flv`);
         await deleteDirFolderUsingName(Directory.VOD, vodDir);
         if (conf) {
           req.log.info("Files deleted");
