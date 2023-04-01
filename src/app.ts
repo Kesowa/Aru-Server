@@ -38,6 +38,7 @@ import LayerGroupApis from "./apis/v1/layerGroupApis";
 import PaymentApis from "./apis/v1/paymentApis";
 import baseLayerApis from "./apis/v1/baseLayerApis";
 import settingApis from "./apis/v1/settingApis";
+import aimlApis from "./apis/v1/aimlApis";
 
 import {
   ARU_INSTANCE,
@@ -177,6 +178,7 @@ app.use("/apis/v1/layergroup", LayerGroupApis);
 app.use("/apis/v1/payment", PaymentApis);
 app.use("/apis/v1/baselayer", baseLayerApis);
 app.use("/apis/v1/setting", settingApis);
+app.use("/apis/v1/aiml", aimlApis);
 
 // 404 route
 app.use(function (req, res, next) {

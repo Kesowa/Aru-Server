@@ -152,6 +152,7 @@ export enum Directory {
   VOD = "vod",
   ICON = "icons",
   IMAGE = "images",
+  AI_ML = "aiml",
   DEFAULT = "",
 }
 
