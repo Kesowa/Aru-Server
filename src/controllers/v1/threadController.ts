@@ -3,6 +3,7 @@ import { docTypes, IComment } from "../../schemas/thread";
 import { Thread } from "../../models/thread";
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
+import User from "../../models/user";
 
 export const GetThread = async (
   docModel: docTypes,
@@ -51,10 +52,17 @@ export const CreateComment = async (
   userId: mongoose.Types.ObjectId,
   content: string
 ) => {
+  const user = await User.findOne({
+    _id: userId,
+    tenantId: tenantId,
+  });
   const comment = {
     author: userId,
+    authorName: user.name,
+    avatar: user.avatar,
     content: content,
   } as IComment;
+  console.log(comment);
   return await Thread.updateOne(
     {
       doc: docId,
@@ -93,56 +101,56 @@ export const DeleteComment = async (
   );
 };
 
-export const CreateAlertThread = async (
-  req: Request<{ docId: mongoose.Types.ObjectId }>,
+export const CreateDocThread = async (
+  req: Request<{  docType: docTypes, docId: mongoose.Types.ObjectId }>,
   res: AuthResponse
 ) => {
   const thread = await CreateThread(
-    "alert",
+    req.params.docType,
     req.params.docId,
     res.locals.user.tenantId._id
   );
   if (thread == null) {
     return res.status(400).json({
       status: false,
-      message: "unable to create alert thread",
+      message: "Unable to create thread",
     });
   }
   return res.status(201).json({
     status: true,
-    message: "alert thread created",
+    message: "Thread created",
     data: thread,
   });
 };
 
-export const GetAlertThread = async (
-  req: Request<{ docId: mongoose.Types.ObjectId }>,
+export const GetDocThread = async (
+  req: Request<{ docType: docTypes, docId: mongoose.Types.ObjectId }>,
   res: AuthResponse
 ) => {
   const thread = await GetThread(
-    "alert",
+    req.params.docType,
     req.params.docId,
     res.locals.user.tenantId._id
   );
   if (thread == null) {
     return res.status(404).json({
       status: false,
-      message: "unable to get alert thread",
+      message: "Unable to get thread",
     });
   }
   return res.json({
     status: true,
-    message: "alert thread retrieved",
+    message: "Thread retrieved",
     data: thread,
   });
 };
 
-export const AddAlertComment = async (
-  req: Request<{ docId: mongoose.Types.ObjectId }, never, { content: string }>,
+export const AddDocComment = async (
+  req: Request<{ docType: docTypes, docId: mongoose.Types.ObjectId }, never, { content: string }>,
   res: AuthResponse
 ) => {
   const comment = await CreateComment(
-    "alert",
+    req.params.docType,
     req.params.docId,
     res.locals.user.tenantId._id,
     res.locals.user._id,
@@ -151,24 +159,24 @@ export const AddAlertComment = async (
   if (comment == null) {
     return res.status(400).json({
       status: false,
-      message: "unable to create alert comment",
+      message: "Uunable to create comment",
     });
   }
   return res.status(201).json({
     status: true,
-    message: "alert comment created",
+    message: "Comment created",
   });
 };
 
-export const RemoveAlertComment = async (
+export const RemoveDocComment = async (
   req: Request<
-    { docId: mongoose.Types.ObjectId; commentId: mongoose.Types.ObjectId },
+    { docType: docTypes, docId: mongoose.Types.ObjectId; commentId: mongoose.Types.ObjectId },
     never
   >,
   res: AuthResponse
 ) => {
   const comment = await DeleteComment(
-    "alert",
+    req.params.docType,
     req.params.docId,
     res.locals.user.tenantId._id,
     res.locals.user._id,
@@ -177,11 +185,11 @@ export const RemoveAlertComment = async (
   if (comment == null) {
     return res.status(400).json({
       status: false,
-      message: "unable to remove alert comment",
+      message: "Unable to remove alert comment",
     });
   }
   return res.status(201).json({
     status: true,
-    message: "alert comment removed",
+    message: "Comment removed",
   });
 };
