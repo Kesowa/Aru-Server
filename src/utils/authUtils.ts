@@ -135,7 +135,7 @@ export const isAuthenticated = (
       }
     })
     .catch((err) => {
-      console.error(err);
+      req.log.error(err);
       res.status(500).json({
         status: false,
         message: "server error",
