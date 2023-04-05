@@ -29,7 +29,9 @@ import multer from "multer";
 import { isSize } from "../../utils/sizePermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
-const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES) });
+// const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES) });
+import { uploadMultiple } from "../../utils/s3multipleUpload";
+import { uploadSingle } from "../../utils/s3singleUpload";
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
@@ -37,9 +39,10 @@ router.post(
   "/upload-alert-image",
   isAuthenticated,
   canCreateAlert,
-  upload.single("image"),
-  isSize,
-  RobustRunner(uploadFile)
+  uploadMultiple
+  // upload.single("image"),
+  // isSize,
+  // RobustRunner(uploadFile)
 );
 
 //++++++++++++++++++++ create alert++++++++++++++++++++++++++++++++++
@@ -66,7 +69,8 @@ router.post(
 router.post(
   "/manual-upload-alert",
   isAuthenticated,
-  upload.single("image"),
+  uploadSingle,
+  // upload.single("image"),
   body("missionId").notEmpty().isMongoId(),
   body("flightId").notEmpty().isMongoId(),
   body("locationName").notEmpty().isString(),
