@@ -56,7 +56,7 @@ export const inferVodViolence = async (req: Request<{ vodId: string }>, res: Aut
       // return;
     }
   }
-  const mp4 = vod.videoName.replace(/m3u8$/, "mp4");
+  const mp4 = vod.videoPath.replace(/m3u8$/, "flv");
   const newTask = hadFailed ? oldTask : await aimlModel.create({
     doc: vod._id,
     docModel: "vod",
