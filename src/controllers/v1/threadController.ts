@@ -45,36 +45,46 @@ export const CreateThread = async (
   return thread;
 };
 
-export const CreateComment = async (
+export const CreateOrUpdateComment = async (
   docModel: docTypes,
   docId: mongoose.Types.ObjectId,
   tenantId: mongoose.Types.ObjectId,
   userId: mongoose.Types.ObjectId,
-  content: string
+  content: string,
+  commentId?: mongoose.Types.ObjectId | undefined
 ) => {
-  const user = await User.findOne({
-    _id: userId,
-    tenantId: tenantId,
-  });
-  const comment = {
-    author: userId,
-    authorName: user.name,
-    avatar: user.avatar,
-    content: content,
-  } as IComment;
-  console.log(comment);
-  return await Thread.updateOne(
-    {
+  if (commentId){
+    return await Thread.update({
       doc: docId,
       tenant: tenantId,
-      docModel: docModel,
-    },
-    {
-      $push: {
-        comments: comment,
+      docModel: docModel, 
+      'comments._id': commentId}, {'$set': {'comments.$.content': content}})
+  } else {
+    const user = await User.findOne({
+      _id: userId,
+      tenantId: tenantId,
+    });
+    const comment = {
+      author: userId,
+      authorName: user.name,
+      avatar: user.avatar,
+      content: content,
+    } as IComment;
+    
+    return await Thread.updateOne(
+      {
+        doc: docId,
+        tenant: tenantId,
+        docModel: docModel,
       },
-    }
-  );
+      {
+        $push: {
+          comments: comment,
+        },
+      }
+    );
+  }
+  
 };
 
 export const DeleteComment = async (
@@ -145,27 +155,48 @@ export const GetDocThread = async (
   });
 };
 
-export const AddDocComment = async (
-  req: Request<{ docType: docTypes, docId: mongoose.Types.ObjectId }, never, { content: string }>,
+export const AddorUpdateDocComment = async (
+  req: Request<{ docType: docTypes, docId: mongoose.Types.ObjectId }, never, { content: string, commentId: mongoose.Types.ObjectId | undefined }>,
   res: AuthResponse
 ) => {
-  const comment = await CreateComment(
-    req.params.docType,
-    req.params.docId,
-    res.locals.user.tenantId._id,
-    res.locals.user._id,
-    req.body.content
-  );
-  if (comment == null) {
-    return res.status(400).json({
-      status: false,
-      message: "Uunable to create comment",
+  if (!req.body.commentId){
+    const comment = await CreateOrUpdateComment(
+      req.params.docType,
+      req.params.docId,
+      res.locals.user.tenantId._id,
+      res.locals.user._id,
+      req.body.content
+    );
+    if (comment == null) {
+      return res.status(400).json({
+        status: false,
+        message: "Unable to create comment",
+      });
+    }
+    return res.status(201).json({
+      status: true,
+      message: `Comment created`,
+    });
+  } else {
+    const comment = await CreateOrUpdateComment(
+      req.params.docType,
+      req.params.docId,
+      res.locals.user.tenantId._id,
+      res.locals.user._id,
+      req.body.content,
+      req.body.commentId
+    );
+    if (comment == null) {
+      return res.status(400).json({
+        status: false,
+        message: "Unable to update comment",
+      });
+    }
+    return res.status(201).json({
+      status: true,
+      message: `Comment update`,
     });
   }
-  return res.status(201).json({
-    status: true,
-    message: "Comment created",
-  });
 };
 
 export const RemoveDocComment = async (

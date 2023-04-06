@@ -2,7 +2,7 @@ import express from "express";
 import { body, param, query } from "express-validator";
 import {
   CreateDocThread,
-  AddDocComment,
+  AddorUpdateDocComment,
   GetDocThread,
   RemoveDocComment,
 } from "../../controllers/v1/threadController";
@@ -39,11 +39,12 @@ router.patch(
   "/:docType/:docId",
   param("docType").isString(),
   param("docId").isMongoId(),
+  body("commentId").optional().isMongoId(),
   body("content").isString().isLength({ min: 10, max: 500 }),
   validator,
   isAuthenticated,
   canUpdateThread,
-  RobustRunner(AddDocComment)
+  RobustRunner(AddorUpdateDocComment)
 );
 router.delete(
   "/:docType/:docId/:commentId",
