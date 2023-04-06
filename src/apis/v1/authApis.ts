@@ -10,6 +10,14 @@ import { isAuthenticated, shouldLinkSend } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
 const router = express.Router();
 
+//++++++++++++++++++++Health check Api +++++++++++++++++++++++++++
+
+router.get(
+  "/health", (req, res) => {
+    res.status(200).send("Server is up and running")
+  }
+)
+
 //++++++++++++++++++++ user login Api +++++++++++++++++++++++++++++
 router.post(
   "/login",
