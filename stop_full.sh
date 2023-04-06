@@ -1,1 +1,1 @@
-docker compose -f docker-compose.yaml -f docker-compose.full.yaml down --remove-orphans && rm -rf ./src/public
+docker compose -p dev down --remove-orphans --volumes && rm -rf ./public
