@@ -122,7 +122,7 @@ const worker = async () => {
 };
 worker()
   .then(() => logger.info("Server started"))
-  .catch((err) => logger.error("Failed to start server", err));
+  .catch((err) => logger.error(err, "Failed to start server"));
 
 cron.schedule("00 00 * * *", () => {
   tempCleanup()
