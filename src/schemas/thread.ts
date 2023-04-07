@@ -20,11 +20,11 @@ export const CommentSchema = new mongoose.Schema(
       ref: "user",
       required: true,
     },
-    authorName:{
+    authorName: {
       type: String,
       required: true,
     },
-    avatar:{
+    avatar: {
       type: String,
     },
     content: {

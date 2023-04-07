@@ -53,12 +53,16 @@ export const CreateOrUpdateComment = async (
   content: string,
   commentId?: mongoose.Types.ObjectId | undefined
 ) => {
-  if (commentId){
-    return await Thread.update({
-      doc: docId,
-      tenant: tenantId,
-      docModel: docModel, 
-      'comments._id': commentId}, {'$set': {'comments.$.content': content}})
+  if (commentId) {
+    return await Thread.update(
+      {
+        doc: docId,
+        tenant: tenantId,
+        docModel: docModel,
+        "comments._id": commentId,
+      },
+      { $set: { "comments.$.content": content } }
+    );
   } else {
     const user = await User.findOne({
       _id: userId,
@@ -70,7 +74,7 @@ export const CreateOrUpdateComment = async (
       avatar: user.avatar,
       content: content,
     } as IComment;
-    
+
     return await Thread.updateOne(
       {
         doc: docId,
@@ -84,7 +88,6 @@ export const CreateOrUpdateComment = async (
       }
     );
   }
-  
 };
 
 export const DeleteComment = async (
@@ -112,7 +115,7 @@ export const DeleteComment = async (
 };
 
 export const CreateDocThread = async (
-  req: Request<{  docType: docTypes, docId: mongoose.Types.ObjectId }>,
+  req: Request<{ docType: docTypes; docId: mongoose.Types.ObjectId }>,
   res: AuthResponse
 ) => {
   const thread = await CreateThread(
@@ -134,7 +137,7 @@ export const CreateDocThread = async (
 };
 
 export const GetDocThread = async (
-  req: Request<{ docType: docTypes, docId: mongoose.Types.ObjectId }>,
+  req: Request<{ docType: docTypes; docId: mongoose.Types.ObjectId }>,
   res: AuthResponse
 ) => {
   const thread = await GetThread(
@@ -156,10 +159,14 @@ export const GetDocThread = async (
 };
 
 export const AddorUpdateDocComment = async (
-  req: Request<{ docType: docTypes, docId: mongoose.Types.ObjectId }, never, { content: string, commentId: mongoose.Types.ObjectId | undefined }>,
+  req: Request<
+    { docType: docTypes; docId: mongoose.Types.ObjectId },
+    never,
+    { content: string; commentId: mongoose.Types.ObjectId | undefined }
+  >,
   res: AuthResponse
 ) => {
-  if (!req.body.commentId){
+  if (!req.body.commentId) {
     const comment = await CreateOrUpdateComment(
       req.params.docType,
       req.params.docId,
@@ -201,7 +208,11 @@ export const AddorUpdateDocComment = async (
 
 export const RemoveDocComment = async (
   req: Request<
-    { docType: docTypes, docId: mongoose.Types.ObjectId; commentId: mongoose.Types.ObjectId },
+    {
+      docType: docTypes;
+      docId: mongoose.Types.ObjectId;
+      commentId: mongoose.Types.ObjectId;
+    },
     never
   >,
   res: AuthResponse

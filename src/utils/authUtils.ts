@@ -406,7 +406,6 @@ export const canListModel = genPermissionGuard({
   ],
 });
 
-
 //Thread Management Permissions :
 export const canCreateThread = genPermissionGuard({
   userTypes: ["tenant-root"],
@@ -422,11 +421,8 @@ export const canDeleteComment = genPermissionGuard({
 });
 export const canListThread = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "thread_list" },
-  ],
+  perm: [{ permName: "name", value: "thread_list" }],
 });
-
 
 //VOD Management Permissions :
 export const canCreateVOD = genPermissionGuard({

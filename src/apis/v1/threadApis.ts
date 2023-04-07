@@ -11,7 +11,7 @@ import {
   canCreateThread,
   canUpdateThread,
   canDeleteComment,
-  canListThread
+  canListThread,
 } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 
