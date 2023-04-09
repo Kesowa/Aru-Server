@@ -76,7 +76,7 @@ jobs:
         docker build -t kesowa-server .
         docker tag kesowa-server:latest public.ecr.aws/b6o0p8u8/kesowa-server:latest
         docker push public.ecr.aws/b6o0p8u8/kesowa-server:latest
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "imaged pushed to repo" >> $GITHUB_OUTPUT
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
