@@ -58,8 +58,9 @@ const expiredSubs = async () => {
           "Kesowa Infinite Ventures Pvt. Ltd",
           "",
           `               
-                        <p>Your subscription is expiring in ${30 - diffInDays
-          } days.</b>
+                        <p>Your subscription is expiring in ${
+                          30 - diffInDays
+                        } days.</b>
                         <p>Best regards,</p>
                         <p><b>Team Kesowa</b></p>
                         `,
