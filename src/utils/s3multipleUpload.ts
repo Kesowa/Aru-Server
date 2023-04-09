@@ -1,7 +1,6 @@
 import busboy from 'busboy';
 import AWS from 'aws-sdk';
 import sharp from 'sharp';
-import { IncomingMessage } from 'http';
 import { Directory } from "../constants";
 import { randomUUID } from "crypto";
 
@@ -65,7 +64,7 @@ export function uploadMultiple(req: any, res: any) {
 
             const { filename, encoding, mimeType } = info
 
-            let uuid = randomUUID();
+            const uuid = randomUUID();
 
             originalImageKey = `${Directory.ALERT_IMAGES}/${uuid}`;
             originalImageStream = file;
@@ -87,8 +86,8 @@ export function uploadMultiple(req: any, res: any) {
                 uploadToS3(resizedImageKey, resizedImageStream, mimeType),
             ]);
 
-            let [originalImageUrl] = await Promise.all([originalImagePromise, resizedImagePromise]);
-            let [, resizedImageUrl] = await resizedImagePromise;
+            const [originalImageUrl] = await Promise.all([originalImagePromise, resizedImagePromise]);
+            const [, resizedImageUrl] = await resizedImagePromise;
 
             console.log(originalImageUrl, resizedImageUrl)
 
