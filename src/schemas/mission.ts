@@ -15,6 +15,7 @@ export interface IMission {
   createdAt: Date;
   updatedAt: Date;
   size: number;
+  isPublic: boolean;
   _previousSize: number;
 }
 const missionSchema = new mongoose.Schema<IMission>(
@@ -68,6 +69,10 @@ const missionSchema = new mongoose.Schema<IMission>(
       },
     ],
     size: { type: Number, default: 0 },
+    isPublic: {
+      type: Boolean,
+      default: false,
+    }
   },
   {
     timestamps: true,

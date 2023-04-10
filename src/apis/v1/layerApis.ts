@@ -52,6 +52,7 @@ import {
   sys_id_Inject_to_layerfiles,
   flagFeature,
   flagLayer,
+  publicLayerByMissionId,
 } from "../../controllers/v1/layerController";
 import { isLayerCount } from "../../utils/countPermission";
 import { isSize } from "../../utils/sizePermission";
@@ -479,4 +480,5 @@ router.patch(
   validator,
   RobustRunner(flagLayer)
 );
+router.get("/layers-by-missionId/:missionId", param("missionId"), validator, RobustRunner(publicLayerByMissionId));
 export default router;

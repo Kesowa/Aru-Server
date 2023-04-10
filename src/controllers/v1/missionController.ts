@@ -200,7 +200,7 @@ export const createMission = async (
 //edit deliverable type
 export const editMission = async (req: Request, res: AuthResponse) => {
   {
-    const { name, description, deliverables, type } = req.body;
+    const { name, description, deliverables, type, isPublic } = req.body;
     const missionType = await MissionType.findOne({ name: type });
     const updatedMission = await Mission.findByIdAndUpdate(
       req.body.id,
@@ -209,6 +209,7 @@ export const editMission = async (req: Request, res: AuthResponse) => {
         description,
         deliverables,
         missionType: missionType?._id,
+        isPublic,
       },
       { new: true }
     )

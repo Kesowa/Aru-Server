@@ -16,8 +16,6 @@ import {
 } from "../../utils/fileDeleteUtils";
 const tj = require("@mapbox/togeojson"),
   DOMParser = require("xmldom").DOMParser;
-import tokml from "tokml";
-import resizer from "node-image-resizer";
 import {
   modGeoJson,
   readGeoJson,
@@ -2679,3 +2677,22 @@ export const flagLayer = async (
     });
   }
 };
+
+export const publicLayerByMissionId = async (req: Request, res: AuthResponse) => {
+  const publicMission = await Mission.findOne({_id: req.params.missionId, isPublic: true});
+  if (!publicMission) {
+    res.status(404).json({
+      status: false,
+      message: "public mission does not exist"
+    })
+    return;
+  }
+  const layers = await Layer.find({missionId: publicMission._id});
+  res.json({
+    status: true,
+    message: "found mission and layers",
+    mission: publicMission,
+    layers,
+  })
+  return;
+}
