@@ -103,13 +103,7 @@ const worker = async () => {
     },
   });
 
-  const pubClient = createClient({
-    socket: {
-      host: REDIS_URI,
-      port: 6379,
-      // tls: true,
-    },
-  });
+  const pubClient = createClient({ url: REDIS_URI });
 
   const subClient = pubClient.duplicate();
   await Promise.all([pubClient.connect(), subClient.connect()]);
