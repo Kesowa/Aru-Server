@@ -36,6 +36,18 @@ router.get(
   RobustRunner(renderResetPasswordPage)
 );
 
+// test route to test mailing templates, will remove later
+router.get(
+  "/mailing-template/resetPassword",
+  (req, res) => {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html");
+    res.render("mails/resetPassword", {
+      resetPasswordUrl: "https://youtube.com"
+    });
+  }
+)
+
 router.post(
   "/reset-password/:token",
   body("password").isString().isLength({ min: 5 }),

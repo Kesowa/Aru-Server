@@ -11,6 +11,8 @@ import { IPermission } from "../../schemas/permission";
 import { API_SERVER, PUBLIC_SERVER } from "../../constants";
 import PassReset from "../../models/passwordReset";
 import { tokenEncoder } from "../../utils/authUtils";
+import ejs from "ejs";
+import path from "path";
 
 //++++++++++++++++++++++++++ user login +++++++++++++++++++++++++++++++++++++++
 
@@ -183,20 +185,15 @@ export const sendForgotPasswordMail = async (
 
     const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
 
+    const html = await ejs.renderFile(path.join(__dirname, "..", "..", "views", "mails", "resetPassword.ejs"), {
+      resetPasswordUrl: resetPasswordUrl
+    }, { async: true });
+    
     await sendMail(
       email,
       "Password Reset Request || Kesowa Infinite Ventures Pvt. Ltd",
       "",
-      `<p><b>Hi user!</b></p>
-    <p>We have recieved a request to change password for your account here at ARU.</p>
-    <p>In order to reset your password, please <a href=${resetPasswordUrl}>click here!</a>
-    <p><b>If this wasn't you, please report at admin@kesowa.com</b></p>
-    <br/>
-    <p><b>Please do not share this email or the password reset link, as it can compromise your account access and organization data!</b></p>
-    <br/>
-    <p>Best regards,</p>
-    <p><b>Team Kesowa</b></p>
-    `,
+      html,
       ""
     );
 
