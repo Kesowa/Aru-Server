@@ -16,6 +16,8 @@ import {
 } from "../../utils/fileDeleteUtils";
 const tj = require("@mapbox/togeojson"),
   DOMParser = require("xmldom").DOMParser;
+import tokml from "tokml";
+import resizer from "node-image-resizer";
 import {
   modGeoJson,
   readGeoJson,
@@ -50,6 +52,7 @@ import {
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
+import { ITenant } from "../../schemas/tenant";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
@@ -2685,12 +2688,13 @@ export const publicLayerByMissionId = async (req: Request, res: AuthResponse) =>
     })
     return;
   }
-  const layers = await Layer.find({ missionId: publicMission._id });
+  const layers = await Layer.find({ missionId: publicMission._id })
+  .populate<{ tenantId: ITenant }>("tenantId", "name");
   res.json({
     status: true,
     message: "found mission and layers",
     mission: publicMission,
-    layers,
+    data: layers,
   })
   return;
 }
