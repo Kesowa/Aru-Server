@@ -401,7 +401,7 @@ export const deleteTenantForId = async (req: Request, res: AuthResponse) => {
 };
 
 export const addActualSizeToTenant = async (
-  req: Request<{}, {}, {tenantId: string}>,
+  req: Request<{}, {}, { tenantId: string }>,
   res: AuthResponse
 ) => {
   {
@@ -410,14 +410,11 @@ export const addActualSizeToTenant = async (
     const alertSum = await findSize(Alert, tenantId);
     const vodSum = await findSize(VOD, tenantId);
     const layerSum = await findSize(Layer, tenantId);
-    const layerFileSum = await findSize(
-      layerFiles,
-      tenantId
-    );
+    const layerFileSum = await findSize(layerFiles, tenantId);
     const ActualSize =
       documentSum + alertSum + vodSum + layerSum + layerFileSum;
     await Tenant.findOneAndUpdate(
-      { _id: tenantId},
+      { _id: tenantId },
       {
         actualSize: ActualSize,
         allVodSize: vodSum,
