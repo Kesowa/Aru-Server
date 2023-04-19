@@ -437,7 +437,7 @@ export const addActualSizeToTenant = async (
 
 export const getTenantStats = async (req: Request, res: AuthResponse) => {
   {
-    const data = await Tenant.findOne({ _id: req.body.tenantId });
+    const data = await Tenant.findOne({ _id: res.locals.user.tenantId._id });
     if (!data) {
       res.status(404).json({
         status: false,
