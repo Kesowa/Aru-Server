@@ -2426,7 +2426,7 @@ export const picktoMapUseForLayerCreate = async (
             // }
           }
           if (flag == true) {
-            const data = {badImages, result: savedDoc1};
+            const data = { badImages, result: savedDoc1 };
             missionSpecificSocket
               .to(savedDoc1.missionId.toString())
               .emit("pic-to-map", data);
