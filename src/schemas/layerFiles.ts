@@ -87,7 +87,7 @@ layerFilesSchema.index({ sys_Id: 1 }, { sparse: true });
 layerFilesSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allLayerFileSize: this.fileSize } }
   );
   await Layer.updateOne(
     { _id: this.layerId },
@@ -103,7 +103,7 @@ layerFilesSchema.post(
   }) {
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize } }
+      { $inc: { actualSize: -this.fileSize, allLayerFileSize: -this.fileSize } }
     );
     await Layer.updateOne(
       { _id: this.layerId },

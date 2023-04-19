@@ -2355,10 +2355,6 @@ export const picktoMapUseForLayerCreate = async (
           );
         }
         if (savedDoc1) {
-          res.status(201).json({
-            status: true,
-            message: "Sucessfully created the layer!",
-          });
           // let dir:any = DirPath(Directory.DEFAULT, savedDoc1.layerpath);
           // let fc: any = geojson.features.length;
           let flag = false;
@@ -2387,7 +2383,7 @@ export const picktoMapUseForLayerCreate = async (
             });
             const savedDoc = await featureFile.save();
             if (savedDoc) flag = true;
-            const tenant: any = await Tenant.findOne({
+            const tenant = await Tenant.findOne({
               _id: res.locals.user.tenantId,
             });
             const newFilename = `1x_${allImageData[i].filename}`;
@@ -2397,26 +2393,30 @@ export const picktoMapUseForLayerCreate = async (
                   DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename)
                 )
               ) {
-                sharp(allImageData[i].path)
-                  .resize(120, 120, { withoutEnlargement: true })
-                  .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
-                  .then((result) => {})
-                  .catch((err) => {
-                    req.log.error(err);
-                  });
+                // sharp(allImageData[i].path)
+                //   .resize(120, 120, { withoutEnlargement: true })
+                //   .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
+                //   .then((result) => {})
+                //   .catch((err) => {
+                //     req.log.error(err);
+                //   });
                 await resizer(
                   DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename),
                   {
                     all: {
-                      path: DirPath(Directory.GEOJSON_IMAGES),
+                      path: DirPath(Directory.GEOJSON_IMAGES, "/"),
                       quality: 80,
                     },
                     versions: [
                       {
-                        quality: 100,
                         prefix: "2x_",
                         width: 1280,
                         height: 720,
+                      },
+                      {
+                        prefix: "1x_",
+                        width: 120,
+                        height: 120,
                       },
                     ],
                   }
@@ -2442,6 +2442,10 @@ export const picktoMapUseForLayerCreate = async (
               .to(savedDoc1.missionId)
               .emit("pic-to-map", data);
           }
+          res.status(201).json({
+            status: true,
+            message: "Sucessfully created the layer!",
+          });
         } else {
           return res.status(200).json({
             status: false,

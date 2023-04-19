@@ -112,7 +112,7 @@ alertSchema.index({ locationId: 1 }, { sparse: true });
 alertSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } }
   );
   await Mission.updateOne(
     { _id: this.missionId },
@@ -128,7 +128,7 @@ alertSchema.post(
   }) {
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize } }
+      { $inc: { actualSize: -this.fileSize, allAlertSize: -this.fileSize } }
     );
     await Mission.updateOne(
       { _id: this.missionId },

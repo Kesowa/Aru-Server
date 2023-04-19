@@ -19,9 +19,9 @@ const castUrl = (val: string) => new URL(val);
 class EnvVar {
   key: string;
   val: string;
-  constructor(key: string, value?: string) {
+  constructor(key: string) {
     this.key = key;
-    let val = value;
+    let val = undefined;
     if (val == undefined) val = process.env[key];
     if (val == undefined || val.length == 0) throw new EnvError(key, val);
     this.val = val;
@@ -116,12 +116,7 @@ export const ARU_INSTANCE = new EnvVar("ARU_INSTANCE")
   .isEnum(Instance)
   .toEnum<Instance>();
 export const LIVE_URL = new EnvVar("LIVE_URL").isUrl().toString();
-export const PUBLIC_DIR = new EnvVar(
-  "PUBLIC_DIR",
-  path.join(__dirname, "public")
-)
-  .check(existsSync)
-  .toString();
+export const PUBLIC_DIR = new EnvVar("PUBLIC_DIR").check(existsSync).toString();
 export const TITILER_SERVER = new EnvVar("TITILER_SERVER").isUrl().toString();
 export const TITILER_STATIC = new EnvVar("TITILER_STATIC").isUrl().toString();
 export const RAZORPAY_KEY_ID = new EnvVar("RAZORPAY_KEY_ID").toString();

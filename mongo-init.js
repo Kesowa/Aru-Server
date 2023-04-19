@@ -281,7 +281,7 @@ db.packages.insertMany([
   },
   {
     _id: ObjectId("608e7a7ee11f722a34fb0585"),
-    isActive: false,
+    isActive: true,
     name: "Trial",
     bandwidth: 0,
     storage: 0,

@@ -147,7 +147,7 @@ layerSchema.index({
 layerSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allLayerSize: this.fileSize } }
   );
   await Mission.updateOne(
     { _id: this.missionId },
@@ -163,7 +163,7 @@ layerSchema.post(
   }) {
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize } }
+      { $inc: { actualSize: -this.fileSize, allLayerSize: -this.fileSize } }
     );
     await Mission.updateOne(
       { _id: this.missionId },
