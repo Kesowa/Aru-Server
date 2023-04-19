@@ -45,13 +45,14 @@ import {
   TITILER_SERVER,
   TITILER_STATIC,
 } from "../../constants";
-import { Types } from "mongoose";
+import { HydratedDocument, Types } from "mongoose";
 import { ILayerFile } from "../../schemas/layerFiles";
 import {
   checkFileExists,
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
+import { ILayer } from "../../schemas/layer";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
@@ -2309,7 +2310,7 @@ export const picktoMapUseForLayerCreate = async (
             message: "Actual storage exceeded the Limit of Set storage!",
           });
         }
-        let vectorLayer: any;
+        let vectorLayer: HydratedDocument<ILayer>;
         if (req.body.missionId == null) {
           vectorLayer = new Layer({
             name: "base- " + req.body.name,
@@ -2383,10 +2384,6 @@ export const picktoMapUseForLayerCreate = async (
             });
             const savedDoc = await featureFile.save();
             if (savedDoc) flag = true;
-            const tenant = await Tenant.findOne({
-              _id: res.locals.user.tenantId,
-            });
-            const newFilename = `1x_${allImageData[i].filename}`;
             try {
               if (
                 await checkFileExists(
@@ -2429,17 +2426,14 @@ export const picktoMapUseForLayerCreate = async (
             // }
           }
           if (flag == true) {
-            const data: any = {};
-            data["badImages"] = badImages;
-            data["result"] = savedDoc1;
+            const data = {badImages, result: savedDoc1};
             missionSpecificSocket
-              .to(savedDoc1.missionId)
+              .to(savedDoc1.missionId.toString())
               .emit("pic-to-map", data);
           } else {
-            const data: any = {};
-            data["badImages"] = badImages;
+            const data = { badImages };
             missionSpecificSocket
-              .to(savedDoc1.missionId)
+              .to(savedDoc1.missionId.toString())
               .emit("pic-to-map", data);
           }
           res.status(201).json({
