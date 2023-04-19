@@ -20,6 +20,7 @@ import { IUser } from "../../schemas/user";
 import { IPackage } from "../../schemas/package";
 import newTenant from "../../models/newTenant";
 import { findCount, findSize } from "../../utils/mongoUtils";
+import { Types } from "mongoose";
 
 //create tenant account
 export const createTenant = async (req: Request, res: AuthResponse) => {
@@ -400,22 +401,23 @@ export const deleteTenantForId = async (req: Request, res: AuthResponse) => {
 };
 
 export const addActualSizeToTenant = async (
-  req: Request,
+  req: Request<{}, {}, {tenantId: string}>,
   res: AuthResponse
 ) => {
   {
-    const documentSum = await findSize(Document, res.locals.user.tenantId._id);
-    const alertSum = await findSize(Alert, res.locals.user.tenantId._id);
-    const vodSum = await findSize(VOD, res.locals.user.tenantId._id);
-    const layerSum = await findSize(Layer, res.locals.user.tenantId._id);
+    const tenantId = new Types.ObjectId(req.body.tenantId);
+    const documentSum = await findSize(Document, tenantId);
+    const alertSum = await findSize(Alert, tenantId);
+    const vodSum = await findSize(VOD, tenantId);
+    const layerSum = await findSize(Layer, tenantId);
     const layerFileSum = await findSize(
       layerFiles,
-      res.locals.user.tenantId._id
+      tenantId
     );
     const ActualSize =
       documentSum + alertSum + vodSum + layerSum + layerFileSum;
     await Tenant.findOneAndUpdate(
-      { _id: res.locals.user.tenantId },
+      { _id: tenantId},
       {
         actualSize: ActualSize,
         allVodSize: vodSum,
@@ -435,7 +437,7 @@ export const addActualSizeToTenant = async (
 
 export const getTenantStats = async (req: Request, res: AuthResponse) => {
   {
-    const data = await Tenant.findOne({ _id: res.locals.user.tenantId._id });
+    const data = await Tenant.findOne({ _id: req.body.tenantId });
     if (!data) {
       res.status(404).json({
         status: false,

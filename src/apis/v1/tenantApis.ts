@@ -170,6 +170,7 @@ router.post(
   "/add-actualSize-to-tenant",
   isAuthenticated,
   onlySuperAdminAccess,
+  body("tenantId").notEmpty().isMongoId(),
   RobustRunner(addActualSizeToTenant)
 );
 router.delete(
