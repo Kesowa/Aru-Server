@@ -2417,7 +2417,7 @@ export const picktoMapUseForLayerCreate = async (
                         prefix: "1x_",
                         width: 120,
                         height: 120,
-                      }
+                      },
                     ],
                   }
                 );
