@@ -95,8 +95,8 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         layerGroupId,
       } = req.body;
 
-      const geojson: any = await readGeoJson(dir);
-      const fc: any = geojson.features.length;
+      const geojson = await readGeoJson(dir);
+      const fc = geojson.features.length;
       if (geojson == null) {
         return res.json({
           status: false,
@@ -104,7 +104,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         });
       }
       if (req.body.inHeritOriginalColorFromFile == "false") {
-        const modCheck: any = await modGeoJson(
+        const modCheck = await modGeoJson(
           req.body.icon,
           req.body.color,
           geojson,
@@ -116,7 +116,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
             message: "Color selection error",
           });
         }
-        const size: number = Number(
+        const size = Number(
           (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
         );
         layer = new Layer({
@@ -145,7 +145,6 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
             }
           }
 
-          let modCheck: any;
           await modGeoJson(null, null, geojson, dir);
           const size: number = Number(
             (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
@@ -181,29 +180,34 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       // instead there is statistics api and info api
       // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
-      //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      req.log.info("fetching metadata from titiler");
-      let response = await fetch(metaDataURL, {
-        method: "GET",
-      });
-      req.log.info("getResponse data :  ", response);
-      let metadata = await response.json();
-      req.log.info("get metadata data :  ", metadata);
-      //-------handle for detail:not found----
-      const minP = metadata["1"]["min"];
-      const maxP = metadata["1"]["max"];
-      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
-      response = await fetch(metaDataURL, {
-        method: "GET",
-      });
-      metadata = await response.json();
-      const center = {
-        lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
-        lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
-      };
       const { name, type, raster, captureDate, missionId, layerGroupId } =
         req.body;
+      let minP = 0;
+      let maxP = 1;
+      let center = {lat: 0, lng: 0};
+      if (type == "DEM") {
+         let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+        //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+        req.log.info("fetching metadata from titiler");
+        let response = await fetch(metaDataURL, {
+          method: "GET",
+        });
+        req.log.info(response), "getResponse data :  ";
+        let metadata = await response.json();
+        req.log.info(metadata, "get metadata data :  ");
+        //-------handle for detail:not found----
+        minP = metadata["1"]["min"];
+        maxP = metadata["1"]["max"];
+        metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
+        response = await fetch(metaDataURL, {
+          method: "GET",
+        });
+        metadata = await response.json();
+        center = {
+          lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
+          lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+        };
+      }
       const size: number = Number(
         (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
       );
