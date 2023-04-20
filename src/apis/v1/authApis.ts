@@ -42,7 +42,7 @@ router.get(
   (req, res) => {
     res.statusCode = 200;
     res.setHeader("Content-Type", "text/html");
-    res.render("mails/resetPassword", {
+    res.render("mails/resetPasswordFull", {
       resetPasswordUrl: "https://youtube.com"
     });
   }
