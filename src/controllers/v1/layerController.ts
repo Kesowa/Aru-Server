@@ -184,9 +184,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         req.body;
       let minP = 0;
       let maxP = 1;
-      let center = {lat: 0, lng: 0};
+      let center = { lat: 0, lng: 0 };
       if (type == "DEM") {
-         let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
         //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
         req.log.info("fetching metadata from titiler");
         let response = await fetch(metaDataURL, {
