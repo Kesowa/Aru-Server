@@ -187,9 +187,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let response = await fetch(metaDataURL, {
         method: "GET",
       });
-      req.log.info("getResponse data :  ", response);
+      req.log.info(response), "getResponse data :  ";
       let metadata = await response.json();
-      req.log.info("get metadata data :  ", metadata);
+      req.log.info(metadata, "get metadata data :  ");
       //-------handle for detail:not found----
       const minP = metadata["1"]["min"];
       const maxP = metadata["1"]["max"];
