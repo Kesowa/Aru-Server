@@ -97,6 +97,7 @@
     "rimraf": "^3.0.2",
     "rotating-file-stream": "^2.1.5",
     "sharp": "^0.31.3",
+    "shpjs": "^4.0.4",
     "socket.io": "^4.5.3",
     "tokml": "^0.4.0",
     "wrtc": "^0.4.7",
