@@ -239,7 +239,7 @@ router.post(
 router.patch(
   "/publishBaseLayer",
   isAuthenticated,
-  body("layerId").notEmpty().isArray({ min: 1 }),
+  body("layerId").isMongoId(),
   validator,
   RobustRunner(publishBaseLayer)
 );
