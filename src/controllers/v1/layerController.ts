@@ -64,7 +64,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       const fileExt = path.extname(req.file.originalname).slice(1);
       let pathee2: string;
       let filePath: string;
-      if ( fileExt === "kml") {
+      if (fileExt === "kml") {
         const pathh1 = DirPath(Directory.VECTOR, req.file?.filename);
         const fileData = await fs.promises.readFile(pathh1, "utf8");
         const kml1 = new DOMParser().parseFromString(fileData);
@@ -73,14 +73,12 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         filePath = `/vector/${req.file.filename.replace(".kml", ".geojson")}`;
         await fs.promises.writeFile(pathee2, JSON.stringify(converted));
         await fs.promises.unlink(pathh1);
-      } else if (
-        fileExt === "shp" || fileExt === "zip"
-      ) {
+      } else if (fileExt === "shp" || fileExt === "zip") {
         const filename = path.basename(req.file.filename, fileExt);
         const pathh1 = DirPath(Directory.VECTOR, req.file.filename);
         const shpFile = await Fs.readFile(pathh1);
         pathee2 = filename + "geojson";
-        filePath = `/${Directory.VECTOR}/${pathee2}`
+        filePath = `/${Directory.VECTOR}/${pathee2}`;
         pathee2 = DirPath(Directory.VECTOR, pathee2);
         const geojson = await shp2json(shpFile);
         await Fs.writeFile(pathee2, JSON.stringify(geojson));
@@ -88,11 +86,11 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         filePath = `/${Directory.VECTOR}/${req.file.filename}`;
         pathee2 = req.file.path;
       } else {
-        req.log.error({fileExt}, "unsupported vector format");
+        req.log.error({ fileExt }, "unsupported vector format");
         res.status(400).json({
           status: false,
-          message: "file format not supported"
-        })
+          message: "file format not supported",
+        });
         return;
       }
       const dir = pathee2 || req.file.path;
