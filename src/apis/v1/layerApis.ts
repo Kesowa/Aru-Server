@@ -481,10 +481,10 @@ router.patch(
   RobustRunner(flagLayer)
 );
 router.get(
-  "/layers-by-missionId/:tenantId/:missionId", 
-  param("tenantId").isMongoId(), 
-  param("missionId").isMongoId(), 
-  validator, 
+  "/layers-by-missionId/:tenantId/:missionId",
+  param("tenantId").isMongoId(),
+  param("missionId").isMongoId(),
+  validator,
   RobustRunner(publicLayerByMissionId)
 );
 export default router;
