@@ -52,6 +52,7 @@ import {
   sys_id_Inject_to_layerfiles,
   flagFeature,
   flagLayer,
+  publicLayerByMissionId,
 } from "../../controllers/v1/layerController";
 import { isLayerCount } from "../../utils/countPermission";
 import { isSize } from "../../utils/sizePermission";
@@ -478,5 +479,12 @@ router.patch(
   body("flag").isBoolean().toBoolean(),
   validator,
   RobustRunner(flagLayer)
+);
+router.get(
+  "/layers-by-missionId/:tenantId/:missionId", 
+  param("tenantId").isMongoId(), 
+  param("missionId").isMongoId(), 
+  validator, 
+  RobustRunner(publicLayerByMissionId)
 );
 export default router;
