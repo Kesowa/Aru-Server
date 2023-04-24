@@ -54,6 +54,7 @@ import {
   getFileSize,
 } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
+import type { ITenant } from "../../schemas/tenant";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
@@ -193,9 +194,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         req.body;
       let minP = 0;
       let maxP = 1;
-      let center = {lat: 0, lng: 0};
+      let center = { lat: 0, lng: 0 };
       if (type == "DEM") {
-         let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
         //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
         req.log.info("fetching metadata from titiler");
         let response = await fetch(metaDataURL, {
@@ -2689,4 +2690,32 @@ export const flagLayer = async (
       message: "layer flagging failed",
     });
   }
+};
+
+export const publicLayerByMissionId = async (
+  req: Request,
+  res: AuthResponse
+) => {
+  const publicMission = await Mission.findOne({
+    _id: req.params.missionId,
+    tenantId: req.params.tenantId,
+    isPublic: true,
+  });
+  if (!publicMission) {
+    res.status(404).json({
+      status: false,
+      message: "public mission does not exist",
+    });
+    return;
+  }
+  const layers = await Layer.find({ missionId: publicMission._id }).populate<{
+    tenantId: ITenant;
+  }>("tenantId", "name");
+  res.json({
+    status: true,
+    message: "found mission and layers",
+    mission: publicMission,
+    data: layers,
+  });
+  return;
 };
