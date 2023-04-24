@@ -72,7 +72,7 @@ const missionSchema = new mongoose.Schema<IMission>(
     isPublic: {
       type: Boolean,
       default: false,
-    }
+    },
   },
   {
     timestamps: true,

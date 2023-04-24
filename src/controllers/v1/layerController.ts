@@ -1372,8 +1372,9 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${ar.length - 1
-              } and data index should start from 0`,
+            message: `Your data must be less than equal to ${
+              ar.length - 1
+            } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -1479,14 +1480,14 @@ export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
       sharp(req.file?.path)
         .resize(120, 120, { withoutEnlargement: true })
         .toFile(DirPath(Directory.LAYER_FILES, newFilename))
-        .then((result) => { })
+        .then((result) => {})
         .catch((err) => {
           req.log.error(err);
         });
       sharp(req.file?.path)
         .resize(1280, 720, { withoutEnlargement: true })
         .toFile(DirPath(Directory.LAYER_FILES, newFilename2))
-        .then((result) => { })
+        .then((result) => {})
         .catch((err) => {
           req.log.error(err);
         });
@@ -1765,7 +1766,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
             await sharp(files[j].path)
               .resize(120, 120, { withoutEnlargement: true })
               .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
-              .then((result) => { })
+              .then((result) => {})
               .catch((err) => {
                 req.log.error("thumbnail creation failed");
               });
@@ -2631,8 +2632,9 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${req.body.flag ? "flagged" : "unflagged"
-        } successfully`,
+      message: `feature ${
+        req.body.flag ? "flagged" : "unflagged"
+      } successfully`,
     });
   } else {
     res.status(501).json({
@@ -2681,22 +2683,30 @@ export const flagLayer = async (
   }
 };
 
-export const publicLayerByMissionId = async (req: Request, res: AuthResponse) => {
-  const publicMission = await Mission.findOne({ _id: req.params.missionId, tenantId: req.params.tenantId, isPublic: true });
+export const publicLayerByMissionId = async (
+  req: Request,
+  res: AuthResponse
+) => {
+  const publicMission = await Mission.findOne({
+    _id: req.params.missionId,
+    tenantId: req.params.tenantId,
+    isPublic: true,
+  });
   if (!publicMission) {
     res.status(404).json({
       status: false,
-      message: "public mission does not exist"
-    })
+      message: "public mission does not exist",
+    });
     return;
   }
-  const layers = await Layer.find({ missionId: publicMission._id })
-  .populate<{ tenantId: ITenant }>("tenantId", "name");
+  const layers = await Layer.find({ missionId: publicMission._id }).populate<{
+    tenantId: ITenant;
+  }>("tenantId", "name");
   res.json({
     status: true,
     message: "found mission and layers",
     mission: publicMission,
     data: layers,
-  })
+  });
   return;
-}
+};
