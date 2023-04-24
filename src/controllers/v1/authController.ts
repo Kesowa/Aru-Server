@@ -185,10 +185,14 @@ export const sendForgotPasswordMail = async (
 
     const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
 
-    const html = await ejs.renderFile(path.join(__dirname, "..", "..", "views", "mails", "resetPassword.ejs"), {
-      resetPasswordUrl: resetPasswordUrl
-    }, { async: true });
-    
+    const html = await ejs.renderFile(
+      path.join(__dirname, "..", "..", "views", "mails", "resetPassword.ejs"),
+      {
+        resetPasswordUrl: resetPasswordUrl,
+      },
+      { async: true }
+    );
+
     await sendMail(
       email,
       "Password Reset Request || Kesowa Infinite Ventures Pvt. Ltd",
