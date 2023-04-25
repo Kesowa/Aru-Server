@@ -5,7 +5,7 @@ export const VODEvents = new EventEmitter();
 import VOD from "../models/vod";
 import Tenant from "../models/tenant";
 import { missionSpecificSocket } from "../socket";
-import DJISRTParser from "dji_srt_parser";
+import DJISRTParser, { AllFunctions } from "dji_srt_parser";
 import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
 import { Directory, DirPath } from "../constants";
@@ -13,9 +13,6 @@ import Location from "../models/location";
 
 // import path from "node:path";
 
-let srtFlag = false;
-let hlsFlag = false;
-let data: string;
 type ProcessVideoData = {
   fullPath: string;
   filename: string;
@@ -28,20 +25,24 @@ type ProcessVideoData = {
 };
 const exitOnce = async (code: Number, d: ProcessVideoData) => {
   console.log("Hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+  let srtFlag = false;
   if (code == 0) {
     console.log(
       "SRT Extraction successful, now Exiting!---------------------------------------------------------------------"
     );
     const srtOutpath = DirPath(Directory.VOD, d.filename + ".srt");
     const geoJSONoutPath = DirPath(Directory.VOD, d.filename + ".geojson");
+    let data: string;
+    let json: string;
+    let DJIData: AllFunctions;
     try {
       data = await fs.promises.readFile(srtOutpath, "utf8");
+      DJIData = DJISRTParser(data, srtOutpath);
+      json = DJIData.toGeoJSON(false, true, false);
     } catch (err) {
       console.error(err);
     }
     console.log(data);
-    const DJIData = DJISRTParser(data, srtOutpath);
-    const json = DJIData.toGeoJSON(false, true, false);
     if (json) {
       console.log("Set to true----------------------");
       srtFlag = true;
@@ -167,6 +168,7 @@ const videoProcessHandler = (d: ProcessVideoData) => {
     console.log(
       "File conversion successful, now Existing!---------------------------------------------------------------------"
     );
+    let hlsFlag = false;
     if (exitCode == 0) {
       hlsFlag = true;
       if (hlsFlag == true) {

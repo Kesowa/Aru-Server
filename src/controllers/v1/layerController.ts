@@ -1,5 +1,6 @@
-import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
+import shp2json from "shpjs";
+import type { Request } from "express";
+import type { AuthResponse } from "../../utils/interfaceUtils";
 import fetch from "node-fetch";
 import Layer from "../../models/layer";
 import layerFiles from "../../models/layerFiles";
@@ -27,7 +28,7 @@ import {
 } from "../../utils/geojsonUtils";
 import * as turf from "@turf/turf";
 import nearestPoint from "@turf/nearest-point";
-import { NearestPoint } from "@turf/nearest-point";
+import type { NearestPoint } from "@turf/nearest-point";
 import exifr from "exifr";
 import path from "path";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
@@ -35,33 +36,35 @@ import Flight from "../../models/flight";
 import archiver from "archiver";
 import { isSizeVector } from "../../utils/sizePermission";
 import LayerGroup from "../../models/layerGroup";
-import { IVector } from "../../schemas/vectorprops";
-import { IRaster } from "../../schemas/rasterprops";
-import { IPackage } from "../../schemas/package";
-import { ILayerGroup } from "../../schemas/layerGroup";
+import type { IVector } from "../../schemas/vectorprops";
+import type { IRaster } from "../../schemas/rasterprops";
+import type { IPackage } from "../../schemas/package";
+import type { ILayerGroup } from "../../schemas/layerGroup";
 import {
   Directory,
   DirPath,
   TITILER_SERVER,
   TITILER_STATIC,
 } from "../../constants";
-import { Types } from "mongoose";
-import { ILayerFile } from "../../schemas/layerFiles";
+import { type HydratedDocument, Types } from "mongoose";
+import type { ILayerFile } from "../../schemas/layerFiles";
 import {
   checkFileExists,
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
+import type { ILayer } from "../../schemas/layer";
+import type { ITenant } from "../../schemas/tenant";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
   {
-    let layer: any;
+    let layer: HydratedDocument<ILayer>;
     if (req.params.type == "Vector") {
-      const fileNamee = req.file?.originalname.split(".")[1];
-      let pathee2: any;
-      let filePath: any;
-      if (req.file?.originalname.split(".")[1] === "kml") {
+      const fileExt = path.extname(req.file.originalname).slice(1);
+      let pathee2: string;
+      let filePath: string;
+      if (fileExt === "kml") {
         const pathh1 = DirPath(Directory.VECTOR, req.file?.filename);
         const fileData = await fs.promises.readFile(pathh1, "utf8");
         const kml1 = new DOMParser().parseFromString(fileData);
@@ -70,20 +73,27 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         filePath = `/vector/${req.file.filename.replace(".kml", ".geojson")}`;
         await fs.promises.writeFile(pathee2, JSON.stringify(converted));
         await fs.promises.unlink(pathh1);
-      } else if (
-        fileNamee === "shp" ||
-        fileNamee === "shx" ||
-        fileNamee === "dbf"
-      ) {
-        const pathh1 = DirPath(Directory.VECTOR, req.file?.filename);
-        pathee2 = pathh1.split(".")[0] + ".geojson";
-        const fileee = pathh1.split(".")[0];
+      } else if (fileExt === "shp" || fileExt === "zip") {
+        const filename = path.basename(req.file.filename, fileExt);
+        const pathh1 = DirPath(Directory.VECTOR, req.file.filename);
+        const shpFile = await Fs.readFile(pathh1);
+        pathee2 = filename + "geojson";
+        filePath = `/${Directory.VECTOR}/${pathee2}`;
+        pathee2 = DirPath(Directory.VECTOR, pathee2);
+        const geojson = await shp2json(shpFile);
+        await Fs.writeFile(pathee2, JSON.stringify(geojson));
+      } else if (fileExt === "geojson") {
+        filePath = `/${Directory.VECTOR}/${req.file.filename}`;
+        pathee2 = req.file.path;
+      } else {
+        req.log.error({ fileExt }, "unsupported vector format");
+        res.status(400).json({
+          status: false,
+          message: "file format not supported",
+        });
+        return;
       }
-      const dir =
-        fileNamee == "kml"
-          ? pathee2
-          : DirPath(Directory.VECTOR, req.file?.filename);
-      // let dir = DirPath(Directory.VECTOR, req.file?.filename);
+      const dir = pathee2 || req.file.path;
       const {
         name,
         type,
@@ -94,8 +104,8 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         layerGroupId,
       } = req.body;
 
-      const geojson: any = await readGeoJson(dir);
-      const fc: any = geojson.features.length;
+      const geojson = await readGeoJson(dir);
+      const fc = geojson.features.length;
       if (geojson == null) {
         return res.json({
           status: false,
@@ -103,7 +113,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         });
       }
       if (req.body.inHeritOriginalColorFromFile == "false") {
-        const modCheck: any = await modGeoJson(
+        const modCheck = await modGeoJson(
           req.body.icon,
           req.body.color,
           geojson,
@@ -115,7 +125,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
             message: "Color selection error",
           });
         }
-        const size: number = Number(
+        const size = Number(
           (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
         );
         layer = new Layer({
@@ -123,8 +133,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           type,
           vector,
           color,
-          layerpath:
-            fileNamee == "kml" ? filePath : `/vector/${req.file?.filename}`,
+          layerpath: filePath,
           fileSize: size,
           featureCount: fc,
           layerGroupId,
@@ -144,7 +153,6 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
             }
           }
 
-          let modCheck: any;
           await modGeoJson(null, null, geojson, dir);
           const size: number = Number(
             (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
@@ -155,7 +163,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
             vector,
             color: flagColor,
             layerpath:
-              fileNamee == "kml" ? filePath : `/vector/${req.file?.filename}`,
+              fileExt == "kml" ? filePath : `/vector/${req.file?.filename}`,
             fileSize: size,
             featureCount: fc,
             layerGroupId,
@@ -180,29 +188,34 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       // instead there is statistics api and info api
       // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
-      //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      req.log.info("fetching metadata from titiler");
-      let response = await fetch(metaDataURL, {
-        method: "GET",
-      });
-      req.log.info("getResponse data :  ", response);
-      let metadata = await response.json();
-      req.log.info("get metadata data :  ", metadata);
-      //-------handle for detail:not found----
-      const minP = metadata["1"]["min"];
-      const maxP = metadata["1"]["max"];
-      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
-      response = await fetch(metaDataURL, {
-        method: "GET",
-      });
-      metadata = await response.json();
-      const center = {
-        lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
-        lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
-      };
       const { name, type, raster, captureDate, missionId, layerGroupId } =
         req.body;
+      let minP = 0;
+      let maxP = 1;
+      let center = { lat: 0, lng: 0 };
+      if (type == "DEM") {
+        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+        //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+        req.log.info("fetching metadata from titiler");
+        let response = await fetch(metaDataURL, {
+          method: "GET",
+        });
+        req.log.info(response), "getResponse data :  ";
+        let metadata = await response.json();
+        req.log.info(metadata, "get metadata data :  ");
+        //-------handle for detail:not found----
+        minP = metadata["1"]["min"];
+        maxP = metadata["1"]["max"];
+        metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
+        response = await fetch(metaDataURL, {
+          method: "GET",
+        });
+        metadata = await response.json();
+        center = {
+          lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
+          lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+        };
+      }
       const size: number = Number(
         (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
       );
@@ -2309,7 +2322,7 @@ export const picktoMapUseForLayerCreate = async (
             message: "Actual storage exceeded the Limit of Set storage!",
           });
         }
-        let vectorLayer: any;
+        let vectorLayer: HydratedDocument<ILayer>;
         if (req.body.missionId == null) {
           vectorLayer = new Layer({
             name: "base- " + req.body.name,
@@ -2355,10 +2368,6 @@ export const picktoMapUseForLayerCreate = async (
           );
         }
         if (savedDoc1) {
-          res.status(201).json({
-            status: true,
-            message: "Sucessfully created the layer!",
-          });
           // let dir:any = DirPath(Directory.DEFAULT, savedDoc1.layerpath);
           // let fc: any = geojson.features.length;
           let flag = false;
@@ -2387,36 +2396,36 @@ export const picktoMapUseForLayerCreate = async (
             });
             const savedDoc = await featureFile.save();
             if (savedDoc) flag = true;
-            const tenant: any = await Tenant.findOne({
-              _id: res.locals.user.tenantId,
-            });
-            const newFilename = `1x_${allImageData[i].filename}`;
             try {
               if (
                 await checkFileExists(
                   DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename)
                 )
               ) {
-                sharp(allImageData[i].path)
-                  .resize(120, 120, { withoutEnlargement: true })
-                  .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
-                  .then((result) => {})
-                  .catch((err) => {
-                    req.log.error(err);
-                  });
+                // sharp(allImageData[i].path)
+                //   .resize(120, 120, { withoutEnlargement: true })
+                //   .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
+                //   .then((result) => {})
+                //   .catch((err) => {
+                //     req.log.error(err);
+                //   });
                 await resizer(
                   DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename),
                   {
                     all: {
-                      path: DirPath(Directory.GEOJSON_IMAGES),
+                      path: DirPath(Directory.GEOJSON_IMAGES, "/"),
                       quality: 80,
                     },
                     versions: [
                       {
-                        quality: 100,
                         prefix: "2x_",
                         width: 1280,
                         height: 720,
+                      },
+                      {
+                        prefix: "1x_",
+                        width: 120,
+                        height: 120,
                       },
                     ],
                   }
@@ -2429,19 +2438,20 @@ export const picktoMapUseForLayerCreate = async (
             // }
           }
           if (flag == true) {
-            const data: any = {};
-            data["badImages"] = badImages;
-            data["result"] = savedDoc1;
+            const data = { badImages, result: savedDoc1 };
             missionSpecificSocket
-              .to(savedDoc1.missionId)
+              .to(savedDoc1.missionId.toString())
               .emit("pic-to-map", data);
           } else {
-            const data: any = {};
-            data["badImages"] = badImages;
+            const data = { badImages };
             missionSpecificSocket
-              .to(savedDoc1.missionId)
+              .to(savedDoc1.missionId.toString())
               .emit("pic-to-map", data);
           }
+          res.status(201).json({
+            status: true,
+            message: "Sucessfully created the layer!",
+          });
         } else {
           return res.status(200).json({
             status: false,
@@ -2678,4 +2688,32 @@ export const flagLayer = async (
       message: "layer flagging failed",
     });
   }
+};
+
+export const publicLayerByMissionId = async (
+  req: Request,
+  res: AuthResponse
+) => {
+  const publicMission = await Mission.findOne({
+    _id: req.params.missionId,
+    tenantId: req.params.tenantId,
+    isPublic: true,
+  });
+  if (!publicMission) {
+    res.status(404).json({
+      status: false,
+      message: "public mission does not exist",
+    });
+    return;
+  }
+  const layers = await Layer.find({ missionId: publicMission._id }).populate<{
+    tenantId: ITenant;
+  }>("tenantId", "name");
+  res.json({
+    status: true,
+    message: "found mission and layers",
+    mission: publicMission,
+    data: layers,
+  });
+  return;
 };
