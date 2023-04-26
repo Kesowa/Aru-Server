@@ -1,6 +1,7 @@
 import Tenant from "../models/tenant";
 import { NextFunction, Request } from "express";
 import { AuthResponse } from "./interfaceUtils";
+import { IPackage } from "../schemas/package";
 export const isAlertCount = async (
   req: Request,
   res: AuthResponse,
@@ -127,11 +128,13 @@ export const isLayerCount = async (
   next: NextFunction
 ) => {
   try {
-    const doc: any = await Tenant.findOne({ _id: res.locals.user.tenantId })
-      .populate("activePackage")
+    const doc = await Tenant.findOne({ _id: res.locals.user.tenantId })
+      .populate<{activePackage: IPackage}>("activePackage")
       .lean();
-    if (Number(doc.actualLayerCount) < Number(doc.activePackage.layerCount))
-      return next();
+    if (Number(doc.actualLayerCount) < Number(doc.activePackage.layerCount)) {
+      next();
+      return;
+    }
     else
       return res.status(403).json({
         status: false,

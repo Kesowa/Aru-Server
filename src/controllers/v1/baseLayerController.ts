@@ -17,7 +17,7 @@ import { IMission } from "../../schemas/mission";
 import { IRaster } from "../../schemas/rasterprops";
 import { IPackage } from "../../schemas/package";
 import { ITenant } from "../../schemas/tenant";
-import mongoose from "mongoose";
+import mongoose, { HydratedDocument } from "mongoose";
 import {
   Directory,
   DirPath,
@@ -28,6 +28,9 @@ import { getFileSize } from "../../utils/fileUtils";
 import Alert from "../../models/alert";
 import VOD from "../../models/vod";
 import { ILayer } from "../../schemas/layer";
+import kmlToGjson from "@mapbox/togeojson";
+import shp2json from "shpjs";
+import { DOMParser } from "xmldom";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -135,8 +138,8 @@ export const getMetadataForBaseLayer = async (
           missionMap
             .get(layer.missionId.toString())
             .layers[
-              missionMap.get(layer.missionId.toString()).layers.length - 1
-            ].fields.push(p[0]);
+            missionMap.get(layer.missionId.toString()).layers.length - 1
+          ].fields.push(p[0]);
 
           if (attrMap.get(p[0])) {
             attrMap.get(p[0]).layerMatches.push({
@@ -181,8 +184,8 @@ export const getMetadataForBaseLayer = async (
                       lm.length === 0
                         ? "No Other Mathces"
                         : lm.length === layerData.length - 1
-                        ? "Matches With All"
-                        : lm,
+                          ? "Matches With All"
+                          : lm,
                   };
                 }),
               };
@@ -201,11 +204,48 @@ export const getMetadataForBaseLayer = async (
 };
 
 // Create Base Layer
-export const createBaseLayer = async (req: Request, res: AuthResponse) => {
+export const createVectorBaseLayer = async (req: Request, res: AuthResponse) => {
   {
-    let layer: any;
-    const dir = DirPath(Directory.VECTOR, req.file?.filename);
-    const { name, type, vector, captureDate, color } = req.body;
+    let layer: HydratedDocument<ILayer>;
+    const fileExt = path.extname(req.file.filename);
+    const filename = path.parse(req.file.filename).name + ".geojson";
+    const dir = DirPath(Directory.VECTOR, filename);
+    try {
+      if (fileExt == ".kml") {
+        const fileData = await fs.promises.readFile(req.file.path, "utf8");
+        const kml1 = new DOMParser().parseFromString(fileData, "text/xml");
+        const converted = kmlToGjson.kml(kml1, { styles: true });
+        await fs.promises.writeFile(dir, JSON.stringify(converted));
+        await fs.promises.rm(req.file.path);
+      }
+      else if (fileExt == ".shp" || fileExt == ".zip") {
+        const fileData = await fs.promises.readFile(req.file.path);
+        const geojson = await shp2json(fileData);
+        await fs.promises.writeFile(dir, JSON.stringify(geojson));
+        await fs.promises.rm(req.file.path);
+      }
+      else if (fileExt == ".geojson") {
+        await fs.promises.rename(req.file.path, dir);
+      }
+      else {
+        await fs.promises.rm(req.file.path);
+        res.status(400).json({
+          status: false,
+          message: "vector format not supported!",
+        })
+        return;
+      }
+    } catch (err) {
+      await fs.promises.rm(req.file.path);
+      req.log.error(err, "file conversion failed");
+      res.status(500).json({
+        status: false,
+        message: "file conversion failed"
+      })
+      return
+    }
+    req.log.info("File successfully converted!");
+    const { name, vector, captureDate, color } = req.body;
 
     const geojson = await readGeoJson(dir);
 
@@ -234,10 +274,10 @@ export const createBaseLayer = async (req: Request, res: AuthResponse) => {
       );
       layer = new Layer({
         name: name,
-        type,
+        type: "Vector",
         vector,
         color,
-        layerpath: `/vector/${req.file?.filename}`,
+        layerpath: `/vector/${filename}`,
         fileSize: size,
         featureCount: fc,
         captureDate,
@@ -259,10 +299,10 @@ export const createBaseLayer = async (req: Request, res: AuthResponse) => {
         );
         layer = new Layer({
           name: name,
-          type,
+          type: "Vector",
           vector,
           color: flagColor,
-          layerpath: `/vector/${req.file?.filename}`,
+          layerpath: `/vector/${filename}`,
           fileSize: size,
           featureCount: fc,
           captureDate,
@@ -812,8 +852,8 @@ export const getMetadataForUpdatingBaseLayer = async (
           missionMap
             .get(layer.missionId.toString())
             .layers[
-              missionMap.get(layer.missionId.toString()).layers.length - 1
-            ].fields.push(p[0]);
+            missionMap.get(layer.missionId.toString()).layers.length - 1
+          ].fields.push(p[0]);
           if (attrMap.get(p[0])) {
             attrMap.get(p[0]).layerMatches.push({
               layerId: layer._id,
@@ -856,8 +896,8 @@ export const getMetadataForUpdatingBaseLayer = async (
                     lm.length === 0
                       ? "No Other Mathces"
                       : lm.length === layerData.length - 1
-                      ? "Matches With All"
-                      : lm,
+                        ? "Matches With All"
+                        : lm,
                 };
               }),
             };
@@ -1062,8 +1102,8 @@ export const getBaseLayers = async (req: Request, res: AuthResponse) => {
     let data: (Omit<
       Omit<
         mongoose.Document<unknown, any, ILayer> &
-          ILayer &
-          Required<{ _id: mongoose.Types.ObjectId }>,
+        ILayer &
+        Required<{ _id: mongoose.Types.ObjectId }>,
         "raster"
       > & { raster: IRaster },
       "vector"
@@ -1537,34 +1577,38 @@ export const createBaseRasterfromUpload = async (
 ) => {
   {
     const tif_loc = `/raster/${req.file?.filename}`;
-    let layer: any;
-    const dataArr: any = [];
+    let layer: HydratedDocument<ILayer>;
+    const dataArr = [];
 
     //----------TITILER API HAS CHANGED-------------------
     //  Metadata api has been removed
     // instead there is statistics api and info api
     // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
     //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-    const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
-    //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-    const response = await fetch(metaDataURL, {
-      method: "GET",
-    });
-    const metadata = await response.json();
-    //-------handle for detail:not found----
-    const minP = metadata["1"]["min"];
-    const maxP = metadata["1"]["max"];
+    let minP = 0;
+    let maxP = 1;
+    const { name, type, raster, captureDate } = req.body;
+    if (type == "DEM") { 
+      const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+      //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+      const response = await fetch(metaDataURL, {
+        method: "GET",
+      });
+      const metadata = await response.json();
+      //-------handle for detail:not found----
+      minP = metadata["1"]["min"];
+      maxP = metadata["1"]["max"];
+    }
     // let center = {
     //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
     //   lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
     // };
-    const { name, type, raster, captureDate } = req.body;
     const size: number = Number(
       (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
     );
     const layerData = [
       {
-        path: `/raster/${req?.file?.filename}`,
+        path: `/raster/${req.file.filename}`,
         minP: minP,
         maxP: maxP,
         import: false,
