@@ -24,7 +24,6 @@ import {
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
-import { Thread } from "../../models/thread";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
