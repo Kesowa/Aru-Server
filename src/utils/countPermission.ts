@@ -129,13 +129,12 @@ export const isLayerCount = async (
 ) => {
   try {
     const doc = await Tenant.findOne({ _id: res.locals.user.tenantId })
-      .populate<{activePackage: IPackage}>("activePackage")
+      .populate<{ activePackage: IPackage }>("activePackage")
       .lean();
     if (Number(doc.actualLayerCount) < Number(doc.activePackage.layerCount)) {
       next();
       return;
-    }
-    else
+    } else
       return res.status(403).json({
         status: false,
         message: "Actual layerCount exceeded the Limit of Set layerCount!",

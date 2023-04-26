@@ -138,8 +138,8 @@ export const getMetadataForBaseLayer = async (
           missionMap
             .get(layer.missionId.toString())
             .layers[
-            missionMap.get(layer.missionId.toString()).layers.length - 1
-          ].fields.push(p[0]);
+              missionMap.get(layer.missionId.toString()).layers.length - 1
+            ].fields.push(p[0]);
 
           if (attrMap.get(p[0])) {
             attrMap.get(p[0]).layerMatches.push({
@@ -184,8 +184,8 @@ export const getMetadataForBaseLayer = async (
                       lm.length === 0
                         ? "No Other Mathces"
                         : lm.length === layerData.length - 1
-                          ? "Matches With All"
-                          : lm,
+                        ? "Matches With All"
+                        : lm,
                   };
                 }),
               };
@@ -204,7 +204,10 @@ export const getMetadataForBaseLayer = async (
 };
 
 // Create Base Layer
-export const createVectorBaseLayer = async (req: Request, res: AuthResponse) => {
+export const createVectorBaseLayer = async (
+  req: Request,
+  res: AuthResponse
+) => {
   {
     let layer: HydratedDocument<ILayer>;
     const fileExt = path.extname(req.file.filename);
@@ -217,22 +220,19 @@ export const createVectorBaseLayer = async (req: Request, res: AuthResponse) => 
         const converted = kmlToGjson.kml(kml1, { styles: true });
         await fs.promises.writeFile(dir, JSON.stringify(converted));
         await fs.promises.rm(req.file.path);
-      }
-      else if (fileExt == ".shp" || fileExt == ".zip") {
+      } else if (fileExt == ".shp" || fileExt == ".zip") {
         const fileData = await fs.promises.readFile(req.file.path);
         const geojson = await shp2json(fileData);
         await fs.promises.writeFile(dir, JSON.stringify(geojson));
         await fs.promises.rm(req.file.path);
-      }
-      else if (fileExt == ".geojson") {
+      } else if (fileExt == ".geojson") {
         await fs.promises.rename(req.file.path, dir);
-      }
-      else {
+      } else {
         await fs.promises.rm(req.file.path);
         res.status(400).json({
           status: false,
           message: "vector format not supported!",
-        })
+        });
         return;
       }
     } catch (err) {
@@ -240,9 +240,9 @@ export const createVectorBaseLayer = async (req: Request, res: AuthResponse) => 
       req.log.error(err, "file conversion failed");
       res.status(500).json({
         status: false,
-        message: "file conversion failed"
-      })
-      return
+        message: "file conversion failed",
+      });
+      return;
     }
     req.log.info("File successfully converted!");
     const { name, vector, captureDate, color } = req.body;
@@ -852,8 +852,8 @@ export const getMetadataForUpdatingBaseLayer = async (
           missionMap
             .get(layer.missionId.toString())
             .layers[
-            missionMap.get(layer.missionId.toString()).layers.length - 1
-          ].fields.push(p[0]);
+              missionMap.get(layer.missionId.toString()).layers.length - 1
+            ].fields.push(p[0]);
           if (attrMap.get(p[0])) {
             attrMap.get(p[0]).layerMatches.push({
               layerId: layer._id,
@@ -896,8 +896,8 @@ export const getMetadataForUpdatingBaseLayer = async (
                     lm.length === 0
                       ? "No Other Mathces"
                       : lm.length === layerData.length - 1
-                        ? "Matches With All"
-                        : lm,
+                      ? "Matches With All"
+                      : lm,
                 };
               }),
             };
@@ -1102,8 +1102,8 @@ export const getBaseLayers = async (req: Request, res: AuthResponse) => {
     let data: (Omit<
       Omit<
         mongoose.Document<unknown, any, ILayer> &
-        ILayer &
-        Required<{ _id: mongoose.Types.ObjectId }>,
+          ILayer &
+          Required<{ _id: mongoose.Types.ObjectId }>,
         "raster"
       > & { raster: IRaster },
       "vector"
@@ -1588,7 +1588,7 @@ export const createBaseRasterfromUpload = async (
     let minP = 0;
     let maxP = 1;
     const { name, type, raster, captureDate } = req.body;
-    if (type == "DEM") { 
+    if (type == "DEM") {
       const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
       //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       const response = await fetch(metaDataURL, {
