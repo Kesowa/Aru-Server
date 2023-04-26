@@ -14,6 +14,8 @@ export interface IVOD {
   fileSize: number;
   isSRT: boolean;
   isFlagged: boolean;
+  isThreadExist: boolean;
+  commentCount: Number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -64,6 +66,14 @@ const VODSchema = new mongoose.Schema<IVOD>(
     isFlagged: {
       type: Boolean,
       default: false,
+    },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
     // startTime: {
     //     type: Date
