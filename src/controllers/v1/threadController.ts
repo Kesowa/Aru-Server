@@ -11,26 +11,26 @@ import Alert from "../../models/alert";
 export const GetThread = async (
   docModel: docTypes,
   docId: mongoose.Types.ObjectId,
-  tenantId: mongoose.Types.ObjectId,
+  tenantId: mongoose.Types.ObjectId
 ) => {
-    const thread = await Thread.findOneAndUpdate(
-      {
+  const thread = await Thread.findOneAndUpdate(
+    {
+      doc: docId,
+      tenant: tenantId,
+      docModel: docModel,
+    },
+    {
+      $setOnInsert: {
         doc: docId,
         tenant: tenantId,
         docModel: docModel,
       },
-      {
-        $setOnInsert: {
-          doc: docId,
-          tenant: tenantId,
-          docModel: docModel,
-        },
-      },
-      {
-        returnOriginal: false,
-        upsert: true,
-      }
-    ).populate("doc");
+    },
+    {
+      returnOriginal: false,
+      upsert: true,
+    }
+  ).populate("doc");
   return thread;
 };
 
@@ -48,40 +48,55 @@ export const CreateThread = async (
   return thread;
 };
 
-const updateDoc = async (docId, tenantId, docModel,  isThreadExist, commentCount) => {
+const updateDoc = async (
+  docId,
+  tenantId,
+  docModel,
+  isThreadExist,
+  commentCount
+) => {
   const updateValue = {
     isThreadExist,
-    commentCount
-  }
-  switch (docModel){
-    case 'document':
-      await Document.update({
-        _id: docId,
-        tenantId,
-      },{
-        '$set':updateValue
-      })
+    commentCount,
+  };
+  switch (docModel) {
+    case "document":
+      await Document.update(
+        {
+          _id: docId,
+          tenantId,
+        },
+        {
+          $set: updateValue,
+        }
+      );
       break;
-    case 'vod':
-      await VOD.update({
-        _id: docId,
-        tenantId,
-      },{
-        '$set':updateValue
-      })
+    case "vod":
+      await VOD.update(
+        {
+          _id: docId,
+          tenantId,
+        },
+        {
+          $set: updateValue,
+        }
+      );
       break;
-    case 'alert':
-      await Alert.update({
-        _id: docId,
-        tenantId,
-      },{
-        '$set':updateValue
-      })
+    case "alert":
+      await Alert.update(
+        {
+          _id: docId,
+          tenantId,
+        },
+        {
+          $set: updateValue,
+        }
+      );
       break;
     default:
-      console.log('Incorrect Doc Model.')
+      console.log("Incorrect Doc Model.");
   }
-}
+};
 
 export const CreateOrUpdateComment = async (
   docModel: docTypes,
@@ -112,7 +127,7 @@ export const CreateOrUpdateComment = async (
       avatar: user.avatar,
       content: content,
     } as IComment;
-    
+
     const response = await Thread.findOneAndUpdate(
       {
         doc: docId,
@@ -124,11 +139,10 @@ export const CreateOrUpdateComment = async (
           comments: comment,
         },
       },
-      {new: true}
+      { new: true }
     );
-    await updateDoc(docId, tenantId, docModel, true, response.comments.length)
+    await updateDoc(docId, tenantId, docModel, true, response.comments.length);
     return response;
-    
   }
 };
 
@@ -153,10 +167,16 @@ export const DeleteComment = async (
         },
       },
     },
-    {new: true}
+    { new: true }
   );
   const commentLength = response.comments.length;
-  await updateDoc(docId, tenantId, docModel, commentLength===0?false:true, commentLength)
+  await updateDoc(
+    docId,
+    tenantId,
+    docModel,
+    commentLength === 0 ? false : true,
+    commentLength
+  );
   return response;
 };
 
@@ -189,7 +209,7 @@ export const GetDocThread = async (
   const thread = await GetThread(
     req.params.docType,
     req.params.docId,
-    res.locals.user.tenantId._id,
+    res.locals.user.tenantId._id
   );
   if (thread == null) {
     return res.status(404).json({
