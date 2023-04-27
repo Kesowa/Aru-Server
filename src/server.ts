@@ -110,7 +110,6 @@ const worker = async () => {
   io.adapter(createAdapter(pubClient, subClient));
   //handle socket.io
   ioHandler(io);
-  console.log(pubClient, subClient);
 
   server.listen(PORT, () => logger.info(`server listening on port ${PORT}`));
 };

@@ -1,12 +1,13 @@
 import * as AWS from "aws-sdk";
 const Busboy = require("busboy");
 import { IncomingMessage } from "http";
-import { Directory } from "../constants";
+import { ACCESS_KEY, AWS_S3_BUCKET, AWS_S3_ENDPOINT, AWS_SECRET_KEY, Directory } from "../constants";
 import { randomUUID } from "crypto";
 
 const s3 = new AWS.S3({
-  accessKeyId: process.env.S3_KEY_ID,
-  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  accessKeyId: ACCESS_KEY,
+  secretAccessKey: AWS_SECRET_KEY,
+  endpoint: AWS_S3_ENDPOINT,
 });
 
 function uploadToS3(
@@ -18,7 +19,7 @@ function uploadToS3(
 
   return new Promise<string>((resolve, reject) => {
     const params: AWS.S3.PutObjectRequest = {
-      Bucket: "kesowa-static",
+      Bucket: AWS_S3_BUCKET,
       Key: key,
       Body: stream,
       ContentType: contentType,

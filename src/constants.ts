@@ -1,8 +1,6 @@
 import { existsSync } from "fs";
 import { Types } from "mongoose";
 import path from "path";
-import * as dotenv from "dotenv";
-dotenv.config();
 
 export const DUMMY_TENANT = new Types.ObjectId("629aeb50ea5ed2cee054870b");
 
@@ -94,7 +92,7 @@ export const MONGODB_CONNECTION_STRING = new EnvVar("MONGODB_CONNECTION_STRING")
 export const SMTP_PASSWORD = new EnvVar("SMTP_PASSWORD").toString();
 export const ACCESS_KEY = new EnvVar("ACCESS_KEY").toString();
 export const AWS_SECRET_KEY = new EnvVar("AWS_SECRET_KEY").toString();
-export const ENDPOINT = new EnvVar("ENDPOINT").toString();
+export const AWS_S3_ENDPOINT = new EnvVar("AWS_S3_ENDPOINT").isUrl().toString();
 export const SMTP_USERNAME = new EnvVar("SMTP_USERNAME").toString();
 export const SMTP_SERVER = new EnvVar("SMTP_SERVER").isUrl().toString();
 export const SMTP_PORT = new EnvVar("SMTP_PORT").toNumeric();
@@ -168,3 +166,5 @@ export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();
 export const REDIS_URI = new EnvVar("REDIS_URI").isUrl().toString();
 export const SEQ_SERVER_URL = new EnvVar("SEQ_URL").isUrl().toString();
 export const SEQ_API_KEY = new EnvVar("SEQ_KEY").isUrl().toString();
+export const AWS_S3_BUCKET = new EnvVar("AWS_S3_BUCKET").toString();
+export const AWS_MEDIACONVERT_ENDPOINT = new EnvVar("AWS_MEDIACONVERT_ENDPOINT").isUrl().toString();

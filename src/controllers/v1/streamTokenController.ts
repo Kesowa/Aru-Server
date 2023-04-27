@@ -9,7 +9,7 @@ import {
   Instance,
   ACCESS_KEY,
   AWS_SECRET_KEY,
-  ENDPOINT,
+  AWS_MEDIACONVERT_ENDPOINT,
 } from "../../constants";
 import mongoose from "mongoose";
 //import dotenv config
@@ -677,7 +677,7 @@ export const mediaconvert = async (
   });
 
   const mediaconvert = new AWS.MediaConvert({
-    endpoint: ENDPOINT,
+    endpoint: AWS_MEDIACONVERT_ENDPOINT,
     region: "ap-south-1",
   });
 

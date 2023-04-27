@@ -64,15 +64,15 @@ app.use(cors());
 app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
 
 //static files
-if (MODE == Mode.Dev) {
-  app.use(
-    express.static(PUBLIC_DIR, {
-      setHeaders: function (res) {
-        res.set("x-timestamp", Date.now().toString());
-      },
-    })
-  );
-}
+// if (MODE == Mode.Dev) {
+//   app.use(
+//     express.static(PUBLIC_DIR, {
+//       setHeaders: function (res) {
+//         res.set("x-timestamp", Date.now().toString());
+//       },
+//     })
+//   );
+// }
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));

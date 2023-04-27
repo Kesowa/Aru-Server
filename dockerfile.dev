@@ -4,6 +4,7 @@ RUN npm i -g ts-node-dev
 ADD ./ffmpeg.tar.xz /opt
 RUN mv /opt/ffmpeg-git-20220910-amd64-static /opt/ffmpeg
 ADD  ./potree.tar.gz /opt
+ADD ./public.tar /app
 RUN mv /opt/build /opt/potree
 RUN cp /opt/potree/liblaszip.so /usr/lib
 COPY package*.json ./
