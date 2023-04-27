@@ -16,7 +16,7 @@ export interface IAlert {
   onSite: boolean;
   flightId: mongoose.Types.ObjectId; // index
   tenantId: mongoose.Types.ObjectId; // index
-  pcount: number;
+  pcount: number; // People count
   type: "Manual" | "Automated" | "Android"; // index
   image: string;
   locationId?: mongoose.Types.ObjectId; // index
