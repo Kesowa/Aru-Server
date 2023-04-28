@@ -37,7 +37,6 @@ export default class CustomStorageEngine implements StorageEngine {
 
     file.filename = randomUUID() + path.extname(file.originalname);
     file.path = path.join(file.destination, file.filename);
-    file.size = 100;
     const s3stream = file.stream.pipe(new PassThrough())
     if (this.tempCopy) {
       const tempPath = "/tmp/" + file.filename;
@@ -51,7 +50,8 @@ export default class CustomStorageEngine implements StorageEngine {
     }
     s3fs
       .writeStream(file.path, s3stream)
-      .then(() => callback(null, file))
+      .then(() => s3fs.stat(file.path))
+      .then(({size}) => callback(null, {...file, size}))
       .catch((err) => callback(err));
   }
 
