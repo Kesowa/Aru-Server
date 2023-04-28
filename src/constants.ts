@@ -158,8 +158,8 @@ export enum Directory {
 
 export const DirPath = (dir: Directory, filename?: string | undefined) =>
   filename == undefined
-    ? path.join(PUBLIC_DIR, dir)
-    : path.join(PUBLIC_DIR, dir, filename);
+    ? path.join(dir)
+    : path.join(dir, filename);
 
 export const TITILER_PUBLIC = new EnvVar("TITILER_PUBLIC").isUrl().toString();
 export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();
