@@ -3,6 +3,7 @@ import { NextFunction, Request } from "express";
 import { AuthResponse } from "./interfaceUtils";
 import fs from "fs";
 import { IPackage } from "../schemas/package";
+import s3fs from "../s3utils/lib-aws";
 
 export const isSize = async (
   req: Request,
@@ -31,14 +32,14 @@ export const isSize = async (
       return next();
     } else {
       console.log("trying to delete file", file.filename);
-      await fs.promises.rm(file.path);
+      await s3fs.rm(file.path);
       return res.status(403).json({
         status: false,
         message: "Actual storage exceeded the Limit of Set storage!",
       });
     }
   } catch (error) {
-    req.log.error(error);
+    req.log.error(error, "error in sizePermission");
     res.status(500).json({
       status: false,
       message: "Server Error!",

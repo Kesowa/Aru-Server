@@ -24,6 +24,7 @@ import {
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
+import s3fs from "../../s3utils/lib-aws";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
@@ -119,13 +120,16 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
           Directory.DOCUMENTS,
           `2x_${req.file.filename}`
         );
-        await sharp(req.file.path)
+        const x2Stream = s3fs.uploadStream(x2FilePath);
+        sharp(req.file["tempPath"])
           .resize(1280, 720, { fit: "inside" })
-          .toFile(x2FilePath);
-
-        await sharp(x2FilePath)
+          .pipe(x2Stream.writeStream);
+        await x2Stream.promise;
+        const x1Stream = s3fs.uploadStream(x1FilePath);
+        sharp(req.file["tempPath"])
           .resize(120, 120, { fit: "inside" })
-          .toFile(x1FilePath);
+          .pipe(x1Stream.writeStream);
+        await x1Stream.promise;
       }
       const doc = new Document({
         name: req.file.originalname,

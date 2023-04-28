@@ -24,7 +24,7 @@ import { validator } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
 
-const upload = multer({ storage: multerStorage(Directory.DOCUMENTS) });
+const upload = multer({ storage: multerStorage(Directory.DOCUMENTS, true) });
 
 // ****************create document**********************
 
