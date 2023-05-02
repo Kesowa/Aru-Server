@@ -245,10 +245,16 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           { $inc: { actualLayerCount: 1 } }
         );
       }
+      const layers = await Layer.findOne({ _id: savedDoc._id })
+      .populate<{
+        tenantId: ITenant;
+      }>("tenantId", "name")
+      .populate<{ raster: IRaster }>({ path: "raster" })
+      .populate<{ vector: IVector }>({ path: "vector" });
       res.status(201).json({
         status: true,
         message: "New Layer Created",
-        data: savedDoc,
+        data: layers,
       });
     }
   }
