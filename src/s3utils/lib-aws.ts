@@ -37,8 +37,13 @@ const stat = async (path: string) => {
     Bucket,
     Key: path,
   });
-  const output = await Client.send(metadata);
-  return { size: output.ContentLength };
+  try {
+    // if file(key) is not found, then exception will be thrown
+    const output = await Client.send(metadata);
+    return { size: output.ContentLength };
+  } catch(error) {
+    return { size: -1 };
+  }
 };
 
 const copyFile = async (src: string, dest: string) => {

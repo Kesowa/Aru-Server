@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import fs from "fs";
+import fs from "fs"; // TO-REMOVE: being used by pointcloud extraction only
 import archiver from "archiver";
 import path from "path";
 import sharp from "sharp";
@@ -12,18 +12,13 @@ import rimraf from "rimraf";
 import { missionSpecificSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import { exec } from "child_process";
-import resizer from "node-image-resizer";
 import {
-  deleteDirFileUsingName,
-  deletePublicFileUsingPath,
   deletePublicFolderUsingPath,
-} from "../../utils/fileDeleteUtils";
+} from "../../utils/fileDeleteUtils"; // TO-REMOVE: being used by pointcloud deletion only
 import { Directory, DirPath } from "../../constants";
 import {
-  checkFileExists,
   createDirIfNotExists,
-  getFileSize,
-} from "../../utils/fileUtils";
+} from "../../utils/fileUtils"; // TO-REMOVE: being used by pointcloud extraction only
 import s3fs from "../../s3utils/lib-aws";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
@@ -195,16 +190,12 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
       if (data.folderName == "rawPhotos" || data.folderName == "photos") {
         const newFilename1 = `1x_${fname}`;
         const newFilename2 = `2x_${fname}`;
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename1);
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename2);
+        await s3fs.rm(DirPath(Directory.DOCUMENTS, newFilename1));
+        await s3fs.rm(DirPath(Directory.DOCUMENTS, newFilename2));
       }
 
-      const conf = await deletePublicFileUsingPath(data.filePath);
-      if (conf) {
-        req.log.info("Files deleted");
-      } else {
-        req.log.info("Files does not exist");
-      }
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, fname));
+
       if (data) {
         res.status(200).json({
           status: true,
@@ -252,14 +243,12 @@ export const deletemultipleDocument = async (
       if (d.folderName == "rawPhotos" || d.folderName == "photos") {
         const newFilename1 = `1x_${fname}`;
         const newFilename2 = `2x_${fname}`;
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename1);
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename2);
+        await s3fs.rm(DirPath(Directory.DOCUMENTS, newFilename1));
+        await s3fs.rm(DirPath(Directory.DOCUMENTS, newFilename2));
       }
 
-      const conf = await deletePublicFileUsingPath(d.filePath);
-      if (conf) {
-        req.log.info("Files Deleted");
-      }
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, fname));
+
       const doc = await d.delete();
       if (doc) {
         flag = 1;
@@ -396,10 +385,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, req.log);
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = fs.createWriteStream(`${dir}${fname}`);
+        const outputStream = s3fs.uploadStream(DirPath(Directory.ZIP, fname));
         const archive = archiver("zip", {
           zlib: { level: 9 }, // Sets the compression level.
         });
@@ -407,14 +394,15 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         //     req.log.info(archive.pointer() + ' total bytes');
         //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
         // });
-        archive.pipe(output);
+        archive.pipe(outputStream.writeStream);
         for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.DEFAULT, d[i].filePath), {
-            name: d[i].filePath.split("/")[2],
-          });
+          const fileName = path.parse(d[i].filePath).base;
+          const fileBuffer = await s3fs.readFile(DirPath(Directory.DOCUMENTS, fileName));
+          archive.append(fileBuffer, { name: fileName });
         }
         try {
-          const _archiveFinalized = await archive.finalize();
+          const _archiveFinalized = await archive.finalize(); // stream closed/ended
+          await outputStream.promise; // await upload.done()
           const link = `/zip/${fname}`;
           missionSpecificSocket
             .to(missionId)
@@ -441,11 +429,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, req.log);
-
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = fs.createWriteStream(`${dir}${fname}`);
+        const outputStream = s3fs.uploadStream(DirPath(Directory.ZIP, fname));
         const archive = archiver("zip", {
           zlib: { level: 9 }, // Sets the compression level.
         });
@@ -453,14 +438,15 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         //     req.log.info(archive.pointer() + ' total bytes');
         //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
         // });
-        archive.pipe(output);
+        archive.pipe(outputStream.writeStream);
         for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.DEFAULT, d[i].filePath), {
-            name: d[i].filePath.split("/")[2],
-          });
+          const fileName = path.parse(d[i].filePath).base;
+          const fileBuffer = await s3fs.readFile(DirPath(Directory.DOCUMENTS, fileName));
+          archive.append(fileBuffer, { name: fileName });
         }
         try {
-          const _archiveFinalized = await archive.finalize();
+          const _archiveFinalized = await archive.finalize(); // stream closed/ended
+          await outputStream.promise; // await upload.done()
           const link = `/zip/${fname}`;
           missionSpecificSocket
             .to(missionId)
@@ -487,25 +473,29 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
       });
       if (doc) {
-        const newFilename = DirPath(Directory.DEFAULT, doc.filePath);
-        if (await checkFileExists(newFilename)) {
-          await resizer(newFilename, {
-            versions: [
-              {
-                quality: 90,
-                prefix: "2x_",
-                width: 1280,
-                height: 720,
-              },
-              {
-                quality: 80,
-                prefix: "1x_",
-                width: 120,
-                height: 120,
-              },
-            ],
-          });
-        }
+        const fileName = path.parse(doc.filePath).base;
+        const fileBuffer = await s3fs.readFile(DirPath(Directory.DOCUMENTS, fileName));
+
+        const x1FilePath = DirPath(
+          Directory.DOCUMENTS,
+          `1x_${fileName}`
+        );
+        const x1Stream = s3fs.uploadStream(x1FilePath);
+        sharp(fileBuffer)
+          .resize(120, 120, { fit: "inside" })
+          .pipe(x1Stream.writeStream);
+        await x1Stream.promise;
+
+        const x2FilePath = DirPath(
+          Directory.DOCUMENTS,
+          `2x_${fileName}`
+        );
+        const x2Stream = s3fs.uploadStream(x2FilePath);
+        sharp(fileBuffer)
+          .resize(1280, 720, { fit: "inside" })
+          .pipe(x2Stream.writeStream);
+        await x2Stream.promise;
+
         res.status(200).json({
           status: true,
           message: `Successfully generated 2x files`,
@@ -538,9 +528,11 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
     );
     if (docs.length) {
       for (let i = 0; i < docs.length; i++) {
-        const newFilename = DirPath(Directory.DEFAULT, docs[i].filePath);
-        if (await checkFileExists(newFilename)) {
-          const size: number = await getFileSize(newFilename);
+        const fileName = path.parse(docs[i].filePath).base;
+        const filePath = DirPath(Directory.DOCUMENTS, fileName);
+        const fileStat = await s3fs.stat(filePath);
+        const size: number = Number((fileStat.size / (1024 * 1024)).toFixed(5));
+        if (size !== -1) { // key found in bucket
           if (size != docs[i].fileSize) {
             await Document.updateOne(
               {
@@ -550,7 +542,7 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
               { upsert: true, useFindAndModify: false }
             );
           }
-        } else {
+        } else { // key not found in bucket
           await docs[i].delete();
         }
       }
