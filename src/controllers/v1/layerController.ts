@@ -2714,15 +2714,29 @@ export const publicLayerByMissionId = async (
   }
 
   const layers = await Layer.find({ missionId: publicMission._id })
-    .populate<{
-      tenantId: ITenant;
-    }>("tenantId", "name")
-    .populate<{ raster: IRaster }>({ path: "raster" })
-    .populate<{ vector: IVector }>({ path: "vector" });
-
+  .populate<{
+    tenantId: ITenant;
+  }>("tenantId", "name")
+  .populate<{ raster: IRaster }>({ path: "raster" })
+  .populate<{ vector: IVector }>({ path: "vector" });
+  const flight = await Flight.findOne<{
+    centerPoints: {
+      lat: number;
+      lng: number;
+    };
+  }>(
+    {
+      mission: req.params.missionId,
+      tenant: req.params.tenantId,
+    },
+    {
+      centerPoints: 1,
+    }
+  );
   res.json({
     status: true,
     message: "found mission and layers",
+    centerPoints: flight.centerPoints,
     mission: publicMission,
     data: layers,
   });
