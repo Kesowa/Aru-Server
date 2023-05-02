@@ -24,7 +24,7 @@ services:
       - MONGO_INITDB_DATABASE=test
     ports:
       - 27019:27017
-  
+
   titiler:
     environment:
       - PORT=8000
