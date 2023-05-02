@@ -14,6 +14,8 @@ export interface IDocument {
   missionId: mongoose.Types.ObjectId; // index
   tenantId: mongoose.Types.ObjectId; // index
   isFlagged: boolean;
+  isThreadExist: boolean;
+  commentCount: Number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +52,14 @@ const documentSchema = new mongoose.Schema<IDocument>(
     isFlagged: {
       type: Boolean,
       default: false,
+    },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

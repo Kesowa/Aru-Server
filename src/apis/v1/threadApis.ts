@@ -1,5 +1,5 @@
 import express from "express";
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 import {
   CreateDocThread,
   AddorUpdateDocComment,
@@ -21,6 +21,7 @@ router.get(
   "/:docType/:docId",
   param("docType").isString(),
   param("docId").isMongoId(),
+  query("ifExist").optional().isBoolean(),
   validator,
   isAuthenticated,
   canListThread,
