@@ -84,27 +84,27 @@ export type Notification = {
 
 export type MissionSpecific = {
   query: {
-    missionID: string,
-  },
+    missionID: string;
+  };
   events: {
-    "PROCESS_VIDEO_FINISHED": ProcessVideoData,
-    "PROCESS_VIDEO_STARTED": ProcessVideoData,
-    "VOD_REMOVED": IVOD,
+    PROCESS_VIDEO_FINISHED: ProcessVideoData;
+    PROCESS_VIDEO_STARTED: ProcessVideoData;
+    VOD_REMOVED: IVOD;
     "ASSIGNED SUCESSFULLY": {
-      layerName: string,
-      data: any,
-      badImages: any[]
-    },
-    "LAYER_ZIP_START": {},
-    "LAYER_ZIP_COMPLETED": string // relative path to zip,
-    "LAYER_ZIP_FAILED": {},
-    "pic-to-map": {badImages: any[], result: ILayer},
-    "POINTCLOUD_EXTRACTION_COMPLETED": IDocument,
-    "POINTCLOUD_EXTRACTION_FAILED": {},
-    "DOCUMENT_CREATED": IDocument,
-    "DOCUMENT_DELETED": IDocument,
-    "DOCUMENT_ZIP_START": {},
-    "DOCUMENT_ZIP_COMPLETED": string // relative path to zip,
-    "DOCUMENT_ZIP_FAILED": {},
-  }
-}
+      layerName: string;
+      data: any;
+      badImages: any[];
+    };
+    LAYER_ZIP_START: {};
+    LAYER_ZIP_COMPLETED: string; // relative path to zip,
+    LAYER_ZIP_FAILED: {};
+    "pic-to-map": { badImages: any[]; result: ILayer };
+    POINTCLOUD_EXTRACTION_COMPLETED: IDocument;
+    POINTCLOUD_EXTRACTION_FAILED: {};
+    DOCUMENT_CREATED: IDocument;
+    DOCUMENT_DELETED: IDocument;
+    DOCUMENT_ZIP_START: {};
+    DOCUMENT_ZIP_COMPLETED: string; // relative path to zip,
+    DOCUMENT_ZIP_FAILED: {};
+  };
+};
