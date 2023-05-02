@@ -1,8 +1,13 @@
-import { IAsset } from "../schemas/asset";
-import { IFlight } from "../schemas/flight";
-import { ILocation } from "../schemas/location";
-import { IMission } from "../schemas/mission";
-import { AIRequest, droneStat } from "../utils/socketUtils";
+import type { IAsset } from "../schemas/asset";
+import { IDocument } from "../schemas/document";
+import type { IFlight } from "../schemas/flight";
+import { ILayer } from "../schemas/layer";
+import type { ILocation } from "../schemas/location";
+import type { IMission } from "../schemas/mission";
+import { IVOD } from "../schemas/VOD";
+import type { AIRequest, droneStat } from "../utils/socketUtils";
+import type { ProcessVideoData } from "../utils/videoUtils";
+
 export type NameSpaces = {
   "/stream/dronelocation": DroneLocation,
   "/stream/alert": Alert,
@@ -78,4 +83,29 @@ export type Notification = {
   }
 }
 
-export type MissionSpecific = {}
+export type MissionSpecific = {
+  query: {
+    missionID: string,
+  },
+  events: {
+    "PROCESS_VIDEO_FINISHED": ProcessVideoData,
+    "PROCESS_VIDEO_STARTED": ProcessVideoData,
+    "VOD_REMOVED": IVOD,
+    "ASSIGNED SUCESSFULLY": {
+      layerName: string,
+      data: any,
+      badImages: any[]
+    },
+    "LAYER_ZIP_START": {},
+    "LAYER_ZIP_COMPLETED": string // relative path to zip,
+    "LAYER_ZIP_FAILED": {},
+    "pic-to-map": {badImages: any[], result: ILayer},
+    "POINTCLOUD_EXTRACTION_COMPLETED": IDocument,
+    "POINTCLOUD_EXTRACTION_FAILED": {},
+    "DOCUMENT_CREATED": IDocument,
+    "DOCUMENT_DELETED": IDocument,
+    "DOCUMENT_ZIP_START": {},
+    "DOCUMENT_ZIP_COMPLETED": string // relative path to zip,
+    "DOCUMENT_ZIP_FAILED": {},
+  }
+}
