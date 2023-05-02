@@ -1,5 +1,6 @@
-import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
+import shp2json from "shpjs";
+import type { Request } from "express";
+import type { AuthResponse } from "../../utils/interfaceUtils";
 import fetch from "node-fetch";
 import Layer from "../../models/layer";
 import layerFiles from "../../models/layerFiles";
@@ -27,7 +28,7 @@ import {
 } from "../../utils/geojsonUtils";
 import * as turf from "@turf/turf";
 import nearestPoint from "@turf/nearest-point";
-import { NearestPoint } from "@turf/nearest-point";
+import type { NearestPoint } from "@turf/nearest-point";
 import exifr from "exifr";
 import path from "path";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
@@ -35,35 +36,35 @@ import Flight from "../../models/flight";
 import archiver from "archiver";
 import { isSizeVector } from "../../utils/sizePermission";
 import LayerGroup from "../../models/layerGroup";
-import { IVector } from "../../schemas/vectorprops";
-import { IRaster } from "../../schemas/rasterprops";
-import { IPackage } from "../../schemas/package";
-import { ILayerGroup } from "../../schemas/layerGroup";
+import type { IVector } from "../../schemas/vectorprops";
+import type { IRaster } from "../../schemas/rasterprops";
+import type { IPackage } from "../../schemas/package";
+import type { ILayerGroup } from "../../schemas/layerGroup";
 import {
   Directory,
   DirPath,
   TITILER_SERVER,
   TITILER_STATIC,
 } from "../../constants";
-import { HydratedDocument, Types } from "mongoose";
-import { ILayerFile } from "../../schemas/layerFiles";
+import { type HydratedDocument, Types } from "mongoose";
+import type { ILayerFile } from "../../schemas/layerFiles";
 import {
   checkFileExists,
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
-import { ITenant } from "../../schemas/tenant";
-import { ILayer } from "../../schemas/layer";
+import type { ILayer } from "../../schemas/layer";
+import type { ITenant } from "../../schemas/tenant";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
   {
-    let layer: any;
+    let layer: HydratedDocument<ILayer>;
     if (req.params.type == "Vector") {
-      const fileNamee = req.file?.originalname.split(".")[1];
-      let pathee2: any;
-      let filePath: any;
-      if (req.file?.originalname.split(".")[1] === "kml") {
+      const fileExt = path.extname(req.file.originalname).slice(1);
+      let pathee2: string;
+      let filePath: string;
+      if (fileExt === "kml") {
         const pathh1 = DirPath(Directory.VECTOR, req.file?.filename);
         const fileData = await fs.promises.readFile(pathh1, "utf8");
         const kml1 = new DOMParser().parseFromString(fileData);
@@ -72,20 +73,27 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         filePath = `/vector/${req.file.filename.replace(".kml", ".geojson")}`;
         await fs.promises.writeFile(pathee2, JSON.stringify(converted));
         await fs.promises.unlink(pathh1);
-      } else if (
-        fileNamee === "shp" ||
-        fileNamee === "shx" ||
-        fileNamee === "dbf"
-      ) {
-        const pathh1 = DirPath(Directory.VECTOR, req.file?.filename);
-        pathee2 = pathh1.split(".")[0] + ".geojson";
-        const fileee = pathh1.split(".")[0];
+      } else if (fileExt === "shp" || fileExt === "zip") {
+        const filename = path.basename(req.file.filename, fileExt);
+        const pathh1 = DirPath(Directory.VECTOR, req.file.filename);
+        const shpFile = await Fs.readFile(pathh1);
+        pathee2 = filename + "geojson";
+        filePath = `/${Directory.VECTOR}/${pathee2}`;
+        pathee2 = DirPath(Directory.VECTOR, pathee2);
+        const geojson = await shp2json(shpFile);
+        await Fs.writeFile(pathee2, JSON.stringify(geojson));
+      } else if (fileExt === "geojson") {
+        filePath = `/${Directory.VECTOR}/${req.file.filename}`;
+        pathee2 = req.file.path;
+      } else {
+        req.log.error({ fileExt }, "unsupported vector format");
+        res.status(400).json({
+          status: false,
+          message: "file format not supported",
+        });
+        return;
       }
-      const dir =
-        fileNamee == "kml"
-          ? pathee2
-          : DirPath(Directory.VECTOR, req.file?.filename);
-      // let dir = DirPath(Directory.VECTOR, req.file?.filename);
+      const dir = pathee2 || req.file.path;
       const {
         name,
         type,
@@ -125,8 +133,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           type,
           vector,
           color,
-          layerpath:
-            fileNamee == "kml" ? filePath : `/vector/${req.file?.filename}`,
+          layerpath: filePath,
           fileSize: size,
           featureCount: fc,
           layerGroupId,
@@ -156,7 +163,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
             vector,
             color: flagColor,
             layerpath:
-              fileNamee == "kml" ? filePath : `/vector/${req.file?.filename}`,
+              fileExt == "kml" ? filePath : `/vector/${req.file?.filename}`,
             fileSize: size,
             featureCount: fc,
             layerGroupId,
@@ -2705,6 +2712,7 @@ export const publicLayerByMissionId = async (
     });
     return;
   }
+
   const layers = await Layer.find({ missionId: publicMission._id })
   .populate<{
     tenantId: ITenant;
