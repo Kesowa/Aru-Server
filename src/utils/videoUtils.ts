@@ -13,7 +13,7 @@ import Location from "../models/location";
 
 // import path from "node:path";
 
-type ProcessVideoData = {
+export type ProcessVideoData = {
   fullPath: string;
   filename: string;
   missionID: mongoose.Types.ObjectId;
