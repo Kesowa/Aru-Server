@@ -111,12 +111,12 @@ export type MissionSpecific = {
 
 export type MavStats = {
   query: {
-    tenantID: string
-  },
+    tenantID: string;
+  };
   events: {
-    "message": any,
-    "START_FILE_SYNC": {
-      missionId: string,
-    }
-  }
+    message: any;
+    START_FILE_SYNC: {
+      missionId: string;
+    };
+  };
 };
