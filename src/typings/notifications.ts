@@ -1,10 +1,10 @@
 import type { IAsset } from "../schemas/asset";
-import { IDocument } from "../schemas/document";
+import type { IDocument } from "../schemas/document";
 import type { IFlight } from "../schemas/flight";
-import { ILayer } from "../schemas/layer";
+import type { ILayer } from "../schemas/layer";
 import type { ILocation } from "../schemas/location";
 import type { IMission } from "../schemas/mission";
-import { IVOD } from "../schemas/VOD";
+import type { IVOD } from "../schemas/VOD";
 import type { AIRequest, droneStat } from "../utils/socketUtils";
 import type { ProcessVideoData } from "../utils/videoUtils";
 
@@ -13,7 +13,7 @@ export type NameSpaces = {
   "/stream/alert": Alert;
   "/stream/notification": Notification;
   "/stream/mission-specific": MissionSpecific;
-  "/stream/mavStats": {};
+  "/stream/mavStats": MavStats;
 };
 
 export type DroneLocation = {
@@ -107,4 +107,16 @@ export type MissionSpecific = {
     DOCUMENT_ZIP_COMPLETED: string; // relative path to zip,
     DOCUMENT_ZIP_FAILED: {};
   };
+};
+
+export type MavStats = {
+  query: {
+    tenantID: string
+  },
+  events: {
+    "message": any,
+    "START_FILE_SYNC": {
+      missionId: string,
+    }
+  }
 };
