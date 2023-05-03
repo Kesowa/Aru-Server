@@ -4,7 +4,6 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import { notificationSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import sharp from "sharp";
-import resizer from "node-image-resizer";
 // sharp.cache({ files : 0 });
 import { Types } from "mongoose";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
@@ -18,6 +17,7 @@ import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 import path from "path";
 import { WiproInterface } from "../../utils/wipro";
+import s3fs from "../../s3utils/lib-aws";
 // Create Alert Controlller
 type CreateAlert = {
   missionId: Types.ObjectId;
@@ -51,9 +51,9 @@ export const createAlert = async (
       location: req.body.location
         ? req.body.location
         : {
-            lat: 0,
-            long: 0,
-          },
+          lat: 0,
+          long: 0,
+        },
       missionId,
       locationId,
       createdBy: res.locals.user._id,
@@ -757,22 +757,27 @@ export const convertImageToThumbnail = async (
   if (result.length) {
     for (let i = 0; i < result.length; i++) {
       const newFilename = DirPath(Directory.DEFAULT, result[i].image);
-      if (await checkFileExists(newFilename)) {
-        await resizer(newFilename, {
-          all: {
-            path: DirPath(Directory.ALERT_IMAGES),
-            quality: 80,
-          },
-          versions: [
-            {
-              quality: 100,
-              prefix: "1x_",
-              width: 120,
-              height: 120,
-            },
-          ],
-        });
-      }
+      const fileName = path.basename(result[i].image);
+      const tempFile = await s3fs.readFile(newFilename);
+      const x1FilePath = DirPath(
+        Directory.ALERT_IMAGES,
+        `1x_${fileName}`
+      );
+      const x2FilePath = DirPath(
+        Directory.ALERT_IMAGES,
+        `2x_${fileName}`
+      );
+      const x2Stream = s3fs.uploadStream(x2FilePath);
+      sharp(tempFile)
+        .resize(1280, 720, { fit: "inside" })
+        .pipe(x2Stream.writeStream);
+      await x2Stream.promise;
+      const x1Stream = s3fs.uploadStream(x1FilePath);
+      sharp(tempFile)
+        .resize(120, 120, { fit: "inside" })
+        .pipe(x1Stream.writeStream);
+      await x1Stream.promise;
+
     }
     res.status(200).json({
       status: true,
@@ -846,19 +851,25 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
 
 export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
-    const img_path = DirPath(Directory.ALERT_IMAGES, req.file?.filename);
-    if (await checkFileExists(img_path)) {
-      try {
-        await sharp(req.file?.path)
-          .resize(120, 120, { withoutEnlargement: true })
-          .toFile(DirPath(Directory.ALERT_IMAGES, `1x_${req.file?.filename}`));
-        req.log.info("Image Resized Sucessfully");
-      } catch (err) {
-        req.log.warn("Image Resizing Failed");
-        req.log.error(err);
-      }
-    }
-    const ff: any = await exifr.parse(img_path);
+    const x1FilePath = DirPath(
+      Directory.ALERT_IMAGES,
+      `1x_${req.file.filename}`
+    );
+    const x2FilePath = DirPath(
+      Directory.ALERT_IMAGES,
+      `2x_${req.file.filename}`
+    );
+    const x2Stream = s3fs.uploadStream(x2FilePath);
+    sharp(req.file["tempPath"])
+      .resize(1280, 720, { fit: "inside", withoutEnlargement: true })
+      .pipe(x2Stream.writeStream);
+    await x2Stream.promise;
+    const x1Stream = s3fs.uploadStream(x1FilePath);
+    sharp(req.file["tempPath"])
+      .resize(120, 120, { fit: "inside", withoutEnlargement: true })
+      .pipe(x1Stream.writeStream);
+    await x1Stream.promise;
+    const ff = await exifr.parse(req.file["tempPath"]);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;

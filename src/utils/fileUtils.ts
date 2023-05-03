@@ -1,9 +1,10 @@
 import fs from "fs";
 import { Logger } from "pino";
 import { Directory, DirPath } from "../constants";
+import s3fs from "../s3utils/lib-aws";
 
 export const getFileSize = async (filepath: string) => {
-  const fileStats = await fs.promises.stat(filepath);
+  const fileStats = await s3fs.stat(filepath);
   const fileSize: number = Number(
     (Number(fileStats.size) / (1024 * 1024)).toFixed(5)
   );
