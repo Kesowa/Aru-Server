@@ -759,7 +759,7 @@ export const convertImageToThumbnail = async (
       const fileName = path.parse(result[i].image).base;
       const fileBuffer = await s3fs.readFile(DirPath(Directory.ALERT_IMAGES, fileName));
       const x1FilePath = DirPath(
-        Directory.DOCUMENTS,
+        Directory.ALERT_IMAGES,
         `1x_${fileName}`
       );
       const x1Stream = s3fs.uploadStream(x1FilePath);
