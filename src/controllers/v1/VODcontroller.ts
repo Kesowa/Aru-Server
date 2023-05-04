@@ -19,6 +19,7 @@ import {
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
 import Flight from "../../models/flight";
+import { randomUUID } from "crypto";
 
 export const saveVOD = async (
   req: Request<
@@ -314,8 +315,8 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     }
     if (req.file) {
       const originalName = req.file.originalname;
-      const fullPath = req.file.path;
-      const fullPath2 = DirPath(Directory.VOD);
+      const fullPath = req.file["tempPath"];
+      // const fullPath2 = DirPath(Directory.VOD);
       const tenantID = res.locals.user.tenantId._id;
       const size: number = Number(
         (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
@@ -324,7 +325,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
       VODEvents.emit("PROCESS_VIDEO", {
         missionID,
         flightID,
-        fullPath2,
+        // fullPath2,
         locationID,
         fullPath,
         filename,
@@ -335,7 +336,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
       res.json({
         status: true,
         message: "Sucessfully uploaded the video",
-        file: `temp/${filename}.mp4`,
+        file: `vod/${filename}.mp4`,
       });
     }
   }

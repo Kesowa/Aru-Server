@@ -8,16 +8,15 @@ import { missionSpecificSocket } from "../socket";
 import DJISRTParser, { AllFunctions } from "dji_srt_parser";
 import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
-import { Directory, DirPath } from "../constants";
 import Location from "../models/location";
 
 // import path from "node:path";
 
 type ProcessVideoData = {
-  fullPath: string;
+  fullPath: string; // temp path
   filename: string;
   missionID: mongoose.Types.ObjectId;
-  fullPath2: string;
+  // fullPath2: string;
   flightID: mongoose.Types.ObjectId;
   locationID: mongoose.Types.ObjectId;
   tenantID: mongoose.Types.ObjectId;
@@ -30,8 +29,8 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     console.log(
       "SRT Extraction successful, now Exiting!---------------------------------------------------------------------"
     );
-    const srtOutpath = DirPath(Directory.VOD, d.filename + ".srt");
-    const geoJSONoutPath = DirPath(Directory.VOD, d.filename + ".geojson");
+    const srtOutpath = "/tmp/" + d.filename + ".srt";
+    const geoJSONoutPath = "/tmp/" + d.filename + ".geojson";
     let data: string;
     let json: string;
     let DJIData: AllFunctions;
@@ -72,7 +71,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     srtFlag = false;
   }
   if (srtFlag == true) {
-    const size1 = await findHlsSize(d.filename + ".m3u8");
+    const size1 = await findHlsSize("/tmp/" + d.filename + ".m3u8");
 
     const VODdoc = new VOD({
       flightID: d.flightID,
@@ -104,7 +103,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     };
     await saveToDb();
   } else {
-    const size1: number = await findHlsSize(d.filename + ".m3u8");
+    const size1: number = await findHlsSize("/tmp/" + d.filename + ".m3u8");
 
     const VODdoc = new VOD({
       flightID: d.flightID,
@@ -146,13 +145,11 @@ const videoProcessHandler = (d: ProcessVideoData) => {
   const ps = exec(
     `/opt/ffmpeg/ffmpeg -i "${
       d.fullPath
-    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(
-      Directory.VOD,
-      d.filename + ".m3u8"
-    )}" -ss 00:00:05.000 -vframes 1 "${DirPath(
-      Directory.VOD,
+    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${
+      "/tmp/" + d.filename + ".m3u8"
+    }" -ss 00:00:05.000 -vframes 1 "${
       d.filename + ".jpg"
-    )}" "${DirPath(Directory.VOD, d.filename + ".flv")}"`,
+    }" "${"/tmp/" + d.filename + ".flv"}"`,
     (error, stdout, stderr) => {
       if (error) console.error(error);
       if (stderr) console.error(stderr);
@@ -174,10 +171,9 @@ const videoProcessHandler = (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(
-            Directory.VOD,
-            d.filename + ".srt"
-          )}"`,
+          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${
+            "/tmp/" + d.filename + ".srt"
+          }"`,
           (error, stdout, stderr) => {
             if (error) console.error(error);
             if (stderr) console.error(stderr);

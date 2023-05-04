@@ -4,7 +4,8 @@ import s3multer from "../s3utils/multer";
 
 export const multerStorage = (
   dir: Directory | ((req: Request) => Directory),
-  tempCopy: boolean = false
+  tempCopy: boolean = false,
+  cleanup: boolean = true,
 ) => {
-  return new s3multer({ destination: dir, tempCopy });
+  return new s3multer({ destination: dir, tempCopy, cleanup });
 };
