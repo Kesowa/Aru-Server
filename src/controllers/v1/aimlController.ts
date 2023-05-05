@@ -30,7 +30,7 @@ export const inferVodViolence = async (req: Request<{ vodId: string }>, res: Aut
       const end = moment(new Date());
       const diff = moment.duration(end.diff(start));
       const hours = diff.asHours();
-      if (hours < 1) {
+      if (hours < 0) {
         res.status(202).json({
           status: true,
           message: "task running"
@@ -103,8 +103,15 @@ export const inferVodViolence = async (req: Request<{ vodId: string }>, res: Aut
     return;
   }
 };
-export const callbackVodViolence = async (req: Request<{ taskId: string }, {Keys: string[], Values: [number, number][]}>, res: AuthResponse) => {
-  const task = await aimlModel.findById(req.params.taskId).populate<{doc: HydratedDocument<IVOD>}>("doc");
+export const callbackVodViolence = async (
+  req: Request<{ taskId: string },
+    {
+      Keys: string[],
+      Values: [number, number][]
+    }>,
+  res: AuthResponse
+) => {
+  const task = await aimlModel.findById(req.params.taskId).populate<{ doc: HydratedDocument<IVOD> }>("doc");
   if (task === null) {
     res.status(404).json({
       status: false,
@@ -122,10 +129,43 @@ export const callbackVodViolence = async (req: Request<{ taskId: string }, {Keys
   const filename = `${task.infer}_${task._id}.json`;
   const dataLoc = DirPath(Directory.AI_ML, filename);
   await writeFile(dataLoc, JSON.stringify(req.body));
-  await task.update({status: "completed", data: `${Directory.AI_ML}/${filename}`});
+  await task.update({ status: "completed", data: `${Directory.AI_ML}/${filename}` });
   res.status(201).json({
     status: true,
     message: "task successfully completed"
   });
   return;
 };
+
+export const fetchAimlTasks = async (
+  req: Request<{
+    docModel: string,
+    docId: string
+  },
+    {},
+    {},
+    { infer?: string[] }>,
+  res: AuthResponse
+) => {
+  const query = {
+    docModel: req.params.docModel,
+    doc: req.params.docId,
+    tenant: res.locals.user.tenantId._id,
+  };
+  if (req.query.infer)
+    query["infer"] = req.query.infer;
+
+  const tasks = await aimlModel.find();
+  if (tasks) {
+    res.status(200).json({
+      status: true,
+      message: "ai tasks found",
+      data: tasks,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "ai tasks not found"
+    })
+  }
+}
