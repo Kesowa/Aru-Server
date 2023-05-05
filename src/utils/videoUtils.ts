@@ -144,7 +144,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
 const videoProcessHandler = (d: ProcessVideoData) => {
   console.log("Now Starting");
   const ps = exec(
-    `/opt/ffmpeg/ffmpeg -i "${
+    `/bin/ffmpeg -i "${
       d.fullPath
     }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(
       Directory.VOD,
@@ -174,7 +174,7 @@ const videoProcessHandler = (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(
+          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(
             Directory.VOD,
             d.filename + ".srt"
           )}"`,
