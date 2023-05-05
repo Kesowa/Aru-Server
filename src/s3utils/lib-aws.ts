@@ -8,6 +8,7 @@ import {
 import { Readable, Stream } from "stream";
 import { Upload } from "@aws-sdk/lib-storage";
 import { buffer } from "stream/consumers";
+import { createReadStream } from "fs";
 import { AWS_S3_BUCKET as Bucket, ACCESS_KEY, AWS_SECRET_KEY, AWS_S3_ENDPOINT, Mode, MODE } from "../constants";
 
 const s3Endpoint = Mode.Dev == MODE ? AWS_S3_ENDPOINT : undefined;
@@ -102,12 +103,18 @@ const writeStream = async (dest: string, stream: Readable) => {
   await upload.done();
 };
 
+const uploadFile = async (src: string, dest: string) => {
+  const fileStream = createReadStream(src);
+  await writeStream(dest, fileStream);
+}
+
 const rename = async (src: string, dest: string) => {
   await copyFile(src, dest);
   await rm(src);
 };
 
 export default {
+  uploadFile,
   uploadStream,
   stat,
   copyFile,

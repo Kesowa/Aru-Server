@@ -1,9 +1,10 @@
 import fs from "fs";
 import { Logger } from "pino";
 import { Directory, DirPath } from "../constants";
+import s3fs from "../s3utils/lib-aws";
 
 export const getFileSize = async (filepath: string) => {
-  const fileStats = await fs.promises.stat(filepath);
+  const fileStats = await s3fs.stat(filepath);
   const fileSize: number = Number(
     (Number(fileStats.size) / (1024 * 1024)).toFixed(5)
   );
@@ -32,15 +33,14 @@ export const checkFileExists = async (filepath: string) => {
   }
 };
 
-export const findHlsSize = async (indexFile: string) => {
-  const indexPath = DirPath(Directory.VOD, indexFile);
+export const findHlsSize = async (indexPath: string) => {
   const index = await fs.promises.readFile(indexPath, "utf8");
   const vodFiles = index
     .split("\n")
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
     await fs.promises.stat(
-      DirPath(Directory.VOD, vodFiles[Math.floor(vodFiles.length / 2)])
+       "/tmp/" + (vodFiles[Math.floor(vodFiles.length / 2)])
     )
   ).size;
   const hlsSize = index.length + vodFiles.length * partSize;

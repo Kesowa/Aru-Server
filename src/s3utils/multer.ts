@@ -11,10 +11,12 @@ import { Directory } from "../constants";
 type Destination = Directory | ((req: Request) => Directory);
 export default class CustomStorageEngine implements StorageEngine {
   destination: Destination;
-  tempCopy: boolean
-  constructor(config: { destination: Destination, tempCopy: boolean }) {
+  tempCopy: boolean;
+  cleanup: boolean;
+  constructor(config: { destination: Destination, tempCopy: boolean, cleanup: boolean }) {
     this.destination = config.destination;
-    this.tempCopy = config.tempCopy
+    this.tempCopy = config.tempCopy;
+    this.cleanup = config.cleanup;
   }
 
   _handleFile(
@@ -44,14 +46,16 @@ export default class CustomStorageEngine implements StorageEngine {
       const tempStream = file.stream.pipe(new PassThrough());
       const fileStream = fs.createWriteStream(tempPath);
       tempStream.pipe(fileStream);
-      onFinished(req.res, () => {
-        fs.rm(tempPath, console.error);
-      })
+      if (this.cleanup) {
+        onFinished(req.res, () => {
+          fs.rm(tempPath, console.error);
+        })
+      }
     }
     s3fs
       .writeStream(file.path, s3stream)
       .then(() => s3fs.stat(file.path))
-      .then(({size}) => callback(null, {...file, size}))
+      .then(({ size }) => callback(null, { ...file, size }))
       .catch((err) => callback(err));
   }
 

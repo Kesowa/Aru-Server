@@ -25,23 +25,18 @@ import { canCreateAlert, isAuthenticated } from "../../utils/authUtils";
 import { isAlertCount } from "../../utils/countPermission";
 import { isSize } from "../../utils/sizePermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-// import { uploadMultiple } from "../../utils/s3multipleUpload";
-// import { uploadSingle } from "../../utils/s3singleUpload";
 import multer from "multer";
 import { multerStorage } from "../../utils/fileUploadUtils";
 import { Directory } from "../../constants";
 import { uploadFile } from "../../controllers/v1/commonController";
-
-const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES, true) });
-
 const router = express.Router();
 
+const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES, true)});
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
 router.post(
   "/upload-alert-image",
   isAuthenticated,
   canCreateAlert,
-  // uploadMultiple
   upload.single("image"),
   isSize,
   RobustRunner(uploadFile)

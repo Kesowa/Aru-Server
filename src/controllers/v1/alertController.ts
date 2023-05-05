@@ -16,7 +16,6 @@ import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
 import path from "path";
 import { WiproInterface } from "../../utils/wipro";
 import s3fs from "../../s3utils/lib-aws";
-
 // Create Alert Controlller
 type CreateAlert = {
   missionId: Types.ObjectId;
@@ -51,9 +50,9 @@ export const createAlert = async (
       location: req.body.location
         ? req.body.location
         : {
-            lat: 0,
-            long: 0,
-          },
+          lat: 0,
+          long: 0,
+        },
       missionId,
       locationId,
       createdBy: res.locals.user._id,
@@ -756,17 +755,28 @@ export const convertImageToThumbnail = async (
   });
   if (result.length) {
     for (let i = 0; i < result.length; i++) {
-      const fileName = path.parse(result[i].image).base;
-      const fileBuffer = await s3fs.readFile(DirPath(Directory.ALERT_IMAGES, fileName));
+      const newFilename = DirPath(Directory.DEFAULT, result[i].image);
+      const fileName = path.basename(result[i].image);
+      const tempFile = await s3fs.readFile(newFilename);
       const x1FilePath = DirPath(
         Directory.ALERT_IMAGES,
         `1x_${fileName}`
       );
+      const x2FilePath = DirPath(
+        Directory.ALERT_IMAGES,
+        `2x_${fileName}`
+      );
+      const x2Stream = s3fs.uploadStream(x2FilePath);
+      sharp(tempFile)
+        .resize(1280, 720, { fit: "inside" })
+        .pipe(x2Stream.writeStream);
+      await x2Stream.promise;
       const x1Stream = s3fs.uploadStream(x1FilePath);
-      sharp(fileBuffer)
+      sharp(tempFile)
         .resize(120, 120, { fit: "inside" })
         .pipe(x1Stream.writeStream);
       await x1Stream.promise;
+
     }
     res.status(200).json({
       status: true,
@@ -837,22 +847,25 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
 
 export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
-    try {
-      const x1FilePath = DirPath(
-        Directory.ALERT_IMAGES,
-        `1x_${req.file?.filename}`
-      );
-      const x1Stream = s3fs.uploadStream(x1FilePath);
-      sharp(req.file["tempPath"])
-        .resize(120, 120, { withoutEnlargement: true })
-        .pipe(x1Stream.writeStream);
-      await x1Stream.promise;
-      req.log.info("Image Resized Sucessfully");
-    } catch (err) {
-      req.log.warn("Image Resizing Failed");
-      req.log.error(err);
-    }
-    const ff: any = await exifr.parse(req.file["tempPath"]);
+    const x1FilePath = DirPath(
+      Directory.ALERT_IMAGES,
+      `1x_${req.file.filename}`
+    );
+    const x2FilePath = DirPath(
+      Directory.ALERT_IMAGES,
+      `2x_${req.file.filename}`
+    );
+    const x2Stream = s3fs.uploadStream(x2FilePath);
+    sharp(req.file["tempPath"])
+      .resize(1280, 720, { fit: "inside", withoutEnlargement: true })
+      .pipe(x2Stream.writeStream);
+    await x2Stream.promise;
+    const x1Stream = s3fs.uploadStream(x1FilePath);
+    sharp(req.file["tempPath"])
+      .resize(120, 120, { fit: "inside", withoutEnlargement: true })
+      .pipe(x1Stream.writeStream);
+    await x1Stream.promise;
+    const ff = await exifr.parse(req.file["tempPath"]);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
