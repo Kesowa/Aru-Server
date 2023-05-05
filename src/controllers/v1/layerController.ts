@@ -252,10 +252,16 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           { $inc: { actualLayerCount: 1 } }
         );
       }
+      const layers = await Layer.findOne({ _id: savedDoc._id })
+        .populate<{
+          tenantId: ITenant;
+        }>("tenantId", "name")
+        .populate<{ raster: IRaster }>({ path: "raster" })
+        .populate<{ vector: IVector }>({ path: "vector" });
       res.status(201).json({
         status: true,
         message: "New Layer Created",
-        data: savedDoc,
+        data: layers,
       });
     }
   }
@@ -2706,12 +2712,31 @@ export const publicLayerByMissionId = async (
     });
     return;
   }
-  const layers = await Layer.find({ missionId: publicMission._id }).populate<{
-    tenantId: ITenant;
-  }>("tenantId", "name");
+
+  const layers = await Layer.find({ missionId: publicMission._id })
+    .populate<{
+      tenantId: ITenant;
+    }>("tenantId", "name")
+    .populate<{ raster: IRaster }>({ path: "raster" })
+    .populate<{ vector: IVector }>({ path: "vector" });
+  const flight = await Flight.findOne<{
+    centerPoints: {
+      lat: number;
+      lng: number;
+    };
+  }>(
+    {
+      mission: req.params.missionId,
+      tenant: req.params.tenantId,
+    },
+    {
+      centerPoints: 1,
+    }
+  );
   res.json({
     status: true,
     message: "found mission and layers",
+    centerPoints: flight.centerPoints,
     mission: publicMission,
     data: layers,
   });

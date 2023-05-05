@@ -1,8 +1,14 @@
-FROM node@sha256:27fab5920246070cf13449cf44c25bc4f5adef18ca7482b2bda90b7cf9e64481
+FROM node:18
 WORKDIR /app
-RUN npm i -g ts-node-dev
-COPY package.json /app
-RUN npm install
-COPY . /app
-ENV NODE_ENV=development
-CMD ["ts-node-dev", "src/server.ts"]
+ADD ffmpeg.tar.gz /bin
+ADD potree.tar.gz /bin
+RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
+COPY package*.json ./
+RUN npm ci
+COPY src ./src
+COPY tsconfig.json ./
+RUN npm run build
+WORKDIR /app/dist
+# USER node
+# ENV NODE_ENV=production
+CMD ["node", "server.js"]

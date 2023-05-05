@@ -25,7 +25,15 @@ services:
     environment:
       - MONGO_INITDB_DATABASE=test
     ports:
-      - 27017:27017
+      - 27019:27017
+
+  titiler:
+    environment:
+      - PORT=8000
+      - WORKERS_PER_CORE=1
+    image: ghcr.io/developmentseed/titiler@sha256:45565498b88d5b77360014ab9dd217c17617ae59d308769f67c24e7540a78d02
+    ports:
+      - 8000:8000
 
   redis:
     image: redis@sha256:aeed51f49a6331df0cb2c1039ae3d1d70d882be3f48bde75cd240452a2348e88

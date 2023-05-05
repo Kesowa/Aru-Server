@@ -12,8 +12,8 @@ import Location from "../models/location";
 
 // import path from "node:path";
 
-type ProcessVideoData = {
-  fullPath: string; // temp path
+export type ProcessVideoData = {
+  fullPath: string;
   filename: string;
   missionID: mongoose.Types.ObjectId;
   // fullPath2: string;
@@ -143,7 +143,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
 const videoProcessHandler = (d: ProcessVideoData) => {
   console.log("Now Starting");
   const ps = exec(
-    `/opt/ffmpeg/ffmpeg -i "${
+    `/bin/ffmpeg -i "${
       d.fullPath
     }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${
       "/tmp/" + d.filename + ".m3u8"
@@ -171,7 +171,7 @@ const videoProcessHandler = (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${
+          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${
             "/tmp/" + d.filename + ".srt"
           }"`,
           (error, stdout, stderr) => {

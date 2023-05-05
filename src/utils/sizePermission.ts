@@ -21,14 +21,14 @@ export const isSize = async (
     const uploadImgSize: number = Number(
       (Number(file.size) / (1024 * 1024)).toFixed(5)
     );
-    console.log("file name", file.filename);
-    console.log("file size", uploadImgSize);
-    console.log("file path", file.path);
-    // console.log(docCount);
+    req.log.info(file.filename, "file name");
+    req.log.info(uploadImgSize, "file size");
+    req.log.info(file.path, "file path");
+    // req.log.info(docCount);
     const totalImgSize: number = uploadImgSize + Number(docCount.actualSize);
-    console.log("total size,", totalImgSize);
+    req.log.info(totalImgSize, "total size");
     if (totalImgSize < Number(docCount.activePackage.storage)) {
-      console.log("user has enough space");
+      req.log.info("user has enough space");
       return next();
     } else {
       console.log("trying to delete file", file.filename);
