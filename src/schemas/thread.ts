@@ -6,6 +6,8 @@ export type docTypes = typeof docModels[number];
 export type IComment = {
   _id: mongoose.Types.ObjectId;
   author: mongoose.Types.ObjectId;
+  authorName: string;
+  avatar: string;
   content: string;
   createdAt: Date;
   updatedAt: Date;
@@ -17,6 +19,13 @@ export const CommentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
       required: true,
+    },
+    authorName: {
+      type: String,
+      required: true,
+    },
+    avatar: {
+      type: String,
     },
     content: {
       type: String,

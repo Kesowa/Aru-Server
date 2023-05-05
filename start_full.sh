@@ -1,3 +1,3 @@
-# DO NOT USE!
+# DO USE!
 
-tar -vxf public.tar -C . && docker compose -f docker-compose.yaml -f docker-compose.full.yaml up --build -d
+tar -vxf public.tar -C . && DOCKER_BUILDKIT=0 docker compose -p aru-server up --build -d && docker logs aru-server-server-1 --follow

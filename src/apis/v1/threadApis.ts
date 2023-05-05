@@ -1,72 +1,61 @@
 import express from "express";
-import expressValidator from "express-validator";
+import { body, param, query } from "express-validator";
 import {
-  AddAlertComment,
-  GetAlertThread,
-  RemoveAlertComment,
+  CreateDocThread,
+  AddorUpdateDocComment,
+  GetDocThread,
+  RemoveDocComment,
 } from "../../controllers/v1/threadController";
 import {
   isAuthenticated,
-  canListAlert,
-  canUpdateAlert,
-  canDeleteAlert,
-  canListMission,
-  canListVOD,
+  canCreateThread,
+  canUpdateThread,
+  canDeleteComment,
+  canListThread,
 } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();
 
-// Alert
-const alertRouter = express.Router();
-alertRouter.get(
-  "/:docId",
-  expressValidator.param("docId").isMongoId(),
+router.get(
+  "/:docType/:docId",
+  param("docType").isString(),
+  param("docId").isMongoId(),
+  query("ifExist").optional().isBoolean(),
   validator,
   isAuthenticated,
-  canListAlert,
-  RobustRunner(GetAlertThread)
+  canListThread,
+  RobustRunner(GetDocThread)
 );
-alertRouter.patch(
-  "/:docId",
-  expressValidator.param("docId").isMongoId(),
-  expressValidator.body("content").isString().isLength({ min: 10, max: 500 }),
+router.post(
+  "/:docType/:docId",
+  param("docType").isString(),
+  param("docId").isMongoId(),
   validator,
   isAuthenticated,
-  canUpdateAlert,
-  RobustRunner(AddAlertComment)
+  canCreateThread,
+  RobustRunner(CreateDocThread)
 );
-alertRouter.delete(
-  "/:docId/:commentId",
-  expressValidator.param("docId").isMongoId(),
-  expressValidator.param("commentId").isMongoId(),
+router.patch(
+  "/:docType/:docId",
+  param("docType").isString(),
+  param("docId").isMongoId(),
+  body("commentId").optional().isMongoId(),
+  body("content").isString().isLength({ min: 10, max: 500 }),
   validator,
   isAuthenticated,
-  canDeleteAlert,
-  RobustRunner(RemoveAlertComment)
+  canUpdateThread,
+  RobustRunner(AddorUpdateDocComment)
 );
-router.use("/alert", alertRouter);
-
-// Document
-const documentRouter = express.Router();
-documentRouter.get(
-  "/:docId",
-  expressValidator.param("docId").isMongoId(),
+router.delete(
+  "/:docType/:docId/:commentId",
+  param("docType").isString(),
+  param("docId").isMongoId(),
+  param("commentId").isMongoId(),
   validator,
   isAuthenticated,
-  canListMission
+  canDeleteComment,
+  RobustRunner(RemoveDocComment)
 );
-router.use("/document", documentRouter);
-
-// VOD
-const vodRouter = express.Router();
-vodRouter.get(
-  "/:docId",
-  expressValidator.param("docId").isMongoId(),
-  validator,
-  isAuthenticated,
-  canListVOD
-);
-router.use("/vod", vodRouter);
 
 export default router;

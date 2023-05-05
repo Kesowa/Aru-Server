@@ -9,6 +9,8 @@ export interface IAlert {
     long?: number;
   };
   isFlagged: boolean;
+  isThreadExist: boolean;
+  commentCount: Number;
   locationName: string;
   fileSize: number;
   note: string;
@@ -16,7 +18,7 @@ export interface IAlert {
   onSite: boolean;
   flightId: mongoose.Types.ObjectId; // index
   tenantId: mongoose.Types.ObjectId; // index
-  pcount: number;
+  pcount: number; // People count
   type: "Manual" | "Automated" | "Android"; // index
   image: string;
   locationId?: mongoose.Types.ObjectId; // index
@@ -46,6 +48,14 @@ const alertSchema = new mongoose.Schema<IAlert>(
     isFlagged: {
       type: Boolean,
       default: false,
+    },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
     locationName: {
       type: String,

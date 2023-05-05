@@ -39,6 +39,7 @@ import PaymentApis from "./apis/v1/paymentApis";
 import baseLayerApis from "./apis/v1/baseLayerApis";
 import settingApis from "./apis/v1/settingApis";
 import aimlApis from "./apis/v1/aimlApis";
+import threadApis from "./apis/v1/threadApis";
 
 import {
   ARU_INSTANCE,
@@ -76,6 +77,7 @@ if (MODE == Mode.Dev) {
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 export let logger: Logger;
@@ -179,6 +181,7 @@ app.use("/apis/v1/payment", PaymentApis);
 app.use("/apis/v1/baselayer", baseLayerApis);
 app.use("/apis/v1/setting", settingApis);
 app.use("/apis/v1/aiml", aimlApis);
+app.use("/apis/v1/thread", threadApis);
 
 // 404 route
 app.use(function (req, res, next) {

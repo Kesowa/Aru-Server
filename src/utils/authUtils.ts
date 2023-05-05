@@ -135,7 +135,7 @@ export const isAuthenticated = (
       }
     })
     .catch((err) => {
-      console.error(err);
+      req.log.error(err);
       res.status(500).json({
         status: false,
         message: "server error",
@@ -404,6 +404,24 @@ export const canListModel = genPermissionGuard({
     { permName: "name", value: "model_list" },
     // { permName: "name", value: "asset_create" },
   ],
+});
+
+//Thread Management Permissions :
+export const canCreateThread = genPermissionGuard({
+  userTypes: ["tenant-root"],
+  perm: [{ permName: "name", value: "thread_create" }],
+});
+export const canUpdateThread = genPermissionGuard({
+  userTypes: ["tenant-root"],
+  perm: [{ permName: "name", value: "thread_update" }],
+});
+export const canDeleteComment = genPermissionGuard({
+  userTypes: ["tenant-root"],
+  perm: [{ permName: "name", value: "comment_delete" }],
+});
+export const canListThread = genPermissionGuard({
+  userTypes: ["tenant-root"],
+  perm: [{ permName: "name", value: "thread_list" }],
 });
 
 //VOD Management Permissions :
