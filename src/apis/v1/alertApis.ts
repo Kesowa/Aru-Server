@@ -31,7 +31,7 @@ import { Directory } from "../../constants";
 import { uploadFile } from "../../controllers/v1/commonController";
 const router = express.Router();
 
-const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES, true)});
+const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES, true) });
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
 router.post(
   "/upload-alert-image",
@@ -46,7 +46,6 @@ router.post(
 router.post(
   "/create",
   isAuthenticated,
-
   body("missionId").notEmpty().isMongoId(),
   body("flightId").notEmpty().isMongoId(),
   body("locationName").notEmpty().isString(),

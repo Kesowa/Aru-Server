@@ -892,10 +892,11 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       onSite: req.body.onSite,
       type,
       fileSize: size1,
-      image: req.file ? `/images/alertImages/${req.file?.filename}` : undefined,
+      image: req.file ? `${process.env.AWS_S3_ENDPOINT}/images/alertImages/${req.file?.filename}` : undefined,
     });
 
     const data = await newAlert.save();
+    console.log(data)
     // deleteFileAvatar(`/images/alertImages/${req.file?.filename}`)
     // let dataa = await Alert.findById(data._id).populate('createdBy')
     // notificationSocket.to(res.locals.user.tenantId._id).emit('ALERT_CREATED', dataa);

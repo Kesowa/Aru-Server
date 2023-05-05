@@ -9,6 +9,8 @@ import DJISRTParser, { AllFunctions } from "dji_srt_parser";
 import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
 import Location from "../models/location";
+import { Directory, DirPath } from "../constants";
+
 
 // import path from "node:path";
 
@@ -141,15 +143,14 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
   }
 };
 const videoProcessHandler = (d: ProcessVideoData) => {
-  console.log("Now Starting");
+  console.log("Now Starting", d.fullPath);
   const ps = exec(
-    `/bin/ffmpeg -i "${
-      d.fullPath
-    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${
-      "/tmp/" + d.filename + ".m3u8"
-    }" -ss 00:00:05.000 -vframes 1 "${
+    `/bin/ffmpeg -i "${d.fullPath
+    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${"/tmp/" + d.filename + ".m3u8"
+    }" -ss 00:00:05.000 -vframes 1 "${DirPath(
+      Directory.VOD,
       d.filename + ".jpg"
-    }" "${"/tmp/" + d.filename + ".flv"}"`,
+    )}" "${"/tmp/" + d.filename + ".flv"}"`,
     (error, stdout, stderr) => {
       if (error) console.error(error);
       if (stderr) console.error(stderr);
@@ -171,8 +172,7 @@ const videoProcessHandler = (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${
-            "/tmp/" + d.filename + ".srt"
+          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${"/tmp/" + d.filename + ".srt"
           }"`,
           (error, stdout, stderr) => {
             if (error) console.error(error);

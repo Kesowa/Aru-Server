@@ -152,7 +152,7 @@ export enum Directory {
   TEMP = "temp",
   VECTOR = "vector",
   ZIP = "zip",
-  VOD = "vod",
+  VOD = "/tmp/temp",
   ICON = "icons",
   IMAGE = "images",
   DEFAULT = "",

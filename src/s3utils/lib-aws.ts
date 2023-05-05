@@ -21,10 +21,10 @@ const Client = new S3Client({
     secretAccessKey: AWS_SECRET_KEY,
   },
   region: "ap-south-1",
-  endpoint: s3Endpoint,
-  endpointProvider: () => ({
-    url: new URL(s3Endpoint + "/" + Bucket),
-  })
+  // endpoint: s3Endpoint,
+  // endpointProvider: () => ({
+  //   url: new URL(s3Endpoint + "/" + Bucket),
+  // })
 });
 
 const uploadStream = (dest: string) => {

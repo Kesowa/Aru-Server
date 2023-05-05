@@ -41,16 +41,19 @@ export default class CustomStorageEngine implements StorageEngine {
     file.path = path.join(file.destination, file.filename);
     const s3stream = file.stream.pipe(new PassThrough())
     if (this.tempCopy) {
+
+      console.log(`Inside temp copy ${this.tempCopy}`)
+
       const tempPath = "/tmp/" + file.filename;
-      file.tempPath = tempPath;
+      console.log(`Temp Path ${tempPath}`)
+      file["tempPath"] = tempPath;
       const tempStream = file.stream.pipe(new PassThrough());
       const fileStream = fs.createWriteStream(tempPath);
       tempStream.pipe(fileStream);
-      if (this.cleanup) {
-        onFinished(req.res, () => {
-          fs.rm(tempPath, console.error);
-        })
-      }
+      onFinished(req.res, () => {
+        // fs.rm(tempPath, console.error);
+        console.log("upload finished")
+      })
     }
     s3fs
       .writeStream(file.path, s3stream)

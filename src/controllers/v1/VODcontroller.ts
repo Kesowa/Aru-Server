@@ -313,6 +313,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
         locationID = new Types.ObjectId("5f202f03b9225726102721b8");
       }
     }
+    console.log(req.file)
     if (req.file) {
       const originalName = req.file.originalname;
       const fullPath = req.file.tempPath;
