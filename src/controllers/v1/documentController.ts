@@ -16,9 +16,6 @@ import {
   deletePublicFolderUsingPath,
 } from "../../utils/fileDeleteUtils"; // TO-REMOVE: being used by pointcloud deletion only
 import { Directory, DirPath } from "../../constants";
-import {
-  createDirIfNotExists,
-} from "../../utils/fileUtils"; // TO-REMOVE: being used by pointcloud extraction only
 import s3fs from "../../s3utils/lib-aws";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
@@ -28,58 +25,53 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
     }
     if (req.body.type == "pointCloud") {
       const { missionId } = req.body;
-      const folderNamee = Date.now();
-      const fileNamee = req.file?.originalname.split(/\.(?=[^\.]+$)/)[0];
-      const doc_loc = DirPath(Directory.DOCUMENTS, req.file?.filename);
-      req.log.info("Prining point cloud file location" + doc_loc);
-      const extract_loc = DirPath(Directory.DOCUMENTS, String(folderNamee));
-      await createDirIfNotExists(extract_loc, req.log);
-      req.log.info("Extract location ++++++++++++++++++" + extract_loc);
+      req.log.info("Prining point cloud file location");
       req.log.info("Starting conversion");
       //In the below line the first command is the path to the potree execuatble file after compiliation
       // For windows: `C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
+      const folderName = path.parse(req.file.filename).name; 
+      const outputDir = `/tmp/${folderName}`;
       const ps = exec(
-        `/bin/PotreeConverter ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
+        `/bin/PotreeConverter ${req.file["tempPath"]} -o ${outputDir} --generate-page index`
       );
       //const ps = exec(`C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe "${doc_loc}" -o "${extract_loc}" --generate-page "${fileNamee}"`);
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
       const onExit = async (exitCode: Number) => {
-        const flag: any = 1;
+        await s3fs.uploadDir(outputDir, path.join(Directory.DOCUMENTS, folderName));
         const size: number = Number(
           (Number(req.file.size) / (1024 * 1024)).toFixed(5)
         );
-        if (flag == 1) {
+        if (exitCode == 0) {
           const doc: any = new Document({
             name: req?.file?.originalname,
             modDate: new Date(),
             fileSize: size,
             folderName: req.body.folderName,
             fileType: req.body.type,
-            filePath: `/documents/${folderNamee}/${fileNamee}.html`,
+            filePath: `/documents/${folderName}/index.html`,
             missionId,
             tenantId: res.locals.user.tenantId,
             createdBy: res.locals.user._id,
             updatedBy: res.locals.user._id,
           });
           const savedDoc = await doc.save();
-          const tenant: any = Tenant.findOne({ _id: res.locals.user.tenantId });
           missionSpecificSocket
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
-        } else {
-          rimraf(extract_loc, function (err) {
+          rimraf(outputDir, function (err) {
             if (err) {
               throw err;
             } else {
               req.log.info("Removed pointCloud data after extraction");
             }
           });
+        } else {
           missionSpecificSocket
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_FAILED");
         }
-        await fs.promises.unlink(doc_loc);
-        req.log.info("Removed zip after extraction");
+        await fs.promises.unlink(req.file["tempPath"]);
+        req.log.info("Removed pointcloud after extraction");
       };
 
       ps.once("exit", onExit);
