@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:19
 WORKDIR /app
 RUN apit-get update && apt-get -y install libtbb2
 ADD ffmpeg.tar.gz /bin
