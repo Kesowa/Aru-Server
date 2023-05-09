@@ -1,7 +1,7 @@
 import express from "express";
 
 import {
-  createBaseLayer,
+  createVectorBaseLayer,
   getMetadataForBaseLayer,
   setPrimeAttributes,
   createBaseLayerByAttr,
@@ -64,11 +64,10 @@ router.patch(
 );
 
 router.post(
-  "/create/:type",
+  "/create/Vector",
   isAuthenticated,
   upload.single("file"),
   body("name").notEmpty().trim(),
-  body("type").notEmpty().trim(),
   body("vector").notEmpty().isMongoId(),
   //adding date format
   body("captureDate").exists().isISO8601().toDate(),
@@ -78,8 +77,8 @@ router.post(
   validator,
   canCreateBaseLayer,
   isLayerCount,
-  // isSize,
-  RobustRunner(createBaseLayer)
+  isSize,
+  RobustRunner(createVectorBaseLayer)
 );
 
 router.patch(
@@ -183,12 +182,11 @@ router.delete(
 );
 
 router.post(
-  "/create-base-raster-upload/:type",
+  "/create-base-raster-upload/Raster",
   isAuthenticated,
   requestTimeout(60_000),
   upload.single("file"),
   body("name").notEmpty().trim(),
-  body("type").notEmpty().trim(),
   body("raster").notEmpty().isMongoId(),
   body("captureDate").exists().isISO8601().toDate(),
   validator,

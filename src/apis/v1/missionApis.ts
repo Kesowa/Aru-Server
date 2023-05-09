@@ -67,6 +67,7 @@ router.post(
   body("description").optional().notEmpty().trim(),
   body("deliverables").optional().isArray(),
   body("type").optional().isMongoId(),
+  body("isPublic").optional().isBoolean(),
   validator,
   RobustRunner(editMission)
 );

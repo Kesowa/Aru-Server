@@ -43,7 +43,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       //In the below line the first command is the path to the potree execuatble file after compiliation
       // For windows: `C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
       const ps = exec(
-        `/opt/potree/PotreeConverter ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
+        `/bin/PotreeConverter ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
       );
       //const ps = exec(`C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe "${doc_loc}" -o "${extract_loc}" --generate-page "${fileNamee}"`);
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");

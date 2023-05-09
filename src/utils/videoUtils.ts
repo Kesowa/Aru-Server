@@ -5,7 +5,7 @@ export const VODEvents = new EventEmitter();
 import VOD from "../models/vod";
 import Tenant from "../models/tenant";
 import { missionSpecificSocket } from "../socket";
-import DJISRTParser from "dji_srt_parser";
+import DJISRTParser, { AllFunctions } from "dji_srt_parser";
 import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
 import { Directory, DirPath } from "../constants";
@@ -13,10 +13,7 @@ import Location from "../models/location";
 
 // import path from "node:path";
 
-let srtFlag = false;
-let hlsFlag = false;
-let data: string;
-type ProcessVideoData = {
+export type ProcessVideoData = {
   fullPath: string;
   filename: string;
   missionID: mongoose.Types.ObjectId;
@@ -28,20 +25,24 @@ type ProcessVideoData = {
 };
 const exitOnce = async (code: Number, d: ProcessVideoData) => {
   console.log("Hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+  let srtFlag = false;
   if (code == 0) {
     console.log(
       "SRT Extraction successful, now Exiting!---------------------------------------------------------------------"
     );
     const srtOutpath = DirPath(Directory.VOD, d.filename + ".srt");
     const geoJSONoutPath = DirPath(Directory.VOD, d.filename + ".geojson");
+    let data: string;
+    let json: string;
+    let DJIData: AllFunctions;
     try {
       data = await fs.promises.readFile(srtOutpath, "utf8");
+      DJIData = DJISRTParser(data, srtOutpath);
+      json = DJIData.toGeoJSON(false, true, false);
     } catch (err) {
       console.error(err);
     }
     console.log(data);
-    const DJIData = DJISRTParser(data, srtOutpath);
-    const json = DJIData.toGeoJSON(false, true, false);
     if (json) {
       console.log("Set to true----------------------");
       srtFlag = true;
@@ -143,7 +144,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
 const videoProcessHandler = (d: ProcessVideoData) => {
   console.log("Now Starting");
   const ps = exec(
-    `/opt/ffmpeg/ffmpeg -i "${
+    `/bin/ffmpeg -i "${
       d.fullPath
     }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(
       Directory.VOD,
@@ -167,12 +168,13 @@ const videoProcessHandler = (d: ProcessVideoData) => {
     console.log(
       "File conversion successful, now Existing!---------------------------------------------------------------------"
     );
+    let hlsFlag = false;
     if (exitCode == 0) {
       hlsFlag = true;
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/opt/ffmpeg/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(
+          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(
             Directory.VOD,
             d.filename + ".srt"
           )}"`,
