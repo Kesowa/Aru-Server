@@ -1,7 +1,6 @@
 FROM node:18
 WORKDIR /app
-RUN apt-get update && apt-get -y install libtbb-dev
-RUN npm i -g ts-node-dev
+RUN apt-get update && apt-get -y install libtbb2
 ADD ./ffmpeg.tar.gz /bin
 ADD  ./potree.tar.gz /bin
 RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
@@ -9,5 +8,5 @@ COPY package*.json ./
 RUN npm ci
 COPY ./tsconfig.json ./
 ENV NODE_ENV=development
-CMD ["ts-node-dev", "src/server.ts"]
+CMD ["npm", "run", "dev"]
 
