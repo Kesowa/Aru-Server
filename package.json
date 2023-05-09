@@ -59,8 +59,6 @@
   "dependencies": {
     "@autotelic/pino-seq-transport": "^0.1.0",
     "@mapbox/togeojson": "^0.16.0",
-    "@peculiar/webcrypto": "^1.2.0",
-    "@peculiar/x509": "^1.5.2",
     "@socket.io/redis-adapter": "^7.2.0",
     "@turf/nearest-point": "^6.5.0",
     "@turf/turf": "^6.5.0",
@@ -82,7 +80,6 @@
     "moment": "^2.29.4",
     "mongoose": "^6.4.6",
     "multer": "^1.4.5-lts.1",
-    "mv": "^2.1.1",
     "node-cron": "^3.0.0",
     "node-fetch": "^2.6.7",
     "node-image-resizer": "^1.0.0",
