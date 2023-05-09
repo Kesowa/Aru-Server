@@ -1,5 +1,6 @@
-FROM node@sha256:27fab5920246070cf13449cf44c25bc4f5adef18ca7482b2bda90b7cf9e64481
+FROM node:18
 WORKDIR /app
+RUN apit-get update && apt-get -y install libtbb2
 ADD ffmpeg.tar.gz /bin
 ADD potree.tar.gz /bin
 RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
