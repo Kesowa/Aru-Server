@@ -32,7 +32,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       const folderName = path.parse(req.file.filename).name; 
       const outputDir = `/tmp/${folderName}`;
       const ps = exec(
-        `/bin/PotreeConverter ${req.file["tempPath"]} -o ${outputDir} --generate-page index`
+        `/bin/PotreeConverter ${req.file.tempPath} -o ${outputDir} --generate-page index`
       );
       //const ps = exec(`C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe "${doc_loc}" -o "${extract_loc}" --generate-page "${fileNamee}"`);
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
@@ -70,7 +70,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_FAILED");
         }
-        await fs.promises.unlink(req.file["tempPath"]);
+        await fs.promises.unlink(req.file.tempPath);
         req.log.info("Removed pointcloud after extraction");
       };
 
@@ -108,12 +108,12 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
           `2x_${req.file.filename}`
         );
         const x2Stream = s3fs.uploadStream(x2FilePath);
-        sharp(req.file["tempPath"])
+        sharp(req.file.tempPath)
           .resize(1280, 720, { fit: "inside" })
           .pipe(x2Stream.writeStream);
         await x2Stream.promise;
         const x1Stream = s3fs.uploadStream(x1FilePath);
-        sharp(req.file["tempPath"])
+        sharp(req.file.tempPath)
           .resize(120, 120, { fit: "inside" })
           .pipe(x1Stream.writeStream);
         await x1Stream.promise;

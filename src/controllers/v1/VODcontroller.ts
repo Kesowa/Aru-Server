@@ -315,7 +315,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     }
     if (req.file) {
       const originalName = req.file.originalname;
-      const fullPath = req.file["tempPath"];
+      const fullPath = req.file.tempPath;
       // const fullPath2 = DirPath(Directory.VOD);
       const tenantID = res.locals.user.tenantId._id;
       const size: number = Number(

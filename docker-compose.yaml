@@ -41,10 +41,13 @@ services:
   s3:
     image: adobe/s3mock@sha256:f1208b07c4b24eb557bbc93ba1b2523b2d577e38926dd087ca6c273431b8c105
     volumes:
-      - ./public:/storage
+      - storage:/storage
     environment:
       - initialBuckets=aru
       - root=/storage
     ports:
       - 9090:9090
       - 9191:9191
+
+volumes:
+  storage:

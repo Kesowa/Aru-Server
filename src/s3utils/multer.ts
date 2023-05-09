@@ -42,7 +42,7 @@ export default class CustomStorageEngine implements StorageEngine {
     const s3stream = file.stream.pipe(new PassThrough())
     if (this.tempCopy) {
       const tempPath = "/tmp/" + file.filename;
-      file["tempPath"] = tempPath;
+      file.tempPath = tempPath;
       const tempStream = file.stream.pipe(new PassThrough());
       const fileStream = fs.createWriteStream(tempPath);
       tempStream.pipe(fileStream);

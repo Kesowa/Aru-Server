@@ -856,16 +856,16 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       `2x_${req.file.filename}`
     );
     const x2Stream = s3fs.uploadStream(x2FilePath);
-    sharp(req.file["tempPath"])
+    sharp(req.file.tempPath)
       .resize(1280, 720, { fit: "inside", withoutEnlargement: true })
       .pipe(x2Stream.writeStream);
     await x2Stream.promise;
     const x1Stream = s3fs.uploadStream(x1FilePath);
-    sharp(req.file["tempPath"])
+    sharp(req.file.tempPath)
       .resize(120, 120, { fit: "inside", withoutEnlargement: true })
       .pipe(x1Stream.writeStream);
     await x1Stream.promise;
-    const ff = await exifr.parse(req.file["tempPath"]);
+    const ff = await exifr.parse(req.file.tempPath);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
