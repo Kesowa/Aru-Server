@@ -1,6 +1,6 @@
 FROM node:19
 WORKDIR /app
-RUN apit-get update && apt-get -y install libtbb2
+RUN apt-get update && apt-get -y install libtbb2
 ADD ffmpeg.tar.gz /bin
 ADD potree.tar.gz /bin
 RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
