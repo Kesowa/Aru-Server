@@ -30,7 +30,7 @@ export const inferVodViolence = async (req: Request<{ vodId: string }>, res: Aut
       const end = moment(new Date());
       const diff = moment.duration(end.diff(start));
       const hours = diff.asHours();
-      if (hours < 0) {
+      if (hours < 1) {
         res.status(202).json({
           status: true,
           message: "task running"

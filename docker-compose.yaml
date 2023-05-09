@@ -15,6 +15,8 @@ services:
       - mongodb
     ports:
       - 5011:5011
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   mongodb:
     image: mongo@sha256:06cd2e814b2641d4c7ac6b093e870fe72c1ddbc7c6ddaaef16d4cb5a61c0ee6b
