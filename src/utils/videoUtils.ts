@@ -10,6 +10,8 @@ import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
 import Location from "../models/location";
 import { Directory, DirPath } from "../constants";
+import path from "path";
+import s3fs from "../s3utils/lib-aws"
 
 
 // import path from "node:path";
@@ -31,8 +33,8 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     console.log(
       "SRT Extraction successful, now Exiting!---------------------------------------------------------------------"
     );
-    const srtOutpath = "/tmp/" + d.filename + ".srt";
-    const geoJSONoutPath = "/tmp/" + d.filename + ".geojson";
+    const srtOutpath = "/tmp/temp/" + d.filename + ".srt";
+    const geoJSONoutPath = "/tmp/temp/" + d.filename + ".geojson";
     let data: string;
     let json: string;
     let DJIData: AllFunctions;
@@ -41,7 +43,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       DJIData = DJISRTParser(data, srtOutpath);
       json = DJIData.toGeoJSON(false, true, false);
     } catch (err) {
-      console.error(err);
+      console.error(`Error coming from read file promise ${err}`);
     }
     console.log(data);
     if (json) {
@@ -73,7 +75,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     srtFlag = false;
   }
   if (srtFlag == true) {
-    const size1 = await findHlsSize("/tmp/" + d.filename + ".m3u8");
+    const size1 = await findHlsSize("/tmp/temp/" + d.filename + ".m3u8");
 
     const VODdoc = new VOD({
       flightID: d.flightID,
@@ -86,6 +88,14 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       videoName: d.originalName.slice(0, -4),
       isSRT: true,
     });
+
+
+    // Upload Vidoes to s3 bucket from /tmp directory. 
+
+    const response = saveFilesToS3()
+
+    console.log(response)
+
     const saveToDb = async () => {
       const dbsave = await VODdoc.save();
       if (dbsave) {
@@ -105,7 +115,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     };
     await saveToDb();
   } else {
-    const size1: number = await findHlsSize("/tmp/" + d.filename + ".m3u8");
+    const size1: number = await findHlsSize("/tmp/temp/" + d.filename + ".m3u8");
 
     const VODdoc = new VOD({
       flightID: d.flightID,
@@ -118,6 +128,12 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       videoName: d.originalName.slice(0, -4),
       isSRT: false,
     });
+
+
+    const response = saveFilesToS3()
+
+    console.log(response)
+
     const saveToDb = async () => {
       const dbsave = await VODdoc.save();
       if (dbsave) {
@@ -146,11 +162,11 @@ const videoProcessHandler = (d: ProcessVideoData) => {
   console.log("Now Starting", d.fullPath);
   const ps = exec(
     `/bin/ffmpeg -i "${d.fullPath
-    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${"/tmp/" + d.filename + ".m3u8"
+    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${"/tmp/temp/" + d.filename + ".m3u8"
     }" -ss 00:00:05.000 -vframes 1 "${DirPath(
       Directory.VOD,
       d.filename + ".jpg"
-    )}" "${"/tmp/" + d.filename + ".flv"}"`,
+    )}" "${"/tmp/temp/" + d.filename + ".flv"}"`,
     (error, stdout, stderr) => {
       if (error) console.error(error);
       if (stderr) console.error(stderr);
@@ -172,7 +188,7 @@ const videoProcessHandler = (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${"/tmp/" + d.filename + ".srt"
+          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${"/tmp/temp/" + d.filename + ".srt"
           }"`,
           (error, stdout, stderr) => {
             if (error) console.error(error);
@@ -204,6 +220,35 @@ const videoProcessHandler = (d: ProcessVideoData) => {
   // ps?.on("message", console.log);
   // ps?.stderr?.on("data", console.error);
   // ps?.stderr?.on("end", console.error);
+};
+
+const saveFilesToS3 = async () => {
+  const folderPath = "/tmp/temp"; // Path to the folder containing the files to be uploaded
+
+  try {
+    // Read the directory
+    const files = await fs.promises.readdir(folderPath);
+
+    // Upload each file to S3
+    for (const file of files) {
+      const filePath = path.join(folderPath, file);
+
+      // Generate a unique S3 key for each file
+      const s3Key = `uploaded-files/${file}`; // Modify the S3 key format as per your requirements
+
+      // Read the file contents
+      const fileData = await fs.promises.readFile(filePath);
+
+      // Upload the file to S3
+      await s3fs.writeFile(s3Key, fileData);
+
+      console.log(`File ${file} uploaded to S3 with key: ${s3Key}`);
+    }
+
+    console.log("All files uploaded to S3 successfully!");
+  } catch (error) {
+    console.error("Error occurred while uploading files to S3:", error);
+  }
 };
 
 VODEvents.on("PROCESS_VIDEO", videoProcessHandler);

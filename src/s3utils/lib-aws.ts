@@ -10,8 +10,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { buffer } from "stream/consumers";
 import { createReadStream, promises as fs } from "fs";
 import { AWS_S3_BUCKET as Bucket, ACCESS_KEY, AWS_SECRET_KEY, AWS_S3_ENDPOINT, Mode, MODE } from "../constants";
-import path from "path";
-import mime from "mime-types";
+// import { path } from 
 
 const s3Endpoint = Mode.Dev == MODE ? AWS_S3_ENDPOINT : undefined;
 
@@ -44,7 +43,7 @@ const stat = async (path: string) => {
     // if file(key) is not found, then exception will be thrown
     const output = await Client.send(metadata);
     return { size: output.ContentLength };
-  } catch(error) {
+  } catch (error) {
     return { size: -1 };
   }
 };
@@ -111,6 +110,8 @@ const uploadFile = async (src: string, dest: string) => {
   const fileStream = createReadStream(src);
   await writeStream(dest, fileStream);
 }
+
+
 
 const rename = async (src: string, dest: string) => {
   await copyFile(src, dest);
