@@ -28,7 +28,7 @@ export const deletePublicFolderUsingPath = async (folderName: string) => {
     if (
       folderName == "" ||
       folderName == "/" ||
-      folderName in Object.values(Directory)
+      path.basename(folderName) in Object.values(Directory)
     )
       return false;
     await fs.promises.rm(path.join(PUBLIC_DIR, folderName), {

@@ -29,15 +29,15 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       req.log.info("Starting conversion");
       //In the below line the first command is the path to the potree execuatble file after compiliation
       // For windows: `C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
-      const folderName = path.parse(req.file.filename).name; 
+      const folderName = path.parse(req.file.filename).name;
       const outputDir = `/tmp/${folderName}`;
       const ps = exec(
-        `/bin/PotreeConverter ${req.file.tempPath} -o ${outputDir} --generate-page index`
+        `/bin/PotreeConverter ${req.file.tempPath} -o ${outputDir} --generate-page ${folderName}`
       );
       //const ps = exec(`C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe "${doc_loc}" -o "${extract_loc}" --generate-page "${fileNamee}"`);
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
       const onExit = async (exitCode: Number) => {
-        await s3fs.uploadDir(outputDir, path.join(Directory.DOCUMENTS, folderName));
+        await s3fs.uploadDir(outputDir, Directory.DOCUMENTS);
         const size: number = Number(
           (Number(req.file.size) / (1024 * 1024)).toFixed(5)
         );
@@ -48,7 +48,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
             fileSize: size,
             folderName: req.body.folderName,
             fileType: req.body.type,
-            filePath: `/documents/${folderName}/index.html`,
+            filePath: `/documents/${folderName}.html`,
             missionId,
             tenantId: res.locals.user.tenantId,
             createdBy: res.locals.user._id,
@@ -58,7 +58,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
           missionSpecificSocket
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
-          rimraf(outputDir, function (err) {
+          rimraf(outputDir, function(err) {
             if (err) {
               throw err;
             } else {
@@ -158,8 +158,11 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (data.fileType == "pointCloud") {
-      const folderName = path.parse(data.filePath).dir;
-      await deletePublicFolderUsingPath(folderName);
+      const fileName = path.parse(data.filePath).name;
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, fileName + ".html"));
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, `potree/${fileName}/hierarchy.bin`));
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, `potree/${fileName}/metadata.json`));
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, `potree/${fileName}/octree.bin`));
       const d = await data.delete();
       if (d) {
         res.status(200).json({
