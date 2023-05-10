@@ -51,8 +51,7 @@ export default class CustomStorageEngine implements StorageEngine {
       const fileStream = fs.createWriteStream(tempPath);
       tempStream.pipe(fileStream);
       onFinished(req.res, () => {
-        // fs.rm(tempPath, console.error);
-        console.log("upload finished")
+        fs.rm(tempPath, console.error);
       })
     }
     s3fs

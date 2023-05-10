@@ -10,7 +10,8 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { buffer } from "stream/consumers";
 import { createReadStream, promises as fs } from "fs";
 import { AWS_S3_BUCKET as Bucket, ACCESS_KEY, AWS_SECRET_KEY, AWS_S3_ENDPOINT, Mode, MODE } from "../constants";
-// import { path } from 
+import path from "path";
+import mime from "mime-types"
 
 const s3Endpoint = Mode.Dev == MODE ? AWS_S3_ENDPOINT : undefined;
 

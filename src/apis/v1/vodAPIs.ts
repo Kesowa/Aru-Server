@@ -28,7 +28,7 @@ import { RobustRunner, validator } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
 
-const upload = multer({ storage: multerStorage(Directory.VOD, true) });
+const upload = multer({ storage: multerStorage(Directory.VOD, true, false) });
 
 const router = express.Router();
 
