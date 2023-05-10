@@ -46,7 +46,7 @@ router.post(
   "/request-otp-for-email-change",
   isAuthenticated,
   onlyTenantRootAccess,
-  body("email").isEmail().withMessage("invalid Email.").normalizeEmail(),
+  body("email").isEmail().withMessage("invalid Email."),
   validator,
   RobustRunner(updateOrganisationEmailGetOTP)
 );

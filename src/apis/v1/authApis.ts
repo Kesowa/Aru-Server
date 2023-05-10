@@ -48,7 +48,7 @@ router.post(
 router.post(
   "/forgot-password/",
   shouldLinkSend,
-  body("email").isEmail().trim().normalizeEmail(),
+  body("email").isEmail().trim(),
   validator,
   RobustRunner(sendForgotPasswordMail)
 );
