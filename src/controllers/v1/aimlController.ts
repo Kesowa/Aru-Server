@@ -8,6 +8,7 @@ import { HydratedDocument } from "mongoose";
 import { writeFile } from "fs/promises";
 import fetch from "node-fetch";
 import moment from "moment";
+import { notificationSocket } from "../../socket";
 
 export const inferVodViolence = async (req: Request<{ vodId: string }>, res: AuthResponse) => {
   const vod = await VOD.findOne({ _id: req.params.vodId, tenantId: res.locals.user.tenantId._id });
@@ -85,6 +86,7 @@ export const inferVodViolence = async (req: Request<{ vodId: string }>, res: Aut
         status: true,
         message: hadFailed ? "task restarted" : "task started"
       });
+      notificationSocket.to(newTask.tenant.toHexString()).emit("AI_TASK", newTask);
       return;
     } else {
       res.status(505).json({
@@ -134,6 +136,7 @@ export const callbackVodViolence = async (
     status: true,
     message: "task successfully completed"
   });
+  notificationSocket.to(task.tenant.toHexString()).emit("AI_TASK", task);
   return;
 };
 
