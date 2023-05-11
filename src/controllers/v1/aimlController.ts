@@ -131,12 +131,14 @@ export const callbackVodViolence = async (
   const filename = `${task.infer}_${task._id}.json`;
   const dataLoc = DirPath(Directory.AI_ML, filename);
   await writeFile(dataLoc, JSON.stringify(req.body));
-  await task.update({ status: "completed", data: `${Directory.AI_ML}/${filename}` });
+  task.status = "completed"
+  task.data = `${Directory.AI_ML}/${filename}`
+  await task.save();
+  notificationSocket.to(task.tenant.toHexString()).emit("AI_TASK", task);
   res.status(201).json({
     status: true,
     message: "task successfully completed"
   });
-  notificationSocket.to(task.tenant.toHexString()).emit("AI_TASK", task);
   return;
 };
 
