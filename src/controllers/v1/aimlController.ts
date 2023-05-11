@@ -127,7 +127,7 @@ export const callbackVodViolence = async (
       message: "task already completed"
     });
     return;
-  };
+  }
   const filename = `${task.infer}_${task._id}.json`;
   const dataLoc = DirPath(Directory.AI_ML, filename);
   await writeFile(dataLoc, JSON.stringify(req.body));
