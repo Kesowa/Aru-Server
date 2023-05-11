@@ -23,45 +23,46 @@ export type IAimlTask = {
   data: string;
 };
 
-export const AimlTaskSchema = new Schema<IAimlTask>({
-  doc: { type: Schema.Types.ObjectId, required: true, index: true },
-  docModel: {
-    type: String,
-    required: true,
-    enum: docModels,
+export const AimlTaskSchema = new Schema<IAimlTask>(
+  {
+    doc: { type: Schema.Types.ObjectId, required: true, index: true },
+    docModel: {
+      type: String,
+      required: true,
+      enum: docModels,
+    },
+    infer: {
+      type: String,
+      required: true,
+      enum: inferences,
+    },
+    status: {
+      type: String,
+      required: true,
+      enum: status,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "user",
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "user",
+    },
+    tenant: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "tenant",
+    },
+    data: {
+      type: String,
+      required: true,
+      default: null,
+    },
   },
-  infer: {
-    type: String,
-    required: true,
-    enum: inferences
-  },
-  status: {
-    type: String,
-    required: true,
-    enum: status,
-  },
-  createdBy: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "user"
-  },
-  updatedBy: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "user"
-  },
-  tenant: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "tenant"
-  },
-  data: {
-    type: String,
-    required: true,
-    default: null
-  }
-},
   { timestamps: true }
 );
 
-AimlTaskSchema.index({doc: 1, infer: 1}, {unique: true})
+AimlTaskSchema.index({ doc: 1, infer: 1 }, { unique: true });

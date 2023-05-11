@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
-import { callbackVodViolence, inferVodViolence, fetchAimlTasks } from "../../controllers/v1/aimlController";
+import {
+  callbackVodViolence,
+  inferVodViolence,
+  fetchAimlTasks,
+} from "../../controllers/v1/aimlController";
 import { isAuthenticated } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
 
