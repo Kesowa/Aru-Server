@@ -33,14 +33,14 @@ export const checkFileExists = async (filepath: string) => {
   }
 };
 
-export const findHlsSize = async (indexPath: string) => {
+export const findHlsSize = async (indexPath: string, folderPath: string) => {
   const index = await fs.promises.readFile(indexPath, "utf8");
   const vodFiles = index
     .split("\n")
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
     await fs.promises.stat(
-       "/tmp/" + (vodFiles[Math.floor(vodFiles.length / 2)])
+      folderPath + (vodFiles[Math.floor(vodFiles.length / 2)])
     )
   ).size;
   const hlsSize = index.length + vodFiles.length * partSize;

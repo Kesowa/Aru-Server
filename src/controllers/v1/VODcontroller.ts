@@ -313,7 +313,6 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
         locationID = new Types.ObjectId("5f202f03b9225726102721b8");
       }
     }
-    console.log(req.file)
     if (req.file) {
       const originalName = req.file.originalname;
       const fullPath = req.file.tempPath;
@@ -351,12 +350,17 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       _id: Id,
       tenantId: res.locals.user.tenantId._id,
     });
+
+
     if (doc) {
       const docpath = doc.videoPath;
       // TODO: Put HLS chunks for a video in a single folder, then replace this
       const indexFile = path.parse(docpath).base;
+
       const conf = await deleteHlsVodUsingIndex(indexFile);
+
       await deletePublicFileUsingPath(doc.thumbnail);
+
       await deleteDirFileUsingName(
         Directory.VOD,
         path.parse(docpath).name + ".flv"
