@@ -6,7 +6,7 @@ import { IPermission } from "../schemas/permission";
 export type AuthResponse = Response & {
   locals: {
     user: LeanDocument<
-      Omit<IUser, "customPermissions"> & { customPermissions: IPermission[] }
+      Omit<IUser, "customPermissions"> & { customPermissions: { permissions: IPermission[] }[] }
     >;
     log: logFace;
     advancedResults: any;

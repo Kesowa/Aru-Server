@@ -159,7 +159,7 @@ type permGuardType = {
 
 function genPermissionGuard(perm: permGuardType) {
   return (req: Request, res: AuthResponse, next: NextFunction) => {
-    let authorized = true;
+    let authorized = false;
     if (perm.userTypes.length > 0) {
       if (perm.userTypes.includes(res.locals.user.userType)) {
         authorized = true;
@@ -169,7 +169,7 @@ function genPermissionGuard(perm: permGuardType) {
       }
     }
     if (perm.perm.length > 0 && !authorized) {
-      authorized = true; // we initialize authorized with true and if ANY of the perms is not found in user.customPermissions, we make it false and break the loop
+      let anyPerms = false; // we initialize authorized with true and if ANY of the perms is not found in user.customPermissions, we make it false and break the loop
       for (const permission of perm.perm) {
         const found = res.locals.user.customPermissions.findIndex(
           (userPerm) => {
@@ -181,10 +181,11 @@ function genPermissionGuard(perm: permGuardType) {
         );
         if (found !== -1) {
           req.log.info("Permission found!", permission);
-          authorized = true;
+          anyPerms = true;
           break;
         }
       }
+      authorized = anyPerms;
     }
     if (authorized) {
       next();
