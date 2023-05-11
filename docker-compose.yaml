@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: dockerfile.dev
     volumes:
-      - ./src:/app/src:rw
+      - ./src:/app/src
     environment:
       - TZ="Asia/Kolkata"
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test

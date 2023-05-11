@@ -1717,7 +1717,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
     if (layerDoc) {
       const docpath = DirPath(Directory.DEFAULT, layerDoc.layerpath);
       const geojson = await readGeoJson(docpath);
-      let snapRadius: Number = 120; // meters
+      let snapRadius: number = 120; // meters
       if (req.body.radius) {
         const tmpRadius = Number(req.body.radius);
         if (tmpRadius > 0) {

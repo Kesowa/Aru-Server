@@ -3,8 +3,6 @@ import { addUser, searchUser, SocketUserObject } from "../../utils/socketUtils";
 import Asset from "../../models/asset";
 import dgram from "dgram";
 const server = dgram.createSocket("udp4");
-import * as x509 from "@peculiar/x509";
-import { Crypto } from "@peculiar/webcrypto";
 import webrtc from "wrtc";
 // export let stat: mavStat;
 import { VODEvents } from "../../utils/videoUtils";
@@ -25,8 +23,6 @@ const senderStreams = new Map<string, any>();
 const clientConsumers = new Map<string, any>();
 const drones = new Map<string, any>();
 
-const crypto = new Crypto();
-x509.cryptoProvider.set(crypto);
 // const base64 = await fs.promises.readFile("pem");
 // const cert1 = new x509.X509Certificate(base64)
 // console.log(cert1)

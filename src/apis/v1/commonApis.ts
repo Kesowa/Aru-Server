@@ -10,7 +10,7 @@ const router = express.Router();
 router.post(
   "/check-email-available",
   isAuthenticated,
-  body("email").isEmail().withMessage("invalid Email.").normalizeEmail(),
+  body("email").isEmail().withMessage("invalid Email."),
   validator,
   RobustRunner(checkIfEmailIdIsAvailable)
 );
