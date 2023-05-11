@@ -12,6 +12,7 @@ import Location from "../models/location";
 import { Directory, DirPath } from "../constants";
 import path from "path";
 import s3fs from "../s3utils/lib-aws"
+import rimraf from "rimraf"
 
 
 
@@ -70,16 +71,13 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       await fs.promises.writeFile(geoJSONoutPath, json);
       srtFlag = true;
     } catch (error) {
-      console.error(error);
       srtFlag = false;
     }
   } else {
-    console.log("inside first else block exit Once function")
     srtFlag = false;
   }
   if (srtFlag == true) {
-    console.log("inside first if block")
-    const size1 = await findHlsSize("/tmp/" + d.folderName + "/" + d.filename + ".m3u8");
+    const size1 = await findHlsSize("/tmp/" + d.folderName + "/" + d.filename + ".m3u8", "/tmp/" + d.folderName + "/");
 
     const VODdoc = new VOD({
       flightID: d.flightID,
@@ -93,15 +91,10 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       isSRT: true,
     });
 
-    // Upload Vidoes to s3 bucket from /tmp directory. 
-
-    s3fs.uploadDir("/tmp/" + d.folderName + "/", "vod/")
-
 
     const saveToDb = async () => {
       const dbsave = await VODdoc.save();
       if (dbsave) {
-        console.log(dbsave);
         missionSpecificSocket
           .to(d.missionID.toString())
           .emit("PROCESS_VIDEO_FINISHED", d);
@@ -115,10 +108,19 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
         );
       }
     };
+
+
+    // Upload Vidoes to s3 bucket from /tmp directory. 
+
+    await s3fs.uploadDir("/tmp/" + d.folderName + "/", "vod/")
+
     await saveToDb();
+
+    rimraf("/tmp/" + d.folderName, function () { console.log("Removed files from file system"); });
+
   } else {
     console.log("inside second else block")
-    const size1: number = await findHlsSize("/tmp/" + d.folderName + "/" + d.filename + ".m3u8");
+    const size1: number = await findHlsSize("/tmp/" + d.folderName + "/" + d.filename + ".m3u8", "/tmp/" + d.folderName + "/");
 
     const VODdoc = new VOD({
       flightID: d.flightID,
@@ -132,10 +134,6 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       isSRT: false,
     });
 
-    // Upload Vidoes to s3 bucket from /tmp directory. 
-
-    s3fs.uploadDir("/tmp/" + d.folderName + "/", "vod/")
-
     const saveToDb = async () => {
       const dbsave = await VODdoc.save();
       if (dbsave) {
@@ -153,12 +151,19 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
         );
       }
     };
+
+    // Upload Vidoes to s3 bucket from /tmp directory. 
+
+    await s3fs.uploadDir("/tmp/" + d.folderName + "/", "vod/")
+
     saveToDb()
       .then(() => console.log(`Saved video ${d.filename} to db`))
       .catch((err) =>
         console.error(`Failed to save video ${d.filename} to db`, err)
       );
   }
+
+  rimraf("/tmp/" + d.folderName, function () { console.log("Removed files from file system"); });
 };
 const videoProcessHandler = (d: ProcessVideoData) => {
   console.log("Now Starting", d.fullPath);
@@ -179,12 +184,7 @@ const videoProcessHandler = (d: ProcessVideoData) => {
   });
 
   const ps = exec(
-    `/bin/ffmpeg -i "${d.fullPath
-    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${"/tmp/" + d.folderName + "/" + d.filename + ".m3u8"
-    }" -ss 00:00:05.000 -vframes 1 "${DirPath(
-      Directory.VOD,
-      d.filename + ".jpg"
-    )}" "${"/tmp/" + d.folderName + "/" + d.filename + ".flv"}"`,
+    `/bin/ffmpeg -i "${d.fullPath}" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${"/tmp/" + d.folderName + "/" + d.filename + ".m3u8"}" -ss 00:00:05.000 -vframes 1 "${"/tmp/" + d.folderName + "/" + d.filename + ".jpg"}" "${"/tmp/" + d.folderName + "/" + d.filename + ".flv"}"`,
     (error, stdout, stderr) => {
       if (error) console.error(error);
       if (stderr) console.error(stderr);
