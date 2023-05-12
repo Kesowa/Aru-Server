@@ -1,6 +1,4 @@
 import fs from "fs";
-import { Logger } from "pino";
-import { Directory, DirPath } from "../constants";
 import s3fs from "../s3utils/lib-aws";
 
 export const getFileSize = async (filepath: string) => {
@@ -11,22 +9,9 @@ export const getFileSize = async (filepath: string) => {
   return fileSize;
 };
 
-export const createDirIfNotExists = async (
-  filepath: string,
-  logger: Logger
-) => {
-  try {
-    await fs.promises.access(filepath);
-    logger.info("Directory exists...");
-  } catch (error) {
-    logger.warn("Directory does not exist... Creating...");
-    await fs.promises.mkdir(filepath, { recursive: true });
-  }
-};
-
 export const checkFileExists = async (filepath: string) => {
   try {
-    await fs.promises.stat(filepath);
+    await s3fs.stat(filepath);
     return true;
   } catch (error) {
     return false;

@@ -1,8 +1,6 @@
 import { existsSync } from "fs";
 import { Types } from "mongoose";
 import path from "path";
-import * as dotenv from 'dotenv' // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
-dotenv.config()
 
 export const DUMMY_TENANT = new Types.ObjectId("629aeb50ea5ed2cee054870b");
 
@@ -121,7 +119,6 @@ export const ARU_INSTANCE = new EnvVar("ARU_INSTANCE")
   .isEnum(Instance)
   .toEnum<Instance>();
 export const LIVE_URL = new EnvVar("LIVE_URL").isUrl().toString();
-export const PUBLIC_DIR = new EnvVar("PUBLIC_DIR").check(existsSync).toString();
 export const TITILER_SERVER = new EnvVar("TITILER_SERVER").isUrl().toString();
 export const TITILER_STATIC = new EnvVar("TITILER_STATIC").isUrl().toString();
 export const RAZORPAY_KEY_ID = new EnvVar("RAZORPAY_KEY_ID").toString();
@@ -160,8 +157,8 @@ export enum Directory {
 
 export const DirPath = (dir: Directory, filename?: string | undefined) =>
   filename == undefined
-    ? path.join(dir)
-    : path.join(dir, filename);
+    ? dir
+    : path.join(dir, filename.replace(/^\//, ""));
 
 export const TITILER_PUBLIC = new EnvVar("TITILER_PUBLIC").isUrl().toString();
 export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();

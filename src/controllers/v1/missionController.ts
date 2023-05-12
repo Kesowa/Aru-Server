@@ -30,8 +30,8 @@ import { ILocation } from "../../schemas/location";
 import MissionType from "../../models/missionType";
 import Location from "../../models/location";
 import { Directory, DirPath } from "../../constants";
-import { createDirIfNotExists } from "../../utils/fileUtils";
 import moment from "moment";
+import s3fs from "../../s3utils/lib-aws";
 
 //create flight controller
 type CreateMission = {
@@ -1117,20 +1117,15 @@ export const getMissionCsvForTenantOrUser = async (
       })
       .lean();
     if (result.length) {
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
+      const file = DirPath(Directory.CSV,`${Math.floor(Math.random() * 62000000)}.csv`);
       const csv = new ObjectsToCsv(result);
-      const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
-      await csv.toDisk(file);
+      const data = await csv.toString();
+      await s3fs.writeFile(file, data);
       return res.status(200).json({
         status: true,
         message: "Successfully csv file created!",
         pathh:
-          "/" +
-          file
-            .split(/[\\\/]/)
-            .slice(7)
-            .join("/"),
+          "/" + file
       });
     } else
       return res.status(404).json({

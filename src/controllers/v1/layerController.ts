@@ -10,7 +10,7 @@ import sharp from "sharp";
 import { ObjectId } from "bson";
 import ObjectsToCsv from "objects-to-csv";
 import Mission from "../../models/mission";
-import fs, { promises as Fs } from "fs";
+// import fs, { promises as Fs } from "fs";
 import {
   deleteDirFileUsingName,
   deletePublicFileUsingPath,
@@ -18,7 +18,6 @@ import {
 const tj = require("@mapbox/togeojson"),
   DOMParser = require("xmldom").DOMParser;
 import tokml from "tokml";
-import resizer from "node-image-resizer";
 import {
   modGeoJson,
   readGeoJson,
@@ -50,11 +49,12 @@ import { type HydratedDocument, Types } from "mongoose";
 import type { ILayerFile } from "../../schemas/layerFiles";
 import {
   checkFileExists,
-  createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
+import s3fs from "../../s3utils/lib-aws";
+import { randomUUID } from "crypto";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
@@ -66,22 +66,23 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let filePath: string;
       if (fileExt === "kml") {
         const pathh1 = DirPath(Directory.VECTOR, req.file?.filename);
-        const fileData = await fs.promises.readFile(pathh1, "utf8");
+        const fileData = (await s3fs.readFile(pathh1)).toString();
         const kml1 = new DOMParser().parseFromString(fileData);
         const converted = tj.kml(kml1, { styles: true });
         pathee2 = pathh1.split(".")[0] + ".geojson";
         filePath = `/vector/${req.file.filename.replace(".kml", ".geojson")}`;
-        await fs.promises.writeFile(pathee2, JSON.stringify(converted));
-        await fs.promises.unlink(pathh1);
+        await s3fs.writeFile(pathee2, JSON.stringify(converted));
+        await s3fs.rm(pathh1);
       } else if (fileExt === "shp" || fileExt === "zip") {
         const filename = path.basename(req.file.filename, fileExt);
         const pathh1 = DirPath(Directory.VECTOR, req.file.filename);
-        const shpFile = await Fs.readFile(pathh1);
+        const shpFile = await s3fs.readFile(pathh1);
         pathee2 = filename + "geojson";
         filePath = `/${Directory.VECTOR}/${pathee2}`;
         pathee2 = DirPath(Directory.VECTOR, pathee2);
         const geojson = await shp2json(shpFile);
-        await Fs.writeFile(pathee2, JSON.stringify(geojson));
+        await s3fs.writeFile(pathee2, JSON.stringify(geojson));
+        await s3fs.rm(pathh1);
       } else if (fileExt === "geojson") {
         filePath = `/${Directory.VECTOR}/${req.file.filename}`;
         pathee2 = req.file.path;
@@ -632,13 +633,16 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
       throw new Error("invalid file format");
     }
     // await removeExifData(req.file.path); // REVISIT: this will break image orientation
-    await sharp(req.file.path, { failOn: "truncated" })
-      .resize(1280, 720, { fit: "inside" })
-      .toFile(x2FilePath);
-
-    await sharp(x2FilePath, { failOn: "truncated" })
-      .resize(120, 120, { fit: "inside" })
-      .toFile(x1FilePath);
+    const x2Stream = s3fs.uploadStream(x2FilePath);
+    sharp(req.file.tempPath, { failOn: "truncated" })
+      .resize(1280, 720, { withoutEnlargement: true })
+      .pipe(x2Stream.writeStream);
+    await x2Stream.promise;
+    const x1Stream = s3fs.uploadStream(x1FilePath);
+    sharp(req.file.tempPath, { failOn: "truncated" })
+      .resize(120, 120, { withoutEnlargement: true })
+      .pipe(x1Stream.writeStream);
+    await x1Stream.promise;
     const size: number = Number(
       (Number(req.file.size) / (1024 * 1024)).toFixed(5)
     );
@@ -658,7 +662,6 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
     });
 
     const savedDoc = await featureFile.save();
-    const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
     if (savedDoc) {
       res.status(201).json({
         status: true,
@@ -863,7 +866,7 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
       String(req.body.name) +
       ".geojson";
     const file = DirPath(Directory.DEFAULT, filepath);
-    await fs.promises.writeFile(file, JSON.stringify(req.body.geoJSON));
+    await s3fs.writeFile(file, JSON.stringify(req.body.geoJSON));
 
     const geojson = await readGeoJson(file);
     // let fc: any = geojson.features.length;
@@ -1385,9 +1388,8 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${
-              ar.length - 1
-            } and data index should start from 0`,
+            message: `Your data must be less than equal to ${ar.length - 1
+              } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -1436,8 +1438,6 @@ export const getFeatureCsvByLayerIdx = async (
           message: "file path not exist!",
         });
       }
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
       const geoArray: any = [];
       const clone: any = [];
       if (req.body.featureIndex) {
@@ -1464,13 +1464,14 @@ export const getFeatureCsvByLayerIdx = async (
         }
       }
       const csv = new ObjectsToCsv(clone);
-      const filename = Math.floor(Math.random() * 620000);
-      const file = path.join(ws, `${filename}.csv`);
-      await csv.toDisk(file);
+      const filename = randomUUID();
+      const file = DirPath(Directory.CSV, `${filename}.csv`);
+      const data = await csv.toString();
+      await s3fs.writeFile(file, data);
       res.json({
         status: true,
         message: "csv file created successfully!",
-        pathh: `/csv/${filename}.csv`,
+        pathh: "/" + file,
       });
     } else
       return res.status(400).json({
@@ -1484,26 +1485,28 @@ export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
     const fname = req.file?.originalname;
     const fpath = "/layerFiles/" + req.file?.filename;
     const layerId = req.body.layerId;
-    const newFilename = `1x_${req.file?.filename}`;
-    const newFilename2 = `2x_${req.file?.filename}`;
     if (
       req.file?.mimetype == "image/jpeg" ||
       req.file?.mimetype == "image/png"
     ) {
-      sharp(req.file?.path)
-        .resize(120, 120, { withoutEnlargement: true })
-        .toFile(DirPath(Directory.LAYER_FILES, newFilename))
-        .then((result) => {})
-        .catch((err) => {
-          req.log.error(err);
-        });
-      sharp(req.file?.path)
+      const x1FilePath = DirPath(
+        Directory.LAYER_FILES,
+        `1x_${req.file.filename}`
+      );
+      const x2FilePath = DirPath(
+        Directory.LAYER_FILES,
+        `2x_${req.file.filename}`
+      );
+      const x2Stream = s3fs.uploadStream(x2FilePath);
+      sharp(req.file.tempPath)
         .resize(1280, 720, { withoutEnlargement: true })
-        .toFile(DirPath(Directory.LAYER_FILES, newFilename2))
-        .then((result) => {})
-        .catch((err) => {
-          req.log.error(err);
-        });
+        .pipe(x2Stream.writeStream);
+      await x2Stream.promise;
+      const x1Stream = s3fs.uploadStream(x1FilePath);
+      sharp(req.file.tempPath)
+        .resize(120, 120, { withoutEnlargement: true })
+        .pipe(x1Stream.writeStream);
+      await x1Stream.promise;
     }
     const size: number = Number(
       (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
@@ -1771,42 +1774,28 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           };
           const fpath = "/images/geojson/" + files[j].filename;
           req.log.info("file path:", fpath);
-          const newFilename = `1x_${files[j].filename}`;
           if (
             files[j].mimetype == "image/jpeg" ||
             files[j].mimetype == "image/png"
           ) {
-            await sharp(files[j].path)
+            const x1FilePath = DirPath(
+              Directory.GEOJSON_IMAGES,
+              `1x_${req.file.filename}`
+            );
+            const x2FilePath = DirPath(
+              Directory.GEOJSON_IMAGES,
+              `2x_${req.file.filename}`
+            );
+            const x2Stream = s3fs.uploadStream(x2FilePath);
+            sharp(req.file.tempPath)
+              .resize(1280, 720, { withoutEnlargement: true })
+              .pipe(x2Stream.writeStream);
+            await x2Stream.promise;
+            const x1Stream = s3fs.uploadStream(x1FilePath);
+            sharp(req.file.tempPath)
               .resize(120, 120, { withoutEnlargement: true })
-              .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
-              .then((result) => {})
-              .catch((err) => {
-                req.log.error("thumbnail creation failed");
-              });
-            //? why not created both thumbnails at once
-            if (
-              await checkFileExists(
-                DirPath(Directory.GEOJSON_IMAGES, files[j].filename)
-              )
-            ) {
-              await resizer(
-                DirPath(Directory.GEOJSON_IMAGES, files[j].filename),
-                {
-                  all: {
-                    path: DirPath(Directory.GEOJSON_IMAGES),
-                    quality: 80,
-                  },
-                  versions: [
-                    {
-                      quality: 100,
-                      prefix: "2x_",
-                      width: 1280,
-                      height: 720,
-                    },
-                  ],
-                }
-              );
-            }
+              .pipe(x1Stream.writeStream);
+            await x1Stream.promise;
           }
           const size: number = Number(
             (Number(files[j].size) / (1024 * 1024)).toFixed(5)
@@ -2032,9 +2021,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       });
       missionSpecificSocket.to(missionId).emit("LAYER_ZIP_START");
       const dir = DirPath(Directory.TEMP);
-      await createDirIfNotExists(dir, req.log);
       const fname = `${req.query.missionId}_layers_${Date.now()}.zip`;
-      const output = fs.createWriteStream(`${dir}${fname}`);
+      const { writeStream: output, promise } = s3fs.uploadStream(`${dir}${fname}`);
       const archive = archiver("zip", {
         zlib: { level: 9 }, // Sets the compression level.
       });
@@ -2056,7 +2044,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       // });
       // Error
       try {
-        await archive.finalize();
+        await Promise.all([archive.finalize(), promise]);
         const link = `temp/${fname}`;
         missionSpecificSocket.to(missionId).emit("LAYER_ZIP_COMPLETED", link);
       } catch (error) {
@@ -2082,11 +2070,11 @@ export const downloadassetbyIDtoKml = async (
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     });
-    const dir: string = DirPath(Directory.DEFAULT, doc.layerpath);
-    const geojson: any = await fs.promises.readFile(dir, "utf-8");
-    const dir2: string = String(dir.replace(".geojson", ".kml"));
-    await fs.promises.writeFile(
-      dir.replace(".geojson", ".kml"),
+    const dir = DirPath(Directory.DEFAULT, doc.layerpath);
+    const geojson = (await s3fs.readFile(dir)).toString();
+    const dir2 = dir.replace(".geojson", ".kml");
+    await s3fs.writeFile(
+      dir2,
       tokml(JSON.parse(geojson))
     );
 
@@ -2112,33 +2100,32 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
     );
     if (docs.length) {
       for (let i = 0; i < docs.length; i++) {
-        if (docs[i].fileType == "image/jpeg") {
-          const newFilename = DirPath(Directory.DEFAULT, docs[i].filePath);
+        if (docs[i].fileType == "image/jpeg" || docs[i].fileType == "image/png") {
+          const newFilename = DirPath(Directory.DEFAULT, docs[i].filePath.slice(1));
           if (!(await checkFileExists(newFilename))) {
-            await resizer(newFilename, {
-              all: {
-                path: DirPath(Directory.GEOJSON_IMAGES),
-                quality: 80,
-              },
-              versions: [
-                {
-                  quality: 100,
-                  prefix: "2x_",
-                  width: 1280,
-                  height: 720,
-                },
-              ],
-            });
+            const filename = path.basename(newFilename);
+            const dirname = path.dirname(newFilename)
+            const x1FilePath = DirPath(
+              Directory.DEFAULT,
+              `${dirname}/1x_${filename}`
+            );
+            const x2FilePath = DirPath(
+              Directory.DEFAULT,
+              `${dirname}/2x_${req.file.filename}`
+            );
+            const x2Stream = s3fs.uploadStream(x2FilePath);
+            const fileData = await s3fs.readFile(newFilename);
+            sharp(fileData)
+              .resize(1280, 720, { withoutEnlargement: true })
+              .pipe(x2Stream.writeStream);
+            await x2Stream.promise;
+            const x1Stream = s3fs.uploadStream(x1FilePath);
+            sharp(fileData)
+              .resize(120, 120, { withoutEnlargement: true })
+              .pipe(x1Stream.writeStream);
+            await x1Stream.promise;
+            ;
           }
-          // let filename = docs[i].filePath.split('/')[3]
-          // let newfileName = `2x_${filename}`
-          // sharp(DirPath(Directory.GEOJSON_IMAGES, filename))
-          //   .resize(1280, 720, { withoutEnlargement: true })
-          //   .toFile(DirPath(Directory.GEOJSON_IMAGES, newfileName))
-          //   .then((result) => {
-          //   }).catch((err) => {
-          //     req.log.error(err)
-          //   });
         }
       }
       res.status(200).json({
@@ -2228,8 +2215,8 @@ export const picktoMapUseForLayerCreate = async (
       const today = new Date();
       const snapRadius = 60; // meters
       for (let i = 0; i < files.length; i++) {
-        const img_path = DirPath(Directory.GEOJSON_IMAGES, files[i]?.filename);
-        const ff: any = await exifr.parse(img_path);
+        req.log.info("Parsing file", i);
+        const ff = await exifr.parse(files[i].tempPath);
         const temp: any = {};
         const geometry: any = {};
         const coordinates: any = [];
@@ -2252,6 +2239,7 @@ export const picktoMapUseForLayerCreate = async (
           let sys_id = new ObjectId();
 
           // check if image location already exists
+          req.log.info("check if image location already exists");
           const imagePoint = turf.point([long, lat]);
           let alreadyRegistered = false;
           for (let j = 0; j < features.length; j++) {
@@ -2271,7 +2259,7 @@ export const picktoMapUseForLayerCreate = async (
             originalname: files[i]?.originalname,
             sys_id: sys_id,
             mimetype: files[i].mimetype,
-            path: img_path,
+            path: "/" + DirPath(Directory.GEOJSON_IMAGES, files[i].filename),
             coordinates: [long, lat],
           });
           if (alreadyRegistered) {
@@ -2301,6 +2289,7 @@ export const picktoMapUseForLayerCreate = async (
           badImages.push(files[i].filename);
         }
       }
+      req.log.info("saving everything");
       if (features.length) {
         geojson["features"] = features;
         geojson["type"] = req.body.type ? req.body.type : "FeatureCollection";
@@ -2308,7 +2297,7 @@ export const picktoMapUseForLayerCreate = async (
         const filepath =
           "/vector/" + String(Date.now()) + "_" + req.body.name + ".geojson";
         const file = DirPath(Directory.DEFAULT, filepath);
-        await fs.promises.writeFile(file, JSON.stringify(geojson));
+        await s3fs.writeFile(file, JSON.stringify(geojson));
         const size1: number = await getFileSize(file);
         const docCount = await Tenant.findOne({
           _id: res.locals.user.tenantId,
@@ -2403,45 +2392,28 @@ export const picktoMapUseForLayerCreate = async (
             const savedDoc = await featureFile.save();
             if (savedDoc) flag = true;
             try {
-              if (
-                await checkFileExists(
-                  DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename)
-                )
-              ) {
-                // sharp(allImageData[i].path)
-                //   .resize(120, 120, { withoutEnlargement: true })
-                //   .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
-                //   .then((result) => {})
-                //   .catch((err) => {
-                //     req.log.error(err);
-                //   });
-                await resizer(
-                  DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename),
-                  {
-                    all: {
-                      path: DirPath(Directory.GEOJSON_IMAGES, "/"),
-                      quality: 80,
-                    },
-                    versions: [
-                      {
-                        prefix: "2x_",
-                        width: 1280,
-                        height: 720,
-                      },
-                      {
-                        prefix: "1x_",
-                        width: 120,
-                        height: 120,
-                      },
-                    ],
-                  }
-                );
-              }
+                  const x1FilePath = DirPath(
+                    Directory.GEOJSON_IMAGES,
+                    `1x_${allImageData[i].filename}`
+                  );
+                  const x2FilePath = DirPath(
+                    Directory.GEOJSON_IMAGES,
+                    `2x_${allImageData[i].filename}`
+                  );
+                  const x2Stream = s3fs.uploadStream(x2FilePath);
+                  sharp("/tmp/" + allImageData[i].filename)
+                    .resize(1280, 720, { withoutEnlargement: true })
+                    .pipe(x2Stream.writeStream);
+                  await x2Stream.promise;
+                  const x1Stream = s3fs.uploadStream(x1FilePath);
+                  sharp("/tmp/" + allImageData[i].filename)
+                    .resize(120, 120, { withoutEnlargement: true })
+                    .pipe(x1Stream.writeStream);
+                  await x1Stream.promise;
+                
             } catch (err) {
               req.log.error(err);
             }
-            // }
-            // }
           }
           if (flag == true) {
             const data = { badImages, result: savedDoc1 };
@@ -2576,7 +2548,7 @@ export const sys_id_Inject_to_layerfiles = async (
             req.log.info("Modified Doc");
           }
         }
-        await Fs.writeFile(p, JSON.stringify(gjson));
+        await s3fs.writeFile(p, JSON.stringify(gjson));
         res.status(200).json({
           status: true,
           message: "Generated sysIds successfully",
@@ -2645,9 +2617,8 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${
-        req.body.flag ? "flagged" : "unflagged"
-      } successfully`,
+      message: `feature ${req.body.flag ? "flagged" : "unflagged"
+        } successfully`,
     });
   } else {
     res.status(501).json({

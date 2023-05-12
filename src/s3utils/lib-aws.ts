@@ -21,10 +21,10 @@ const Client = new S3Client({
     secretAccessKey: AWS_SECRET_KEY,
   },
   region: "ap-south-1",
-  // endpoint: s3Endpoint,
-  // endpointProvider: () => ({
-  //   url: new URL(s3Endpoint + "/" + Bucket),
-  // })
+  endpoint: s3Endpoint,
+  endpointProvider: MODE == Mode.Dev ? () => ({
+    url: new URL(s3Endpoint + "/" + Bucket),
+  }) : undefined
 });
 
 const uploadStream = (dest: string) => {
@@ -40,13 +40,13 @@ const stat = async (path: string) => {
     Bucket,
     Key: path,
   });
-  try {
-    // if file(key) is not found, then exception will be thrown
-    const output = await Client.send(metadata);
-    return { size: output.ContentLength };
-  } catch (error) {
-    return { size: -1 };
-  }
+  // try {
+  // if file(key) is not found, then exception will be thrown
+  const output = await Client.send(metadata);
+  return { size: output.ContentLength };
+  // } catch (error) {
+  //   return { size: -1 };
+  // }
 };
 
 const copyFile = async (src: string, dest: string) => {

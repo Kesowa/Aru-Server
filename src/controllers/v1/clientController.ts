@@ -7,9 +7,8 @@ import User from "../../models/user";
 import bcrypt from "bcrypt";
 import Flight from "../../models/flight";
 import Tenant from "../../models/tenant";
-import path from "path";
 import ObjectsToCsv from "objects-to-csv";
-import crypto from "crypto";
+import crypto, { randomUUID } from "crypto";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
@@ -19,7 +18,8 @@ import { IMission } from "../../schemas/mission";
 import { ILocation } from "../../schemas/location";
 import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
 import { SortOrder } from "mongoose";
-import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
+import { getFileSize } from "../../utils/fileUtils";
+import s3fs from "../../s3utils/lib-aws";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -155,7 +155,6 @@ export const createClientformissionGroup = async (
           });
           const createDoc = await newClient.save();
           const docPath = DirPath(Directory.DEFAULT, req.body.avatar);
-          const size: number = await getFileSize(docPath);
           if (req.body.avatar && createDoc) {
             copyFiled(
               req.body.avatar,
@@ -171,7 +170,7 @@ export const createClientformissionGroup = async (
           if (req.body.avatar && createDoc) {
             await deletePublicFileUsingPath(req.body.avatar);
           }
-          const tenant: any = await Tenant.findOne(
+          const tenant = await Tenant.findOne(
             {
               _id: res.locals.user.tenantId,
             },
@@ -575,8 +574,6 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       .lean();
     const savedResult: any = [];
     if (result.length) {
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
       for (let i = 0; i < result.length; i++) {
         const d = {
           name: result[i].name,
@@ -587,17 +584,13 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       }
 
       const csv = new ObjectsToCsv(savedResult);
-      const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
-      await csv.toDisk(file);
+      const file = DirPath(Directory.CSV, `${randomUUID()}.csv`);
+      const data = await csv.toString();
+      await s3fs.writeFile(file, data);
       return res.status(200).json({
         status: true,
         message: "Client CSV generated successfully!",
-        pathh:
-          "/" +
-          file
-            .split(/[\\\/]/)
-            .slice(8)
-            .join("/"),
+        pathh: "/" + file
       });
     } else
       return res.status(400).json({

@@ -1,6 +1,4 @@
-import fs, { Dir } from "fs";
-import path from "path";
-import { Directory, DirPath, PUBLIC_DIR } from "../constants";
+import { Directory, DirPath } from "../constants";
 import s3fs from "../s3utils/lib-aws"
 
 export const deleteDirFileUsingName = async (
@@ -21,39 +19,8 @@ export const deleteDirFileUsingName = async (
 export const deletePublicFileUsingPath = async (filePath: string) => {
   try {
     // await fs.promises.unlink(path.join(PUBLIC_DIR, filePath));
-
-    filePath = filePath.slice(1)
-
-    await s3fs.rm(filePath)
+    await s3fs.rm(DirPath(Directory.DEFAULT, filePath));
     return true;
-  } catch (error) {
-    return false;
-  }
-};
-
-export const deletePublicFolderUsingPath = async (folderName: string) => {
-  try {
-    if (
-      folderName == "" ||
-      folderName == "/" ||
-      path.basename(folderName) in Object.values(Directory)
-    )
-      return false;
-    await fs.promises.rm(path.join(PUBLIC_DIR, folderName), {
-      recursive: true,
-    });
-  } catch (error) {
-    return false;
-  }
-};
-
-export const deleteDirFolderUsingName = async (
-  directory: Directory,
-  folderName: string
-) => {
-  try {
-    if (folderName == "" || folderName == "/") return false;
-    await fs.promises.rm(DirPath(directory, folderName), { recursive: true });
   } catch (error) {
     return false;
   }

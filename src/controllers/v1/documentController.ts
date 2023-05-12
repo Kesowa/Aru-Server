@@ -12,9 +12,6 @@ import rimraf from "rimraf";
 import { missionSpecificSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import { exec } from "child_process";
-import {
-  deletePublicFolderUsingPath,
-} from "../../utils/fileDeleteUtils"; // TO-REMOVE: being used by pointcloud deletion only
 import { Directory, DirPath } from "../../constants";
 import s3fs from "../../s3utils/lib-aws";
 

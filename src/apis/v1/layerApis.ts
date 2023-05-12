@@ -74,8 +74,12 @@ const upload = multer({
 });
 
 const uploadlayerfile = multer({
-  storage: multerStorage(Directory.LAYER_FILES),
+  storage: multerStorage(Directory.LAYER_FILES, true),
 });
+
+const uploadPicToMap = multer({
+  storage: multerStorage(Directory.GEOJSON_IMAGES, true),
+})
 
 // ********* create ***********
 router.post(
@@ -433,7 +437,7 @@ router.patch(
 router.post(
   "/pick-to-map-for-layer",
   isAuthenticated,
-  upload.array("file", 50),
+  uploadPicToMap.array("file", 50),
   body("name").trim(),
   body("vectorId").isMongoId(),
   // optional
