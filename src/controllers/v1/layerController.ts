@@ -2124,7 +2124,7 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
               .resize(120, 120, { withoutEnlargement: true })
               .pipe(x1Stream.writeStream);
             await x1Stream.promise;
-            ;
+            
           }
         }
       }

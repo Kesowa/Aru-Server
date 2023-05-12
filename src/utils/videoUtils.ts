@@ -9,7 +9,6 @@ import DJISRTParser, { AllFunctions } from "dji_srt_parser";
 import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
 import Location from "../models/location";
-import { Directory, DirPath } from "../constants";
 import path from "path";
 import s3fs from "../s3utils/lib-aws"
 import rimraf from "rimraf"

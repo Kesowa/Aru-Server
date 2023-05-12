@@ -1,4 +1,3 @@
-import { existsSync } from "fs";
 import { Types } from "mongoose";
 import path from "path";
 
