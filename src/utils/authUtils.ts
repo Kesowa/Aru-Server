@@ -147,13 +147,13 @@ type permGuardType = {
   userTypes: Array<string>;
   perm: Array<
     | {
-      permName: "name";
-      value: string;
-    }
+        permName: "name";
+        value: string;
+      }
     | {
-      permName: string;
-      value: boolean;
-    }
+        permName: string;
+        value: boolean;
+      }
   >;
 };
 

@@ -13,7 +13,11 @@ export default class CustomStorageEngine implements StorageEngine {
   destination: Destination;
   tempCopy: boolean;
   cleanup: boolean;
-  constructor(config: { destination: Destination, tempCopy: boolean, cleanup: boolean }) {
+  constructor(config: {
+    destination: Destination;
+    tempCopy: boolean;
+    cleanup: boolean;
+  }) {
     this.destination = config.destination;
     this.tempCopy = config.tempCopy;
     this.cleanup = config.cleanup;
@@ -39,13 +43,12 @@ export default class CustomStorageEngine implements StorageEngine {
 
     file.filename = randomUUID() + path.extname(file.originalname);
     file.path = path.join(file.destination, file.filename);
-    const s3stream = file.stream.pipe(new PassThrough())
+    const s3stream = file.stream.pipe(new PassThrough());
     if (this.tempCopy) {
-
-      console.log(`Inside temp copy ${this.tempCopy}`)
+      console.log(`Inside temp copy ${this.tempCopy}`);
 
       const tempPath = "/tmp/" + file.filename;
-      console.log(`Temp Path ${tempPath}`)
+      console.log(`Temp Path ${tempPath}`);
       file["tempPath"] = tempPath;
       const tempStream = file.stream.pipe(new PassThrough());
       const fileStream = fs.createWriteStream(tempPath);
@@ -53,9 +56,8 @@ export default class CustomStorageEngine implements StorageEngine {
       if (this.cleanup) {
         onFinished(req.res, () => {
           fs.rm(tempPath, console.error);
-        })
+        });
       }
-
     }
     s3fs
       .writeStream(file.path, s3stream)

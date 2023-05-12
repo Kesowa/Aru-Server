@@ -9,9 +9,16 @@ import { Readable, Stream } from "stream";
 import { Upload } from "@aws-sdk/lib-storage";
 import { buffer } from "stream/consumers";
 import { createReadStream, promises as fs } from "fs";
-import { AWS_S3_BUCKET as Bucket, ACCESS_KEY, AWS_SECRET_KEY, AWS_S3_ENDPOINT, Mode, MODE } from "../constants";
+import {
+  AWS_S3_BUCKET as Bucket,
+  ACCESS_KEY,
+  AWS_SECRET_KEY,
+  AWS_S3_ENDPOINT,
+  Mode,
+  MODE,
+} from "../constants";
 import path from "path";
-import mime from "mime-types"
+import mime from "mime-types";
 
 const s3Endpoint = Mode.Dev == MODE ? AWS_S3_ENDPOINT : undefined;
 
@@ -22,9 +29,12 @@ const Client = new S3Client({
   },
   region: "ap-south-1",
   endpoint: s3Endpoint,
-  endpointProvider: MODE == Mode.Dev ? () => ({
-    url: new URL(s3Endpoint + "/" + Bucket),
-  }) : undefined
+  endpointProvider:
+    MODE == Mode.Dev
+      ? () => ({
+          url: new URL(s3Endpoint + "/" + Bucket),
+        })
+      : undefined,
 });
 
 const uploadStream = (dest: string) => {
@@ -94,7 +104,8 @@ const readStream = async (path: string) => {
 };
 
 const writeStream = async (dest: string, stream: Readable) => {
-  const mimeType = mime.contentType(path.extname(dest)) || "application/octet-stream";
+  const mimeType =
+    mime.contentType(path.extname(dest)) || "application/octet-stream";
   const upload = new Upload({
     client: Client,
     params: {
@@ -110,9 +121,7 @@ const writeStream = async (dest: string, stream: Readable) => {
 const uploadFile = async (src: string, dest: string) => {
   const fileStream = createReadStream(src);
   await writeStream(dest, fileStream);
-}
-
-
+};
 
 const rename = async (src: string, dest: string) => {
   await copyFile(src, dest);
@@ -129,7 +138,7 @@ const uploadDir = async (src: string, dest: string) => {
       await uploadDir(fullSrc, fullDest);
     }
   }
-}
+};
 
 export default {
   uploadDir,

@@ -47,10 +47,7 @@ import {
 } from "../../constants";
 import { type HydratedDocument, Types } from "mongoose";
 import type { ILayerFile } from "../../schemas/layerFiles";
-import {
-  checkFileExists,
-  getFileSize,
-} from "../../utils/fileUtils";
+import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import s3fs from "../../s3utils/lib-aws";
@@ -1388,8 +1385,9 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${ar.length - 1
-              } and data index should start from 0`,
+            message: `Your data must be less than equal to ${
+              ar.length - 1
+            } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -2022,7 +2020,9 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       missionSpecificSocket.to(missionId).emit("LAYER_ZIP_START");
       const dir = DirPath(Directory.TEMP);
       const fname = `${req.query.missionId}_layers_${Date.now()}.zip`;
-      const { writeStream: output, promise } = s3fs.uploadStream(`${dir}${fname}`);
+      const { writeStream: output, promise } = s3fs.uploadStream(
+        `${dir}${fname}`
+      );
       const archive = archiver("zip", {
         zlib: { level: 9 }, // Sets the compression level.
       });
@@ -2073,10 +2073,7 @@ export const downloadassetbyIDtoKml = async (
     const dir = DirPath(Directory.DEFAULT, doc.layerpath);
     const geojson = (await s3fs.readFile(dir)).toString();
     const dir2 = dir.replace(".geojson", ".kml");
-    await s3fs.writeFile(
-      dir2,
-      tokml(JSON.parse(geojson))
-    );
+    await s3fs.writeFile(dir2, tokml(JSON.parse(geojson)));
 
     const downloadlink = doc.layerpath.replace(".geojson", ".kml");
     res.json({
@@ -2100,11 +2097,17 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
     );
     if (docs.length) {
       for (let i = 0; i < docs.length; i++) {
-        if (docs[i].fileType == "image/jpeg" || docs[i].fileType == "image/png") {
-          const newFilename = DirPath(Directory.DEFAULT, docs[i].filePath.slice(1));
+        if (
+          docs[i].fileType == "image/jpeg" ||
+          docs[i].fileType == "image/png"
+        ) {
+          const newFilename = DirPath(
+            Directory.DEFAULT,
+            docs[i].filePath.slice(1)
+          );
           if (!(await checkFileExists(newFilename))) {
             const filename = path.basename(newFilename);
-            const dirname = path.dirname(newFilename)
+            const dirname = path.dirname(newFilename);
             const x1FilePath = DirPath(
               Directory.DEFAULT,
               `${dirname}/1x_${filename}`
@@ -2124,7 +2127,6 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
               .resize(120, 120, { withoutEnlargement: true })
               .pipe(x1Stream.writeStream);
             await x1Stream.promise;
-            ;
           }
         }
       }
@@ -2392,25 +2394,24 @@ export const picktoMapUseForLayerCreate = async (
             const savedDoc = await featureFile.save();
             if (savedDoc) flag = true;
             try {
-                  const x1FilePath = DirPath(
-                    Directory.GEOJSON_IMAGES,
-                    `1x_${allImageData[i].filename}`
-                  );
-                  const x2FilePath = DirPath(
-                    Directory.GEOJSON_IMAGES,
-                    `2x_${allImageData[i].filename}`
-                  );
-                  const x2Stream = s3fs.uploadStream(x2FilePath);
-                  sharp("/tmp/" + allImageData[i].filename)
-                    .resize(1280, 720, { withoutEnlargement: true })
-                    .pipe(x2Stream.writeStream);
-                  await x2Stream.promise;
-                  const x1Stream = s3fs.uploadStream(x1FilePath);
-                  sharp("/tmp/" + allImageData[i].filename)
-                    .resize(120, 120, { withoutEnlargement: true })
-                    .pipe(x1Stream.writeStream);
-                  await x1Stream.promise;
-                
+              const x1FilePath = DirPath(
+                Directory.GEOJSON_IMAGES,
+                `1x_${allImageData[i].filename}`
+              );
+              const x2FilePath = DirPath(
+                Directory.GEOJSON_IMAGES,
+                `2x_${allImageData[i].filename}`
+              );
+              const x2Stream = s3fs.uploadStream(x2FilePath);
+              sharp("/tmp/" + allImageData[i].filename)
+                .resize(1280, 720, { withoutEnlargement: true })
+                .pipe(x2Stream.writeStream);
+              await x2Stream.promise;
+              const x1Stream = s3fs.uploadStream(x1FilePath);
+              sharp("/tmp/" + allImageData[i].filename)
+                .resize(120, 120, { withoutEnlargement: true })
+                .pipe(x1Stream.writeStream);
+              await x1Stream.promise;
             } catch (err) {
               req.log.error(err);
             }
@@ -2617,8 +2618,9 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${req.body.flag ? "flagged" : "unflagged"
-        } successfully`,
+      message: `feature ${
+        req.body.flag ? "flagged" : "unflagged"
+      } successfully`,
     });
   } else {
     res.status(501).json({

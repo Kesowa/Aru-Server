@@ -9,7 +9,6 @@ export const serverError = (res: Response) => {
 };
 
 export const validator: RequestHandler = (req, res, next) => {
-
   const errs = validationResult(req);
   if (!errs.isEmpty()) {
     const errMap = errs.array();

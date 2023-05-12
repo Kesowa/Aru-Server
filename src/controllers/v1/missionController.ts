@@ -1117,15 +1117,17 @@ export const getMissionCsvForTenantOrUser = async (
       })
       .lean();
     if (result.length) {
-      const file = DirPath(Directory.CSV,`${Math.floor(Math.random() * 62000000)}.csv`);
+      const file = DirPath(
+        Directory.CSV,
+        `${Math.floor(Math.random() * 62000000)}.csv`
+      );
       const csv = new ObjectsToCsv(result);
       const data = await csv.toString();
       await s3fs.writeFile(file, data);
       return res.status(200).json({
         status: true,
         message: "Successfully csv file created!",
-        pathh:
-          "/" + file
+        pathh: "/" + file,
       });
     } else
       return res.status(404).json({

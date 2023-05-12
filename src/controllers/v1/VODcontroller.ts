@@ -350,7 +350,6 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
 
-
     if (doc) {
       const docpath = doc.videoPath;
       // TODO: Put HLS chunks for a video in a single folder, then replace this

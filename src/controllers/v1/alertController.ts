@@ -50,9 +50,9 @@ export const createAlert = async (
       location: req.body.location
         ? req.body.location
         : {
-          lat: 0,
-          long: 0,
-        },
+            lat: 0,
+            long: 0,
+          },
       missionId,
       locationId,
       createdBy: res.locals.user._id,
@@ -758,14 +758,8 @@ export const convertImageToThumbnail = async (
       const newFilename = DirPath(Directory.DEFAULT, result[i].image);
       const fileName = path.basename(result[i].image);
       const tempFile = await s3fs.readFile(newFilename);
-      const x1FilePath = DirPath(
-        Directory.ALERT_IMAGES,
-        `1x_${fileName}`
-      );
-      const x2FilePath = DirPath(
-        Directory.ALERT_IMAGES,
-        `2x_${fileName}`
-      );
+      const x1FilePath = DirPath(Directory.ALERT_IMAGES, `1x_${fileName}`);
+      const x2FilePath = DirPath(Directory.ALERT_IMAGES, `2x_${fileName}`);
       const x2Stream = s3fs.uploadStream(x2FilePath);
       sharp(tempFile)
         .resize(1280, 720, { fit: "inside" })
@@ -776,7 +770,6 @@ export const convertImageToThumbnail = async (
         .resize(120, 120, { fit: "inside" })
         .pipe(x1Stream.writeStream);
       await x1Stream.promise;
-
     }
     res.status(200).json({
       status: true,
@@ -873,7 +866,7 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       lat: ff ? ff.latitude : 0,
       long: ff ? ff.longitude : 0,
     };
-    
+
     const img_path = DirPath(Directory.ALERT_IMAGES, req.file?.filename);
     const fileStat = await s3fs.stat(img_path);
     const size1: number = Number((fileStat.size / (1024 * 1024)).toFixed(5));
@@ -892,11 +885,13 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       onSite: req.body.onSite,
       type,
       fileSize: size1,
-      image: req.file ? `${process.env.AWS_S3_ENDPOINT}/images/alertImages/${req.file?.filename}` : undefined,
+      image: req.file
+        ? `${process.env.AWS_S3_ENDPOINT}/images/alertImages/${req.file?.filename}`
+        : undefined,
     });
 
     const data = await newAlert.save();
-    console.log(data)
+    console.log(data);
     // deleteFileAvatar(`/images/alertImages/${req.file?.filename}`)
     // let dataa = await Alert.findById(data._id).populate('createdBy')
     // notificationSocket.to(res.locals.user.tenantId._id).emit('ALERT_CREATED', dataa);

@@ -590,7 +590,7 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       return res.status(200).json({
         status: true,
         message: "Client CSV generated successfully!",
-        pathh: "/" + file
+        pathh: "/" + file,
       });
     } else
       return res.status(400).json({

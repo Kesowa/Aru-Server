@@ -25,7 +25,7 @@ export const findHlsSize = async (indexPath: string, folderPath: string) => {
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
     await fs.promises.stat(
-      folderPath + (vodFiles[Math.floor(vodFiles.length / 2)])
+      folderPath + vodFiles[Math.floor(vodFiles.length / 2)]
     )
   ).size;
   const hlsSize = index.length + vodFiles.length * partSize;

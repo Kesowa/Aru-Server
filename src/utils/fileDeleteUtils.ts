@@ -1,5 +1,5 @@
 import { Directory, DirPath } from "../constants";
-import s3fs from "../s3utils/lib-aws"
+import s3fs from "../s3utils/lib-aws";
 
 export const deleteDirFileUsingName = async (
   directory: Directory,
@@ -8,7 +8,7 @@ export const deleteDirFileUsingName = async (
   try {
     // await fs.promises.unlink(DirPath(directory, fileName));
 
-    await s3fs.rm(DirPath(directory, fileName))
+    await s3fs.rm(DirPath(directory, fileName));
 
     return true;
   } catch (error) {
@@ -29,7 +29,7 @@ export const deletePublicFileUsingPath = async (filePath: string) => {
 export const deleteHlsVodUsingIndex = async (indexFile: string) => {
   const indexPath = DirPath(Directory.VOD, indexFile);
   // const index = await fs.promises.readFile(indexPath, "utf8");
-  const bufferData = await s3fs.readFile(indexPath)
+  const bufferData = await s3fs.readFile(indexPath);
 
   const index = bufferData.toString();
 
