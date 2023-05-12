@@ -1,6 +1,10 @@
-import { existsSync } from "fs";
 import { Types } from "mongoose";
 import path from "path";
+
+if (process.env.MODE == "production") {
+  const dotenv = require("dotenv");
+  dotenv.config();
+}
 
 export const DUMMY_TENANT = new Types.ObjectId("629aeb50ea5ed2cee054870b");
 
