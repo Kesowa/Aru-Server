@@ -79,7 +79,7 @@ const uploadlayerfile = multer({
 
 const uploadPicToMap = multer({
   storage: multerStorage(Directory.GEOJSON_IMAGES, true),
-})
+});
 
 // ********* create ***********
 router.post(

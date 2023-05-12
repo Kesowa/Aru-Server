@@ -55,7 +55,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
           missionSpecificSocket
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
-          rimraf(outputDir, function(err) {
+          rimraf(outputDir, function (err) {
             if (err) {
               throw err;
             } else {
@@ -157,9 +157,15 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
     if (data.fileType == "pointCloud") {
       const fileName = path.parse(data.filePath).name;
       await s3fs.rm(DirPath(Directory.DOCUMENTS, fileName + ".html"));
-      await s3fs.rm(DirPath(Directory.DOCUMENTS, `potree/${fileName}/hierarchy.bin`));
-      await s3fs.rm(DirPath(Directory.DOCUMENTS, `potree/${fileName}/metadata.json`));
-      await s3fs.rm(DirPath(Directory.DOCUMENTS, `potree/${fileName}/octree.bin`));
+      await s3fs.rm(
+        DirPath(Directory.DOCUMENTS, `potree/${fileName}/hierarchy.bin`)
+      );
+      await s3fs.rm(
+        DirPath(Directory.DOCUMENTS, `potree/${fileName}/metadata.json`)
+      );
+      await s3fs.rm(
+        DirPath(Directory.DOCUMENTS, `potree/${fileName}/octree.bin`)
+      );
       const d = await data.delete();
       if (d) {
         res.status(200).json({
@@ -389,7 +395,9 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         archive.pipe(outputStream.writeStream);
         for (let i = 0; i < d.length; i++) {
           const fileName = path.parse(d[i].filePath).base;
-          const fileBuffer = await s3fs.readFile(DirPath(Directory.DOCUMENTS, fileName));
+          const fileBuffer = await s3fs.readFile(
+            DirPath(Directory.DOCUMENTS, fileName)
+          );
           archive.append(fileBuffer, { name: fileName });
         }
         try {
@@ -433,7 +441,9 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         archive.pipe(outputStream.writeStream);
         for (let i = 0; i < d.length; i++) {
           const fileName = path.parse(d[i].filePath).base;
-          const fileBuffer = await s3fs.readFile(DirPath(Directory.DOCUMENTS, fileName));
+          const fileBuffer = await s3fs.readFile(
+            DirPath(Directory.DOCUMENTS, fileName)
+          );
           archive.append(fileBuffer, { name: fileName });
         }
         try {
@@ -466,22 +476,18 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
       });
       if (doc) {
         const fileName = path.parse(doc.filePath).base;
-        const fileBuffer = await s3fs.readFile(DirPath(Directory.DOCUMENTS, fileName));
-
-        const x1FilePath = DirPath(
-          Directory.DOCUMENTS,
-          `1x_${fileName}`
+        const fileBuffer = await s3fs.readFile(
+          DirPath(Directory.DOCUMENTS, fileName)
         );
+
+        const x1FilePath = DirPath(Directory.DOCUMENTS, `1x_${fileName}`);
         const x1Stream = s3fs.uploadStream(x1FilePath);
         sharp(fileBuffer)
           .resize(120, 120, { fit: "inside" })
           .pipe(x1Stream.writeStream);
         await x1Stream.promise;
 
-        const x2FilePath = DirPath(
-          Directory.DOCUMENTS,
-          `2x_${fileName}`
-        );
+        const x2FilePath = DirPath(Directory.DOCUMENTS, `2x_${fileName}`);
         const x2Stream = s3fs.uploadStream(x2FilePath);
         sharp(fileBuffer)
           .resize(1280, 720, { fit: "inside" })
@@ -524,7 +530,8 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
         const filePath = DirPath(Directory.DOCUMENTS, fileName);
         const fileStat = await s3fs.stat(filePath);
         const size: number = Number((fileStat.size / (1024 * 1024)).toFixed(5));
-        if (size !== -1) { // key found in bucket
+        if (size !== -1) {
+          // key found in bucket
           if (size != docs[i].fileSize) {
             await Document.updateOne(
               {
@@ -534,7 +541,8 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
               { upsert: true, useFindAndModify: false }
             );
           }
-        } else { // key not found in bucket
+        } else {
+          // key not found in bucket
           await docs[i].delete();
         }
       }

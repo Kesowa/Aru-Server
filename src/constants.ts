@@ -155,9 +155,7 @@ export enum Directory {
 }
 
 export const DirPath = (dir: Directory, filename?: string | undefined) =>
-  filename == undefined
-    ? dir
-    : path.join(dir, filename.replace(/^\//, ""));
+  filename == undefined ? dir : path.join(dir, filename.replace(/^\//, ""));
 
 export const TITILER_PUBLIC = new EnvVar("TITILER_PUBLIC").isUrl().toString();
 export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();
@@ -165,4 +163,6 @@ export const REDIS_URI = new EnvVar("REDIS_URI").isUrl().toString();
 export const SEQ_SERVER_URL = new EnvVar("SEQ_URL").isUrl().toString();
 export const SEQ_API_KEY = new EnvVar("SEQ_KEY").isUrl().toString();
 export const AWS_S3_BUCKET = new EnvVar("AWS_S3_BUCKET").toString();
-export const AWS_MEDIACONVERT_ENDPOINT = new EnvVar("AWS_MEDIACONVERT_ENDPOINT").isUrl().toString();
+export const AWS_MEDIACONVERT_ENDPOINT = new EnvVar("AWS_MEDIACONVERT_ENDPOINT")
+  .isUrl()
+  .toString();

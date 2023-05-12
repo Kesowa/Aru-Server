@@ -10,10 +10,8 @@ import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
 import Location from "../models/location";
 import path from "path";
-import s3fs from "../s3utils/lib-aws"
-import rimraf from "rimraf"
-
-
+import s3fs from "../s3utils/lib-aws";
+import rimraf from "rimraf";
 
 // import path from "node:path";
 
@@ -36,7 +34,8 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       "SRT Extraction successful, now Exiting!---------------------------------------------------------------------"
     );
     const srtOutpath = "/tmp/" + d.folderName + "/" + d.filename + ".srt";
-    const geoJSONoutPath = "/tmp/" + d.folderName + "/" + d.filename + ".geojson";
+    const geoJSONoutPath =
+      "/tmp/" + d.folderName + "/" + d.filename + ".geojson";
     let data: string;
     let json: string;
     let DJIData: AllFunctions;
@@ -76,7 +75,10 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
     srtFlag = false;
   }
   if (srtFlag == true) {
-    const size1 = await findHlsSize("/tmp/" + d.folderName + "/" + d.filename + ".m3u8", "/tmp/" + d.folderName + "/");
+    const size1 = await findHlsSize(
+      "/tmp/" + d.folderName + "/" + d.filename + ".m3u8",
+      "/tmp/" + d.folderName + "/"
+    );
 
     const VODdoc = new VOD({
       flightID: d.flightID,
@@ -89,7 +91,6 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       videoName: d.originalName.slice(0, -4),
       isSRT: true,
     });
-
 
     const saveToDb = async () => {
       const dbsave = await VODdoc.save();
@@ -108,18 +109,21 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       }
     };
 
+    // Upload Vidoes to s3 bucket from /tmp directory.
 
-    // Upload Vidoes to s3 bucket from /tmp directory. 
-
-    await s3fs.uploadDir("/tmp/" + d.folderName + "/", "vod/")
+    await s3fs.uploadDir("/tmp/" + d.folderName + "/", "vod/");
 
     await saveToDb();
 
-    rimraf("/tmp/" + d.folderName, function () { console.log("Removed files from file system"); });
-
+    rimraf("/tmp/" + d.folderName, function () {
+      console.log("Removed files from file system");
+    });
   } else {
-    console.log("inside second else block")
-    const size1: number = await findHlsSize("/tmp/" + d.folderName + "/" + d.filename + ".m3u8", "/tmp/" + d.folderName + "/");
+    console.log("inside second else block");
+    const size1: number = await findHlsSize(
+      "/tmp/" + d.folderName + "/" + d.filename + ".m3u8",
+      "/tmp/" + d.folderName + "/"
+    );
 
     const VODdoc = new VOD({
       flightID: d.flightID,
@@ -151,9 +155,9 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       }
     };
 
-    // Upload Vidoes to s3 bucket from /tmp directory. 
+    // Upload Vidoes to s3 bucket from /tmp directory.
 
-    await s3fs.uploadDir("/tmp/" + d.folderName + "/", "vod/")
+    await s3fs.uploadDir("/tmp/" + d.folderName + "/", "vod/");
 
     saveToDb()
       .then(() => console.log(`Saved video ${d.filename} to db`))
@@ -162,7 +166,9 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
       );
   }
 
-  rimraf("/tmp/" + d.folderName, function () { console.log("Removed files from file system"); });
+  rimraf("/tmp/" + d.folderName, function () {
+    console.log("Removed files from file system");
+  });
 };
 const videoProcessHandler = (d: ProcessVideoData) => {
   console.log("Now Starting", d.fullPath);
@@ -173,7 +179,6 @@ const videoProcessHandler = (d: ProcessVideoData) => {
 
   d.folderName = folderName;
 
-
   fs.mkdir(`/tmp/${folderName}`, (err) => {
     if (err) {
       console.error(err);
@@ -183,7 +188,13 @@ const videoProcessHandler = (d: ProcessVideoData) => {
   });
 
   const ps = exec(
-    `/bin/ffmpeg -i "${d.fullPath}" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${"/tmp/" + d.folderName + "/" + d.filename + ".m3u8"}" -ss 00:00:05.000 -vframes 1 "${"/tmp/" + d.folderName + "/" + d.filename + ".jpg"}" "${"/tmp/" + d.folderName + "/" + d.filename + ".flv"}"`,
+    `/bin/ffmpeg -i "${
+      d.fullPath
+    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${
+      "/tmp/" + d.folderName + "/" + d.filename + ".m3u8"
+    }" -ss 00:00:05.000 -vframes 1 "${
+      "/tmp/" + d.folderName + "/" + d.filename + ".jpg"
+    }" "${"/tmp/" + d.folderName + "/" + d.filename + ".flv"}"`,
     (error, stdout, stderr) => {
       if (error) console.error(error);
       if (stderr) console.error(stderr);
@@ -205,7 +216,8 @@ const videoProcessHandler = (d: ProcessVideoData) => {
       if (hlsFlag == true) {
         console.log("Now Starting SRT extraction");
         const pss = exec(
-          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${"/tmp/" + d.folderName + "/" + d.filename + ".srt"
+          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${
+            "/tmp/" + d.folderName + "/" + d.filename + ".srt"
           }"`,
           (error, stdout, stderr) => {
             if (error) console.error(error);
@@ -238,6 +250,5 @@ const videoProcessHandler = (d: ProcessVideoData) => {
   // ps?.stderr?.on("data", console.error);
   // ps?.stderr?.on("end", console.error);
 };
-
 
 VODEvents.on("PROCESS_VIDEO", videoProcessHandler);

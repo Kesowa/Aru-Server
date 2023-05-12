@@ -100,11 +100,11 @@ app.use(
   pinoHttp({
     logger,
 
-    genReqId: function(req, _) {
+    genReqId: function (req, _) {
       const cookies = cookie.parse(req.headers.cookie || "");
       return cookies["email"] || req.socket.remoteAddress;
     },
-    customLogLevel: function(_, res, err) {
+    customLogLevel: function (_, res, err) {
       if (res.statusCode >= 400 && res.statusCode < 500) {
         return "warn";
       } else if (res.statusCode >= 500 || err) {
@@ -168,7 +168,7 @@ app.use("/apis/v1/baselayer", baseLayerApis);
 app.use("/apis/v1/setting", settingApis);
 app.use("/apis/v1/thread", threadApis);
 // 404 route
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   // if (req.url.startsWith("/socket.io")) return next();
   if (res.headersSent) return;
   req.log.warn("Trying to handle route, god help us all.");

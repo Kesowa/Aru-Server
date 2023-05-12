@@ -43,7 +43,9 @@ interface Point {
 
 export async function readGeoJson(fullpath: string) {
   try {
-    const data = (await s3fs.readFile(DirPath(Directory.DEFAULT, fullpath))).toString();
+    const data = (
+      await s3fs.readFile(DirPath(Directory.DEFAULT, fullpath))
+    ).toString();
     const geojson = JSON.parse(data) as GeoJson;
     return geojson;
   } catch (error) {
@@ -116,7 +118,10 @@ export async function featureAddition(
     Object.assign(editObject.feature.properties, { sys_id: sys_id });
     geojson.features.push(editObject.feature);
 
-    await s3fs.writeFile(DirPath(Directory.DEFAULT, pathh), JSON.stringify(geojson));
+    await s3fs.writeFile(
+      DirPath(Directory.DEFAULT, pathh),
+      JSON.stringify(geojson)
+    );
     await Layer.updateOne(
       { _id: editObject.id },
       { featureCount: geojson.features.length }
@@ -140,7 +145,10 @@ export async function editGeoJsonForAll(
       geojson.features[editObject.featureIndex].properties,
       editObject.feature.properties
     );
-    await s3fs.writeFile(DirPath(Directory.DEFAULT, pathh), JSON.stringify(geojson));
+    await s3fs.writeFile(
+      DirPath(Directory.DEFAULT, pathh),
+      JSON.stringify(geojson)
+    );
     return true;
   } catch (error) {
     console.error(error);
@@ -153,8 +161,11 @@ export async function deleteGeoJsonFeature(
   geojson: GeoJson
 ) {
   try {
-    geojson.features.splice(deleteObject.featureIndex, 1)
-    await s3fs.writeFile(DirPath(Directory.DEFAULT, pathh), JSON.stringify(geojson));
+    geojson.features.splice(deleteObject.featureIndex, 1);
+    await s3fs.writeFile(
+      DirPath(Directory.DEFAULT, pathh),
+      JSON.stringify(geojson)
+    );
     await Layer.updateOne(
       { _id: deleteObject.id },
       { featureCount: geojson.features.length }
