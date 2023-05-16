@@ -38,6 +38,7 @@ import LayerGroupApis from "./apis/v1/layerGroupApis";
 import PaymentApis from "./apis/v1/paymentApis";
 import baseLayerApis from "./apis/v1/baseLayerApis";
 import settingApis from "./apis/v1/settingApis";
+import aimlApis from "./apis/v1/aimlApis";
 import threadApis from "./apis/v1/threadApis";
 
 import {
@@ -179,7 +180,9 @@ app.use("/apis/v1/layergroup", LayerGroupApis);
 app.use("/apis/v1/payment", PaymentApis);
 app.use("/apis/v1/baselayer", baseLayerApis);
 app.use("/apis/v1/setting", settingApis);
+app.use("/apis/v1/aiml", aimlApis);
 app.use("/apis/v1/thread", threadApis);
+
 // 404 route
 app.use(function (req, res, next) {
   // if (req.url.startsWith("/socket.io")) return next();
