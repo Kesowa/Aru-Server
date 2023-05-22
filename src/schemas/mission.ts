@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
 export interface IMission {
   _id: mongoose.Types.ObjectId;
   deliverables: string[];
@@ -16,7 +17,24 @@ export interface IMission {
   updatedAt: Date;
   size: number;
   isPublic: boolean;
-  _previousSize: number;
+}
+export const MissionType = {
+  _id: Types.String(),
+  deliverables: Types.Array({ arrayType: Types.String() }),
+  status: Types.StringEnum({ values: ["Upcoming", "Live", "Completed", "Review"] }), // index
+  user: Types.String(), // index
+  pilotAssigned: Types.String(),
+  assetID: Types.String(),
+  name: Types.String(),
+  description: Types.String(),
+  tenantId: Types.String(), // index
+  clientId: Types.Array({ arrayType: Types.String() }), // index
+  missionType: Types.String(),
+  invites: Types.Array({ arrayType: Types.String() }),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+  size: Types.Number(),
+  isPublic: Types.Boolean(),
 }
 const missionSchema = new mongoose.Schema<IMission>(
   {

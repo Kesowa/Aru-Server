@@ -16,14 +16,17 @@ alertApi.get("/", async (req: Request<null, {}, null, {
   offset: number,
   orderBy: string,
   asc: boolean,
+  populate: string[],
+  locationId?: string,
 }>, res: AuthResponse) => {
-  const { alertId, missionId, flightId, timespan, limit, offset, orderBy, asc } = req.query;
+  const { alertId, missionId, flightId, timespan, limit, offset, orderBy, asc, populate, locationId } = req.query;
   const data = await Alert.find(
     {
       tenantId: res.locals.user.tenantId._id,
       [alertId && "_id"]: alertId,
       [missionId && "missionId"]: missionId,
       [flightId && "flightId"]: flightId,
+      [locationId && "locationId"]: locationId,
       [timespan?.length && "createdAt"]: { $gte: timespan?.[0], $lte: timespan?.[1] },
 
     }, {}, {
@@ -33,6 +36,7 @@ alertApi.get("/", async (req: Request<null, {}, null, {
   })
     .skip(offset)
     .limit(limit)
+    .populate(populate)
     .lean();
   res.json({
     data,
@@ -57,8 +61,10 @@ openApi.addPath("/alert", {
         timespan: Types.Array({ arrayType: Types.DateTime(), minLength: 2, maxLength: 2 }),
         offset: Types.Integer({ minValue: 0, default: 0, required: true }),
         limit: Types.Integer({ minValue: 0, maxValue: 100, default: 10, required: true }),
-        orderBy: Types.String({ default: "createdAt" }),
-        asc: Types.Boolean({ default: true }),
+        orderBy: Types.String({ default: "createdAt", required: true }),
+        asc: Types.Boolean({ default: false, required: true }),
+        populate: Types.Array({ arrayType: Types.String() }),
+        locationId: Types.String(),
       }
     },
     tags: ["Alert API"],

@@ -6,6 +6,7 @@ import * as OpenApiValidator from "express-openapi-validator";
 import swaggerUi from "swagger-ui-express";
 import alertApi from "./alertApis";
 import { isAuthenticated } from "../../utils/authUtils";
+import missionApi from "./missionApis";
 
 const routerV2 = Router();
 
@@ -25,9 +26,10 @@ routerV2.use(OpenApiValidator.middleware({
   // validateResponses: true,
 }))
 
-// routerV2.use(isAuthenticated);
+routerV2.use(isAuthenticated);
 
 routerV2.use("/alert", alertApi);
+routerV2.use("/mission", missionApi);
 
 // @ts-ignore
 routerV2.use((err, req, res, next) => {
