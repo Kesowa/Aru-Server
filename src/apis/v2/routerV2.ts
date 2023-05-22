@@ -22,8 +22,7 @@ writeFileSync("/tmp/openapi.json", JSON.stringify(openApiJson));
 routerV2.use(OpenApiValidator.middleware({
   apiSpec: "/tmp/openapi.json",
   validateRequests: true,
-  validateResponses: true,
-
+  // validateResponses: true,
 }))
 
 // routerV2.use(isAuthenticated);
