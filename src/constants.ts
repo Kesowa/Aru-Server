@@ -1,6 +1,9 @@
 import { Types } from "mongoose";
 import path from "path";
 
+const dotenv = require("dotenv");
+dotenv.config();
+
 if (process.env.MODE == "production") {
   const dotenv = require("dotenv");
   dotenv.config();
