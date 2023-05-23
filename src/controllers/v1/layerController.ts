@@ -1867,10 +1867,19 @@ export const assignlayerLabel = async (req: Request, res: AuthResponse) => {
         : res.locals.user.tenantId,
     });
     if (doc) {
-      const savedDoc: any = await Layer.updateOne(
-        { _id: req.body.layerId },
-        { layerLabel: req.body.label }
-      );
+      let savedDoc: any;
+      if (req.query.popup){
+        savedDoc = await Layer.updateOne(
+          { _id: req.body.layerId },
+          { layerPopupLabel: req.body.label }
+        );
+      } else {
+        savedDoc = await Layer.updateOne(
+          { _id: req.body.layerId },
+          { layerLabel: req.body.label }
+        );
+      }
+      
       if (savedDoc) {
         const d: any = await Layer.findOne({
           _id: req.body.layerId,
