@@ -1868,7 +1868,7 @@ export const assignlayerLabel = async (req: Request, res: AuthResponse) => {
     });
     if (doc) {
       let savedDoc: any;
-      if (req.query.popup){
+      if (req.query.popup) {
         savedDoc = await Layer.updateOne(
           { _id: req.body.layerId },
           { layerPopupLabel: req.body.label }
@@ -1879,7 +1879,7 @@ export const assignlayerLabel = async (req: Request, res: AuthResponse) => {
           { layerLabel: req.body.label }
         );
       }
-      
+
       if (savedDoc) {
         const d: any = await Layer.findOne({
           _id: req.body.layerId,
