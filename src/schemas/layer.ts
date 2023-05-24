@@ -23,6 +23,7 @@ export interface ILayer {
   featureCount: number;
   layers?: mongoose.Types.ObjectId[];
   layerLabel?: string;
+  layerPopupLabel?: string;
   isPublic: boolean; // index
   publicMapRef?: string;
   isBase: boolean;
@@ -72,6 +73,10 @@ const layerSchema = new mongoose.Schema<ILayer>(
       required: false,
     },
     layerLabel: {
+      type: String,
+      require: false,
+    },
+    layerPopupLabel: {
       type: String,
       require: false,
     },

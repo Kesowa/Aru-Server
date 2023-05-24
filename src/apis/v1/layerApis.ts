@@ -386,6 +386,7 @@ router.patch(
   isAuthenticated,
   body("layerId").notEmpty().isMongoId(),
   body("label").notEmpty().trim(),
+  query("popup").optional().trim(),
   validator,
   RobustRunner(assignlayerLabel)
 );
