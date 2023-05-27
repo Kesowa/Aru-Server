@@ -2,13 +2,13 @@ import express from "express";
 import { isAuthenticated, canFly } from "../../utils/authUtils";
 import {
   getActiveStreams,
-  channelCreationAWS,
   streamTokenValidator,
   getActiveStreamByFlightId,
-  removeChannelandInput,
+  streamKeyGen,
 } from "../../controllers/v1/streamTokenController";
 import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { removeStreamKey } from "../../controllers/v1/streamTokenController";
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.post(
   body("locationID").default("5f202f03b9225726102721b8").isString().notEmpty(),
   validator,
   canFly,
-  RobustRunner(channelCreationAWS)
+  RobustRunner(streamKeyGen)
 );
 
 //+++++++++++++++++++++Stream Token Valiation ++++++++++++++++++++++++++++++
@@ -56,7 +56,7 @@ router.post(
   isAuthenticated,
   body("name").notEmpty().trim(),
   validator,
-  RobustRunner(removeChannelandInput)
+  RobustRunner(removeStreamKey)
 );
 
 export default router;

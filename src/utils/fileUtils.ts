@@ -1,5 +1,6 @@
 import fs from "fs";
 import s3fs from "../s3utils/lib-aws";
+import path from "path";
 
 export const getFileSize = async (filepath: string) => {
   const fileStats = await s3fs.stat(filepath);
@@ -31,3 +32,19 @@ export const findHlsSize = async (indexPath: string, folderPath: string) => {
   const hlsSize = index.length + vodFiles.length * partSize;
   return hlsSize / (1024 * 1024);
 };
+
+export const findHlsSizeS3 = async (indexPath: string) => {
+  const index = (await s3fs.readFile(indexPath)).toString();
+  const dir = path.dirname(indexPath);
+  const vodFiles = index
+    .split("\n")
+    .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
+  const partSize = (
+    await s3fs.stat(
+      dir + "/" + vodFiles[Math.floor(vodFiles.length / 2)]
+    )
+  ).size;
+  const hlsSize = index.length + vodFiles.length * partSize;
+  return hlsSize / (1024 * 1024);
+};
+

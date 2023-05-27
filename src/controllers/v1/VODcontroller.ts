@@ -2,7 +2,6 @@ import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
 import format from "date-fns/format";
 import path from "path";
-import fs from "fs";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { generateToken } from "./streamTokenController";
@@ -11,7 +10,7 @@ import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
 import { IMission } from "../../schemas/mission";
-import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
+import { ARU_INSTANCE, DirPath, Directory, Instance } from "../../constants";
 import { WiproInterface } from "../../utils/wipro";
 import {
   deleteDirFileUsingName,
@@ -19,6 +18,7 @@ import {
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
 import Flight from "../../models/flight";
+import { findHlsSizeS3 } from "../../utils/fileUtils";
 
 export const saveVOD = async (
   req: Request<
@@ -47,18 +47,16 @@ export const saveVOD = async (
           .catch(console.error);
       }, 10_000);
     }
-    const stats = await fs.promises.stat(
-      DirPath(Directory.VOD, `${req.body.filename}.flv`)
-    );
+    const size = await findHlsSizeS3(DirPath(Directory.VOD, req.body.filename + "/index.m3u8"));
     const VODdoc = new VOD({
       flightID: flightID,
       missionID: missionID,
       locationID: locationID,
-      videoPath: `/vod/${req.body.filename}.m3u8`,
+      videoPath: `/vod/${req.body.filename}/index.m3u8`,
       thumbnail: `/vod/${req.body.filename}.jpg`,
       tenantId: tenantId,
       videoName: req.body.filename,
-      fileSize: stats.size / (1024 * 1024),
+      fileSize: size,
     });
     const dbsave = await VODdoc.save();
     const tenant = await Tenant.findOne({ _id: tenantId });

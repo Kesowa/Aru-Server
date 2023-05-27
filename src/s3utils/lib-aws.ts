@@ -8,7 +8,7 @@ import {
 import { Readable, Stream } from "stream";
 import { Upload } from "@aws-sdk/lib-storage";
 import { buffer } from "stream/consumers";
-import { createReadStream, promises as fs } from "fs";
+import { createReadStream, createWriteStream, promises as fs } from "fs";
 import {
   AWS_S3_BUCKET as Bucket,
   ACCESS_KEY,
@@ -32,8 +32,8 @@ const Client = new S3Client({
   endpointProvider:
     MODE == Mode.Dev
       ? () => ({
-          url: new URL(s3Endpoint + "/" + Bucket),
-        })
+        url: new URL(s3Endpoint + "/" + Bucket),
+      })
       : undefined,
 });
 
