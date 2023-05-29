@@ -139,6 +139,7 @@ router.patch(
   body("name").notEmpty().trim(),
   //adding date format
   body("captureDate").exists().isISO8601().toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm
+  body("layerType").exists().notEmpty().isMongoId(),
   validator,
   canEditLayer,
   RobustRunner(updateLayer)
