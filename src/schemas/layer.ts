@@ -30,6 +30,8 @@ export interface ILayer {
   fileSize: number;
   flaggedFeatures: number[];
   isFlagged: boolean;
+  isThreadExist: boolean;
+  commentCount: Number;
   createdAt: Date; // index
   updatedAt: Date;
 }
@@ -130,6 +132,14 @@ const layerSchema = new mongoose.Schema<ILayer>(
       type: Boolean,
       required: true,
       default: false,
+    },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
     createdAt: {
       type: Date,
