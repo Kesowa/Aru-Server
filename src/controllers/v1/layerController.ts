@@ -279,36 +279,40 @@ export const updateLayer = async (req: Request, res: AuthResponse) => {
       doc.name = req.body.name;
       doc.captureDate = req.body.captureDate;
 
-      if(doc.type === "Vector") { // for Vector: geometry must match
-        const currentType = await vector.findById(doc.vector);
-        const requestedType = await vector.findById(req.body.layerType);
-        if(!requestedType) {
-          res.status(404).json({
-            status: false,
-            message: "layer type not found"
-          });
-          return;
+      if(req.body.layerType) {
+        if(doc.type === "Vector") { // for Vector: geometry must match
+          // edit layer type
+          const currentType = await vector.findById(doc.vector);
+          const requestedType = await vector.findById(req.body.layerType);
+          if(!requestedType) {
+            res.status(404).json({
+              status: false,
+              message: "layer type not found"
+            });
+            return;
+          }
+          else if(currentType.type !== requestedType.type) {
+            res.status(400).json({
+              status: false,
+              message: "geometry of previous type doesn't match new type"
+            });
+            return;
+          } else {
+            doc.vector = req.body.layerType;
+          }
+        } else { // for Raster
+          const requestedType = await raster.findById(req.body.layerType);
+          if(!requestedType) {
+            res.status(404).json({
+              status: false,
+              message: "layer type not found"
+            });
+            return;
+          }
+          doc.raster = req.body.layerType;
         }
-        else if(currentType.type !== requestedType.type) {
-          res.status(400).json({
-            status: false,
-            message: "geometry of previous type doesn't match new type"
-          });
-          return;
-        } else {
-          doc.vector = req.body.layerType;
-        }
-      } else { // for Raster
-        const requestedType = await raster.findById(req.body.layerType);
-        if(!requestedType) {
-          res.status(404).json({
-            status: false,
-            message: "layer type not found"
-          });
-          return;
-        }
-        doc.raster = req.body.layerType;
       }
+
       const data = await Layer.findOneAndUpdate(
         {
           _id: req.query.id,
@@ -857,7 +861,7 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
     } else {
       res.json({
         status: false,
-        message: `Color modification error`,
+        message: `Color or icon modification error`,
       });
     }
   }
