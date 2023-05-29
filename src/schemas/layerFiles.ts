@@ -16,6 +16,8 @@ export interface ILayerFile {
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
   isReview: boolean; // index
+  isThreadExist: boolean;
+  commentCount: Number;
   fileSize: number;
   createdAt: Date;
   updatedAt: Date;
@@ -72,6 +74,14 @@ const layerFilesSchema = new mongoose.Schema<ILayerFile>(
     isReview: {
       type: Boolean,
       default: false,
+    },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
   },
   {
