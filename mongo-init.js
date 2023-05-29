@@ -421,7 +421,7 @@ db.rasters.insertMany([
   },
   {
     _id: ObjectId("70c3138f4764fb024a3c1a59"),
-    bidx: "1%2C2%2C4,
+    bidx: "1%2C2%2C4",
     name: "NDWI",
     bandExp: null,
     colorMap: null,
