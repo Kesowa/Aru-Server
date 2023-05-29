@@ -341,6 +341,16 @@ db.vectors.insertMany([
     __v: 0,
   },
   {
+    _id: ObjectId("60c3123431213e039fce0d64"),
+    name: "Electric Pole",
+    type: "Point",
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0,
+  },
+  {
     _id: ObjectId("60c3a13fca0cbe039fce0d4f"),
     name: "Plot",
     type: "MultiPolygon",
@@ -350,6 +360,36 @@ db.vectors.insertMany([
     updatedAt: ISODate("2021-06-11T17:45:35.193+00:00"),
     __v: 0,
   },
+  {
+    _id: ObjectId("78934325ca0cbe039fce0d64"),
+    name: "Zone Boundary",
+    type: "MultiPolygon",
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0,
+  },
+  {
+    _id: ObjectId("60c3a3a2321cce039fce0d64"),
+    name: "Election Ward Boundary",
+    type: "MultiLineString",
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0,
+  },
+  {
+    _id: ObjectId("60c3a3c5ca02312cccce0d64"),
+    name: "Flyover",
+    type: "MultiLineString",
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0,
+  }
 ]);
 
 db.rasters.insertMany([
@@ -366,6 +406,33 @@ db.rasters.insertMany([
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
     __v: 0,
   },
+  {
+    _id: ObjectId("50c3138f4764fb024a3c1a59"),
+    bidx: "1",
+    name: "DEM",
+    bandExp: null,
+    colorMap: "plasma",
+    resamplingMethod: "nearest",
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0,
+  },
+  {
+    _id: ObjectId("70c3138f4764fb024a3c1a59"),
+    bidx: "1%2C2%2C4,
+    name: "NDWI",
+    bandExp: null,
+    colorMap: null,
+    resamplingMethod: "nearest",
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0,
+  },
+    
 ]);
 
 db.missions.insertMany([
