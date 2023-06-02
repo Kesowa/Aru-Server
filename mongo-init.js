@@ -389,7 +389,7 @@ db.vectors.insertMany([
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
     __v: 0,
-  }
+  },
 ]);
 
 db.rasters.insertMany([
@@ -432,7 +432,6 @@ db.rasters.insertMany([
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
     __v: 0,
   },
-    
 ]);
 
 db.missions.insertMany([

@@ -279,33 +279,34 @@ export const updateLayer = async (req: Request, res: AuthResponse) => {
       doc.name = req.body.name;
       doc.captureDate = req.body.captureDate;
 
-      if(req.body.layerType) {
-        if(doc.type === "Vector") { // for Vector: geometry must match
+      if (req.body.layerType) {
+        if (doc.type === "Vector") {
+          // for Vector: geometry must match
           // edit layer type
           const currentType = await vector.findById(doc.vector);
           const requestedType = await vector.findById(req.body.layerType);
-          if(!requestedType) {
+          if (!requestedType) {
             res.status(404).json({
               status: false,
-              message: "layer type not found"
+              message: "layer type not found",
             });
             return;
-          }
-          else if(currentType.type !== requestedType.type) {
+          } else if (currentType.type !== requestedType.type) {
             res.status(400).json({
               status: false,
-              message: "geometry of previous type doesn't match new type"
+              message: "geometry of previous type doesn't match new type",
             });
             return;
           } else {
             doc.vector = req.body.layerType;
           }
-        } else { // for Raster
+        } else {
+          // for Raster
           const requestedType = await raster.findById(req.body.layerType);
-          if(!requestedType) {
+          if (!requestedType) {
             res.status(404).json({
               status: false,
-              message: "layer type not found"
+              message: "layer type not found",
             });
             return;
           }
