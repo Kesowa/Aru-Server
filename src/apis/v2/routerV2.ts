@@ -7,6 +7,9 @@ import swaggerUi from "swagger-ui-express";
 import alertApi from "./alertApis";
 import { isAuthenticated } from "../../utils/authUtils";
 import missionApi from "./missionApis";
+import assetApi from "./assetApis";
+import assetClassApi from "./assetClassApis";
+import layerApi from "./layerApis";
 
 const routerV2 = Router();
 
@@ -29,6 +32,9 @@ routerV2.use(OpenApiValidator.middleware({
 routerV2.use(isAuthenticated);
 
 routerV2.use("/alert", alertApi);
+routerV2.use("/asset", assetApi);
+routerV2.use("/assetclass", assetClassApi);
+routerV2.use("/layer", layerApi);
 routerV2.use("/mission", missionApi);
 
 // @ts-ignore

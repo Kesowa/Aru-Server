@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IAsset {
   _id: mongoose.Types.ObjectId;
   assetName: string;
@@ -23,6 +25,30 @@ export interface IAsset {
   UIN: string;
   FCID: string;
   serialNo: string;
+}
+export const AssetType = {
+  _id: Types.String(),
+  assetName: Types.String(),
+  userID: Types.String(),
+  tenantID: Types.String(), // index
+  assetInfo: [
+    {
+      UIN: Types.String(),
+      FCID: Types.String(),
+      serialNO: Types.String(),
+    }
+  ],
+  manufactureID: Types.String(),
+  createdBy: Types.String(),
+  isActive: Types.Boolean(),
+  modelID: Types.String(),
+  assetOwner: Types.String(),
+  manufactureDate: Types.DateTime(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+  UIN: Types.String(),
+  FCID: Types.String(),
+  serialNo: Types.String(),
 }
 const assetSchema = new mongoose.Schema<IAsset>(
   {

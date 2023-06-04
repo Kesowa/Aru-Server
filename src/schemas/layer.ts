@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
+import { Types } from "ts-openapi";
 export interface ILayer {
   _id: mongoose.Types.ObjectId;
   type: "Vector" | "Raster"; // index
@@ -31,6 +32,36 @@ export interface ILayer {
   isFlagged: boolean;
   createdAt: Date; // index
   updatedAt: Date;
+}
+export const LayerType = {
+  _id: Types.String(),
+  type: Types.StringEnum({ values: ["Vector", "Raster"] }), // index
+  raster: Types.String(),
+  vector: Types.String(),
+  missionId: Types.String(), // index
+  tenantId: Types.String(), // index
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  layerGroupId: Types.String(),
+  captureDate: Types.DateTime(),
+  color: Types.String(),
+  layerpath: Types.String(),
+  name: Types.String(),
+  layerdataArr: Types.Array({ arrayType: Types.Object({ properties: {} }) }),
+  center: Types.Array({ arrayType: Types.Object({ properties: {} }) }),
+  minp: Types.Number(),
+  maxp: Types.Number(),
+  featureCount: Types.Number(),
+  layers: Types.Array({ arrayType: Types.String() }),
+  layerLabel: Types.String(),
+  isPublic: Types.Boolean(), // index
+  publicMapRef: Types.String(),
+  isBase: Types.Boolean(),
+  fileSize: Types.Number(),
+  flaggedFeatures: Types.Array({ arrayType: Types.Number() }),
+  isFlagged: Types.Boolean(),
+  createdAt: Types.DateTime(), // index
+  updatedAt: Types.DateTime(),
 }
 const layerSchema = new mongoose.Schema<ILayer>(
   {
