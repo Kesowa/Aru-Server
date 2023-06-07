@@ -2,8 +2,9 @@ import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
 import Flight from "../../models/flight";
-import { FlightType } from "../../schemas/flight";
+import { FlightType, IFlight } from "../../schemas/flight";
 import { AuthResponse } from "../../utils/interfaceUtils";
+import { HydratedDocument } from "mongoose";
 
 const flightApi = Router();
 
@@ -15,7 +16,7 @@ flightApi.get("/", async (req: Request<null, {}, null, {
   populate: string[],
 }>, res: AuthResponse) => {
   const { locationId, hasNoMission, limit, offset, populate } = req.query;
-  let data;
+  let data: HydratedDocument<IFlight>[];
   if(hasNoMission) {
     data = await Flight.aggregate([
       {
@@ -39,13 +40,10 @@ flightApi.get("/", async (req: Request<null, {}, null, {
           mission: [],
         },
       },
-      {
-        $project: {
-          mission: null,
-        },
-      },
     ]);
-    // TODO: populate
+    data.forEach(d => d.mission = null);
+    if (populate?.length > 0)
+      data = await Flight.populate(data, populate.join(","));
   } else {
     data = await Flight.find(
       {
