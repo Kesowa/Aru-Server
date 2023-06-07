@@ -15,7 +15,7 @@ assetApi.get("/", canListAsset, async (req: Request<null, {}, null, {
   const { assetId, populate } = req.query;
   const data = await Asset.find(
     {
-      tenantId: res.locals.user.tenantId._id,
+      tenantID: res.locals.user.tenantId._id,
       [assetId && "_id"]: assetId,
     })
     .populate(populate)

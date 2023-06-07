@@ -10,6 +10,9 @@ import missionApi from "./missionApis";
 import assetApi from "./assetApis";
 import assetClassApi from "./assetClassApis";
 import layerApi from "./layerApis";
+import baseLayerApi from "./baseLayerApis";
+import documentApi from "./documentApis";
+import flightApi from "./flightApis";
 
 const routerV2 = Router();
 
@@ -35,6 +38,9 @@ routerV2.use("/alert", alertApi);
 routerV2.use("/asset", assetApi);
 routerV2.use("/assetclass", assetClassApi);
 routerV2.use("/layer", layerApi);
+routerV2.use("/baselayer", baseLayerApi);
+routerV2.use("/document", documentApi);
+routerV2.use("/flight", flightApi);
 routerV2.use("/mission", missionApi);
 
 // @ts-ignore
