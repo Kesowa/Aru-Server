@@ -55,6 +55,8 @@ import {
 } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
+import vector from "../../models/vectorprops";
+import raster from "../../models/rasterprops";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
@@ -269,27 +271,66 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
 
 export const updateLayer = async (req: Request, res: AuthResponse) => {
   {
-    const data = await Layer.findOneAndUpdate(
-      {
-        _id: req.query.id,
-        tenantId: res.locals.user.tenantId._id,
-      },
-      {
-        name: req.body.name,
-        captureDate: req.body.captureDate,
-      },
-      {
-        new: true,
+    const doc = await Layer.findOne({
+      _id: req.query.id,
+      tenantId: res.locals.user.tenantId._id,
+    });
+    if (doc) {
+      doc.name = req.body.name;
+      doc.captureDate = req.body.captureDate;
+
+      if (req.body.layerType) {
+        if (doc.type === "Vector") {
+          // for Vector: geometry must match
+          // edit layer type
+          const currentType = await vector.findById(doc.vector);
+          const requestedType = await vector.findById(req.body.layerType);
+          if (!requestedType) {
+            res.status(404).json({
+              status: false,
+              message: "layer type not found",
+            });
+            return;
+          } else if (currentType.type !== requestedType.type) {
+            res.status(400).json({
+              status: false,
+              message: "geometry of previous type doesn't match new type",
+            });
+            return;
+          } else {
+            doc.vector = req.body.layerType;
+          }
+        } else {
+          // for Raster
+          const requestedType = await raster.findById(req.body.layerType);
+          if (!requestedType) {
+            res.status(404).json({
+              status: false,
+              message: "layer type not found",
+            });
+            return;
+          }
+          doc.raster = req.body.layerType;
+        }
       }
-    );
-    if (data) {
+
+      const data = await Layer.findOneAndUpdate(
+        {
+          _id: req.query.id,
+          tenantId: res.locals.user.tenantId._id,
+        },
+        doc,
+        {
+          new: true,
+        }
+      );
       res.status(200).json({
         status: true,
         message: "Layer updated successfully",
         data: data,
       });
     } else {
-      res.json({
+      res.status(404).json({
         status: false,
         message: "layer id doesnt match!! give correct ID ",
       });
@@ -821,7 +862,7 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
     } else {
       res.json({
         status: false,
-        message: `Color modification error`,
+        message: `Color or icon modification error`,
       });
     }
   }
@@ -1867,10 +1908,19 @@ export const assignlayerLabel = async (req: Request, res: AuthResponse) => {
         : res.locals.user.tenantId,
     });
     if (doc) {
-      const savedDoc: any = await Layer.updateOne(
-        { _id: req.body.layerId },
-        { layerLabel: req.body.label }
-      );
+      let savedDoc: any;
+      if (req.query.popup) {
+        savedDoc = await Layer.updateOne(
+          { _id: req.body.layerId },
+          { layerPopupLabel: req.body.label }
+        );
+      } else {
+        savedDoc = await Layer.updateOne(
+          { _id: req.body.layerId },
+          { layerLabel: req.body.label }
+        );
+      }
+
       if (savedDoc) {
         const d: any = await Layer.findOne({
           _id: req.body.layerId,

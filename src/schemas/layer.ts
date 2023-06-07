@@ -23,12 +23,15 @@ export interface ILayer {
   featureCount: number;
   layers?: mongoose.Types.ObjectId[];
   layerLabel?: string;
+  layerPopupLabel?: string;
   isPublic: boolean; // index
   publicMapRef?: string;
   isBase: boolean;
   fileSize: number;
   flaggedFeatures: number[];
   isFlagged: boolean;
+  isThreadExist: boolean;
+  commentCount: Number;
   createdAt: Date; // index
   updatedAt: Date;
 }
@@ -72,6 +75,10 @@ const layerSchema = new mongoose.Schema<ILayer>(
       required: false,
     },
     layerLabel: {
+      type: String,
+      require: false,
+    },
+    layerPopupLabel: {
       type: String,
       require: false,
     },
@@ -125,6 +132,14 @@ const layerSchema = new mongoose.Schema<ILayer>(
       type: Boolean,
       required: true,
       default: false,
+    },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
     createdAt: {
       type: Date,

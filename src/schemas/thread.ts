@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const docModels = <const>["alert", "document", "vod"];
+const docModels = <const>["alert", "document", "vod", "layer", "layerfile"];
 export type docTypes = typeof docModels[number];
 
 export type IComment = {
