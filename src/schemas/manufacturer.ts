@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
 export interface IManufacturer {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -15,6 +16,25 @@ export interface IManufacturer {
   updatedAt: Date;
   createdBy: mongoose.Types.ObjectId;
   tenantID: mongoose.Types.ObjectId; // index
+}
+export const ManufacturerType = {
+  _id: Types.String(),
+  name: Types.String(),
+  address: Types.String(),
+  nationality: Types.String(),
+  website: Types.String(),
+  contacts: Types.Array({ arrayType: Types.Object({
+    properties: {
+      name: Types.String(),
+      designation: Types.String(),
+      Mobile: Types.String(),
+      email: Types.String(),
+    }
+  })}),
+  createdAt:Types.DateTime(),
+  updatedAt: Types.DateTime(),
+  createdBy: Types.String(),
+  tenantID: Types.String(), // index
 }
 const manufacturerSchema = new mongoose.Schema<IManufacturer>(
   {

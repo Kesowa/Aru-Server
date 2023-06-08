@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
 // https://www.rfc-editor.org/rfc/rfc7946#section-3.1.1
 type Position = {
   lng: number;
@@ -43,6 +44,17 @@ export interface ILocation {
     name: string;
   };
   tenantId: mongoose.Types.ObjectId; // index
+}
+export const LocationType = {
+  _id: Types.String(),
+  geometry: Types.Object({ properties: {
+    type: Types.StringEnum({ values: ["Point","MultiPoint","LineString","MultiLineString","Polygon","MultiPolygon"] }),
+    // "coordinates" not included as it can be of many types: object, array of objects, array of array of objects, etc.
+  }}),
+  properties: Types.Object({ properties: {
+    name: Types.String(),
+  }}),
+  tenantId: Types.String() // index
 }
 const locationSchema = new mongoose.Schema<ILocation>({
   geometry: {

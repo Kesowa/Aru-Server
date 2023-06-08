@@ -13,6 +13,11 @@ import layerApi from "./layerApis";
 import baseLayerApi from "./baseLayerApis";
 import documentApi from "./documentApis";
 import flightApi from "./flightApis";
+import clientApi from "./clientApis";
+import flightLogApi from "./flightLogApis";
+import layerGroupApis from "./layerGroupApis";
+import locationApi from "./locationApis";
+import manufacturerApi from "./manufacturerApis";
 
 const routerV2 = Router();
 
@@ -37,10 +42,15 @@ routerV2.use(isAuthenticated);
 routerV2.use("/alert", alertApi);
 routerV2.use("/asset", assetApi);
 routerV2.use("/assetclass", assetClassApi);
-routerV2.use("/layer", layerApi);
 routerV2.use("/baselayer", baseLayerApi);
+routerV2.use("/client", clientApi);
 routerV2.use("/document", documentApi);
 routerV2.use("/flight", flightApi);
+routerV2.use("/flightlog", flightLogApi);
+routerV2.use("/layer", layerApi);
+routerV2.use("/layergroup", layerGroupApis);
+routerV2.use("/location", locationApi);
+routerV2.use("/manufacturer", manufacturerApi);
 routerV2.use("/mission", missionApi);
 
 // @ts-ignore

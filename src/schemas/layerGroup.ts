@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface ILayerGroup {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -7,6 +9,15 @@ export interface ILayerGroup {
   tenantId: mongoose.Types.ObjectId; // index
   createdAt: Date;
   updatedAt: Date;
+}
+export const LayerGroupType = {
+  _id: Types.String(),
+  name: Types.String(),
+  layers: Types.Array({ arrayType: Types.String() }), // index
+  createdBy: Types.String(),
+  tenantId: Types.String(), // index
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
 }
 const layerGroupSchema = new mongoose.Schema<ILayerGroup>(
   {
