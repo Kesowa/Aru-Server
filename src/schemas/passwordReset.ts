@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
 import { RESET_PASSWORD_TOKEN_EXPIRE } from "../constants";
 
 export interface IPassReset {
@@ -8,6 +9,15 @@ export interface IPassReset {
   retries: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export const PasswordResetType = {
+  _id: Types.String(),
+  email: Types.String(),
+  passwordResetToken: Types.String(), // index
+  retries: Types.Number(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
 }
 
 const PassResetSchema = new mongoose.Schema<IPassReset>(

@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IPackage {
   name: string;
   bandwidth: number;
@@ -20,6 +22,29 @@ export interface IPackage {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const PackageType = {
+  name: Types.String(),
+  bandwidth: Types.Number(),
+  storage: Types.Number(),
+  duration: Types.Number(), // This is in days
+  userCount: Types.Number(),
+  missionCount: Types.Number(),
+  alertCount: Types.Number(),
+  vodCount: Types.Number(),
+  layerCount: Types.Number(),
+  clientCount: Types.Number(),
+  locationCount: Types.Number(),
+  userGroupCount: Types.Number(),
+  poster: Types.String(),
+  price: Types.Number(),
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  isActive: Types.Boolean(), // index
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+}
+
 const packageschema = new mongoose.Schema<IPackage>(
   {
     name: {

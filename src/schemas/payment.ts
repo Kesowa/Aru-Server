@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IPayment {
   _id: mongoose.Types.ObjectId;
   razorpay_order_id: string; // index
@@ -13,6 +15,22 @@ export interface IPayment {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const PaymentType = {
+  _id: Types.String(),
+  razorpay_order_id: Types.String(), // index
+  razorpay_payment_id: Types.String(),
+  razorpay_signature: Types.String(),
+  amount: Types.Number(),
+  currency: Types.String(),
+  status: Types.StringEnum({ values: ["captured", "failed", "unknown"] }),
+  tenant: Types.String(), // index
+  paidOn: Types.DateTime(),
+  package: Types.String(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+}
+
 const paymentSchema = new mongoose.Schema<IPayment>(
   {
     razorpay_order_id: {

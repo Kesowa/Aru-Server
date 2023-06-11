@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 export interface IVOD {
@@ -18,6 +19,24 @@ export interface IVOD {
   commentCount: Number;
   createdAt: Date;
   updatedAt: Date;
+}
+export const VODType = {
+  _id: Types.String(),
+  flightID: Types.String(), // index
+  missionID: Types.String(), // index
+  videoPath: Types.String(),
+  // bookmarks: Map<number, String>; // TODO: No matching Type found in ts-openapi
+  thumbnail: Types.String(),
+  locationID: Types.String(), // index
+  tenantId: Types.String(), // index
+  videoName: Types.String(),
+  fileSize: Types.Number(),
+  isSRT: Types.Boolean(),
+  isFlagged: Types.Boolean(),
+  isThreadExist: Types.Boolean(),
+  commentCount: Types.Number(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
 }
 const VODSchema = new mongoose.Schema<IVOD>(
   {

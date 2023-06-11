@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
 import Tenant from "../models/tenant";
 import { IPackage } from "./package";
 export interface ITenant {
@@ -50,6 +51,56 @@ export interface ITenant {
   allLayerSize: number;
   allDocumentsSize: number;
   allLayerFileSize: number;
+}
+export const TenantType = {
+  _id: Types.String(),
+  name: Types.String(),
+  phoneNo: Types.String(),
+  // tenantRoot: any, // TODO: no "any" type found in ts-openspi
+  email: Types.String(), // index
+  contactPerson: Types.String(),
+  registrationNumber: Types.String(),
+  officialWebsite: Types.String(),
+  avatar: Types.String(),
+  gstNumber: Types.String(),
+  billingAddressLine1: Types.String(),
+  billingAddressLine2: Types.String(),
+  billingCity: Types.String(),
+  billingDistrict: Types.String(),
+  billingState: Types.String(),
+  billingPin: Types.String(),
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  upcomingPackages: Types.Array({ arrayType: Types.String() }),
+  isActive: Types.Boolean(),
+  storageUsed: Types.Number(),
+  actualSize: Types.Number(),
+  modefiedEmailRequested: Types.String(),
+  modefiedEmailRequestedOTPs: Types.Array({ arrayType: Types.Number() }),
+  modefiedphoneNoRequested: Types.String(),
+  modefiedphoneNoRequestedOTPs: Types.Array({ arrayType: Types.Number() }),
+  activePackage: Types.String(),
+  bandwidthUsed: Types.Number(),
+  packageStartDate: Types.DateTime(),
+  actualUserCount: Types.Number(),
+  actualMissionCount: Types.Number(),
+  actualAlertCount: Types.Number(),
+  actualVodCount: Types.Number(),
+  actualLayerCount: Types.Number(),
+  actualClientCount: Types.Number(),
+  actualLocationCount: Types.Number(),
+  actualUserGroupCount: Types.Number(),
+  isActivated: Types.Boolean(),
+  publicMapRef: Types.String(), // index
+  verificationCode: Types.Number(),
+  isVerified: Types.Boolean(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+  allVodSize: Types.Number(),
+  allAlertSize: Types.Number(),
+  allLayerSize: Types.Number(),
+  allDocumentsSize: Types.Number(),
+  allLayerFileSize: Types.Number(),
 }
 const tenantschema = new mongoose.Schema<ITenant>(
   {

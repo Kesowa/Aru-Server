@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IModel {
   _id: mongoose.Types.ObjectId;
   modelName: string;
@@ -17,6 +19,26 @@ export interface IModel {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const ModelType = {
+  _id: Types.String(),
+  modelName: Types.String(),
+  modelNumber: Types.String(),
+  assetClassID: Types.String(),
+  dimensions: Types.Object({ properties: {
+    length: Types.Number(),
+    breadth: Types.Number(),
+    height: Types.Number(),
+  }}),
+  manufacturerID: Types.String(),
+  website: Types.String(),
+  createdBy: Types.String(),
+  tenantID: Types.String(), // index
+  props: Types.Object({ properties: {} }),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+}
+
 const modelSchema = new mongoose.Schema<IModel>(
   {
     modelName: {

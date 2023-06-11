@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 const sessionDuration = 60 * 60 * 24; //* Session duration in seconds (1 day)
 export interface ISession {
   _id: mongoose.Types.ObjectId;
@@ -6,6 +8,13 @@ export interface ISession {
   owner: mongoose.Types.ObjectId; // index
   createdAt: Date;
   updatedAt: Date;
+}
+export const SessionType = {
+  _id: Types.String(),
+  valid: Types.Boolean(),
+  owner: Types.String(), // index
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
 }
 export const sessionSchema = new mongoose.Schema<ISession>(
   {
