@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
+import { thermalStatus, thermalStatusType } from "./sharedSchemas";
 export interface IAlert {
   _id: mongoose.Types.ObjectId;
   missionId: mongoose.Types.ObjectId; // index
@@ -24,6 +25,7 @@ export interface IAlert {
   locationId?: mongoose.Types.ObjectId; // index
   createdAt: Date;
   updatedAt: Date;
+  thermalStatus: thermalStatusType;
 }
 const alertSchema = new mongoose.Schema<IAlert>(
   {
@@ -107,6 +109,7 @@ const alertSchema = new mongoose.Schema<IAlert>(
     updatedAt: {
       type: Date,
     },
+    thermalStatus
   },
   {
     timestamps: true,

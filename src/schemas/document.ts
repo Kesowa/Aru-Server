@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
+import { thermalStatus, thermalStatusType } from "./sharedSchemas";
 export interface IDocument {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -18,6 +19,7 @@ export interface IDocument {
   commentCount: Number;
   createdAt: Date;
   updatedAt: Date;
+  thermalStatus: thermalStatusType;
 }
 const documentSchema = new mongoose.Schema<IDocument>(
   {
@@ -73,6 +75,7 @@ const documentSchema = new mongoose.Schema<IDocument>(
     updatedAt: {
       type: Date,
     },
+    thermalStatus 
   },
   {
     timestamps: true,
