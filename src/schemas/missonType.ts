@@ -19,7 +19,7 @@ export const MissionTypeType = {
   isActive: Types.Boolean(), // index
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 const missionTypeSchema = new mongoose.Schema<IMissionType>(
   {

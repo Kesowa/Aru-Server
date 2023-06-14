@@ -15,7 +15,7 @@ export const SessionType = {
   owner: Types.String(), // index
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 export const sessionSchema = new mongoose.Schema<ISession>(
   {
     valid: {

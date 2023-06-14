@@ -43,7 +43,7 @@ export const PackageType = {
   isActive: Types.Boolean(), // index
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 const packageschema = new mongoose.Schema<IPackage>(
   {

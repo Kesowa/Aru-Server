@@ -20,27 +20,33 @@ settingApi.get("/", (req: Request, res: AuthResponse) => {
   });
 });
 
-openApi.addPath("/setting", {
-  get: {
-    summary: "Get setting data",
-    description: "This operation retrives server configuration and settings information",
-    operationId: "GetSetting",
-    requestSchema: {},
-    tags: ["Setting API"],
-    responses: {
-      200: openApi.declareSchema("successful response",
-        Types.Object({
-          description: "Successful Operation",
-          properties: {
-            RTMP_URL: Types.String(),
-            STREAM_URL: Types.String(),
-            COG_URL: Types.String(),
-            SERVER_URL: Types.String(),
-          },
-        })
-      )
-    }
-  }
-}, true)
+openApi.addPath(
+  "/setting",
+  {
+    get: {
+      summary: "Get setting data",
+      description:
+        "This operation retrives server configuration and settings information",
+      operationId: "GetSetting",
+      requestSchema: {},
+      tags: ["Setting API"],
+      responses: {
+        200: openApi.declareSchema(
+          "successful response",
+          Types.Object({
+            description: "Successful Operation",
+            properties: {
+              RTMP_URL: Types.String(),
+              STREAM_URL: Types.String(),
+              COG_URL: Types.String(),
+              SERVER_URL: Types.String(),
+            },
+          })
+        ),
+      },
+    },
+  },
+  true
+);
 
 export default settingApi;

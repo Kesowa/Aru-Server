@@ -22,7 +22,7 @@ export const CommentType = {
   content: Types.String(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 export const CommentSchema = new mongoose.Schema(
   {

@@ -22,7 +22,7 @@ export const UserGroupType = {
   isActive: Types.Boolean(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 const usergroupschema = new mongoose.Schema<IUserGroup>(
   {
     name: {

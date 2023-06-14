@@ -28,7 +28,7 @@ export const StreamKeyType = {
   locationID: Types.String(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 const streamKeySchema = new mongoose.Schema<IStreamKey>(
   {
     isActive: {

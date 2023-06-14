@@ -16,7 +16,7 @@ export interface IRaster {
 
 export const RasterType = {
   _id: Types.String(),
-  name: Types.StringEnum({ values: ["ORTHO","DEM","NDVI","DTM","NDWI"] }),
+  name: Types.StringEnum({ values: ["ORTHO", "DEM", "NDVI", "DTM", "NDWI"] }),
   bidx: Types.String(),
   bandExp: Types.String(),
   colorMap: Types.String(),
@@ -25,7 +25,7 @@ export const RasterType = {
   updatedBy: Types.String(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 const rasterSchema = new mongoose.Schema<IRaster>(
   {

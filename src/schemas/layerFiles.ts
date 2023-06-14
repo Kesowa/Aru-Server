@@ -29,7 +29,9 @@ export const LayerFileType = {
   layers: Types.Array({ arrayType: Types.String() }), // index // REVISIT
   sys_Id: Types.String(), // index
   featureLabel: Types.String(),
-  centerPoints: Types.Object({ properties: { lat: Types.Number(), lng: Types.Number() } }),
+  centerPoints: Types.Object({
+    properties: { lat: Types.Number(), lng: Types.Number() },
+  }),
   coverPhoto: Types.Boolean(),
   filePath: Types.String(),
   fileType: Types.String(),

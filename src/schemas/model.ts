@@ -25,11 +25,13 @@ export const ModelType = {
   modelName: Types.String(),
   modelNumber: Types.String(),
   assetClassID: Types.String(),
-  dimensions: Types.Object({ properties: {
-    length: Types.Number(),
-    breadth: Types.Number(),
-    height: Types.Number(),
-  }}),
+  dimensions: Types.Object({
+    properties: {
+      length: Types.Number(),
+      breadth: Types.Number(),
+      height: Types.Number(),
+    },
+  }),
   manufacturerID: Types.String(),
   website: Types.String(),
   createdBy: Types.String(),
@@ -37,7 +39,7 @@ export const ModelType = {
   props: Types.Object({ properties: {} }),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 const modelSchema = new mongoose.Schema<IModel>(
   {

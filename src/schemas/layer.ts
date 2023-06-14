@@ -62,7 +62,7 @@ export const LayerType = {
   isFlagged: Types.Boolean(),
   createdAt: Types.DateTime(), // index
   updatedAt: Types.DateTime(),
-}
+};
 const layerSchema = new mongoose.Schema<ILayer>(
   {
     name: {

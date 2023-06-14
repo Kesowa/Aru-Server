@@ -18,7 +18,7 @@ export const LayerGroupType = {
   tenantId: Types.String(), // index
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 const layerGroupSchema = new mongoose.Schema<ILayerGroup>(
   {
     name: {

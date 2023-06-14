@@ -50,7 +50,7 @@ export const AlertType = {
   locationId: Types.String(), // index
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 const alertSchema = new mongoose.Schema<IAlert>(
   {
     location: {
@@ -145,7 +145,7 @@ alertSchema.index({
   type: 1,
 });
 alertSchema.index({ locationId: 1 }, { sparse: true });
-alertSchema.pre("save", async function() {
+alertSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
     { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } }
@@ -157,7 +157,7 @@ alertSchema.pre("save", async function() {
 });
 alertSchema.post(
   "remove",
-  async function(this: {
+  async function (this: {
     tenantId: mongoose.Types.ObjectId;
     fileSize: number;
     missionId: mongoose.Types.ObjectId;

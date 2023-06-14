@@ -39,7 +39,7 @@ const routerV2 = Router();
 
 const openApiJson = openApi.generateJson();
 
-routerV2.get("/openapi.json", function(_req, res) {
+routerV2.get("/openapi.json", function (_req, res) {
   res.json(openApiJson);
 });
 
@@ -47,11 +47,13 @@ routerV2.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiJson));
 
 writeFileSync("/tmp/openapi.json", JSON.stringify(openApiJson));
 
-routerV2.use(OpenApiValidator.middleware({
-  apiSpec: "/tmp/openapi.json",
-  validateRequests: true,
-  // validateResponses: true,
-}))
+routerV2.use(
+  OpenApiValidator.middleware({
+    apiSpec: "/tmp/openapi.json",
+    validateRequests: true,
+    // validateResponses: true,
+  })
+);
 
 routerV2.use(isAuthenticated);
 
@@ -68,7 +70,7 @@ routerV2.use("/layergroup", layerGroupApis);
 routerV2.use("/location", locationApi);
 routerV2.use("/manufacturer", manufacturerApi);
 routerV2.use("/mission", missionApi);
-routerV2.use("/missiontype", missionTypeApi); 
+routerV2.use("/missiontype", missionTypeApi);
 routerV2.use("/model", modelApi);
 routerV2.use("/organisation", organisationApi);
 routerV2.use("/package", packageApi);
@@ -90,7 +92,7 @@ routerV2.use((err, req, res, next) => {
   res.status(err.status || 500).json({
     message: err.message,
     errors: err.errors,
-  })
-})
+  });
+});
 
 export default routerV2;

@@ -29,7 +29,7 @@ export const PaymentType = {
   package: Types.String(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 const paymentSchema = new mongoose.Schema<IPayment>(
   {

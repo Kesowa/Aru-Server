@@ -37,7 +37,7 @@ export const PermissionType = {
   isActive: Types.Boolean(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 const permissionschema = new mongoose.Schema<IPermission>(
   {

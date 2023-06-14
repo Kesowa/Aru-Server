@@ -43,8 +43,8 @@ export const FlightType = {
   assetID: Types.String(),
   client: Types.String(),
   createdAt: Types.DateTime(),
-  updatedAt: Types.DateTime()
-}
+  updatedAt: Types.DateTime(),
+};
 const flightSchema = new mongoose.Schema<IFlight>(
   {
     date: {

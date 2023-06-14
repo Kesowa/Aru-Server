@@ -65,4 +65,9 @@ export const environmentGuard =
     next();
   };
 
-export type SchemaTranslator<Param, Query, Body> = Request<Param, unknown, Body, Query>
+export type SchemaTranslator<Param, Query, Body> = Request<
+  Param,
+  unknown,
+  Body,
+  Query
+>;

@@ -8,24 +8,37 @@ import { canListAsset } from "../../utils/authUtils";
 
 const assetApi = Router();
 
-assetApi.get("/", canListAsset, async (req: Request<null, {}, null, {
-  assetId?: string,
-  populate: string[],
-}>, res: AuthResponse) => {
-  const { assetId, populate } = req.query;
-  const data = await Asset.find(
-    {
+assetApi.get(
+  "/",
+  canListAsset,
+  async (
+    req: Request<
+      null,
+      {},
+      null,
+      {
+        assetId?: string;
+        populate: string[];
+      }
+    >,
+    res: AuthResponse
+  ) => {
+    const { assetId, populate } = req.query;
+    const data = await Asset.find({
       tenantID: res.locals.user.tenantId._id,
       [assetId && "_id"]: assetId,
     })
-    .populate(populate)
-    .lean();
-  res.json({
-    data
-  })
-});
+      .populate(populate)
+      .lean();
+    res.json({
+      data,
+    });
+  }
+);
 
-openApi.addPath("/asset", {
+openApi.addPath(
+  "/asset",
+  {
     get: {
       summary: "Get asset data",
       description: "This operation retrives asset(drone) information",
@@ -34,20 +47,23 @@ openApi.addPath("/asset", {
         query: {
           assetId: Types.String(),
           populate: Types.Array({ arrayType: Types.String() }),
-        }
+        },
       },
       tags: ["Asset API"],
       responses: {
-        200: openApi.declareSchema("successful response",
+        200: openApi.declareSchema(
+          "successful response",
           Types.Object({
             description: "Successful Operation",
             properties: {
               data: Types.Array({ arrayType: AssetType }),
             },
           })
-        )
-      }
-    }
-  }, true)
-  
-  export default assetApi;
+        ),
+      },
+    },
+  },
+  true
+);
+
+export default assetApi;

@@ -11,8 +11,8 @@ export const AssetClassType = {
   _id: Types.String(),
   typeName: Types.String(),
   createdAt: Types.DateTime(),
-  createdBy: Types.String()
-}
+  createdBy: Types.String(),
+};
 const assetClassSchema = new mongoose.Schema<IAssetClass>({
   typeName: String,
   createdAt: Date,

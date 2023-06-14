@@ -37,7 +37,7 @@ export const VODType = {
   commentCount: Types.Number(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 const VODSchema = new mongoose.Schema<IVOD>(
   {
     flightID: {

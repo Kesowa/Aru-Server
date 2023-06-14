@@ -18,7 +18,7 @@ export const PasswordResetType = {
   retries: Types.Number(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 const PassResetSchema = new mongoose.Schema<IPassReset>(
   {

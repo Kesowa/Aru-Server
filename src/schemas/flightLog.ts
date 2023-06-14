@@ -38,8 +38,8 @@ export const FlightLogType = {
   jobType: Types.String(),
   deliverables: Types.Array({ arrayType: Types.String() }),
   tenantId: Types.String(), // index
-  fileSize: Types.Number()
-}
+  fileSize: Types.Number(),
+};
 const flightLogSchema = new mongoose.Schema<IFlightLog>({
   date: String,
   time: String,

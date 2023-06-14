@@ -23,19 +23,21 @@ export const ManufacturerType = {
   address: Types.String(),
   nationality: Types.String(),
   website: Types.String(),
-  contacts: Types.Array({ arrayType: Types.Object({
-    properties: {
-      name: Types.String(),
-      designation: Types.String(),
-      Mobile: Types.String(),
-      email: Types.String(),
-    }
-  })}),
-  createdAt:Types.DateTime(),
+  contacts: Types.Array({
+    arrayType: Types.Object({
+      properties: {
+        name: Types.String(),
+        designation: Types.String(),
+        Mobile: Types.String(),
+        email: Types.String(),
+      },
+    }),
+  }),
+  createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
   createdBy: Types.String(),
   tenantID: Types.String(), // index
-}
+};
 const manufacturerSchema = new mongoose.Schema<IManufacturer>(
   {
     name: {

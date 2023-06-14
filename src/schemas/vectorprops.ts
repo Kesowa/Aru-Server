@@ -13,12 +13,14 @@ export interface IVector {
 export const VectorType = {
   _id: Types.String(),
   name: Types.String(),
-  type: Types.StringEnum({ values: ["Point","MultiLineString","MultiPolygon"] }),
+  type: Types.StringEnum({
+    values: ["Point", "MultiLineString", "MultiPolygon"],
+  }),
   createdBy: Types.String(),
   updatedBy: Types.String(),
   createdAt: Types.DateTime(),
-  updatedAt: Types.DateTime()
-}
+  updatedAt: Types.DateTime(),
+};
 const vectorSchema = new mongoose.Schema<IVector>(
   {
     name: {

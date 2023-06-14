@@ -38,7 +38,7 @@ export const DocumentType = {
   commentCount: Types.Number(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 const documentSchema = new mongoose.Schema<IDocument>(
   {
     name: {

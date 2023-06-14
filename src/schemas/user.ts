@@ -61,7 +61,7 @@ export const UserType = {
   passwordResetToken: Types.String(),
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-}
+};
 
 const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {

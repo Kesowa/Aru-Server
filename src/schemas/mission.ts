@@ -21,7 +21,9 @@ export interface IMission {
 export const MissionType = {
   _id: Types.String(),
   deliverables: Types.Array({ arrayType: Types.String() }),
-  status: Types.StringEnum({ values: ["Upcoming", "Live", "Completed", "Review"] }), // index
+  status: Types.StringEnum({
+    values: ["Upcoming", "Live", "Completed", "Review"],
+  }), // index
   user: Types.String(), // index
   pilotAssigned: Types.String(),
   assetID: Types.String(),
@@ -35,7 +37,7 @@ export const MissionType = {
   updatedAt: Types.DateTime(),
   size: Types.Number(),
   isPublic: Types.Boolean(),
-}
+};
 const missionSchema = new mongoose.Schema<IMission>(
   {
     name: {

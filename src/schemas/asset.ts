@@ -36,7 +36,7 @@ export const AssetType = {
       UIN: Types.String(),
       FCID: Types.String(),
       serialNO: Types.String(),
-    }
+    },
   ],
   manufactureID: Types.String(),
   createdBy: Types.String(),
@@ -49,7 +49,7 @@ export const AssetType = {
   UIN: Types.String(),
   FCID: Types.String(),
   serialNo: Types.String(),
-}
+};
 const assetSchema = new mongoose.Schema<IAsset>(
   {
     UIN: String,

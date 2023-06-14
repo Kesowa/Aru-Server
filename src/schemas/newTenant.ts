@@ -50,7 +50,7 @@ export const NewTenantType = {
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
   password: Types.String(),
-}
+};
 
 const newTenantSchema = new mongoose.Schema<INewTenant>(
   {

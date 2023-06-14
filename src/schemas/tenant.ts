@@ -101,7 +101,7 @@ export const TenantType = {
   allLayerSize: Types.Number(),
   allDocumentsSize: Types.Number(),
   allLayerFileSize: Types.Number(),
-}
+};
 const tenantschema = new mongoose.Schema<ITenant>(
   {
     name: {
