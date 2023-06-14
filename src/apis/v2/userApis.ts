@@ -33,7 +33,7 @@ userApi.get("/", canListUsers, async (req: Request<null, {}, null, {
     .populate(populate)
     .lean();
 
-  let resp:any = {
+  const resp:any = {
     data,
     pagination: {
       limit,

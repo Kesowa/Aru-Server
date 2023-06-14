@@ -46,7 +46,7 @@ clientApi.get("/", async (req: Request<null, {}, null, {
       actualClientCount: 1,
     });
 
-    let resp:any = {
+    const resp:any = {
         data,
         pagination: {
             limit,
