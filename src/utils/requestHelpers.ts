@@ -1,4 +1,4 @@
-import { NextFunction, RequestHandler, Response, Request } from "express";
+import type { NextFunction, RequestHandler, Response, Request } from "express";
 import { validationResult } from "express-validator";
 import { MODE, Mode } from "../constants";
 export const serverError = (res: Response) => {
@@ -64,3 +64,10 @@ export const environmentGuard =
     }
     next();
   };
+
+export type SchemaTranslator<Param, Query, Body> = Request<
+  Param,
+  unknown,
+  Body,
+  Query
+>;

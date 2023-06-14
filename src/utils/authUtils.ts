@@ -8,7 +8,7 @@ import { sessionModel } from "../models/session";
 import { IPackage } from "../schemas/package";
 import PassReset from "../models/passwordReset";
 import crypto from "crypto";
-import { SECRET_KEY } from "../constants";
+import { MODE, Mode, SECRET_KEY } from "../constants";
 import { ObjectId } from "mongodb";
 
 enum InvalidAuth {
@@ -57,8 +57,10 @@ const tokenDecoder = (token: string) => {
 
 const Authenticator = async (token: string, ip: string, agent: string) => {
   const payload = tokenDecoder(token);
-  if (payload.ip != ip) return InvalidAuth.INVALID_LOCATION;
-  if (payload.agent != agent) return InvalidAuth.INVALID_AGENT;
+  if (MODE == Mode.Prod) {
+    if (payload.ip != ip) return InvalidAuth.INVALID_LOCATION;
+    if (payload.agent != agent) return InvalidAuth.INVALID_AGENT;
+  }
   const session = await sessionModel.findById(new ObjectId(payload.session));
   const user = await User.findById(session?.owner)
     .populate("tenantId", "_id")
