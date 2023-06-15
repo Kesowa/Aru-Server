@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Directory, DirPath, PUBLIC_DIR } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 import path from "path";
 import { exec } from "child_process";
 import Alert from "../../models/alert";
