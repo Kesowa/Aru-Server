@@ -135,7 +135,7 @@ const alertSchema = new mongoose.Schema<IAlert>(
     updatedAt: {
       type: Date,
     },
-    thermalStatus
+    thermalStatus,
   },
   {
     timestamps: true,

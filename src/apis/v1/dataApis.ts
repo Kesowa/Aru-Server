@@ -12,7 +12,7 @@ dataRouter.post(
   body("doc").isString().notEmpty().isIn(["alerts", "documents"]),
   validator,
   isAuthenticated,
-  RobustRunner(genThermal),
+  RobustRunner(genThermal)
 );
 
 export default dataRouter;

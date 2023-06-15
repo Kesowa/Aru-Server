@@ -8,7 +8,7 @@ import Document from "../../models/document";
 
 export const genThermal = async (
   req: Request<{}, {}, { id: string; doc: "alerts" | "documents" }>,
-  res: AuthResponse,
+  res: AuthResponse
 ) => {
   const [doc, filePath] = await (async () => {
     if (req.body.doc == "alerts") {
@@ -57,7 +57,7 @@ export const genThermal = async (
             req.log.error(ste);
           }
           res(sto);
-        },
+        }
       );
     });
     await doc.updateOne({ thermalStatus: "converted" });

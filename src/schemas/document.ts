@@ -95,7 +95,7 @@ const documentSchema = new mongoose.Schema<IDocument>(
     updatedAt: {
       type: Date,
     },
-    thermalStatus 
+    thermalStatus,
   },
   {
     timestamps: true,
