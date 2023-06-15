@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
+import { Types } from "ts-openapi";
 export interface IFlightLog {
   _id: mongoose.Types.ObjectId;
   date: Date;
@@ -20,6 +21,25 @@ export interface IFlightLog {
   tenantId: mongoose.Types.ObjectId; // index
   fileSize: number;
 }
+export const FlightLogType = {
+  _id: Types.String(),
+  date: Types.DateTime(),
+  time: Types.DateTime(),
+  missionID: Types.String(), // index
+  flightID: Types.String(),
+  assetID: Types.String(),
+  locationID: Types.String(), // index
+  duration: Types.String(),
+  location: Types.String(),
+  geofence: Types.Object({ properties: {} }),
+  flightArea: Types.String(),
+  filePath: Types.String(),
+  pilotName: Types.String(),
+  jobType: Types.String(),
+  deliverables: Types.Array({ arrayType: Types.String() }),
+  tenantId: Types.String(), // index
+  fileSize: Types.Number(),
+};
 const flightLogSchema = new mongoose.Schema<IFlightLog>({
   date: String,
   time: String,

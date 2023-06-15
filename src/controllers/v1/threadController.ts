@@ -7,6 +7,8 @@ import User from "../../models/user";
 import Document from "../../models/document";
 import VOD from "../../models/vod";
 import Alert from "../../models/alert";
+import layerFiles from "../../models/layerFiles";
+import layer from "../../models/layer";
 
 export const GetThread = async (
   docModel: docTypes,
@@ -84,6 +86,28 @@ const updateDoc = async (
       break;
     case "alert":
       await Alert.update(
+        {
+          _id: docId,
+          tenantId,
+        },
+        {
+          $set: updateValue,
+        }
+      );
+      break;
+    case "layer":
+      await layer.update(
+        {
+          _id: docId,
+          tenantId,
+        },
+        {
+          $set: updateValue,
+        }
+      );
+      break;
+    case "layerfile":
+      await layerFiles.update(
         {
           _id: docId,
           tenantId,

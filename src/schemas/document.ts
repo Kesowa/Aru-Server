@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 import { thermalStatus, thermalStatusType } from "./sharedSchemas";
+import { Types } from "ts-openapi";
+
 export interface IDocument {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -21,6 +23,24 @@ export interface IDocument {
   updatedAt: Date;
   thermalStatus: thermalStatusType;
 }
+export const DocumentType = {
+  _id: Types.String(),
+  name: Types.String(),
+  modDate: Types.DateTime(),
+  fileSize: Types.Number(),
+  fileType: Types.String(),
+  filePath: Types.String(), // index
+  folderName: Types.String(), // index
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  missionId: Types.String(), // index
+  tenantId: Types.String(), // index
+  isFlagged: Types.Boolean(),
+  isThreadExist: Types.Boolean(),
+  commentCount: Types.Number(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
 const documentSchema = new mongoose.Schema<IDocument>(
   {
     name: {

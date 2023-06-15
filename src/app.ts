@@ -53,6 +53,7 @@ import {
 import cors from "cors";
 import { randomUUID } from "crypto";
 import cookie from "cookie";
+import routerV2 from "./apis/v2/routerV2";
 
 const app: Application = express();
 
@@ -147,6 +148,8 @@ app.use(
     },
   })
 );
+
+app.use("/apis/v2", routerV2);
 
 //connecting APIs routes
 app.use("/apis/v1/auth", authApis);

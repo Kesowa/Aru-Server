@@ -2,12 +2,14 @@ import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 import { thermalStatus, thermalStatusType } from "./sharedSchemas";
+import { Types } from "ts-openapi";
+
 export interface IAlert {
   _id: mongoose.Types.ObjectId;
   missionId: mongoose.Types.ObjectId; // index
   location: {
-    lat?: number;
-    long?: number;
+    lat: number;
+    long: number;
   };
   isFlagged: boolean;
   isThreadExist: boolean;
@@ -27,6 +29,30 @@ export interface IAlert {
   updatedAt: Date;
   thermalStatus: thermalStatusType;
 }
+export const AlertType = {
+  _id: Types.String(),
+  missionId: Types.String(), // index
+  location: {
+    lat: Types.Number(),
+    long: Types.Number(),
+  },
+  isFlagged: Types.Boolean(),
+  isThreadExist: Types.Boolean(),
+  commentCount: Types.Number(),
+  locationName: Types.String(),
+  fileSize: Types.Number(),
+  note: Types.String(),
+  createdBy: Types.String(),
+  onSite: Types.Boolean(),
+  flightId: Types.String(), // index
+  tenantId: Types.String(), // index
+  pcount: Types.Number(), // People count
+  type: Types.StringEnum({ values: ["Manual", "Automated", "Android"] }), // index
+  image: Types.String(),
+  locationId: Types.String(), // index
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
 const alertSchema = new mongoose.Schema<IAlert>(
   {
     location: {

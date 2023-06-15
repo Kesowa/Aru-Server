@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
 
-const docModels = <const>["alert", "document", "vod"];
+const docModels = <const>["alert", "document", "vod", "layer", "layerfile"];
 export type docTypes = typeof docModels[number];
 
 export type IComment = {
@@ -11,6 +12,16 @@ export type IComment = {
   content: string;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export const CommentType = {
+  _id: Types.String(),
+  author: Types.String(),
+  authorName: Types.String(),
+  avatar: Types.String(),
+  content: Types.String(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
 };
 
 export const CommentSchema = new mongoose.Schema(
@@ -43,6 +54,16 @@ export type IThread = {
   createdAt: Date;
   updatedAt: Date;
   tenant: mongoose.Types.ObjectId;
+};
+
+export const ThreadType = {
+  _id: Types.String(),
+  doc: Types.String(),
+  docModel: Types.StringEnum({ values: ["alert", "document", "vod"] }),
+  comments: Types.Array({ arrayType: CommentType }),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+  tenant: Types.String(),
 };
 
 export const ThreadSchema = new mongoose.Schema(

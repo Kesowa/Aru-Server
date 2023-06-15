@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import { RESET_PASSWORD_TOKEN_EXPIRE } from "../constants";
+import { Types } from "ts-openapi";
+
 export interface INewTenant {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -24,6 +26,32 @@ export interface INewTenant {
   updatedAt: Date;
   password: string;
 }
+
+export const NewTenantType = {
+  _id: Types.String(),
+  name: Types.String(),
+  phoneNo: Types.String(),
+  email: Types.String(), // index
+  contactPerson: Types.String(),
+  registrationNumber: Types.String(),
+  officialWebsite: Types.String(),
+  avatar: Types.String(),
+  gstNumber: Types.String(),
+  billingAddressLine1: Types.String(),
+  billingAddressLine2: Types.String(),
+  billingCity: Types.String(),
+  billingDistrict: Types.String(),
+  billingState: Types.String(),
+  billingPin: Types.String(),
+  isActive: Types.Boolean(),
+  isActivated: Types.Boolean(),
+  verificationCode: Types.Number(),
+  isVerified: Types.Boolean(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+  password: Types.String(),
+};
+
 const newTenantSchema = new mongoose.Schema<INewTenant>(
   {
     name: String,

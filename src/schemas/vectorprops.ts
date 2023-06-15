@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IVector {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -8,6 +10,17 @@ export interface IVector {
   createdAt: Date;
   updatedAt: Date;
 }
+export const VectorType = {
+  _id: Types.String(),
+  name: Types.String(),
+  type: Types.StringEnum({
+    values: ["Point", "MultiLineString", "MultiPolygon"],
+  }),
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
 const vectorSchema = new mongoose.Schema<IVector>(
   {
     name: {

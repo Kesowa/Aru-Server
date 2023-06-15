@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import Layer from "../models/layer";
 import Tenant from "../models/tenant";
+import { Types } from "ts-openapi";
+
 export interface ILayerFile {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -16,10 +18,33 @@ export interface ILayerFile {
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
   isReview: boolean; // index
+  isThreadExist: boolean;
+  commentCount: Number;
   fileSize: number;
   createdAt: Date;
   updatedAt: Date;
 }
+export const LayerFileType = {
+  _id: Types.String(),
+  name: Types.String(),
+  layerId: Types.String(), // index
+  layers: Types.Array({ arrayType: Types.String() }), // index // REVISIT
+  sys_Id: Types.String(), // index
+  featureLabel: Types.String(),
+  centerPoints: Types.Object({
+    properties: { lat: Types.Number(), lng: Types.Number() },
+  }),
+  coverPhoto: Types.Boolean(),
+  filePath: Types.String(),
+  fileType: Types.String(),
+  tenantId: Types.String(), // index
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  isReview: Types.Boolean(), // index
+  fileSize: Types.Number(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
 const layerFilesSchema = new mongoose.Schema<ILayerFile>(
   {
     name: {
@@ -72,6 +97,14 @@ const layerFilesSchema = new mongoose.Schema<ILayerFile>(
     isReview: {
       type: Boolean,
       default: false,
+    },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
   },
   {
