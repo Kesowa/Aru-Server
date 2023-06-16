@@ -3,6 +3,9 @@
 // import type { IUser } from "../schemas/user";
 // import type { IPermission } from "../schemas/permission";
 
+import { Request } from "express";
+import { AuthResponse } from "../utils/interfaceUtils";
+
 // declare module "express-serve-static-core" {
 //   namespace e {
 //     interface Response {
@@ -17,3 +20,14 @@
 //   }
 
 // }
+
+declare namespace e {
+  export interface RequestHandler {
+    (
+      req: Request,
+      res: AuthResponse,
+    ): Promise<void>;
+  }
+}
+
+export = e;
