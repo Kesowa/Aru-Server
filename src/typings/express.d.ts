@@ -23,10 +23,7 @@ import { AuthResponse } from "../utils/interfaceUtils";
 
 declare namespace e {
   export interface RequestHandler {
-    (
-      req: Request,
-      res: AuthResponse,
-    ): Promise<void>;
+    (req: Request, res: AuthResponse): Promise<void>;
   }
 }
 
