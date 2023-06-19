@@ -8,19 +8,17 @@ import {
 import { Readable, Stream } from "stream";
 import { Upload } from "@aws-sdk/lib-storage";
 import { buffer } from "stream/consumers";
-import { createReadStream, createWriteStream, promises as fs } from "fs";
+import { createReadStream, promises as fs } from "fs";
 import {
-  AWS_S3_BUCKET as Bucket,
   ACCESS_KEY,
-  AWS_SECRET_KEY,
+  AWS_S3_BUCKET as Bucket,
   AWS_S3_ENDPOINT,
-  Mode,
+  AWS_SECRET_KEY,
   MODE,
+  Mode,
 } from "../constants";
 import path from "path";
 import mime from "mime-types";
-
-const s3Endpoint = Mode.Dev == MODE ? AWS_S3_ENDPOINT : undefined;
 
 const Client = new S3Client({
   credentials: {
@@ -28,13 +26,10 @@ const Client = new S3Client({
     secretAccessKey: AWS_SECRET_KEY,
   },
   region: "ap-south-1",
-  endpoint: s3Endpoint,
-  endpointProvider:
-    MODE == Mode.Dev
-      ? () => ({
-        url: new URL(s3Endpoint + "/" + Bucket),
-      })
-      : undefined,
+  [MODE == Mode.Dev && "endpoint"]: AWS_S3_ENDPOINT,
+  [MODE == Mode.Dev && "endpointProvider"]: () => ({
+    url: new URL(AWS_S3_ENDPOINT + "/" + Bucket),
+  }),
 });
 
 const uploadStream = (dest: string) => {
@@ -104,8 +99,8 @@ const readStream = async (path: string) => {
 };
 
 const writeStream = async (dest: string, stream: Readable) => {
-  const mimeType =
-    mime.contentType(path.extname(dest)) || "application/octet-stream";
+  const mimeType = mime.contentType(path.extname(dest)) ||
+    "application/octet-stream";
   const upload = new Upload({
     client: Client,
     params: {
