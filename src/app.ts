@@ -38,36 +38,32 @@ import LayerGroupApis from "./apis/v1/layerGroupApis";
 import PaymentApis from "./apis/v1/paymentApis";
 import baseLayerApis from "./apis/v1/baseLayerApis";
 import settingApis from "./apis/v1/settingApis";
+import threadApis from "./apis/v1/threadApis";
 
 import {
   ARU_INSTANCE,
   Mode,
   MODE,
-  PUBLIC_DIR,
   SEQ_API_KEY,
   SEQ_SERVER_URL,
 } from "./constants";
 import cors from "cors";
-import { randomUUID } from "crypto";
 import cookie from "cookie";
 
 const app: Application = express();
 
 app.use(compression());
-app.use(helmet());
-app.use(cors());
-
-//static files
 app.use(
-  express.static(PUBLIC_DIR, {
-    setHeaders: function (res) {
-      res.set("x-timestamp", Date.now().toString());
-    },
+  helmet({
+    frameguard: false,
   })
 );
+app.use(cors());
+app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 export let logger: Logger;
@@ -106,7 +102,7 @@ app.use(
 
     genReqId: function (req, _) {
       const cookies = cookie.parse(req.headers.cookie || "");
-      return cookies["email"] || req.headers["authorization"] || randomUUID();
+      return cookies["email"] || req.socket.remoteAddress;
     },
     customLogLevel: function (_, res, err) {
       if (res.statusCode >= 400 && res.statusCode < 500) {
@@ -170,7 +166,7 @@ app.use("/apis/v1/layergroup", LayerGroupApis);
 app.use("/apis/v1/payment", PaymentApis);
 app.use("/apis/v1/baselayer", baseLayerApis);
 app.use("/apis/v1/setting", settingApis);
-
+app.use("/apis/v1/thread", threadApis);
 // 404 route
 app.use(function (req, res, next) {
   // if (req.url.startsWith("/socket.io")) return next();
@@ -181,14 +177,6 @@ app.use(function (req, res, next) {
   }
   if (!req.url.startsWith("/apis/v1")) {
     req.log.info("url does not starts with /apis/v1");
-    res.sendFile(path.join(PUBLIC_DIR, "/index.html"), function (err) {
-      if (err) {
-        req.log.error("error sending index.html", err);
-        if (res.headersSent) return next();
-        return next(err);
-      }
-    });
-  } else {
     next();
   }
 });

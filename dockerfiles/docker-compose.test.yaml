@@ -1,0 +1,17 @@
+services:
+  server:
+    command:
+      [
+        "node",
+        "--inspect=0.0.0.0:9229",
+        "./node_modules/.bin/jest",
+        "--runInBand",
+        "--logHeapUsage",
+      ]
+    volumes:
+      - ./__tests__:/app/__tests__:ro
+      - ./assets:/app/assets:ro
+      - ./config:/app/config:ro
+      - ./jest.config.js:/app/jest.config.js:ro
+    ports:
+      - 9229:9229

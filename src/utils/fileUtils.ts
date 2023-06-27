@@ -1,48 +1,50 @@
 import fs from "fs";
-import { Logger } from "pino";
-import { Directory, DirPath } from "../constants";
+import s3fs from "../s3utils/lib-aws";
+import path from "path";
 
 export const getFileSize = async (filepath: string) => {
-  const fileStats = await fs.promises.stat(filepath);
+  const fileStats = await s3fs.stat(filepath);
   const fileSize: number = Number(
     (Number(fileStats.size) / (1024 * 1024)).toFixed(5)
   );
   return fileSize;
 };
 
-export const createDirIfNotExists = async (
-  filepath: string,
-  logger: Logger
-) => {
-  try {
-    await fs.promises.access(filepath);
-    logger.info("Directory exists...");
-  } catch (error) {
-    logger.warn("Directory does not exist... Creating...");
-    await fs.promises.mkdir(filepath, { recursive: true });
-  }
-};
-
 export const checkFileExists = async (filepath: string) => {
   try {
-    await fs.promises.stat(filepath);
+    await s3fs.stat(filepath);
     return true;
   } catch (error) {
     return false;
   }
 };
 
-export const findHlsSize = async (indexFile: string) => {
-  const indexPath = DirPath(Directory.VOD, indexFile);
+export const findHlsSize = async (indexPath: string, folderPath: string) => {
   const index = await fs.promises.readFile(indexPath, "utf8");
   const vodFiles = index
     .split("\n")
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
     await fs.promises.stat(
-      DirPath(Directory.VOD, vodFiles[Math.floor(vodFiles.length / 2)])
+      folderPath + vodFiles[Math.floor(vodFiles.length / 2)]
     )
   ).size;
   const hlsSize = index.length + vodFiles.length * partSize;
   return hlsSize / (1024 * 1024);
 };
+
+export const findHlsSizeS3 = async (indexPath: string) => {
+  const index = (await s3fs.readFile(indexPath)).toString();
+  const dir = path.dirname(indexPath);
+  const vodFiles = index
+    .split("\n")
+    .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
+  const partSize = (
+    await s3fs.stat(
+      dir + "/" + vodFiles[Math.floor(vodFiles.length / 2)]
+    )
+  ).size;
+  const hlsSize = index.length + vodFiles.length * partSize;
+  return hlsSize / (1024 * 1024);
+};
+

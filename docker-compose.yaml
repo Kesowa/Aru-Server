@@ -1,17 +1,22 @@
 services:
   server:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile.dev
     volumes:
-      - ./src:/app/src:rw
-      - ./logs:/var/log/aru:rw
-      # - ./public:/app/src/public:rw
+      - ./src:/app/src
     environment:
       - TZ="Asia/Kolkata"
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
+      - AWS_S3_ENDPOINT=http://s3:9090
     env_file:
-      - ../server.env
+      - ./server.env
     depends_on:
       - mongodb
+      - redis
+      - s3
+    ports:
+      - 5011:5011
 
   mongodb:
     image: mongo@sha256:06cd2e814b2641d4c7ac6b093e870fe72c1ddbc7c6ddaaef16d4cb5a61c0ee6b
@@ -19,3 +24,27 @@ services:
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
       - MONGO_INITDB_DATABASE=test
+    ports:
+      - 27019:27017
+
+  titiler:
+    environment:
+      - PORT=8000
+      - WORKERS_PER_CORE=1
+    image: ghcr.io/developmentseed/titiler@sha256:45565498b88d5b77360014ab9dd217c17617ae59d308769f67c24e7540a78d02
+    ports:
+      - 8001:8000
+
+  redis:
+    image: redis@sha256:aeed51f49a6331df0cb2c1039ae3d1d70d882be3f48bde75cd240452a2348e88
+
+  s3:
+    image: adobe/s3mock@sha256:f1208b07c4b24eb557bbc93ba1b2523b2d577e38926dd087ca6c273431b8c105
+    volumes:
+      - ./public:/storage
+    environment:
+      - initialBuckets=aru
+      - root=/storage
+    ports:
+      - 9090:9090
+      - 9191:9191

@@ -52,6 +52,7 @@ import {
   sys_id_Inject_to_layerfiles,
   flagFeature,
   flagLayer,
+  publicLayerByMissionId,
 } from "../../controllers/v1/layerController";
 import { isLayerCount } from "../../utils/countPermission";
 import { isSize } from "../../utils/sizePermission";
@@ -73,7 +74,11 @@ const upload = multer({
 });
 
 const uploadlayerfile = multer({
-  storage: multerStorage(Directory.LAYER_FILES),
+  storage: multerStorage(Directory.LAYER_FILES, true),
+});
+
+const uploadPicToMap = multer({
+  storage: multerStorage(Directory.GEOJSON_IMAGES, true),
 });
 
 // ********* create ***********
@@ -432,7 +437,7 @@ router.patch(
 router.post(
   "/pick-to-map-for-layer",
   isAuthenticated,
-  upload.array("file", 50),
+  uploadPicToMap.array("file", 50),
   body("name").trim(),
   body("vectorId").isMongoId(),
   // optional
@@ -478,5 +483,12 @@ router.patch(
   body("flag").isBoolean().toBoolean(),
   validator,
   RobustRunner(flagLayer)
+);
+router.get(
+  "/layers-by-missionId/:tenantId/:missionId",
+  param("tenantId").isMongoId(),
+  param("missionId").isMongoId(),
+  validator,
+  RobustRunner(publicLayerByMissionId)
 );
 export default router;

@@ -1,6 +1,5 @@
 import express from "express";
 import { body, check, oneOf, query } from "express-validator";
-import { uploadFile } from "../../controllers/v1/commonController";
 
 import {
   createAlert,
@@ -24,14 +23,15 @@ import {
 
 import { canCreateAlert, isAuthenticated } from "../../utils/authUtils";
 import { isAlertCount } from "../../utils/countPermission";
-import { multerStorage } from "../../utils/fileUploadUtils";
-import multer from "multer";
 import { isSize } from "../../utils/sizePermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import multer from "multer";
+import { multerStorage } from "../../utils/fileUploadUtils";
 import { Directory } from "../../constants";
-const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES) });
+import { uploadFile } from "../../controllers/v1/commonController";
 const router = express.Router();
 
+const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES, true) });
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
 router.post(
   "/upload-alert-image",
@@ -46,7 +46,6 @@ router.post(
 router.post(
   "/create",
   isAuthenticated,
-
   body("missionId").notEmpty().isMongoId(),
   body("flightId").notEmpty().isMongoId(),
   body("locationName").notEmpty().isString(),

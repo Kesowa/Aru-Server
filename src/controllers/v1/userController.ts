@@ -10,7 +10,7 @@ import crypto from "crypto";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
-import { BASE_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
+import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
 import { getFileSize } from "../../utils/fileUtils";
 // let saltRound = 10;
 //create user account
@@ -75,7 +75,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
       const email = req.body.email;
 
       const token = await generateResetPasswordToken(email);
-      const resetPasswordUrl = `${BASE_SERVER}/apis/v1/auth/reset-password/${token}`;
+      const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
 
       await sendMail(
         email,
@@ -151,7 +151,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
       const email = req.body.email;
 
       const token = await generateResetPasswordToken(email);
-      const resetPasswordUrl = `${BASE_SERVER}/apis/v1/auth/reset-password/${token}`;
+      const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
 
       await sendMail(
         email,

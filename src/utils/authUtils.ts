@@ -7,14 +7,59 @@ import { sessionModel } from "../models/session";
 
 import { IPackage } from "../schemas/package";
 import PassReset from "../models/passwordReset";
-import { isObjectIdOrHexString } from "mongoose";
+import crypto from "crypto";
+import { SECRET_KEY } from "../constants";
+import { ObjectId } from "mongodb";
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,
   INVALID_USER,
+  INVALID_LOCATION,
+  INVALID_AGENT,
 }
-const Authenticator = async (token: string) => {
-  const session = await sessionModel.findById(token);
+
+const hasher = crypto.createHash("MD5");
+hasher.update("somerandomkey", "utf8");
+const iv = hasher.digest();
+
+type Payload = {
+  session: string;
+  ip: string;
+  agent: string;
+};
+
+export const tokenEncoder = (payload: Payload) => {
+  const cipher = crypto.createCipheriv(
+    "aes192",
+    Buffer.from(SECRET_KEY, "base64"),
+    iv
+  );
+  let encrypted = cipher.update(JSON.stringify(payload), "utf8", "base64");
+  encrypted += cipher.final("base64");
+  return encrypted;
+};
+
+const tokenDecoder = (token: string) => {
+  const decipher = crypto.createDecipheriv(
+    "aes192",
+    Buffer.from(SECRET_KEY, "base64"),
+    iv
+  );
+  try {
+    let decrypted = decipher.update(token, "base64", "utf8");
+    decrypted += decipher.final("utf8");
+    const payload = JSON.parse(decrypted) as Payload;
+    return payload;
+  } catch {
+    return { session: null, ip: null, agent: null };
+  }
+};
+
+const Authenticator = async (token: string, ip: string, agent: string) => {
+  const payload = tokenDecoder(token);
+  if (payload.ip != ip) return InvalidAuth.INVALID_LOCATION;
+  if (payload.agent != agent) return InvalidAuth.INVALID_AGENT;
+  const session = await sessionModel.findById(new ObjectId(payload.session));
   const user = await User.findById(session?.owner)
     .populate("tenantId", "_id")
     .lean();
@@ -50,7 +95,7 @@ export const isAuthenticated = (
   next: NextFunction
 ) => {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!isObjectIdOrHexString(token)) {
+  if (!token) {
     res.status(400).json({
       status: false,
       message: "request validation failed",
@@ -62,7 +107,7 @@ export const isAuthenticated = (
     });
     return;
   }
-  Authenticator(token)
+  Authenticator(token, req.ip, req.headers["user-agent"])
     .then((data) => {
       if (data == InvalidAuth.PACKAGE_EXPIRED) {
         res.status(401).json({
@@ -74,13 +119,23 @@ export const isAuthenticated = (
           status: false,
           message: "Invalid user id",
         });
+      } else if (data == InvalidAuth.INVALID_LOCATION) {
+        res.status(401).json({
+          status: false,
+          message: "Location not authorized",
+        });
+      } else if (data == InvalidAuth.INVALID_AGENT) {
+        res.status(401).json({
+          status: false,
+          message: "Agent not authorized",
+        });
       } else {
         res.locals["user"] = data;
         next();
       }
     })
     .catch((err) => {
-      console.error(err);
+      req.log.error(err);
       res.status(500).json({
         status: false,
         message: "server error",
@@ -349,6 +404,24 @@ export const canListModel = genPermissionGuard({
     { permName: "name", value: "model_list" },
     // { permName: "name", value: "asset_create" },
   ],
+});
+
+//Thread Management Permissions :
+export const canCreateThread = genPermissionGuard({
+  userTypes: ["tenant-root"],
+  perm: [{ permName: "name", value: "thread_create" }],
+});
+export const canUpdateThread = genPermissionGuard({
+  userTypes: ["tenant-root"],
+  perm: [{ permName: "name", value: "thread_update" }],
+});
+export const canDeleteComment = genPermissionGuard({
+  userTypes: ["tenant-root"],
+  perm: [{ permName: "name", value: "comment_delete" }],
+});
+export const canListThread = genPermissionGuard({
+  userTypes: ["tenant-root"],
+  perm: [{ permName: "name", value: "thread_list" }],
 });
 
 //VOD Management Permissions :

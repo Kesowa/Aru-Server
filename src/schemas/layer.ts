@@ -147,21 +147,28 @@ layerSchema.index({
 layerSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allLayerSize: this.fileSize } }
   );
   await Mission.updateOne(
     { _id: this.missionId },
     { $inc: { size: this.fileSize } }
   );
 });
-layerSchema.post("remove", async function (this: {tenantId, fileSize, missionId}) {
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: -this.fileSize } }
-  );
-  await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: -this.fileSize } }
-  );
-});
+layerSchema.post(
+  "remove",
+  async function (this: {
+    tenantId: mongoose.Types.ObjectId;
+    missionId: mongoose.Types.ObjectId;
+    fileSize: number;
+  }) {
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: -this.fileSize, allLayerSize: -this.fileSize } }
+    );
+    await Mission.updateOne(
+      { _id: this.missionId },
+      { $inc: { size: -this.fileSize } }
+    );
+  }
+);
 export default layerSchema;

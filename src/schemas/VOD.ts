@@ -14,6 +14,8 @@ export interface IVOD {
   fileSize: number;
   isSRT: boolean;
   isFlagged: boolean;
+  isThreadExist: boolean;
+  commentCount: Number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,6 +67,14 @@ const VODSchema = new mongoose.Schema<IVOD>(
       type: Boolean,
       default: false,
     },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
+    },
     // startTime: {
     //     type: Date
     // },
@@ -100,17 +110,24 @@ VODSchema.pre("save", async function () {
   );
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allVodSize: this.fileSize } }
   );
 });
-VODSchema.post("remove", async function (this: {missionID, fileSize, tenantId}) {
-  await Mission.updateOne(
-    { _id: this.missionID },
-    { $inc: { size: -this.fileSize } }
-  );
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: -this.fileSize } }
-  );
-});
+VODSchema.post(
+  "remove",
+  async function (this: {
+    missionID: mongoose.Types.ObjectId;
+    fileSize: number;
+    tenantId: mongoose.Types.ObjectId;
+  }) {
+    await Mission.updateOne(
+      { _id: this.missionID },
+      { $inc: { size: -this.fileSize } }
+    );
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: -this.fileSize, allVodSize: -this.fileSize } }
+    );
+  }
+);
 export default VODSchema;

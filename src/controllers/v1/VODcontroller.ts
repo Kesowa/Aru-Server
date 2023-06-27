@@ -2,7 +2,6 @@ import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
 import format from "date-fns/format";
 import path from "path";
-import fs from "fs";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { generateToken } from "./streamTokenController";
@@ -11,7 +10,7 @@ import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
 import { IMission } from "../../schemas/mission";
-import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
+import { ARU_INSTANCE, DirPath, Directory, Instance } from "../../constants";
 import { WiproInterface } from "../../utils/wipro";
 import {
   deleteDirFileUsingName,
@@ -19,6 +18,7 @@ import {
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
 import Flight from "../../models/flight";
+import { findHlsSizeS3 } from "../../utils/fileUtils";
 
 export const saveVOD = async (
   req: Request<
@@ -47,18 +47,16 @@ export const saveVOD = async (
           .catch(console.error);
       }, 10_000);
     }
-    const stats = await fs.promises.stat(
-      DirPath(Directory.VOD, `${req.body.filename}.flv`)
-    );
+    const size = await findHlsSizeS3(DirPath(Directory.VOD, req.body.filename + "/index.m3u8"));
     const VODdoc = new VOD({
       flightID: flightID,
       missionID: missionID,
       locationID: locationID,
-      videoPath: `/vod/${req.body.filename}.m3u8`,
+      videoPath: `/vod/${req.body.filename}/index.m3u8`,
       thumbnail: `/vod/${req.body.filename}.jpg`,
       tenantId: tenantId,
       videoName: req.body.filename,
-      fileSize: stats.size / (1024 * 1024),
+      fileSize: size,
     });
     const dbsave = await VODdoc.save();
     const tenant = await Tenant.findOne({ _id: tenantId });
@@ -114,10 +112,11 @@ export const getVODByID = async (req: Request, res: AuthResponse) => {
 export const getByMissionID = async (req: Request, res: AuthResponse) => {
   {
     const missionID = new Types.ObjectId(String(req.query.missionID));
-    const page = Number(req.query.page) || 0;
+    const page = Number(req.query.page) || 1;
     const sortString = req.query.sort?.toString() || "createdAt:desc";
     const [sortBy, order] = sortString.split(":");
-    const limit = Number(req.query.limit) || 9;
+    const limit = Number(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
 
     const query = {
       missionID: missionID,
@@ -126,12 +125,12 @@ export const getByMissionID = async (req: Request, res: AuthResponse) => {
     if (req.query.isFlagged !== undefined) {
       query["isFlagged"] = req.query.isFlagged;
     }
-    const len = await VOD.countDocuments(query);
+    const total = await VOD.countDocuments(query);
     const doc = await VOD.find(query)
       .sort({ [sortBy]: order as SortOrder })
       .populate<{ flightId: IFlight }>("flightID")
       .populate<{ missionID: IMission }>("missionID")
-      .skip(page * 9)
+      .skip(startIndex)
       .limit(limit);
     if (doc.length) {
       missionSpecificSocket.to(String(missionID)).emit("VOD_FETCH", {
@@ -140,13 +139,14 @@ export const getByMissionID = async (req: Request, res: AuthResponse) => {
       res.json({
         status: true,
         message: "sucessfully fetched the VODs",
-        TotalPages: Math.ceil(len / 9),
+        TotalPages: Math.ceil(total / limit),
+        total: total,
         data: doc,
       });
     } else {
       res.status(404).json({
         status: false,
-        message: "No Document found",
+        message: "No Videos found",
       });
     }
   }
@@ -312,8 +312,8 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     }
     if (req.file) {
       const originalName = req.file.originalname;
-      const fullPath = req.file.path;
-      const fullPath2 = DirPath(Directory.VOD);
+      const fullPath = req.file.tempPath;
+      // const fullPath2 = DirPath(Directory.VOD);
       const tenantID = res.locals.user.tenantId._id;
       const size: number = Number(
         (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
@@ -322,7 +322,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
       VODEvents.emit("PROCESS_VIDEO", {
         missionID,
         flightID,
-        fullPath2,
+        // fullPath2,
         locationID,
         fullPath,
         filename,
@@ -333,7 +333,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
       res.json({
         status: true,
         message: "Sucessfully uploaded the video",
-        file: `temp/${filename}.mp4`,
+        file: `vod/${filename}.mp4`,
       });
     }
   }
@@ -347,12 +347,16 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       _id: Id,
       tenantId: res.locals.user.tenantId._id,
     });
+
     if (doc) {
       const docpath = doc.videoPath;
       // TODO: Put HLS chunks for a video in a single folder, then replace this
       const indexFile = path.parse(docpath).base;
+
       const conf = await deleteHlsVodUsingIndex(indexFile);
+
       await deletePublicFileUsingPath(doc.thumbnail);
+
       await deleteDirFileUsingName(
         Directory.VOD,
         path.parse(docpath).name + ".flv"

@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import fs from "fs";
+import fs from "fs"; // TO-REMOVE: being used by pointcloud extraction only
 import archiver from "archiver";
 import path from "path";
 import sharp from "sharp";
@@ -12,18 +12,8 @@ import rimraf from "rimraf";
 import { missionSpecificSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import { exec } from "child_process";
-import resizer from "node-image-resizer";
-import {
-  deleteDirFileUsingName,
-  deletePublicFileUsingPath,
-  deletePublicFolderUsingPath,
-} from "../../utils/fileDeleteUtils";
 import { Directory, DirPath } from "../../constants";
-import {
-  checkFileExists,
-  createDirIfNotExists,
-  getFileSize,
-} from "../../utils/fileUtils";
+import s3fs from "../../s3utils/lib-aws";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
@@ -32,58 +22,53 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
     }
     if (req.body.type == "pointCloud") {
       const { missionId } = req.body;
-      const folderNamee = Date.now();
-      const fileNamee = req.file?.originalname.split(/\.(?=[^\.]+$)/)[0];
-      const doc_loc = DirPath(Directory.DOCUMENTS, req.file?.filename);
-      req.log.info("Prining point cloud file location" + doc_loc);
-      const extract_loc = DirPath(Directory.DOCUMENTS, String(folderNamee));
-      await createDirIfNotExists(extract_loc, req.log);
-      req.log.info("Extract location ++++++++++++++++++" + extract_loc);
+      req.log.info("Prining point cloud file location");
       req.log.info("Starting conversion");
       //In the below line the first command is the path to the potree execuatble file after compiliation
       // For windows: `C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
+      const folderName = path.parse(req.file.filename).name;
+      const outputDir = `/tmp/${folderName}`;
       const ps = exec(
-        `/opt/potree/PotreeConverter ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
+        `/bin/PotreeConverter ${req.file.tempPath} -o ${outputDir} --generate-page ${folderName}`
       );
       //const ps = exec(`C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe "${doc_loc}" -o "${extract_loc}" --generate-page "${fileNamee}"`);
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
       const onExit = async (exitCode: Number) => {
-        const flag: any = 1;
+        await s3fs.uploadDir(outputDir, Directory.DOCUMENTS);
         const size: number = Number(
           (Number(req.file.size) / (1024 * 1024)).toFixed(5)
         );
-        if (flag == 1) {
+        if (exitCode == 0) {
           const doc: any = new Document({
             name: req?.file?.originalname,
             modDate: new Date(),
             fileSize: size,
             folderName: req.body.folderName,
             fileType: req.body.type,
-            filePath: `/documents/${folderNamee}/${fileNamee}.html`,
+            filePath: `/documents/${folderName}.html`,
             missionId,
             tenantId: res.locals.user.tenantId,
             createdBy: res.locals.user._id,
             updatedBy: res.locals.user._id,
           });
           const savedDoc = await doc.save();
-          const tenant: any = Tenant.findOne({ _id: res.locals.user.tenantId });
           missionSpecificSocket
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
-        } else {
-          rimraf(extract_loc, function (err) {
+          rimraf(outputDir, function (err) {
             if (err) {
               throw err;
             } else {
               req.log.info("Removed pointCloud data after extraction");
             }
           });
+        } else {
           missionSpecificSocket
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_FAILED");
         }
-        await fs.promises.unlink(doc_loc);
-        req.log.info("Removed zip after extraction");
+        await fs.promises.unlink(req.file.tempPath);
+        req.log.info("Removed pointcloud after extraction");
       };
 
       ps.once("exit", onExit);
@@ -119,13 +104,16 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
           Directory.DOCUMENTS,
           `2x_${req.file.filename}`
         );
-        await sharp(req.file.path)
+        const x2Stream = s3fs.uploadStream(x2FilePath);
+        sharp(req.file.tempPath)
           .resize(1280, 720, { fit: "inside" })
-          .toFile(x2FilePath);
-
-        await sharp(x2FilePath)
+          .pipe(x2Stream.writeStream);
+        await x2Stream.promise;
+        const x1Stream = s3fs.uploadStream(x1FilePath);
+        sharp(req.file.tempPath)
           .resize(120, 120, { fit: "inside" })
-          .toFile(x1FilePath);
+          .pipe(x1Stream.writeStream);
+        await x1Stream.promise;
       }
       const doc = new Document({
         name: req.file.originalname,
@@ -167,8 +155,17 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (data.fileType == "pointCloud") {
-      const folderName = path.parse(data.filePath).dir;
-      await deletePublicFolderUsingPath(folderName);
+      const fileName = path.parse(data.filePath).name;
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, fileName + ".html"));
+      await s3fs.rm(
+        DirPath(Directory.DOCUMENTS, `potree/${fileName}/hierarchy.bin`)
+      );
+      await s3fs.rm(
+        DirPath(Directory.DOCUMENTS, `potree/${fileName}/metadata.json`)
+      );
+      await s3fs.rm(
+        DirPath(Directory.DOCUMENTS, `potree/${fileName}/octree.bin`)
+      );
       const d = await data.delete();
       if (d) {
         res.status(200).json({
@@ -191,16 +188,12 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
       if (data.folderName == "rawPhotos" || data.folderName == "photos") {
         const newFilename1 = `1x_${fname}`;
         const newFilename2 = `2x_${fname}`;
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename1);
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename2);
+        await s3fs.rm(DirPath(Directory.DOCUMENTS, newFilename1));
+        await s3fs.rm(DirPath(Directory.DOCUMENTS, newFilename2));
       }
 
-      const conf = await deletePublicFileUsingPath(data.filePath);
-      if (conf) {
-        req.log.info("Files deleted");
-      } else {
-        req.log.info("Files does not exist");
-      }
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, fname));
+
       if (data) {
         res.status(200).json({
           status: true,
@@ -248,14 +241,12 @@ export const deletemultipleDocument = async (
       if (d.folderName == "rawPhotos" || d.folderName == "photos") {
         const newFilename1 = `1x_${fname}`;
         const newFilename2 = `2x_${fname}`;
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename1);
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename2);
+        await s3fs.rm(DirPath(Directory.DOCUMENTS, newFilename1));
+        await s3fs.rm(DirPath(Directory.DOCUMENTS, newFilename2));
       }
 
-      const conf = await deletePublicFileUsingPath(d.filePath);
-      if (conf) {
-        req.log.info("Files Deleted");
-      }
+      await s3fs.rm(DirPath(Directory.DOCUMENTS, fname));
+
       const doc = await d.delete();
       if (doc) {
         flag = 1;
@@ -282,10 +273,29 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     }).select("name");
-    const doc = await Document.find({
+
+    const total = await Document.countDocuments({
       missionId: id,
       tenantId: res.locals.user.tenantId._id,
     });
+
+    let doc;
+    if (req.query.page && req.query.limit) {
+      const page = Number(req.query.page);
+      const limit = Number(req.query.limit);
+      const startIndex = (page - 1) * limit;
+      doc = await Document.find({
+        missionId: id,
+        tenantId: res.locals.user.tenantId._id,
+      })
+        .limit(limit)
+        .skip(startIndex);
+    } else {
+      doc = await Document.find({
+        missionId: id,
+        tenantId: res.locals.user.tenantId._id,
+      });
+    }
     if (doc) {
       res.status(200).json({
         status: true,
@@ -294,11 +304,65 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
           mission: mission["name"],
           documents: doc,
         },
+        total: total,
       });
     } else {
       res.status(200).json({
         status: false,
         message: `Document does not exist for ${id}`,
+      });
+    }
+  }
+};
+
+export const getImagesbymissionID = async (req: Request, res: AuthResponse) => {
+  {
+    const page = Number(req.query.page);
+    const limit = Number(req.query.limit);
+    const startIndex = (page - 1) * limit;
+
+    const sort: any = {};
+    if (req.query.sortBy) {
+      const parts = String(req.query.sortBy).split(":");
+      sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
+    }
+
+    const id = new Types.ObjectId(String(req.query.missionId));
+    const mission = await Mission.findOne({
+      _id: id,
+      tenantId: res.locals.user.tenantId._id,
+    }).select("name");
+
+    const query = {
+      missionId: id,
+      tenantId: res.locals.user.tenantId._id,
+      folderName: "photos",
+    };
+
+    if (req.query.isFlagged !== undefined) {
+      query["isFlagged"] = req.query.isFlagged;
+    }
+
+    const total = await Document.countDocuments(query);
+
+    const doc = await Document.find(query, null, { sort: sort })
+      .limit(limit)
+      .skip(startIndex);
+
+    if (doc) {
+      res.status(200).json({
+        status: true,
+        message: "Images fetched successfully",
+        data: {
+          mission: mission["name"],
+          documents: doc,
+          total: total,
+        },
+      });
+    } else {
+      res.status(200).json({
+        status: false,
+        message: `No images exist for ${id}`,
       });
     }
   }
@@ -319,10 +383,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, req.log);
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = fs.createWriteStream(`${dir}${fname}`);
+        const outputStream = s3fs.uploadStream(DirPath(Directory.ZIP, fname));
         const archive = archiver("zip", {
           zlib: { level: 9 }, // Sets the compression level.
         });
@@ -330,14 +392,17 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         //     req.log.info(archive.pointer() + ' total bytes');
         //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
         // });
-        archive.pipe(output);
+        archive.pipe(outputStream.writeStream);
         for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.DEFAULT, d[i].filePath), {
-            name: d[i].filePath.split("/")[2],
-          });
+          const fileName = path.parse(d[i].filePath).base;
+          const fileBuffer = await s3fs.readFile(
+            DirPath(Directory.DOCUMENTS, fileName)
+          );
+          archive.append(fileBuffer, { name: fileName });
         }
         try {
-          const _archiveFinalized = await archive.finalize();
+          const _archiveFinalized = await archive.finalize(); // stream closed/ended
+          await outputStream.promise; // await upload.done()
           const link = `/zip/${fname}`;
           missionSpecificSocket
             .to(missionId)
@@ -364,11 +429,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, req.log);
-
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = fs.createWriteStream(`${dir}${fname}`);
+        const outputStream = s3fs.uploadStream(DirPath(Directory.ZIP, fname));
         const archive = archiver("zip", {
           zlib: { level: 9 }, // Sets the compression level.
         });
@@ -376,14 +438,17 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         //     req.log.info(archive.pointer() + ' total bytes');
         //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
         // });
-        archive.pipe(output);
+        archive.pipe(outputStream.writeStream);
         for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.DEFAULT, d[i].filePath), {
-            name: d[i].filePath.split("/")[2],
-          });
+          const fileName = path.parse(d[i].filePath).base;
+          const fileBuffer = await s3fs.readFile(
+            DirPath(Directory.DOCUMENTS, fileName)
+          );
+          archive.append(fileBuffer, { name: fileName });
         }
         try {
-          const _archiveFinalized = await archive.finalize();
+          const _archiveFinalized = await archive.finalize(); // stream closed/ended
+          await outputStream.promise; // await upload.done()
           const link = `/zip/${fname}`;
           missionSpecificSocket
             .to(missionId)
@@ -410,25 +475,25 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
       });
       if (doc) {
-        const newFilename = DirPath(Directory.DEFAULT, doc.filePath);
-        if (await checkFileExists(newFilename)) {
-          await resizer(newFilename, {
-            versions: [
-              {
-                quality: 90,
-                prefix: "2x_",
-                width: 1280,
-                height: 720,
-              },
-              {
-                quality: 80,
-                prefix: "1x_",
-                width: 120,
-                height: 120,
-              },
-            ],
-          });
-        }
+        const fileName = path.parse(doc.filePath).base;
+        const fileBuffer = await s3fs.readFile(
+          DirPath(Directory.DOCUMENTS, fileName)
+        );
+
+        const x1FilePath = DirPath(Directory.DOCUMENTS, `1x_${fileName}`);
+        const x1Stream = s3fs.uploadStream(x1FilePath);
+        sharp(fileBuffer)
+          .resize(120, 120, { fit: "inside" })
+          .pipe(x1Stream.writeStream);
+        await x1Stream.promise;
+
+        const x2FilePath = DirPath(Directory.DOCUMENTS, `2x_${fileName}`);
+        const x2Stream = s3fs.uploadStream(x2FilePath);
+        sharp(fileBuffer)
+          .resize(1280, 720, { fit: "inside" })
+          .pipe(x2Stream.writeStream);
+        await x2Stream.promise;
+
         res.status(200).json({
           status: true,
           message: `Successfully generated 2x files`,
@@ -461,9 +526,12 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
     );
     if (docs.length) {
       for (let i = 0; i < docs.length; i++) {
-        const newFilename = DirPath(Directory.DEFAULT, docs[i].filePath);
-        if (await checkFileExists(newFilename)) {
-          const size: number = await getFileSize(newFilename);
+        const fileName = path.parse(docs[i].filePath).base;
+        const filePath = DirPath(Directory.DOCUMENTS, fileName);
+        const fileStat = await s3fs.stat(filePath);
+        const size: number = Number((fileStat.size / (1024 * 1024)).toFixed(5));
+        if (size !== -1) {
+          // key found in bucket
           if (size != docs[i].fileSize) {
             await Document.updateOne(
               {
@@ -474,6 +542,7 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
             );
           }
         } else {
+          // key not found in bucket
           await docs[i].delete();
         }
       }

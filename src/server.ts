@@ -7,8 +7,6 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { createClient } from "redis";
 import { ioHandler } from "./socket";
 import { deletePublicFileUsingPath } from "./utils/fileDeleteUtils";
-import { promises as asyncFS } from "fs";
-import path from "path";
 import Tenant from "./models/tenant";
 import { sendMail } from "./utils/emailUtil";
 import mongoose from "mongoose";
@@ -16,7 +14,6 @@ import {
   DUMMY_TENANT,
   MONGODB_CONNECTION_STRING,
   PORT,
-  PUBLIC_DIR,
   REDIS_URI,
 } from "./constants";
 
@@ -38,9 +35,6 @@ const tempCleanup = async () => {
       await doc[i].save();
     }
   }
-  const TMP_IMG = path.join(PUBLIC_DIR, "/images/temp/");
-  const files = await asyncFS.readdir(TMP_IMG);
-  await Promise.all(files.map((file) => asyncFS.rm(path.join(TMP_IMG, file))));
 };
 
 const expiredSubs = async () => {
@@ -103,26 +97,19 @@ const worker = async () => {
     },
   });
 
-  const pubClient = createClient({
-    socket: {
-      host: REDIS_URI,
-      port: 6379,
-      tls: true,
-    },
-  });
+  const pubClient = createClient({ url: REDIS_URI });
 
   const subClient = pubClient.duplicate();
   await Promise.all([pubClient.connect(), subClient.connect()]);
   io.adapter(createAdapter(pubClient, subClient));
   //handle socket.io
   ioHandler(io);
-  console.log(pubClient, subClient);
 
   server.listen(PORT, () => logger.info(`server listening on port ${PORT}`));
 };
 worker()
   .then(() => logger.info("Server started"))
-  .catch((err) => logger.error("Failed to start server", err));
+  .catch((err) => logger.error(err, "Failed to start server"));
 
 cron.schedule("00 00 * * *", () => {
   tempCleanup()

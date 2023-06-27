@@ -16,6 +16,7 @@ import {
   updateSizeExistDoc,
   updateMultiDoc,
   updateDoc,
+  getImagesbymissionID,
 } from "../../controllers/v1/documentController";
 import { isSize } from "../../utils/sizePermission";
 import { body, query } from "express-validator";
@@ -23,7 +24,9 @@ import { validator } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
 
-const upload = multer({ storage: multerStorage(Directory.DOCUMENTS) });
+const upload = multer({
+  storage: multerStorage(Directory.DOCUMENTS, true, false),
+});
 
 // ****************create document**********************
 
@@ -67,8 +70,21 @@ router.get(
   isAuthenticated,
   query("missionId").notEmpty(),
   query("isFlagged").optional().isBoolean().toBoolean(),
+  query("page").optional().isInt().toInt(),
+  query("limit").optional().isInt().toInt(),
   validator,
   getbymissionID
+);
+
+router.get(
+  "/getImagesByMissionId",
+  isAuthenticated,
+  query("missionId").notEmpty(),
+  query("isFlagged").optional().isBoolean().toBoolean(),
+  query("page").optional().isInt().toInt(),
+  query("limit").optional().isInt().toInt(),
+  validator,
+  getImagesbymissionID
 );
 
 router.get(

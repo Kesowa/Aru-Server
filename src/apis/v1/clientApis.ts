@@ -35,7 +35,7 @@ router.post(
   "/create",
   isAuthenticated,
   body("name").notEmpty().trim(),
-  body("email").isEmail().withMessage("invalid Email.").normalizeEmail(),
+  body("email").isEmail().withMessage("invalid Email."),
   body("phoneNo").isString().notEmpty().trim(),
   body("userGroupId").notEmpty(),
   body("userType").notEmpty().trim(),
@@ -72,7 +72,7 @@ router.patch(
     [
       body("id").notEmpty(),
       body("name").notEmpty().trim(),
-      body("email").isEmail().withMessage("invalid Email.").normalizeEmail(),
+      body("email").isEmail().withMessage("invalid Email."),
       body("phoneNo").isString().notEmpty().trim(),
       body("userGroupId").notEmpty(),
       body("avatar").optional().notEmpty().trim(),
@@ -147,7 +147,7 @@ router.get(
 router.get(
   "/get-client-by-email",
   isAuthenticated,
-  query("email").isEmail().withMessage("invalid Email.").normalizeEmail(),
+  query("email").isEmail().withMessage("invalid Email."),
   validator,
   canClient,
   RobustRunner(getClientByEmail)
@@ -157,7 +157,7 @@ router.post(
   "/invite-client-to-mission",
   isAuthenticated,
   body("missionID").notEmpty(),
-  body("emailID").isEmail().withMessage("invalid Email.").normalizeEmail(),
+  body("emailID").isEmail().withMessage("invalid Email."),
   validator,
   canManageClient,
   RobustRunner(inviteClient)

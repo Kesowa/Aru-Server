@@ -9,6 +9,8 @@ export interface IAlert {
     long?: number;
   };
   isFlagged: boolean;
+  isThreadExist: boolean;
+  commentCount: Number;
   locationName: string;
   fileSize: number;
   note: string;
@@ -16,7 +18,7 @@ export interface IAlert {
   onSite: boolean;
   flightId: mongoose.Types.ObjectId; // index
   tenantId: mongoose.Types.ObjectId; // index
-  pcount: number;
+  pcount: number; // People count
   type: "Manual" | "Automated" | "Android"; // index
   image: string;
   locationId?: mongoose.Types.ObjectId; // index
@@ -46,6 +48,14 @@ const alertSchema = new mongoose.Schema<IAlert>(
     isFlagged: {
       type: Boolean,
       default: false,
+    },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
     },
     locationName: {
       type: String,
@@ -112,21 +122,28 @@ alertSchema.index({ locationId: 1 }, { sparse: true });
 alertSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } }
   );
   await Mission.updateOne(
     { _id: this.missionId },
     { $inc: { size: this.fileSize } }
   );
 });
-alertSchema.post("remove", async function (this: {tenantId, fileSize, missionId}) {
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: -this.fileSize } }
-  );
-  await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: -this.fileSize } }
-  );
-});
+alertSchema.post(
+  "remove",
+  async function (this: {
+    tenantId: mongoose.Types.ObjectId;
+    fileSize: number;
+    missionId: mongoose.Types.ObjectId;
+  }) {
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: -this.fileSize, allAlertSize: -this.fileSize } }
+    );
+    await Mission.updateOne(
+      { _id: this.missionId },
+      { $inc: { size: -this.fileSize } }
+    );
+  }
+);
 export default alertSchema;

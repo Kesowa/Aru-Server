@@ -1,1 +1,2 @@
-tar -vxf public.tar -C ./src && docker compose -f docker-compose.yaml -f docker-compose.full.yaml up --build -d
+# DO USE!
+docker compose -p dev up --build -d  && docker logs dev-server-1 --follow

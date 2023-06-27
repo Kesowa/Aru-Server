@@ -3,37 +3,38 @@ import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import path from "path";
 import sharp from "sharp";
-import resizer from "node-image-resizer";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { checkFileExists } from "../../utils/fileUtils";
 import { Directory, DirPath } from "../../constants";
+import s3fs from "../../s3utils/lib-aws";
 
 //pupload file
 export const uploadFile = async (req: Request, res: AuthResponse) => {
   {
     if (req.file?.fieldname == "image") {
-      const img_path = DirPath(Directory.ALERT_IMAGES, req.file?.filename);
       if (
         req.file?.mimetype === "image/jpeg" ||
         req.file?.mimetype === "image/png"
       ) {
-        if (await checkFileExists(img_path)) {
-          await resizer(img_path, {
-            all: {
-              path: DirPath(Directory.ALERT_IMAGES),
-              quality: 80,
-            },
-            versions: [
-              {
-                quality: 100,
-                prefix: "1x_",
-                width: 120,
-                height: 120,
-              },
-            ],
-          });
-        }
+        const x1FilePath = DirPath(
+          Directory.ALERT_IMAGES,
+          `1x_${req.file.filename}`
+        );
+        const x2FilePath = DirPath(
+          Directory.ALERT_IMAGES,
+          `2x_${req.file.filename}`
+        );
+        const x2Stream = s3fs.uploadStream(x2FilePath);
+        sharp(req.file.tempPath)
+          .resize(1280, 720, { fit: "inside" })
+          .pipe(x2Stream.writeStream);
+        await x2Stream.promise;
+        const x1Stream = s3fs.uploadStream(x1FilePath);
+        sharp(req.file.tempPath)
+          .resize(120, 120, { fit: "inside" })
+          .pipe(x1Stream.writeStream);
+        await x1Stream.promise;
       }
       if (req.file) {
         res.status(201).json({

@@ -4,7 +4,7 @@ import Package from "../models/package";
 import moment from "moment";
 import crypto from "crypto";
 import { generateResetPasswordToken } from "../utils/resetPasswordUtils";
-import { BASE_SERVER } from "../constants";
+import { API_SERVER } from "../constants";
 
 // let saltRound = 10;
 export const createTenantLevelrootUser = async (tenant: any) => {
@@ -26,7 +26,7 @@ export const createTenantLevelrootUser = async (tenant: any) => {
     const t = await tenantRoot.save();
 
     const token = await generateResetPasswordToken(tenant.email);
-    const resetPasswordUrl = `${BASE_SERVER}/apis/v1/auth/reset-password/${token}`;
+    const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
 
     // await sendMail(tenant.email, "Account Created! || Kesowa Infinite Ventures Pvt. Ltd", "", `<p><b>Greetings ${tenant.name}!</b></p>
     // <p>We wish you a warm welcome from Kesowa Infinite Ventures Pvt. Ltd for using our app <b>ARU.</b></p>

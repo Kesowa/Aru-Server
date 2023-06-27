@@ -14,6 +14,8 @@ export interface IDocument {
   missionId: mongoose.Types.ObjectId; // index
   tenantId: mongoose.Types.ObjectId; // index
   isFlagged: boolean;
+  isThreadExist: boolean;
+  commentCount: Number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +53,14 @@ const documentSchema = new mongoose.Schema<IDocument>(
       type: Boolean,
       default: false,
     },
+    isThreadExist: {
+      type: Boolean,
+      default: false,
+    },
+    commentCount: {
+      type: Number,
+      default: 0,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
     },
@@ -77,21 +87,28 @@ documentSchema.index({
 documentSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allDocumentsSize: this.fileSize } }
   );
   await Mission.updateOne(
     { _id: this.missionId },
     { $inc: { size: this.fileSize } }
   );
 });
-documentSchema.post("remove", async function (this: {tenantId, missionId, fileSize}) {
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: -this.fileSize } }
-  );
-  await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: -this.fileSize } }
-  );
-});
+documentSchema.post(
+  "remove",
+  async function (this: {
+    tenantId: mongoose.Types.ObjectId;
+    fileSize: number;
+    missionId: mongoose.Types.ObjectId;
+  }) {
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: -this.fileSize, allDocumentsSize: -this.fileSize } }
+    );
+    await Mission.updateOne(
+      { _id: this.missionId },
+      { $inc: { size: -this.fileSize } }
+    );
+  }
+);
 export default documentSchema;

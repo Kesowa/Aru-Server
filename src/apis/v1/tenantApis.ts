@@ -48,11 +48,11 @@ router.post(
   body("email").notEmpty().isEmail().withMessage("invalid Email."),
   body("activePackage").notEmpty().isMongoId(),
   body("contactPerson").notEmpty().trim(),
-  body("registrationNumber").notEmpty().isNumeric().toInt(),
-  body("officialWebsite").notEmpty().trim(),
+  body("registrationNumber").optional().notEmpty().isNumeric().toInt(),
+  body("officialWebsite").optional().notEmpty().trim(),
   body("gstNumber").notEmpty().isNumeric().toInt(),
   body("billingAddressLine1").notEmpty().trim(),
-  body("billingAddressLine2").notEmpty().trim(),
+  body("billingAddressLine2").optional().notEmpty().trim(),
   body("billingCity").notEmpty().trim(),
   body("billingDistrict").notEmpty().trim(),
   body("billingState").notEmpty().trim(),
@@ -170,6 +170,7 @@ router.post(
   "/add-actualSize-to-tenant",
   isAuthenticated,
   onlySuperAdminAccess,
+  body("tenantId").notEmpty().isMongoId(),
   RobustRunner(addActualSizeToTenant)
 );
 router.delete(
