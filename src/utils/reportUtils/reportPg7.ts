@@ -646,7 +646,7 @@ export const reportPg7 = (properties: IPage7Properties) => {
                 },
             }),
             new ImageRun({
-                data: fs.readFileSync("./images/NKDA_Logo.png"),
+                data: fs.readFileSync("./utils/reportUtils/images/NKDA_Logo.png"),
                 transformation: {
                     width: 50,
                     height: 50,
@@ -664,7 +664,7 @@ export const reportPg7 = (properties: IPage7Properties) => {
                 },
             }),
             new ImageRun({
-                data: fs.readFileSync("./images/Kesowa_Logo.png"),
+                data: fs.readFileSync("./utils/reportUtils/images/Kesowa_Logo.png"),
                 transformation: {
                     width: 80,
                     height: 40,

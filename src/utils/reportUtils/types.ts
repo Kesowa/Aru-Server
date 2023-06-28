@@ -1,17 +1,13 @@
-export interface IReportData {
-
-};
-
 export interface IPage1Properties {
     missionHeading: string, 
     missionSubHeading: string, 
     missionMapImgPath: string, 
     missionCode: string, 
-    missionDate: string,
+    date: string,
     users: string[], 
     emails: string[], 
     phoneNos: string[]
-};
+}
 
 export interface IAreaDesc {
     name: string,
@@ -48,4 +44,17 @@ export interface IPage7Properties {
     heading: string,
     subheading: string,
     imgPaths: string[],
+}
+
+export interface IData {
+    missionHeading: string, 
+    missionSubHeading: string, 
+    missionMapImgPath: string, 
+    missionCode: string, 
+    date: string,
+    users: string[], 
+    emails: string[], 
+    phoneNos: string[],
+    area: IAreaData, 
+    occupancy: IOccupancyDesc[],
 }

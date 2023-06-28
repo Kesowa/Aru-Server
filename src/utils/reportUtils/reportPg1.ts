@@ -1,12 +1,13 @@
 import * as fs from "fs";
-import { Paragraph, AlignmentType, TextRun, PageNumber, ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, FrameAnchorType, Table, TableRow, HeightRule, TableCell, VerticalAlign } from "docx";
+import { Paragraph, AlignmentType, TextRun, ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, FrameAnchorType, Table, TableRow, HeightRule, TableCell, VerticalAlign } from "docx";
 import { commonPageFooter, commonPageProperties } from "./reportUtils";
 import { IPage1Properties } from "./types";
+import path from "path";
 
 const NKDALogo = new Paragraph({
     children: [
         new ImageRun({
-            data: fs.readFileSync("./images/NKDA_Logo.png"),
+            data: fs.readFileSync(path.join(__dirname, "images", "NKDA_Logo.png")),
             transformation: {
                 width: 100,
                 height: 100,
@@ -28,7 +29,7 @@ const NKDALogo = new Paragraph({
 const FSIPLLogo = new Paragraph({
     children: [
         new ImageRun({
-            data: fs.readFileSync("./images/FSIPL_Logo.png"),
+            data: fs.readFileSync(path.join(__dirname, "images", "FSIPL_Logo.png")),
             transformation: {
                 width: 110,
                 height: 100,
@@ -301,7 +302,11 @@ const idTextBox = (missionCode:string) => {
 }
 
 export const page1 = (properties: IPage1Properties) => {
-    const { missionHeading, missionSubHeading, missionMapImgPath, missionCode, missionDate, users, emails, phoneNos } = properties;
+    const { missionHeading, missionSubHeading, missionCode, date, users, emails, phoneNos } = properties;
+    let { missionMapImgPath } = properties;
+    if(missionMapImgPath == "") {
+        missionMapImgPath = path.join(__dirname, "images", "geojsonCover1.jpg");
+    }
     return {
         properties: commonPageProperties,
         footers: commonPageFooter,
@@ -310,7 +315,7 @@ export const page1 = (properties: IPage1Properties) => {
             headings(missionHeading, missionSubHeading),
             FSIPLLogo,
             missionMapImage(missionMapImgPath),
-            pg1Table(missionSubHeading, missionDate, users, emails, phoneNos),
+            pg1Table(missionSubHeading, date, users, emails, phoneNos),
             idTextBox(missionCode),
         ],
     };

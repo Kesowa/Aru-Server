@@ -72,6 +72,7 @@
     "cors": "^2.8.5",
     "date-fns": "^2.21.1",
     "dji_srt_parser": "^1.3.2",
+    "docx": "^8.1.0",
     "ejs": "^3.1.9",
     "errorhandler": "^1.5.1",
     "exifr": "^7.1.3",
