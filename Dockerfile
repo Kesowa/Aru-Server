@@ -12,5 +12,5 @@ RUN npm run build
 COPY .env /app/dist
 WORKDIR /app/dist
 # USER node
-# ENV NODE_ENV=production
+ENV MODE=production
 CMD ["node", "server.js"]

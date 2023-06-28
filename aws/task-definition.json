@@ -1,83 +1,89 @@
 {
-  "taskDefinitionArn": "arn:aws:ecs:ap-south-1:543620115200:task-definition/kesowa-server:1",
-  "containerDefinitions": [
-      {
-          "name": "kesowa-backend",
-          "image": "public.ecr.aws/b6o0p8u8/kesowa-server:latest",
-          "cpu": 0,
-          "portMappings": [
-              {
-                  "name": "kesowa-backend-5011-tcp",
-                  "containerPort": 5011,
-                  "hostPort": 5011,
-                  "protocol": "tcp",
-                  "appProtocol": "http"
-              }
-          ],
-          "essential": true,
-          "environment": [],
-          "environmentFiles": [],
-          "mountPoints": [],
-          "volumesFrom": [],
-          "ulimits": [],
-          "logConfiguration": {
-              "logDriver": "awslogs",
-              "options": {
-                  "awslogs-create-group": "true",
-                  "awslogs-group": "/ecs/kesowa-server",
-                  "awslogs-region": "ap-south-1",
-                  "awslogs-stream-prefix": "ecs"
-              }
-          }
-      }
-  ],
-  "family": "kesowa-server",
-  "executionRoleArn": "arn:aws:iam::543620115200:role/ecsTaskExecutionRole",
-  "networkMode": "awsvpc",
-  "revision": 1,
-  "volumes": [],
-  "status": "ACTIVE",
-  "requiresAttributes": [
-      {
-          "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
-      },
-      {
-          "name": "ecs.capability.execution-role-awslogs"
-      },
-      {
-          "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
-      },
-      {
-          "name": "ecs.capability.extensible-ephemeral-storage"
-      },
-      {
-          "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
-      },
-      {
-          "name": "ecs.capability.task-eni"
-      },
-      {
-          "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
-      }
-  ],
-  "placementConstraints": [],
-  "compatibilities": [
-      "EC2",
-      "FARGATE"
-  ],
-  "requiresCompatibilities": [
-      "FARGATE"
-  ],
-  "cpu": "2048",
-  "memory": "4096",
-  "ephemeralStorage": {
-      "sizeInGiB": 21
-  },
-  "runtimePlatform": {
-      "cpuArchitecture": "X86_64",
-      "operatingSystemFamily": "LINUX"
-  },
-  "registeredAt": "2023-06-28T07:11:12.108Z",
-  "registeredBy": "arn:aws:iam::543620115200:user/rivi",
-  "tags": []
+    "taskDefinitionArn": "arn:aws:ecs:ap-south-1:543620115200:task-definition/kesowa-server:2",
+    "containerDefinitions": [
+        {
+            "name": "kesowa-server",
+            "image": "543620115200.dkr.ecr.ap-south-1.amazonaws.com/kesowa-server:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "kesowa-server-5011-tcp",
+                    "containerPort": 5011,
+                    "hostPort": 5011,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/kesowa-server",
+                    "awslogs-region": "ap-south-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+    "family": "kesowa-server",
+    "executionRoleArn": "arn:aws:iam::543620115200:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 2,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "ecs.capability.extensible-ephemeral-storage"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "2048",
+    "memory": "4096",
+    "ephemeralStorage": {
+        "sizeInGiB": 21
+    },
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2023-06-28T11:07:10.158Z",
+    "registeredBy": "arn:aws:iam::543620115200:user/rivi",
+    "tags": []
 }
