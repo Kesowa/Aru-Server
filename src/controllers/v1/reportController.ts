@@ -11,6 +11,7 @@ import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/types";
 import Flight from "../../models/flight";
 import { IUser } from "../../schemas/user";
+import { privateCommercialLayerTypes, residentialLayerTypes, govtCommercialLayerTypes, housingComplexLayerTypes, govtLayerTypes, motorableRoadsLayerTypes, footpathLayerTypes, cycleTrackLayerTypes, greeneryLayerTypes, waterBodyLayerTypes } from "../../utils/reportUtils/reportUtils";
 
 export async function findArea(filepath: string) {
   try {
@@ -141,18 +142,6 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       missionId: missionId,
       type: "Vector",
     }).populate<{ vector: IVector }>("vector");
-
-    // TODO: Fill in respective vector layer types in the arrays below
-    const privateCommercialLayerTypes = [];
-    const residentialLayerTypes = [];
-    const govtCommercialLayerTypes = [];
-    const housingComplexLayerTypes = [];
-    const govtLayerTypes = [];
-    const motorableRoadsLayerTypes = [];
-    const footpathLayerTypes = [];
-    const cycleTrackLayerTypes = [];
-    const greeneryLayerTypes = ["Park"];
-    const waterBodyLayerTypes = ["Lake", "Pool"];
 
     for (const layer of vectorLayers) {
       const currLayerArea = await findArea(

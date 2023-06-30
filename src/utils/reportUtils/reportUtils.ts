@@ -75,3 +75,87 @@ export const commonPageFooter = {
         ],
     }),
 }
+
+// areas
+export const privateCommercialLayerTypes = [
+    "Bus Shelters", 
+    "Parking Area", 
+    "Cycle Stand", 
+    "Boundary Wall", 
+    "Cellphone Tower", 
+    "Parcel", 
+    "Farming Land", 
+];
+export const residentialLayerTypes = ["Plot", ];
+export const govtCommercialLayerTypes = [
+    "Sub Station", 
+    "Metro station", 
+    "Metro Route", 
+    "Public Convenience", 
+    "Mobile Drone Port", 
+];
+export const housingComplexLayerTypes = [];
+export const govtLayerTypes = [
+    "Restricted Area", 
+    "Powersupply Network", 
+    "Landfill", 
+    "Fire Station", 
+    "Right of Way", 
+    "Water Transmission Line", 
+    "Water Treatment Plant", 
+    "Garbage Collection Area", 
+];
+export const motorableRoadsLayerTypes = [
+    "Flyover", 
+    "Roundabout", 
+    "Bridge/Flyover", 
+    "Bridge", 
+    "Carriage Way", 
+    "Road", 
+    "Street", 
+];
+export const footpathLayerTypes = ["Footpath"];
+export const cycleTrackLayerTypes = ["Cycle Track",];
+export const greeneryLayerTypes = [
+    "Playground", 
+    "Park", 
+    "Green Verge", 
+    "Jungle", 
+];
+export const waterBodyLayerTypes = [
+    "Drainage Network", 
+    "Canal", 
+    "Sewerage Network", 
+    "Waterbody",
+];
+
+// Doubt in areas:
+/*
+    [ 
+        "Median"(what is it?), 
+        "Vacant Plot"(govt. or private ?), 
+        "Solar Area"(govt. or private ?), 
+        "Potholes"
+    ]
+*/
+
+// Overlapping in areas: 
+/* 
+    [ 
+        "Zone Boundary", 
+        "Block Boundary", 
+        "Area Boundary", 
+        "Election Ward Boundary", 
+        "Municipal Boundary", 
+        "Panchayat Boundary",
+        "Revenew Ward Boundary",
+        "Municipal Boundary",
+        "Sector Boundary",
+        "Building Footprint",
+        "Slum Boundary",
+
+    ]
+*/
+
+// occupancy
+export const vacantType = ["Vacant Plot"];

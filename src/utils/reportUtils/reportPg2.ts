@@ -9,6 +9,7 @@ const sqMtrToAcres = (sqMtr:number) => { return roundOffTo2DecimalPlaces(0.00024
 const sqMtrToSqKm = (sqMtr:number) => { return roundOffTo2DecimalPlaces(0.000001*sqMtr); } // correct to last 2 decimal places
 
 const table1 = (area: IAreaData) => {
+    if(area.total == 0) area.total = 1; // to avoid (...)/0 and NaN while converting from sq. mtr. to acres
     return new Table({
         width: {
             size: "13.97cm",
