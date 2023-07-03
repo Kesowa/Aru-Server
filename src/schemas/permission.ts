@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IPermission {
   name: string; // index
   isSideNavOption: boolean;
@@ -17,6 +19,26 @@ export interface IPermission {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const PermissionType = {
+  name: Types.String(), // index
+  isSideNavOption: Types.Boolean(),
+  isFrontendRoute: Types.Boolean(),
+  isPilot: Types.Boolean(),
+  isClient: Types.Boolean(), // index
+  frontendRoute: Types.String(),
+  isVisibleToTenant: Types.Boolean(), // index
+  isVisibleToSuperAdmin: Types.Boolean(),
+  sideNavOptionLabel: Types.String(),
+  sideNavOptionIcon: Types.String(),
+  description: Types.String(),
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  isActive: Types.Boolean(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
+
 const permissionschema = new mongoose.Schema<IPermission>(
   {
     name: {

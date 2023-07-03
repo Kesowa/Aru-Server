@@ -40,6 +40,7 @@ import baseLayerApis from "./apis/v1/baseLayerApis";
 import settingApis from "./apis/v1/settingApis";
 import aimlApis from "./apis/v1/aimlApis";
 import threadApis from "./apis/v1/threadApis";
+import dataApis from "./apis/v1/dataApis";
 
 import {
   ARU_INSTANCE,
@@ -52,6 +53,7 @@ import {
 import cors from "cors";
 import { randomUUID } from "crypto";
 import cookie from "cookie";
+import routerV2 from "./apis/v2/routerV2";
 
 const app: Application = express();
 
@@ -147,6 +149,8 @@ app.use(
   })
 );
 
+app.use("/apis/v2", routerV2);
+
 //connecting APIs routes
 app.use("/apis/v1/auth", authApis);
 app.use("/apis/v1/admin/tenant", tenantApis);
@@ -182,6 +186,7 @@ app.use("/apis/v1/baselayer", baseLayerApis);
 app.use("/apis/v1/setting", settingApis);
 app.use("/apis/v1/aiml", aimlApis);
 app.use("/apis/v1/thread", threadApis);
+app.use("/apis/v1/data", dataApis);
 
 // 404 route
 app.use(function (req, res, next) {

@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IStreamKey {
   _id: mongoose.Types.ObjectId;
   isActive: boolean;
@@ -13,6 +15,20 @@ export interface IStreamKey {
   createdAt: Date;
   updatedAt: Date;
 }
+export const StreamKeyType = {
+  _id: Types.String(),
+  isActive: Types.Boolean(),
+  pStatus: Types.Boolean(),
+  createdBy: Types.String(),
+  streamKey: Types.String(), // index
+  tenantID: Types.String(), // index
+  assetID: Types.String(),
+  missionID: Types.String(),
+  flightID: Types.String(), // index
+  locationID: Types.String(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
 const streamKeySchema = new mongoose.Schema<IStreamKey>(
   {
     isActive: {

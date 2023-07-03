@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
 import bcrypt from "bcrypt";
 
 interface IUserMethods {
@@ -34,6 +35,33 @@ export interface IUser {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const UserType = {
+  _id: Types.String(),
+  tenantId: Types.String(), // index
+  userGroupId: Types.String(), // index
+  name: Types.String(),
+  phoneNo: Types.String(), // index
+  email: Types.String(), // index
+  password: Types.String(),
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  userType: Types.String(), // index
+  customPermissions: Types.Array({ arrayType: Types.String() }),
+  dob: Types.DateTime(),
+  aadhaarNo: Types.String(),
+  pilotLicenceNo: Types.String(),
+  isActive: Types.Boolean(),
+  isBanned: Types.Boolean(),
+  isTermsAccepted: Types.Boolean(),
+  city: Types.String(),
+  country: Types.String(),
+  expiryDatee: Types.DateTime(),
+  avatar: Types.String(),
+  passwordResetToken: Types.String(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
 
 const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {

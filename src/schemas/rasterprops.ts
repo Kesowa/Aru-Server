@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IRaster {
   _id: mongoose.Types.ObjectId;
   name: "ORTHO" | "DEM" | "NDVI" | "DTM" | "NDWI";
@@ -11,6 +13,20 @@ export interface IRaster {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const RasterType = {
+  _id: Types.String(),
+  name: Types.StringEnum({ values: ["ORTHO", "DEM", "NDVI", "DTM", "NDWI"] }),
+  bidx: Types.String(),
+  bandExp: Types.String(),
+  colorMap: Types.String(),
+  resamplingMethod: Types.String(),
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
+
 const rasterSchema = new mongoose.Schema<IRaster>(
   {
     name: {

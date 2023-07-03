@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IFlight {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -21,6 +23,28 @@ export interface IFlight {
   createdAt: Date;
   updatedAt: Date;
 }
+export const FlightType = {
+  _id: Types.String(),
+  name: Types.String(),
+  description: Types.String(),
+  pilotID: Types.String(), // index
+  mission: Types.String(), // index
+  date: Types.String(), // index
+  time: Types.String(),
+  duration: Types.String(),
+  locationID: Types.String(), // index
+  geoFence: Types.Object({ properties: {} }),
+  centerPoints: {
+    lat: Types.Number(),
+    lng: Types.Number(),
+  },
+  tenant: Types.String(), // index
+  geoLocation: Types.String(),
+  assetID: Types.String(),
+  client: Types.String(),
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
 const flightSchema = new mongoose.Schema<IFlight>(
   {
     date: {

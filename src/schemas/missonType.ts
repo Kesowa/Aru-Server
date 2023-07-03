@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 export interface IMissionType {
   name: string; // index
   description: string;
@@ -8,6 +10,17 @@ export interface IMissionType {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export const MissionTypeType = {
+  name: Types.String(), // index
+  description: Types.String(),
+  createdBy: Types.String(),
+  updatedBy: Types.String(),
+  isActive: Types.Boolean(), // index
+  createdAt: Types.DateTime(),
+  updatedAt: Types.DateTime(),
+};
+
 const missionTypeSchema = new mongoose.Schema<IMissionType>(
   {
     name: {
