@@ -90,8 +90,6 @@ jobs:
         # push it to ECR so that it can
         # be deployed to ECS.
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY" >> $GITHUB_OUTPUT
-        ls
-        pwd
         docker build -f ./Dockerfile --build-arg FILE_PATH=./.env -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT    
