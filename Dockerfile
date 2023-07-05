@@ -9,8 +9,9 @@ RUN npm ci
 COPY src ./src
 COPY tsconfig.json ./
 RUN npm run build
-COPY .env /app/dist
+RUN ls
 RUN cat .env
+COPY .env /app/dist
 WORKDIR /app/dist
 # USER node
 ENV MODE=production

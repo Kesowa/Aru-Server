@@ -80,6 +80,10 @@ jobs:
         echo "AWS_MEDIACONVERT_ENDPOINT=${{ vars.AWS_MEDIACONVERT_ENDPOINT }}" >> .env
         echo "ENDPOINT=${{ vars.ENDPOINT }}" >> .env
 
+    - name: Print .env file
+      run: |
+        cat .env
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
