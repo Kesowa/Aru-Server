@@ -10,6 +10,7 @@ COPY src ./src
 COPY tsconfig.json ./
 RUN npm run build
 COPY .env /app/dist
+RUN cat .env
 WORKDIR /app/dist
 # USER node
 ENV MODE=production
