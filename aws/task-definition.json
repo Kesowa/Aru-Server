@@ -1,5 +1,5 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:ap-south-1:543620115200:task-definition/kesowa-server:2",
+    "taskDefinitionArn": "arn:aws:ecs:ap-south-1:543620115200:task-definition/kesowa-server:5",
     "containerDefinitions": [
         {
             "name": "kesowa-server",
@@ -16,10 +16,8 @@
             ],
             "essential": true,
             "environment": [],
-            "environmentFiles": [],
             "mountPoints": [],
             "volumesFrom": [],
-            "ulimits": [],
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
@@ -34,7 +32,7 @@
     "family": "kesowa-server",
     "executionRoleArn": "arn:aws:iam::543620115200:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 2,
+    "revision": 5,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
@@ -83,7 +81,7 @@
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
     },
-    "registeredAt": "2023-06-28T11:07:10.158Z",
-    "registeredBy": "arn:aws:iam::543620115200:user/rivi",
+    "registeredAt": "2023-07-05T12:37:51.377Z",
+    "registeredBy": "arn:aws:iam::543620115200:user/ecrAccess",
     "tags": []
 }
