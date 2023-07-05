@@ -1,8 +1,4 @@
 FROM node:19
-RUN ls
-RUN pwd
-WORKDIR /home
-RUN ls
 WORKDIR /app
 RUN apt-get update && apt-get -y install libtbb2
 ADD ffmpeg.tar.gz /bin
@@ -12,7 +8,6 @@ COPY package*.json ./
 RUN npm ci
 COPY src ./src
 COPY tsconfig.json ./
-RUN cat .env
 RUN npm run build
 COPY .env /app/dist
 WORKDIR /app/dist

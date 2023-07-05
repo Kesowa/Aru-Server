@@ -80,15 +80,6 @@ jobs:
         echo "AWS_MEDIACONVERT_ENDPOINT=${{ vars.AWS_MEDIACONVERT_ENDPOINT }}" >> .env
         echo "ENDPOINT=${{ vars.ENDPOINT }}" >> .env
 
-    - name: Print .env file
-      run: |
-        cat .env
-
-    - name: Print .env file path
-      run: |
-        pwd
-        echo "Path to .env file: ${{ github.workspace }}/.env"
-
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
@@ -99,7 +90,7 @@ jobs:
         # push it to ECR so that it can
         # be deployed to ECS.
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY" >> $GITHUB_OUTPUT
-        cat .env
+        ls
         pwd
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
