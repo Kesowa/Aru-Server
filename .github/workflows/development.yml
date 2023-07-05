@@ -56,6 +56,7 @@ jobs:
         echo "FTP_PASSWORD=${{ vars.FTP_PASSWORD }}" >> .env
         echo "RESET_PASSWORD_TOKEN_EXPIRE=${{ vars.RESET_PASSWORD_TOKEN_EXPIRE }}" >> .env
         echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+        echo "ARU_INSTANCE=${{ vars.ARU_INSTANCE }}" >> .env
         echo "LIVE_URL=${{ vars.LIVE_URL }}" >> .env
         echo "RAZORPAY_KEY_ID=${{ vars.RAZORPAY_KEY_ID }}" >> .env
         echo "RAZORPAY_KEY_SECRET=${{ vars.RAZORPAY_KEY_SECRET }}" >> .env
