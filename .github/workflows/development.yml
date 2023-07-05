@@ -38,47 +38,47 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Set up environment variables
-        run: |
-          echo "PORT=${{ secrets.PORT }}" >> .env
-          echo "MONGODB_CONNECTION_STRING=${{ secrets.MONGODB_CONNECTION_STRING }}" >> .env
-          echo "SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}" >> .env
-          echo "SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}" >> .env
-          echo "SMTP_SERVER=${{ secrets.SMTP_SERVER }}" >> .env
-          echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env
-          echo "MAP_KEY=${{ secrets.MAP_KEY }}" >> .env
-          echo "BASE_SERVER=${{ secrets.BASE_SERVER }}" >> .env
-          echo "TITILER_STATIC=${{ secrets.TITILER_STATIC }}" >> .env
-          echo "FTP_PORT=${{ secrets.FTP_PORT }}" >> .env
-          echo "FTP_HOST_DEV=${{ secrets.FTP_HOST_DEV }}" >> .env
-          echo "FTP_HOST_PROD=${{ secrets.FTP_HOST_PROD }}" >> .env
-          echo "FTP_USERNAME=${{ secrets.FTP_USERNAME }}" >> .env
-          echo "FTP_PASSWORD=${{ secrets.FTP_PASSWORD }}" >> .env
-          echo "RESET_PASSWORD_TOKEN_EXPIRE=${{ secrets.RESET_PASSWORD_TOKEN_EXPIRE }}" >> .env
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-          echo "LIVE_URL=${{ secrets.LIVE_URL }}" >> .env
-          echo "RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}" >> .env
-          echo "RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}" >> .env
-          echo "RAZORPAY_HOOK_SECRET=${{ secrets.RAZORPAY_HOOK_SECRET }}" >> .env
-          echo "TITILER_SERVER=${{ secrets.TITILER_SERVER }}" >> .env
-          echo "MODE=${{ secrets.MODE }}" >> .env
-          echo "TITILER_PUBLIC=${{ secrets.TITILER_PUBLIC }}" >> .env
-          echo "RTMP_PUBLIC=${{ secrets.RTMP_PUBLIC }}" >> .env
-          echo "REDIS_URI=${{ secrets.REDIS_URI }}" >> .env
-          echo "API_SERVER=${{ secrets.API_SERVER }}" >> .env
-          echo "PUBLIC_SERVER=${{ secrets.PUBLIC_SERVER }}" >> .env
-          echo "CDN_URL=${{ secrets.CDN_URL }}" >> .env
-          echo "PUBLIC_DIR=${{ secrets.PUBLIC_DIR }}" >> .env
-          echo "SEQ_URL=${{ secrets.SEQ_URL }}" >> .env
-          echo "SEQ_KEY=${{ secrets.SEQ_KEY }}" >> .env
-          echo "S3_KEY_ID=${{ secrets.S3_KEY_ID }}" >> .env
-          echo "S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }}" >> .env
-          echo "ACCESS_KEY=${{ secrets.ACCESS_KEY }}" >> .env
-          echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> .env
-          echo "AWS_S3_ENDPOINT=${{ secrets.AWS_S3_ENDPOINT }}" >> .env
-          echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env
-          echo "AWS_MEDIACONVERT_ENDPOINT=${{ secrets.AWS_MEDIACONVERT_ENDPOINT }}" >> .env
-          echo "ENDPOINT=${{ secrets.ENDPOINT }}" >> .env
+    - name: Set up environment variables
+      run: |
+        echo "PORT=${{ secrets.PORT }}" >> .env
+        echo "MONGODB_CONNECTION_STRING=${{ secrets.MONGODB_CONNECTION_STRING }}" >> .env
+        echo "SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}" >> .env
+        echo "SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}" >> .env
+        echo "SMTP_SERVER=${{ secrets.SMTP_SERVER }}" >> .env
+        echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env
+        echo "MAP_KEY=${{ secrets.MAP_KEY }}" >> .env
+        echo "BASE_SERVER=${{ secrets.BASE_SERVER }}" >> .env
+        echo "TITILER_STATIC=${{ secrets.TITILER_STATIC }}" >> .env
+        echo "FTP_PORT=${{ secrets.FTP_PORT }}" >> .env
+        echo "FTP_HOST_DEV=${{ secrets.FTP_HOST_DEV }}" >> .env
+        echo "FTP_HOST_PROD=${{ secrets.FTP_HOST_PROD }}" >> .env
+        echo "FTP_USERNAME=${{ secrets.FTP_USERNAME }}" >> .env
+        echo "FTP_PASSWORD=${{ secrets.FTP_PASSWORD }}" >> .env
+        echo "RESET_PASSWORD_TOKEN_EXPIRE=${{ secrets.RESET_PASSWORD_TOKEN_EXPIRE }}" >> .env
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+        echo "LIVE_URL=${{ secrets.LIVE_URL }}" >> .env
+        echo "RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}" >> .env
+        echo "RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}" >> .env
+        echo "RAZORPAY_HOOK_SECRET=${{ secrets.RAZORPAY_HOOK_SECRET }}" >> .env
+        echo "TITILER_SERVER=${{ secrets.TITILER_SERVER }}" >> .env
+        echo "MODE=${{ secrets.MODE }}" >> .env
+        echo "TITILER_PUBLIC=${{ secrets.TITILER_PUBLIC }}" >> .env
+        echo "RTMP_PUBLIC=${{ secrets.RTMP_PUBLIC }}" >> .env
+        echo "REDIS_URI=${{ secrets.REDIS_URI }}" >> .env
+        echo "API_SERVER=${{ secrets.API_SERVER }}" >> .env
+        echo "PUBLIC_SERVER=${{ secrets.PUBLIC_SERVER }}" >> .env
+        echo "CDN_URL=${{ secrets.CDN_URL }}" >> .env
+        echo "PUBLIC_DIR=${{ secrets.PUBLIC_DIR }}" >> .env
+        echo "SEQ_URL=${{ secrets.SEQ_URL }}" >> .env
+        echo "SEQ_KEY=${{ secrets.SEQ_KEY }}" >> .env
+        echo "S3_KEY_ID=${{ secrets.S3_KEY_ID }}" >> .env
+        echo "S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }}" >> .env
+        echo "ACCESS_KEY=${{ secrets.ACCESS_KEY }}" >> .env
+        echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> .env
+        echo "AWS_S3_ENDPOINT=${{ secrets.AWS_S3_ENDPOINT }}" >> .env
+        echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env
+        echo "AWS_MEDIACONVERT_ENDPOINT=${{ secrets.AWS_MEDIACONVERT_ENDPOINT }}" >> .env
+        echo "ENDPOINT=${{ secrets.ENDPOINT }}" >> .env
 
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
