@@ -2,9 +2,14 @@ import { Paragraph, FrameAnchorType, ShadingType, ImageRun, HorizontalPositionRe
 import * as fs from "fs";
 import { commonPageProperties, commonPageFooter } from "./reportUtils";
 import { IPage7Properties } from "./types";
+import path from "path";
 
 export const reportPg7 = (properties: IPage7Properties) => {
-    const { heading, subheading, imgPaths } = properties;
+    const { heading, subheading } = properties;
+    let { imgPaths } = properties;
+    while(imgPaths.length < 3) {
+        imgPaths.push(path.join(__dirname, "images", "fallback.png"));
+    }
     const headings = new Paragraph({
         frame: {
             position: {
@@ -646,7 +651,7 @@ export const reportPg7 = (properties: IPage7Properties) => {
                 },
             }),
             new ImageRun({
-                data: fs.readFileSync("./utils/reportUtils/images/NKDA_Logo.png"),
+                data: fs.readFileSync(path.join(__dirname, "images", "NKDA_Logo.png")),
                 transformation: {
                     width: 50,
                     height: 50,
@@ -664,7 +669,7 @@ export const reportPg7 = (properties: IPage7Properties) => {
                 },
             }),
             new ImageRun({
-                data: fs.readFileSync("./utils/reportUtils/images/Kesowa_Logo.png"),
+                data: fs.readFileSync(path.join(__dirname, "images", "Kesowa_Logo.png")),
                 transformation: {
                     width: 80,
                     height: 40,

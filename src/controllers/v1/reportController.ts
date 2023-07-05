@@ -11,12 +11,12 @@ import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/types";
 import Flight from "../../models/flight";
 import { IUser } from "../../schemas/user";
-import { privateCommercialLayerTypes, residentialLayerTypes, govtCommercialLayerTypes, housingComplexLayerTypes, govtLayerTypes, motorableRoadsLayerTypes, footpathLayerTypes, cycleTrackLayerTypes, greeneryLayerTypes, waterBodyLayerTypes } from "../../utils/reportUtils/reportUtils";
+import { privateCommercialLayerTypes, residentialLayerTypes, govtCommercialLayerTypes, housingComplexLayerTypes, govtLayerTypes, motorableRoadsLayerTypes, footpathLayerTypes, cycleTrackLayerTypes, greeneryLayerTypes, waterBodyLayerTypes, vacantTypes, underConstructionTypes } from "../../utils/reportUtils/reportUtils";
+import Document from "../../models/document";
+import { missionSpecificSocket } from "../../socket";
 
-export async function findArea(filepath: string) {
+export async function findArea(gjson: any) {
   try {
-    const data = await fs.readFile(filepath, "utf-8");
-    const gjson = JSON.parse(data);
     let totalArea = 0;
     const allIndependantPositions: any[] = [];
     for (const feature of gjson.features) {
@@ -41,11 +41,53 @@ export async function findArea(filepath: string) {
         }
       }
     }
-    if (allIndependantPositions.length >= 4) {
+    if (allIndependantPositions.length >= 3) {
       const area = turf.area(turf.polygon([allIndependantPositions]));
       totalArea += area;
     }
     return totalArea;
+  } catch (error) {
+    console.error(error);
+    return 0;
+  }
+}
+
+export async function findLength(gjson: any) {
+  try {
+    let totalLength = 0;
+    for (const feature of gjson.features) {
+      if (
+        ["MultiLineString", "LineString", "Polygon"].includes(
+          feature.geometry.type
+        )
+      ) {
+        let lines = feature.geometry.coordinates;
+        if (feature.geometry.type === "LineString") {
+          lines = [lines];
+        }
+        // Polygon and MultiLineString both have similar structure, array of line strings
+        totalLength += turf.length(turf.multiLineString(lines));
+      }
+    }
+    return totalLength / 1000; // as turf calculates in km, but we need in m
+  } catch (error) {
+    console.error(error);
+    return 0;
+  }
+}
+
+export async function countPolygons(gjson: any) {
+  try {
+    let count = 0;
+    for (const feature of gjson.features) {
+      if (feature.geometry.type === "Polygon") {
+        count++;
+      }
+      else if(feature.geometry.type === "MultiPolygon") {
+        count += feature.geometry.coordinates.length;
+      }
+    }
+    return count;
   } catch (error) {
     console.error(error);
     return 0;
@@ -105,10 +147,40 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         },
         { name: "Government", occupied: 0, underConstruction: 0, vacant: 0 },
       ],
+      roadCount: 0,
+      roadLength: 0,
+      cycleTrackLength: 0,
+      deliverables: [
+        { name: "OVERVIEW", imgPath: "" },
+        { name: "BOUNDARY", imgPath: "" },
+        { name: "BUILT-UP AREA", imgPath: "" },
+        { name: "AMENITIES AND POI", imgPath: "" },
+        { name: "OTHER FEATURES", imgPath: "" },
+        { name: "ACTIONABLE POINTS", imgPath: "" },
+        { name: "OCCUPIED UNTAXED AREA (ENCROACHMENT)", imgPath: "" },
+        { name: "ROAD DETAILS", imgPath: "" },
+        { name: "FOOTPATH DETAILS", imgPath: "" },
+        { name: "CYCLE TRACK DETAILS", imgPath: "" },
+        { name: "WATERBODIES DETAILS", imgPath: "" },
+        { name: "GREENERY DETAILS", imgPath: "" },
+        { name: "WATERBODIES DETAILS", imgPath: "" },
+        { name: "WATER TANK", imgPath: "" },
+        { name: "STREET-LIGHT DETAILS", imgPath: "" },
+      ]
     };
 
     // mission details filling
-    const mission = await Mission.findOne({ _id: missionId }, { name: 1 });
+    const mission = await Mission.findOne(
+      { _id: missionId }, 
+      { name: 1, user: 1 }
+    ).populate<{ user: IUser }>({
+      path: "user",
+      select: {
+        name: 1,
+        phoneNo: 1,
+        email: 1,
+      },
+    });
     data.missionHeading = mission.name;
     // TODO: missionCode(??), missionMapImgPath(scrape screenshot)
 
@@ -133,8 +205,11 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         email: 1,
       },
     });
+    data.users.push(mission.user.name);
     data.users.push(flight.pilotID.name);
+    data.emails.push(mission.user.email);
     data.emails.push(flight.pilotID.email);
+    data.phoneNos.push(mission.user.phoneNo);
     data.phoneNos.push(flight.pilotID.phoneNo);
 
     // area details filling (for page 2 tables)
@@ -143,28 +218,49 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       type: "Vector",
     }).populate<{ vector: IVector }>("vector");
 
+    function assignOccupancy(layerType: string, idx: number) {
+      if(vacantTypes.includes(layerType)) {
+        data.occupancy[idx].vacant++;
+      }
+      else if(underConstructionTypes.includes(layerType)) {
+        data.occupancy[idx].underConstruction++;
+      } 
+      else {
+        data.occupancy[idx].occupied++;
+      }
+    }
+
     for (const layer of vectorLayers) {
-      const currLayerArea = await findArea(
-        DirPath(Directory.DEFAULT, layer.layerpath)
-      );
+      const layerData = await fs.readFile(DirPath(Directory.DEFAULT, layer.layerpath), "utf-8");
+      const gjson = JSON.parse(layerData);
+      const currLayerArea = await findArea(gjson);
+      const currLayerLength = await findLength(gjson);
       data.area.total += currLayerArea;
       // check the layer type and accordingly add area to respective type
       if (privateCommercialLayerTypes.includes(layer.vector.name)) {
         data.area.privateSpaces[0].value += currLayerArea;
+        assignOccupancy(layer.vector.name, 0);
       } else if (residentialLayerTypes.includes(layer.vector.name)) {
         data.area.privateSpaces[1].value += currLayerArea;
+        assignOccupancy(layer.vector.name, 1);
       } else if (govtCommercialLayerTypes.includes(layer.vector.name)) {
         data.area.privateSpaces[2].value += currLayerArea;
+        assignOccupancy(layer.vector.name, 2);
       } else if (housingComplexLayerTypes.includes(layer.vector.name)) {
         data.area.privateSpaces[3].value += currLayerArea;
+        assignOccupancy(layer.vector.name, 3);
       } else if (govtLayerTypes.includes(layer.vector.name)) {
         data.area.publicSpaces[0].value += currLayerArea;
+        assignOccupancy(layer.vector.name, 4);
       } else if (motorableRoadsLayerTypes.includes(layer.vector.name)) {
         data.area.publicSpaces[1].value += currLayerArea;
+        data.roadCount++;
+        data.roadLength += currLayerLength;
       } else if (footpathLayerTypes.includes(layer.vector.name)) {
         data.area.publicSpaces[2].value += currLayerArea;
       } else if (cycleTrackLayerTypes.includes(layer.vector.name)) {
         data.area.publicSpaces[3].value += currLayerArea;
+        data.cycleTrackLength += currLayerLength;
       } else if (greeneryLayerTypes.includes(layer.vector.name)) {
         data.area.publicSpaces[4].value += currLayerArea;
       } else if (waterBodyLayerTypes.includes(layer.vector.name)) {
@@ -177,14 +273,40 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
     // saving the document
     const doc = generateDocument(data);
     const buffer = await Packer.toBuffer(doc);
-    await fs.writeFile(
-      DirPath(Directory.DOCUMENTS, `${missionId}-report.docx`),
-      buffer
-    );
+    const filename = `${missionId}-report.docx`;
+    const filepath = DirPath(Directory.DOCUMENTS, filename);
+    await fs.writeFile(filepath, buffer);
 
-    res.json({
-      success: true,
-      message: "Report Generated",
+    const fileStats = await fs.stat(filepath);
+
+    const docDB = new Document({
+      name: filename,
+      modDate: new Date(),
+      fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
+      fileType: "docx",
+      folderName: "",
+      filePath: `/documents/${filename}`,
+      missionId,
+      tenantId: res.locals.user.tenantId,
+      createdBy: res.locals.user._id,
+      updatedBy: res.locals.user._id,
     });
+    const savedDoc = await docDB.save();
+    missionSpecificSocket
+      .to(savedDoc.missionId.toString())
+      .emit("DOCUMENT_CREATED", savedDoc);
+    
+    if (savedDoc) {
+      res.status(201).json({
+        status: true,
+        message: "Report Generated!",
+        data: savedDoc,
+      });
+    } else {
+      res.status(500).json({
+        status: false,
+        message: "Failed to generate report",
+      });
+    }
   }
 };

@@ -158,4 +158,5 @@ export const waterBodyLayerTypes = [
 */
 
 // occupancy
-export const vacantType = ["Vacant Plot"];
+export const underConstructionTypes = [];
+export const vacantTypes = ["Vacant Plot"];

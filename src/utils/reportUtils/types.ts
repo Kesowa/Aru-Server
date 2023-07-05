@@ -46,6 +46,11 @@ export interface IPage7Properties {
     imgPaths: string[],
 }
 
+export interface IDeliverable {
+    name: string,
+    imgPath: string,
+}
+
 export interface IData {
     missionHeading: string, 
     missionSubHeading: string, 
@@ -55,6 +60,13 @@ export interface IData {
     users: string[], 
     emails: string[], 
     phoneNos: string[],
+    // page 2
     area: IAreaData, 
     occupancy: IOccupancyDesc[],
+    // page 3
+    roadCount: number,
+    roadLength: number,
+    cycleTrackLength: number,
+    // map pages
+    deliverables: IDeliverable[],
 }

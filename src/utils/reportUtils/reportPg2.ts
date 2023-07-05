@@ -911,7 +911,7 @@ export const page2 = (properties:IPage2Properties) => {
     const { missionHeading, missionSubHeading, missionCode, area, occupancy } = properties;
     let { missionMapImgPath } = properties;
     if(missionMapImgPath == "") {
-        missionMapImgPath = path.join(__dirname, "images", "geojsonCover1.jpg");
+        missionMapImgPath = path.join(__dirname, "images", "fallback.png");
     }
     return {
         properties: commonPageProperties,

@@ -26,10 +26,10 @@ const pg3Heading = new Paragraph({
 });
 
 const renderTableCellFromData = (data: any, numberingRef: string, currLevel: number): Paragraph[] => {
-    if(Array.isArray(data)) {
+    if(Array.isArray(data)) { // for data which needs numbering
         let components: Paragraph[] = [];
         for(let d of data) {
-            if(typeof d.value === "string") {
+            if(typeof d.value === "string") { // base condition, no further need for numbering
                 components.push(
                     new Paragraph({
                         text: (d.name !== "") ? `${d.name}: ${d.value}` : `${d.value}`,
@@ -39,7 +39,7 @@ const renderTableCellFromData = (data: any, numberingRef: string, currLevel: num
                         }
                     }),
                 );
-            } else if(Array.isArray(d.value)) {
+            } else if(Array.isArray(d.value)) { // more sub-levels of numbering required
                 components.push(
                     new Paragraph({
                         text: `${d.name}:`,
@@ -54,7 +54,7 @@ const renderTableCellFromData = (data: any, numberingRef: string, currLevel: num
             }
         }
         return components;
-    } else if(typeof data === "string") {
+    } else if(typeof data === "string") { // for data which doesn't need numbering
         return [
             new Paragraph({
                 text: data,
@@ -62,7 +62,7 @@ const renderTableCellFromData = (data: any, numberingRef: string, currLevel: num
             }),
         ];
     } else {
-        // for invalid type
+        // for invalid type of data
         return [];
     }
 }

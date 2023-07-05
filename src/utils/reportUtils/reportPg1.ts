@@ -305,7 +305,7 @@ export const page1 = (properties: IPage1Properties) => {
     const { missionHeading, missionSubHeading, missionCode, date, users, emails, phoneNos } = properties;
     let { missionMapImgPath } = properties;
     if(missionMapImgPath == "") {
-        missionMapImgPath = path.join(__dirname, "images", "geojsonCover1.jpg");
+        missionMapImgPath = path.join(__dirname, "images", "fallback.png");
     }
     return {
         properties: commonPageProperties,
