@@ -9,6 +9,7 @@ RUN npm ci
 COPY src ./src
 COPY tsconfig.json ./
 RUN npm run build
+RUN pwd
 RUN ls
 RUN cat .env
 COPY .env /app/dist

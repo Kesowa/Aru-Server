@@ -84,6 +84,11 @@ jobs:
       run: |
         cat .env
 
+    - name: Print .env file path
+      run: |
+        pwd
+        echo "Path to .env file: ${{ github.workspace }}/.env"
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
