@@ -6,8 +6,6 @@ This folder contain the server codes of the Arya streaming platform.
 
 ## Steps
 
-- Install dependencies using `npm i`
-- create a .env file and write the credintials
-- run `npm run dev` to start development server.
-- run `npm run start` to run the production server
-- run `npm run build` to create production bundle
+- Install `docker` and `docker compose`
+- To start the server and all dependencies, run `start_full.sh`
+- To stop the server and clean up, run `stop_full.sh`
