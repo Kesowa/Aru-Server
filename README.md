@@ -5,6 +5,7 @@ This folder contain the server codes of the Arya streaming platform.
 # Development Guide
 
 The following flow needs to be followed to prevent mishaps:
+
 1. Create feature branch from dev
 2. Merge feature branch into dev
 3. Merge dev into dev-aws
