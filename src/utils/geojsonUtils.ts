@@ -1,4 +1,4 @@
-import { DirPath, Directory } from "../constants";
+import { Directory, DirPath } from "../constants";
 import Layer from "../models/layer";
 import s3fs from "../s3utils/lib-aws";
 
@@ -58,7 +58,7 @@ export async function modGeoJson(
   icon: string,
   color: string,
   geojson: GeoJson,
-  pathh: string
+  pathh: string,
 ) {
   if (color && icon) {
     for (let i = 0; i < geojson.features.length; i++) {
@@ -106,7 +106,7 @@ export async function modGeoJson(
 export async function featureAddition(
   pathh: string,
   editObject: any,
-  geojson: GeoJson
+  geojson: GeoJson,
 ) {
   try {
     const sys_id = new ObjectId();
@@ -121,12 +121,12 @@ export async function featureAddition(
 
     await s3fs.writeFile(
       DirPath(Directory.DEFAULT, pathh),
-      JSON.stringify(geojson)
+      JSON.stringify(geojson),
     );
     await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     await Layer.updateOne(
       { _id: editObject.id },
-      { featureCount: geojson.features.length }
+      { featureCount: geojson.features.length },
     );
     return 1;
   } catch (error) {
@@ -138,18 +138,18 @@ export async function featureAddition(
 export async function editGeoJsonForAll(
   pathh: string,
   editObject: any,
-  geojson: GeoJson
+  geojson: GeoJson,
 ) {
   try {
     delete editObject.feature.geometry;
     delete editObject.feature.properties.Id;
     Object.assign(
       geojson.features[editObject.featureIndex].properties,
-      editObject.feature.properties
+      editObject.feature.properties,
     );
     await s3fs.writeFile(
       DirPath(Directory.DEFAULT, pathh),
-      JSON.stringify(geojson)
+      JSON.stringify(geojson),
     );
     await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     return true;
@@ -161,18 +161,18 @@ export async function editGeoJsonForAll(
 export async function deleteGeoJsonFeature(
   pathh: string,
   deleteObject: any,
-  geojson: GeoJson
+  geojson: GeoJson,
 ) {
   try {
     geojson.features.splice(deleteObject.featureIndex, 1);
     await s3fs.writeFile(
       DirPath(Directory.DEFAULT, pathh),
-      JSON.stringify(geojson)
+      JSON.stringify(geojson),
     );
     await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     await Layer.updateOne(
       { _id: deleteObject.id },
-      { featureCount: geojson.features.length }
+      { featureCount: geojson.features.length },
     );
     return true;
   } catch (error) {
