@@ -43,7 +43,7 @@ const updateFile = async (paths: string | string[]) => {
         },
         CallerReference: randomUUID(),
       },
-    }),
+    })
   );
 };
 const Client = new S3Client({
