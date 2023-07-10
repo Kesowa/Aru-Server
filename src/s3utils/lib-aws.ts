@@ -99,8 +99,8 @@ const readStream = async (path: string) => {
 };
 
 const writeStream = async (dest: string, stream: Readable) => {
-  const mimeType = mime.contentType(path.extname(dest)) ||
-    "application/octet-stream";
+  const mimeType =
+    mime.contentType(path.extname(dest)) || "application/octet-stream";
   const upload = new Upload({
     client: Client,
     params: {

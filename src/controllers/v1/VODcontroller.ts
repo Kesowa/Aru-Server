@@ -47,7 +47,9 @@ export const saveVOD = async (
           .catch(console.error);
       }, 10_000);
     }
-    const size = await findHlsSizeS3(DirPath(Directory.VOD, req.body.filename + "/index.m3u8"));
+    const size = await findHlsSizeS3(
+      DirPath(Directory.VOD, req.body.filename + "/index.m3u8")
+    );
     const VODdoc = new VOD({
       flightID: flightID,
       missionID: missionID,
