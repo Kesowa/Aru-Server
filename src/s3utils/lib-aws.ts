@@ -16,10 +16,33 @@ import {
   AWS_SECRET_KEY,
   MODE,
   Mode,
+  AWS_CLOUDFRONT_ID,
 } from "../constants";
 import path from "path";
 import mime from "mime-types";
+import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-cloudfront";
+import { randomUUID } from "crypto";
 
+const CFClient = new CloudFrontClient({
+  credentials: {
+    accessKeyId: AWS_CLOUDFRONT_ID,
+    secretAccessKey: AWS_SECRET_KEY,
+  },
+})
+const updateFile = async (paths: string | string[]) => {
+  return await CFClient.send(
+    new CreateInvalidationCommand({
+      DistributionId: AWS_CLOUDFRONT_ID,
+      InvalidationBatch: {
+        Paths: {
+          Quantity: Array.isArray(paths) ? paths.length : 1,
+          Items: Array.isArray(paths) ? paths : [paths],
+        },
+        CallerReference: randomUUID()
+      },
+    })
+  );
+}
 const Client = new S3Client({
   credentials: {
     accessKeyId: ACCESS_KEY,
@@ -147,4 +170,5 @@ export default {
   rename,
   writeStream,
   readStream,
+  updateFile,
 };

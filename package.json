@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@autotelic/pino-seq-transport": "^0.1.0",
+    "@aws-sdk/client-cloudfront": "^3.363.0",
     "@aws-sdk/client-s3": "^3.321.1",
     "@aws-sdk/lib-storage": "^3.321.1",
     "@mapbox/togeojson": "^0.16.0",

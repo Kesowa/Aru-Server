@@ -95,6 +95,7 @@ export async function modGeoJson(
   }
   try {
     await s3fs.writeFile(pathh, JSON.stringify(geojson));
+    await s3fs.updateFile(pathh);
     return 1;
   } catch (error) {
     console.error(error);
@@ -122,6 +123,7 @@ export async function featureAddition(
       DirPath(Directory.DEFAULT, pathh),
       JSON.stringify(geojson)
     );
+    await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     await Layer.updateOne(
       { _id: editObject.id },
       { featureCount: geojson.features.length }
@@ -149,6 +151,7 @@ export async function editGeoJsonForAll(
       DirPath(Directory.DEFAULT, pathh),
       JSON.stringify(geojson)
     );
+    await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     return true;
   } catch (error) {
     console.error(error);
@@ -166,6 +169,7 @@ export async function deleteGeoJsonFeature(
       DirPath(Directory.DEFAULT, pathh),
       JSON.stringify(geojson)
     );
+    await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     await Layer.updateOne(
       { _id: deleteObject.id },
       { featureCount: geojson.features.length }
