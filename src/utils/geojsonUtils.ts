@@ -1,3 +1,4 @@
+import { Logger } from "pino";
 import { Directory, DirPath } from "../constants";
 import Layer from "../models/layer";
 import s3fs from "../s3utils/lib-aws";
@@ -58,7 +59,8 @@ export async function modGeoJson(
   icon: string,
   color: string,
   geojson: GeoJson,
-  pathh: string
+  pathh: string,
+  log?: Logger
 ) {
   if (color && icon) {
     for (let i = 0; i < geojson.features.length; i++) {
@@ -98,7 +100,7 @@ export async function modGeoJson(
     await s3fs.updateFile(pathh);
     return 1;
   } catch (error) {
-    console.error(error);
+    log ? log.error(error) : console.log(error);
     return 0;
   }
 }
