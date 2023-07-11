@@ -51,7 +51,7 @@ const uploadVector = multer({
 });
 const uploadRaster = multer({
   storage: multerStorage(Directory.RASTER),
-})
+});
 
 router.patch(
   "/get-meta-data",
