@@ -555,7 +555,7 @@ export const createBaseLayerByAttr = async (
       layers: ids,
       color: color,
       fileSize: size,
-      layerpath: filepath,
+      layerpath: file,
       captureDate: new Date(),
       featureCount: geojson.features.length,
     });
@@ -1977,7 +1977,7 @@ export const createBaseVectorLayer = async (
       updatedBy: res.locals.user._id,
       color: color,
       fileSize: size,
-      layerpath: filepath,
+      layerpath: file,
       captureDate: new Date(),
     });
 
