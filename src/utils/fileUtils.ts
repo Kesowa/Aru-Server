@@ -40,11 +40,8 @@ export const findHlsSizeS3 = async (indexPath: string) => {
     .split("\n")
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
-    await s3fs.stat(
-      dir + "/" + vodFiles[Math.floor(vodFiles.length / 2)]
-    )
+    await s3fs.stat(dir + "/" + vodFiles[Math.floor(vodFiles.length / 2)])
   ).size;
   const hlsSize = index.length + vodFiles.length * partSize;
   return hlsSize / (1024 * 1024);
 };
-

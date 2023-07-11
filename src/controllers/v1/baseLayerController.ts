@@ -1,11 +1,14 @@
 import { Request } from "express";
 import Layer from "../../models/layer";
 import fetch from "node-fetch";
-import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Feature, modGeoJson, readGeoJson } from "../../utils/geojsonUtils";
+import {
+  Feature,
+  GeoJson,
+  modGeoJson,
+  readGeoJson,
+} from "../../utils/geojsonUtils";
 import Tenant from "../../models/tenant";
-import fs from "fs";
 import { isSizeVector } from "../../utils/sizePermission";
 
 import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
@@ -24,13 +27,16 @@ import {
   TITILER_SERVER,
   TITILER_STATIC,
 } from "../../constants";
-import { getFileSize } from "../../utils/fileUtils";
 import Alert from "../../models/alert";
 import VOD from "../../models/vod";
 import { ILayer } from "../../schemas/layer";
 import kmlToGjson from "@mapbox/togeojson";
 import shp2json from "shpjs";
 import { DOMParser } from "xmldom";
+import s3fs from "../../s3utils/lib-aws";
+import { randomUUID } from "crypto";
+import path from "path";
+import fs from "fs/promises";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -212,23 +218,25 @@ export const createVectorBaseLayer = async (
     let layer: HydratedDocument<ILayer>;
     const fileExt = path.extname(req.file.filename);
     const filename = path.parse(req.file.filename).name + ".geojson";
-    const dir = DirPath(Directory.VECTOR, filename);
+    const filepath = DirPath(Directory.VECTOR, filename);
+    let geojson: GeoJson;
     try {
       if (fileExt == ".kml") {
-        const fileData = await fs.promises.readFile(req.file.path, "utf8");
+        const fileData = await fs.readFile(req.file.tempPath, "utf8");
         const kml1 = new DOMParser().parseFromString(fileData, "text/xml");
-        const converted = kmlToGjson.kml(kml1, { styles: true });
-        await fs.promises.writeFile(dir, JSON.stringify(converted));
-        await fs.promises.rm(req.file.path);
+        geojson = kmlToGjson.kml(kml1, { styles: true });
+        await s3fs.writeFile(filepath, JSON.stringify(geojson));
+        await s3fs.rm(req.file.path);
       } else if (fileExt == ".shp" || fileExt == ".zip") {
-        const fileData = await fs.promises.readFile(req.file.path);
-        const geojson = await shp2json(fileData);
-        await fs.promises.writeFile(dir, JSON.stringify(geojson));
-        await fs.promises.rm(req.file.path);
+        const fileData = await fs.readFile(req.file.tempPath);
+        geojson = await shp2json(fileData);
+        await s3fs.writeFile(filepath, JSON.stringify(geojson));
+        await s3fs.rm(req.file.path);
       } else if (fileExt == ".geojson") {
-        await fs.promises.rename(req.file.path, dir);
+        geojson = JSON.parse(
+          await fs.readFile(req.file.tempPath, { encoding: "utf8" })
+        ) as GeoJson;
       } else {
-        await fs.promises.rm(req.file.path);
         res.status(400).json({
           status: false,
           message: "vector format not supported!",
@@ -236,7 +244,7 @@ export const createVectorBaseLayer = async (
         return;
       }
     } catch (err) {
-      await fs.promises.rm(req.file.path);
+      await s3fs.rm(req.file.path);
       req.log.error(err, "file conversion failed");
       res.status(500).json({
         status: false,
@@ -246,8 +254,6 @@ export const createVectorBaseLayer = async (
     }
     req.log.info("File successfully converted!");
     const { name, vector, captureDate, color } = req.body;
-
-    const geojson = await readGeoJson(dir);
 
     const fc = geojson.features.length;
     if (geojson == null) {
@@ -261,7 +267,7 @@ export const createVectorBaseLayer = async (
         req.body.icon,
         req.body.color,
         geojson,
-        dir
+        filepath
       );
       if (modCheck == 0) {
         return res.json({
@@ -394,7 +400,8 @@ export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
     const mutantObject = Object.assign(geojson, { features: nfeatures });
     const gjson = JSON.stringify(mutantObject);
 
-    await fs.promises.writeFile(dir, gjson);
+    await s3fs.writeFile(dir, gjson);
+    await s3fs.updateFile(dir);
 
     const doc = await Layer.findOne({ _id: id }).populate<{
       vector: IVector;
@@ -415,13 +422,7 @@ export const createBaseLayerByAttr = async (
   {
     // const { name, vectorTypeId } = req.body;
 
-    const filepath =
-      "/vector/" +
-      String(Date.now()) +
-      "_" +
-      String(req.body.name) +
-      ".geojson";
-    const file = DirPath(Directory.DEFAULT, filepath);
+    const file = DirPath(Directory.VECTOR, randomUUID() + ".geojson");
 
     const geojson: any = {
       type: "FeatureCollection",
@@ -517,9 +518,10 @@ export const createBaseLayerByAttr = async (
       }
     }
 
-    await fs.promises.writeFile(file, JSON.stringify(geojson));
+    const geoString = JSON.stringify(geojson);
+    await s3fs.writeFile(file, geoString);
 
-    const size: number = await getFileSize(file);
+    const size: number = geoString.length / (1024 * 1024);
 
     const color: any = req.body.color ? req.body.color : "#000000";
 
@@ -1032,9 +1034,10 @@ export const updateBaseLayerByAttr = async (
 
     bgjson.features = [...bgjson.features, ...newFeatures];
 
-    await fs.promises.writeFile(file, JSON.stringify(bgjson));
+    const geoString = JSON.stringify(bgjson);
+    await s3fs.writeFile(file, geoString);
 
-    const size: number = await getFileSize(file);
+    const size: number = geoString.length / (1024 * 1024);
 
     const docCount: any = await Tenant.findById(
       res.locals.user.tenantId._id
@@ -1139,9 +1142,9 @@ export const uploadLayerToUpdateBaseLayer = async (
 ) => {
   {
     let layer: any;
-    const dir = DirPath(Directory.VECTOR, req.file?.filename);
+    const filePath = DirPath(Directory.VECTOR, req.file.filename);
 
-    const geojson: any = await readGeoJson(dir);
+    const geojson = await readGeoJson(req.file.tempPath);
 
     if (geojson == null) {
       return res.json({
@@ -1174,7 +1177,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     if (
       geojson.features[0].geometry.type !== bgjson.features[0].geometry.type
     ) {
-      await fs.promises.unlink(dir);
+      await s3fs.rm(req.file.path);
       return res.status(400).json({
         success: false,
         message: "The file must be of same type as base layer",
@@ -1295,11 +1298,13 @@ export const updateBaseLayerByUploadedFile = async (
 
     bgjson.features = [...bgjson.features, ...newFeatures];
 
-    await fs.promises.writeFile(baseLayerPath, JSON.stringify(bgjson));
+    const geoString = JSON.stringify(bgjson);
+    await s3fs.writeFile(baseLayerPath, geoString);
+    await s3fs.updateFile(baseLayerPath);
 
-    const size: number = await getFileSize(baseLayerPath);
+    const size: number = geoString.length;
 
-    const docCount: any = await Tenant.findById(
+    const docCount = await Tenant.findById(
       res.locals.user.tenantId._id
         ? res.locals.user.tenantId._id
         : res.locals.user.tenantId,
@@ -1336,7 +1341,7 @@ export const updateBaseLayerByUploadedFile = async (
       { $inc: { actualSize: newSize } }
     );
 
-    await fs.promises.unlink(dir);
+    await s3fs.rm(dir);
 
     const layer = await Layer.findOne({ _id: baseLayer._id })
       .populate<{ vector: IVector }>("vector")
@@ -1926,17 +1931,9 @@ export const createBaseVectorLayer = async (
   res: AuthResponse
 ) => {
   {
-    //const filepath = `/vector/${req.body.name}-${new Date().toISOString()}.geojson`
-    const filepath =
-      "/vector/" +
-      String(Date.now()) +
-      "_" +
-      String(req.body.name) +
-      ".geojson";
-    const file = DirPath(Directory.DEFAULT, filepath);
-    await fs.promises.writeFile(file, JSON.stringify(req.body.geoJSON));
+    const file = DirPath(Directory.VECTOR, randomUUID() + ".geojson");
 
-    const geojson: any = await readGeoJson(file);
+    const geojson = req.body.geoJSON as GeoJson;
     // let fc: any = geojson.features.length;
     if (geojson == null) {
       return res.json({
@@ -1953,15 +1950,17 @@ export const createBaseVectorLayer = async (
       });
     }
 
-    const color: any = req.body.geoJSON.features[0].properties.color;
-    const size: number = await getFileSize(file);
-    const docCount: any = await Tenant.findOne({
+    const color = req.body.geoJSON.features[0].properties.color;
+    const geoString = JSON.stringify(geojson);
+    await s3fs.writeFile(file, geoString);
+    const size = geoString.length / (1024 * 1024);
+    const docCount = await Tenant.findOne({
       _id: res.locals.user.tenantId,
     })
       .populate<{ activePackage: IPackage }>("activePackage")
       .lean();
 
-    const ress: any = await isSizeVector(size, docCount, file);
+    const ress = await isSizeVector(size, docCount, file);
     if (ress !== true) {
       return res.status(403).json({
         status: false,
