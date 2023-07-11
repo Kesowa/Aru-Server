@@ -2,7 +2,12 @@ import { Request } from "express";
 import Layer from "../../models/layer";
 import fetch from "node-fetch";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Feature, GeoJson, modGeoJson, readGeoJson } from "../../utils/geojsonUtils";
+import {
+  Feature,
+  GeoJson,
+  modGeoJson,
+  readGeoJson,
+} from "../../utils/geojsonUtils";
 import Tenant from "../../models/tenant";
 import { isSizeVector } from "../../utils/sizePermission";
 
@@ -228,7 +233,9 @@ export const createVectorBaseLayer = async (
         await s3fs.writeFile(filepath, JSON.stringify(geojson));
         await s3fs.rm(req.file.path);
       } else if (fileExt == ".geojson") {
-        geojson = JSON.parse(await fs.readFile(req.file.tempPath, {encoding: "utf8"})) as GeoJson;
+        geojson = JSON.parse(
+          await fs.readFile(req.file.tempPath, { encoding: "utf8" })
+        ) as GeoJson;
       } else {
         res.status(400).json({
           status: false,
@@ -1334,7 +1341,7 @@ export const updateBaseLayerByUploadedFile = async (
       { $inc: { actualSize: newSize } }
     );
 
-    await s3fs.rm(dir)
+    await s3fs.rm(dir);
 
     const layer = await Layer.findOne({ _id: baseLayer._id })
       .populate<{ vector: IVector }>("vector")
@@ -1946,7 +1953,7 @@ export const createBaseVectorLayer = async (
     const color = req.body.geoJSON.features[0].properties.color;
     const geoString = JSON.stringify(geojson);
     await s3fs.writeFile(file, geoString);
-    const size = geoString.length/(1024*1024);
+    const size = geoString.length / (1024 * 1024);
     const docCount = await Tenant.findOne({
       _id: res.locals.user.tenantId,
     })
