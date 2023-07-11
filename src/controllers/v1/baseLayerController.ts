@@ -267,7 +267,8 @@ export const createVectorBaseLayer = async (
         req.body.icon,
         req.body.color,
         geojson,
-        filepath
+        filepath,
+        req.log
       );
       if (modCheck == 0) {
         return res.json({
