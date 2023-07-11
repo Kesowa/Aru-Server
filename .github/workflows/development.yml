@@ -1,43 +1,15 @@
-# This workflow will build and push a new container image to Amazon ECR,
-# and then will deploy a new task definition to Amazon ECS, when there is a push to the "dev-aws" branch.
-#
-# To use this workflow, you will need to complete the following set-up steps:
-#
-# 1. Create an ECR repository to store your images.
-#    For example: `aws ecr create-repository --repository-name my-ecr-repo --region us-east-2`.
-#    Replace the value of the `ECR_REPOSITORY` environment variable in the workflow below with your repository's name.
-#    Replace the value of the `AWS_REGION` environment variable in the workflow below with your repository's region.
-#
-# 2. Create an ECS task definition, an ECS cluster, and an ECS service.
-#    For example, follow the Getting Started guide on the ECS console:
-#      https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/firstRun
-#    Replace the value of the `ECS_SERVICE` environment variable in the workflow below with the name you set for the Amazon ECS service.
-#    Replace the value of the `ECS_CLUSTER` environment variable in the workflow below with the name you set for the cluster.
-#
-# 3. Store your ECS task definition as a JSON file in your repository.
-#    The format should follow the output of `aws ecs register-task-definition --generate-cli-skeleton`.
-#    Replace the value of the `ECS_TASK_DEFINITION` environment variable in the workflow below with the path to the JSON file.
-#    Replace the value of the `CONTAINER_NAME` environment variable in the workflow below with the name of the container
-#    in the `containerDefinitions` section of the task definition.
-#
-# 4. Store an IAM user access key in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
-#    See the documentation for each action used below for the recommended IAM policies for this IAM user,
-#    and best practices on handling the access key credentials.
-
-# public.ecr.aws/b6o0p8u8/kesowa-server
-
 name: Deploy to Amazon ECS
 
 on:
   push:
-    branches: [ "dev-aws" ]
+    branches: [ "master-aws" ]
 
 env:
-  AWS_REGION: "us-east-1"                   # set this to your preferred AWS region, e.g. us-west-1
+  AWS_REGION: "ap-south-1"                   # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: "kesowa-server"          # set this to your Amazon ECR repository name
   ECS_SERVICE: "kesowa-server"                 # set this to your Amazon ECS service name
   ECS_CLUSTER: "kesowa-server"      # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: "../../aws/task-definition.json" # set this to the path to your Amazon ECS task definition
+  ECS_TASK_DEFINITION: "./aws/task-definition.json" # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: "kesowa-server"           # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
@@ -66,6 +38,50 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Set up environment variables
+      run: |
+        echo "PORT=${{ vars.PORT }}" >> .env
+        echo "MONGODB_CONNECTION_STRING=${{ secrets.MONGODB_CONNECTION_STRING }}" >> .env
+        echo "SMTP_PASSWORD=${{ vars.SMTP_PASSWORD }}" >> .env
+        echo "SMTP_USERNAME=${{ vars.SMTP_USERNAME }}" >> .env
+        echo "SMTP_SERVER=${{ vars.SMTP_SERVER }}" >> .env
+        echo "SMTP_PORT=${{ vars.SMTP_PORT }}" >> .env
+        echo "MAP_KEY=${{ vars.MAP_KEY }}" >> .env
+        echo "BASE_SERVER=${{ vars.BASE_SERVER }}" >> .env
+        echo "TITILER_STATIC=${{ vars.TITILER_STATIC }}" >> .env
+        echo "FTP_PORT=${{ vars.FTP_PORT }}" >> .env
+        echo "FTP_HOST_DEV=${{ vars.FTP_HOST_DEV }}" >> .env
+        echo "FTP_HOST_PROD=${{ vars.FTP_HOST_PROD }}" >> .env
+        echo "FTP_USERNAME=${{ vars.FTP_USERNAME }}" >> .env
+        echo "FTP_PASSWORD=${{ vars.FTP_PASSWORD }}" >> .env
+        echo "RESET_PASSWORD_TOKEN_EXPIRE=${{ vars.RESET_PASSWORD_TOKEN_EXPIRE }}" >> .env
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+        echo "ARU_INSTANCE=${{ vars.ARU_INSTANCE }}" >> .env
+        echo "LIVE_URL=${{ vars.LIVE_URL }}" >> .env
+        echo "RAZORPAY_KEY_ID=${{ vars.RAZORPAY_KEY_ID }}" >> .env
+        echo "RAZORPAY_KEY_SECRET=${{ vars.RAZORPAY_KEY_SECRET }}" >> .env
+        echo "RAZORPAY_HOOK_SECRET=${{ vars.RAZORPAY_HOOK_SECRET }}" >> .env
+        echo "TITILER_SERVER=${{ vars.TITILER_SERVER }}" >> .env
+        echo "MODE=${{ vars.MODE }}" >> .env
+        echo "TITILER_PUBLIC=${{ vars.TITILER_PUBLIC }}" >> .env
+        echo "RTMP_PUBLIC=${{ vars.RTMP_PUBLIC }}" >> .env
+        echo "REDIS_URI=${{ vars.REDIS_URI }}" >> .env
+        echo "API_SERVER=${{ vars.API_SERVER }}" >> .env
+        echo "PUBLIC_SERVER=${{ vars.PUBLIC_SERVER }}" >> .env
+        echo "CDN_URL=${{ vars.CDN_URL }}" >> .env
+        echo "PUBLIC_DIR=${{ vars.PUBLIC_DIR }}" >> .env
+        echo "SEQ_URL=${{ vars.SEQ_URL }}" >> .env
+        echo "SEQ_KEY=${{ secrets.SEQ_KEY }}" >> .env
+        echo "S3_KEY_ID=${{ secrets.S3_KEY_ID }}" >> .env
+        echo "S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }}" >> .env
+        echo "ACCESS_KEY=${{ secrets.ACCESS_KEY }}" >> .env
+        echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> .env
+        echo "AWS_S3_ENDPOINT=${{ vars.AWS_S3_ENDPOINT }}" >> .env
+        echo "AWS_S3_BUCKET=${{ vars.AWS_S3_BUCKET }}" >> .env
+        echo "AWS_MEDIACONVERT_ENDPOINT=${{ vars.AWS_MEDIACONVERT_ENDPOINT }}" >> .env
+        echo "ENDPOINT=${{ vars.ENDPOINT }}" >> .env
+        echo "AWS_CLOUDFRONT_ID=${{ vars.AWS_CLOUDFRONT_ID }}" >> .env
+
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
       env:
@@ -76,7 +92,7 @@ jobs:
         # push it to ECR so that it can
         # be deployed to ECS.
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY" >> $GITHUB_OUTPUT
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -f ./Dockerfile --build-arg FILE_PATH=./.env -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT    
     - name: Fill in the new image ID in the Amazon ECS task definition

@@ -1,4 +1,6 @@
 FROM node:19
+ARG FILE_PATH
+COPY $FILE_PATH /app/.env
 WORKDIR /app
 RUN apt-get update && apt-get -y install libtbb2
 ADD ffmpeg.tar.gz /bin
@@ -9,7 +11,8 @@ RUN npm ci
 COPY src ./src
 COPY tsconfig.json ./
 RUN npm run build
+COPY .env /app/dist
 WORKDIR /app/dist
 # USER node
-# ENV NODE_ENV=production
+ENV MODE=production
 CMD ["node", "server.js"]
