@@ -7,7 +7,7 @@ import { reportMapPage } from "./reportMapPage";
 import { reportPg7 } from "./reportPg7";
 import { IData } from "./types";
 
-export const generateDocument = (data: IData): Document => {
+export const generateDocument = async (data: IData) => {
     const { 
         missionHeading, 
         missionSubHeading, 
@@ -24,6 +24,12 @@ export const generateDocument = (data: IData): Document => {
         cycleTrackLength,
         deliverables,
     } = data;
+
+    const page7 = await reportPg7({
+        heading: missionHeading, 
+        subheading: "PLOT DETAILS - PART 02", 
+        imgPaths: [],
+    });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     return new Document({
         numbering: numberings,
@@ -112,11 +118,7 @@ export const generateDocument = (data: IData): Document => {
                 subheading: "PLOT DETAILS - PART 01", 
                 imgPath: "",
             }),
-            reportPg7({
-                heading: missionHeading, 
-                subheading: "PLOT DETAILS - PART 02", 
-                imgPaths: [],
-            }),
+            page7,
             ...(deliverables.map((d) => {
                     return reportMapPage({
                         heading: missionHeading, 

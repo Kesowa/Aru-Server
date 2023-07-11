@@ -3,13 +3,190 @@ import * as fs from "fs";
 import { commonPageProperties, commonPageFooter } from "./reportUtils";
 import { IPage7Properties } from "./types";
 import path from "path";
+import * as d3 from "d3";
+import { JSDOM } from "jsdom";
+import sharp from "sharp";
 
-export const reportPg7 = (properties: IPage7Properties) => {
+const genPieChart = async (data: any) => {
+    const document = new JSDOM().window.document;
+    
+    const width = 500;
+    const height = 500;
+
+    // ============================================================================================
+
+    // Create the pie layout and arc generator.
+    const pie = d3.pie().value(d => d.percent);
+
+    const arc = d3.arc()
+        .innerRadius(0)
+        .outerRadius(Math.min(width, height) / 2 - 1);
+
+    const labelRadius = arc.outerRadius()() * 0.5;
+
+    // A separate arc generator for labels.
+    const arcLabel = d3.arc()
+        .innerRadius(labelRadius)
+        .outerRadius(labelRadius);
+
+    const arcs = pie(data);
+
+    // Create the SVG container.
+    const svg = d3
+        .select(document.body)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [-width / 2, -height / 2, width, height])
+        .attr("style", "font: 24px sans-serif;");
+
+    // Add a sector path for each value.
+    svg.append("g")
+        .attr("stroke", "white")
+        .selectAll()
+        .data(arcs)
+        .join("path")
+        .attr("fill", d => d.data.color)
+        .attr("d", arc);
+
+    // Create a new arc generator to place a label close to the edge.
+    // The label shows the value if there is enough room.
+    svg.append("g")
+        .attr("text-anchor", "middle")
+        .selectAll()
+        .data(arcs)
+        .join("text")
+        .attr("transform", d => `translate(${arcLabel.centroid(d)})`)
+        .call(text => text.append("tspan")
+            .attr("y", "-0.4em")
+            .attr("font-weight", "bold")
+            .text(d => `${d.data.percent.toLocaleString("en-US")}%`));
+        // .call(text => text.append("tspan")
+        //     .attr("y", "-0.4em")
+        //     .attr("font-weight", "bold")
+        //     .text(d => d.data.name))
+        // .call(text => text.filter(d => (d.endAngle - d.startAngle) > 0.25).append("tspan")
+        //     .attr("x", 0)
+        //     .attr("y", "0.7em")
+        //     .attr("font-weight", "bold")
+        //     .text(d => `${d.data.percent.toLocaleString("en-US")}%`));
+
+    // ========================================================================================================
+
+    const buff = Buffer.from(svg.node().outerHTML);
+
+    const pngBuff = await sharp(buff).png().toBuffer();
+
+    return pngBuff;
+}
+
+const genStackedBarChart = async (data: any[]) => {
+    const document = new JSDOM().window.document;
+    
+    let groups: any[] = [];
+    let subgroups: any[] = Object.keys(data[0]).filter(g => (g != "name"));
+    
+    for(let d of data) groups.push(d.name);
+
+    let margin = {top: 50, right: 30, bottom: 20, left: 50};
+    const width = 500 - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = d3
+        .select(document.body)
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom);
+
+    var x = d3.scaleBand()
+        .domain(groups)
+        .range([0, width])
+        .padding(0.2)
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},${height + margin.top})`)
+        .attr("style", "font-size: 15px;")
+        .call(d3.axisBottom(x).tickSizeOuter(0));
+
+    var y = d3.scaleLinear()
+        .domain([0, 100])
+        .range([ height, 0 ]);
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .attr("style", "font-size: 15px;")
+        .call(d3.axisLeft(y));
+
+    data = data.map((d) => {
+        let total = 0;
+        let normalized_d: any = {};
+        normalized_d["name"] = d["name"];
+        for (let sub of subgroups){ total += d[sub]; }
+        for (let sub of subgroups){ normalized_d[sub] = d[sub] / total * 100; }
+        return normalized_d;
+      });
+
+    const stackedData = d3.stack().keys(subgroups)(data);
+
+    var color = d3.scaleOrdinal()
+        .domain(subgroups)
+        .range(['#e01ea3', '#df7c12', '#8277da']);
+
+    var bar_groups = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .selectAll("g")
+        .data(stackedData)
+        .enter().append("g")
+        .attr("fill", function(d) { return color(d.key); })
+
+    var bars = bar_groups.selectAll("g")
+        .data(function(d) { return d; })
+        .enter().append("g")
+    
+    bars.append('rect')
+        .attr("x", function(d) { return x(d.data.name); })
+        .attr("y", function(d) { return y(d[1]); })
+        .attr("height", function(d) { return y(d[0]) - y(d[1]); })
+        .attr("width", x.bandwidth());
+
+    bars.append("text")
+        .text(function(d) { return d3.format(".2s")(d[1]-d[0])+"%"; })
+        .attr("y", function(d) { return y(d[1])+(y(d[0]) - y(d[1]))/2; })
+        .attr("x", function(d) { return x(d.data.name) + (x.bandwidth() * 0.4); })
+        .style("fill", '#000000')
+        .attr("font-size", "15")
+        .attr("font-weight", "bold");
+
+    const buff = Buffer.from(svg.node().outerHTML);
+
+    const pngBuff = await sharp(buff).png().toBuffer();
+
+    return pngBuff;
+}
+
+export const reportPg7 = async (properties: IPage7Properties) => {
     const { heading, subheading } = properties;
     let { imgPaths } = properties;
     while(imgPaths.length < 3) {
         imgPaths.push(path.join(__dirname, "images", "fallback.png"));
     }
+
+    const categoryData = [
+        {name: "Government", percent: 16, color: "#4472c4"},
+        {name: "Residential", percent: 84, color: "#ed7d31"},
+    ];
+    const statusData = [
+        {name: "Under Construction", percent: 9, color: "#ffc000"},
+        {name: "Empty", percent: 28, color: "#5b9bd5"},
+        {name: "Constructed", percent: 63, color: "#70ad47"},
+    ];
+    const barChartData = [
+        {name: "Government", underConstruction: 1, empty: 7, constructed: 3 },
+        {name: "Residential", underConstruction: 22, empty: 50, constructed: 157 },
+    ];
+
+    const categoryPieChart = await genPieChart(categoryData);
+    const statusPieChart = await genPieChart(statusData);
+    const barChart = await genStackedBarChart(barChartData);
+
     const headings = new Paragraph({
         frame: {
             position: {
@@ -39,6 +216,81 @@ export const reportPg7 = (properties: IPage7Properties) => {
                 color: "FFFFFF",
                 bold: true,
                 break: 1,
+            }),
+        ]
+    });
+
+    const categoryPieChartHeading = new Paragraph({
+        frame: {
+            position: {
+                x: 8200,
+                y: 2000,
+            },
+            width: 4000,
+            height: 500,
+            anchor: {
+                horizontal: FrameAnchorType.MARGIN,
+                vertical: FrameAnchorType.MARGIN,
+            },
+        },
+        alignment: AlignmentType.CENTER,
+        children: [
+            new TextRun({
+                text: "Area Distribution By Plot Category",
+                size: "14pt",
+                font: "Calibri",
+                color: "000000",
+                bold: true,
+            }),
+        ]
+    });
+
+    const statusPieChartHeading = new Paragraph({
+        frame: {
+            position: {
+                x: 8200,
+                y: 6950,
+            },
+            width: 4000,
+            height: 500,
+            anchor: {
+                horizontal: FrameAnchorType.MARGIN,
+                vertical: FrameAnchorType.MARGIN,
+            },
+        },
+        alignment: AlignmentType.CENTER,
+        children: [
+            new TextRun({
+                text: "Area Distribution By Plot Status",
+                size: "14pt",
+                font: "Calibri",
+                color: "000000",
+                bold: true,
+            }),
+        ]
+    });
+
+    const barChartHeading = new Paragraph({
+        frame: {
+            position: {
+                x: 1000,
+                y: 2000,
+            },
+            width: 4000,
+            height: 500,
+            anchor: {
+                horizontal: FrameAnchorType.MARGIN,
+                vertical: FrameAnchorType.MARGIN,
+            },
+        },
+        alignment: AlignmentType.CENTER,
+        children: [
+            new TextRun({
+                text: "Plot Details",
+                size: "14pt",
+                font: "Calibri",
+                color: "000000",
+                bold: true,
             }),
         ]
     });
@@ -597,56 +849,56 @@ export const reportPg7 = (properties: IPage7Properties) => {
         },
         children: [
             new ImageRun({
-                data: fs.readFileSync(imgPaths[0]),
+                data: barChart,
                 transformation: {
-                    width: 440,
-                    height: 320,
+                    width: 350,
+                    height: 260,
                 },
                 floating: {
                     zIndex: 9,
                     horizontalPosition: {
                         relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                        offset: 0,
+                        offset: 514400,
                     },
                     verticalPosition: {
                         relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-                        offset: 1514400,
+                        offset: 1804400,
                     }
                 },
             }),
             new ImageRun({
-                data: fs.readFileSync(imgPaths[1]),
+                data: categoryPieChart,
                 transformation: {
-                    width: 400,
-                    height: 320,
+                    width: 270,
+                    height: 250,
                 },
                 floating: {
                     zIndex: 9,
                     horizontalPosition: {
                         relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                        offset: 5214400,
+                        offset: 5514400,
                     },
                     verticalPosition: {
                         relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-                        offset: 1514400,
+                        offset: 1904400,
                     }
                 },
             }),
             new ImageRun({
-                data: fs.readFileSync(imgPaths[2]),
+                data: statusPieChart,
                 transformation: {
-                    width: 400,
-                    height: 230,
+                    width: 215,
+                    height: 200,
                 },
                 floating: {
                     zIndex: 9,
                     horizontalPosition: {
                         relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                        offset: 5214400,
+                        offset: 5714400,
                     },
                     verticalPosition: {
                         relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-                        offset: 4630000,
+                        offset: 5000000,
                     }
                 },
             }),
@@ -743,6 +995,9 @@ export const reportPg7 = (properties: IPage7Properties) => {
             table1,
             table2,
             headings,
+            categoryPieChartHeading,
+            statusPieChartHeading,
+            barChartHeading,
             idTextBox,
         ],
     };

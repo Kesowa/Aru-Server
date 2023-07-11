@@ -271,7 +271,7 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
     }
 
     // saving the document
-    const doc = generateDocument(data);
+    const doc =await generateDocument(data);
     const buffer = await Packer.toBuffer(doc);
     const filename = `${missionId}-report.docx`;
     const filepath = DirPath(Directory.DOCUMENTS, filename);
