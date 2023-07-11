@@ -51,7 +51,7 @@ const upload = multer({
   storage: multerStorage((req: Request): Directory => {
     if (req.params.type == "Vector") return Directory.VECTOR;
     else return Directory.RASTER;
-  }),
+  }, true),
 });
 
 router.patch(

@@ -56,7 +56,7 @@ export const isSizeVector = async (
     const totalImgSize: number = size + Number(docCount.actualSize);
     if (totalImgSize < Number(docCount.activePackage.storage)) return true;
     else {
-      await fs.promises.unlink(String(pathh));
+      await s3fs.rm(pathh);
       return false;
     }
   } catch (error) {

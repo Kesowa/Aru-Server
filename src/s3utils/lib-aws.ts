@@ -33,6 +33,9 @@ const CFClient = new CloudFrontClient({
   },
 });
 const updateFile = async (paths: string | string[]) => {
+  if (Mode.Dev == MODE) {
+    return;
+  }
   return await CFClient.send(
     new CreateInvalidationCommand({
       DistributionId: AWS_CLOUDFRONT_ID,
