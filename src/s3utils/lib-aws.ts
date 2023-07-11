@@ -33,6 +33,8 @@ const CFClient = new CloudFrontClient({
   },
 });
 const updateFile = async (paths: string | string[]) => {
+  paths = Array.isArray(paths) ? paths : [paths];
+  paths = paths.map(p => p.startsWith("/") ? p : "/" + p);
   if (Mode.Dev == MODE) {
     return;
   }
@@ -41,8 +43,8 @@ const updateFile = async (paths: string | string[]) => {
       DistributionId: AWS_CLOUDFRONT_ID,
       InvalidationBatch: {
         Paths: {
-          Quantity: Array.isArray(paths) ? paths.length : 1,
-          Items: Array.isArray(paths) ? paths : [paths],
+          Quantity: paths.length,
+          Items: paths,
         },
         CallerReference: randomUUID(),
       },
