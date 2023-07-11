@@ -80,6 +80,7 @@ jobs:
         echo "AWS_S3_BUCKET=${{ vars.AWS_S3_BUCKET }}" >> .env
         echo "AWS_MEDIACONVERT_ENDPOINT=${{ vars.AWS_MEDIACONVERT_ENDPOINT }}" >> .env
         echo "ENDPOINT=${{ vars.ENDPOINT }}" >> .env
+        echo "AWS_CLOUDFRONT_ID=${{ vars.AWS_CLOUDFRONT_ID }}" >> .env
 
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
