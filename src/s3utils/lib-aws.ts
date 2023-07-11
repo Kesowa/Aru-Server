@@ -28,7 +28,7 @@ import { randomUUID } from "crypto";
 
 const CFClient = new CloudFrontClient({
   credentials: {
-    accessKeyId: AWS_CLOUDFRONT_ID,
+    accessKeyId: ACCESS_KEY,
     secretAccessKey: AWS_SECRET_KEY,
   },
 });
