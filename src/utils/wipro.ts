@@ -10,7 +10,7 @@ import { Logger } from "pino";
 
 export class WiproInterface {
   private static readonly ServerURL =
-    MODE == Mode.Prod ? "http://115.240.18.125" : "http://103.38.190.202";
+    MODE == Mode.Prod ? "https://iccc.ntkiccc.in" : "http://127.0.0.1";
   private static readonly username = "wipro";
   private static readonly password = "CredKol@123";
   private static readonly AlertURL = new URL(
