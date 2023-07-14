@@ -1,4 +1,5 @@
-import { DirPath, Directory } from "../constants";
+import { Logger } from "pino";
+import { Directory, DirPath } from "../constants";
 import Layer from "../models/layer";
 import s3fs from "../s3utils/lib-aws";
 
@@ -58,7 +59,8 @@ export async function modGeoJson(
   icon: string,
   color: string,
   geojson: GeoJson,
-  pathh: string
+  pathh: string,
+  log?: Logger
 ) {
   if (color && icon) {
     for (let i = 0; i < geojson.features.length; i++) {
@@ -95,9 +97,10 @@ export async function modGeoJson(
   }
   try {
     await s3fs.writeFile(pathh, JSON.stringify(geojson));
+    await s3fs.updateFile(pathh);
     return 1;
   } catch (error) {
-    console.error(error);
+    log ? log.error(error) : console.log(error);
     return 0;
   }
 }
@@ -122,6 +125,7 @@ export async function featureAddition(
       DirPath(Directory.DEFAULT, pathh),
       JSON.stringify(geojson)
     );
+    await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     await Layer.updateOne(
       { _id: editObject.id },
       { featureCount: geojson.features.length }
@@ -149,6 +153,7 @@ export async function editGeoJsonForAll(
       DirPath(Directory.DEFAULT, pathh),
       JSON.stringify(geojson)
     );
+    await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     return true;
   } catch (error) {
     console.error(error);
@@ -166,6 +171,7 @@ export async function deleteGeoJsonFeature(
       DirPath(Directory.DEFAULT, pathh),
       JSON.stringify(geojson)
     );
+    await s3fs.updateFile(DirPath(Directory.DEFAULT, pathh));
     await Layer.updateOne(
       { _id: deleteObject.id },
       { featureCount: geojson.features.length }

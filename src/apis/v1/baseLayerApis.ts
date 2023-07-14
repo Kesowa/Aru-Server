@@ -43,15 +43,14 @@ import {
 } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
-import { Request } from "express";
 
 const router = express.Router();
 
-const upload = multer({
-  storage: multerStorage((req: Request): Directory => {
-    if (req.params.type == "Vector") return Directory.VECTOR;
-    else return Directory.RASTER;
-  }),
+const uploadVector = multer({
+  storage: multerStorage(Directory.VECTOR, true),
+});
+const uploadRaster = multer({
+  storage: multerStorage(Directory.RASTER),
 });
 
 router.patch(
@@ -66,7 +65,7 @@ router.patch(
 router.post(
   "/create/Vector",
   isAuthenticated,
-  upload.single("file"),
+  uploadVector.single("file"),
   body("name").notEmpty().trim(),
   body("vector").notEmpty().isMongoId(),
   //adding date format
@@ -142,9 +141,9 @@ router.patch(
 router.get("/fetch/:type", isAuthenticated, RobustRunner(getBaseLayers));
 
 router.post(
-  "/upload-to-update-base-layer/:type",
+  "/upload-to-update-base-layer/Vector",
   isAuthenticated,
-  upload.single("file"),
+  uploadVector.single("file"),
   body("baseLayer").notEmpty().isMongoId(),
   validator,
   canUpdateBaseLayer,
@@ -185,7 +184,7 @@ router.post(
   "/create-base-raster-upload/Raster",
   isAuthenticated,
   requestTimeout(60_000),
-  upload.single("file"),
+  uploadRaster.single("file"),
   body("name").notEmpty().trim(),
   body("raster").notEmpty().isMongoId(),
   body("captureDate").exists().isISO8601().toDate(),
@@ -197,9 +196,9 @@ router.post(
 );
 
 router.patch(
-  "/updateRasterLayerUpload/:type",
+  "/updateRasterLayerUpload/Raster",
   isAuthenticated,
-  upload.single("file"),
+  uploadRaster.single("file"),
   body("layerId").notEmpty().isMongoId(),
   validator,
   canUpdateBaseLayer,

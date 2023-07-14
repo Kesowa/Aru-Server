@@ -42,10 +42,10 @@ jobs:
       run: |
         echo "PORT=${{ vars.PORT }}" >> .env
         echo "MONGODB_CONNECTION_STRING=${{ secrets.MONGODB_CONNECTION_STRING }}" >> .env
-        echo "SMTP_PASSWORD=${{ vars.SMTP_PASSWORD }}" >> .env
-        echo "SMTP_USERNAME=${{ vars.SMTP_USERNAME }}" >> .env
-        echo "SMTP_SERVER=${{ vars.SMTP_SERVER }}" >> .env
-        echo "SMTP_PORT=${{ vars.SMTP_PORT }}" >> .env
+        echo "SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}" >> .env
+        echo "SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}" >> .env
+        echo "SMTP_SERVER=${{ secrets.SMTP_SERVER }}" >> .env
+        echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env
         echo "MAP_KEY=${{ vars.MAP_KEY }}" >> .env
         echo "BASE_SERVER=${{ vars.BASE_SERVER }}" >> .env
         echo "TITILER_STATIC=${{ vars.TITILER_STATIC }}" >> .env
@@ -80,6 +80,7 @@ jobs:
         echo "AWS_S3_BUCKET=${{ vars.AWS_S3_BUCKET }}" >> .env
         echo "AWS_MEDIACONVERT_ENDPOINT=${{ vars.AWS_MEDIACONVERT_ENDPOINT }}" >> .env
         echo "ENDPOINT=${{ vars.ENDPOINT }}" >> .env
+        echo "AWS_CLOUDFRONT_ID=${{ vars.AWS_CLOUDFRONT_ID }}" >> .env
 
     - name: Build, tag, and push image to Amazon ECR
       id: build-image

@@ -11,6 +11,7 @@ import { buffer } from "stream/consumers";
 import { createReadStream, promises as fs } from "fs";
 import {
   ACCESS_KEY,
+  AWS_CLOUDFRONT_ID,
   AWS_S3_BUCKET as Bucket,
   AWS_S3_ENDPOINT,
   AWS_SECRET_KEY,
@@ -19,7 +20,37 @@ import {
 } from "../constants";
 import path from "path";
 import mime from "mime-types";
+import {
+  CloudFrontClient,
+  CreateInvalidationCommand,
+} from "@aws-sdk/client-cloudfront";
+import { randomUUID } from "crypto";
 
+const CFClient = new CloudFrontClient({
+  credentials: {
+    accessKeyId: ACCESS_KEY,
+    secretAccessKey: AWS_SECRET_KEY,
+  },
+});
+const updateFile = async (paths: string | string[]) => {
+  paths = Array.isArray(paths) ? paths : [paths];
+  paths = paths.map(p => p.startsWith("/") ? p : "/" + p);
+  if (Mode.Dev == MODE) {
+    return;
+  }
+  return await CFClient.send(
+    new CreateInvalidationCommand({
+      DistributionId: AWS_CLOUDFRONT_ID,
+      InvalidationBatch: {
+        Paths: {
+          Quantity: paths.length,
+          Items: paths,
+        },
+        CallerReference: randomUUID(),
+      },
+    })
+  );
+};
 const Client = new S3Client({
   credentials: {
     accessKeyId: ACCESS_KEY,
@@ -99,8 +130,8 @@ const readStream = async (path: string) => {
 };
 
 const writeStream = async (dest: string, stream: Readable) => {
-  const mimeType = mime.contentType(path.extname(dest)) ||
-    "application/octet-stream";
+  const mimeType =
+    mime.contentType(path.extname(dest)) || "application/octet-stream";
   const upload = new Upload({
     client: Client,
     params: {
@@ -147,4 +178,5 @@ export default {
   rename,
   writeStream,
   readStream,
+  updateFile,
 };

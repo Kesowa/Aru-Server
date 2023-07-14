@@ -171,3 +171,4 @@ export const AWS_S3_BUCKET = new EnvVar("AWS_S3_BUCKET").toString();
 export const AWS_MEDIACONVERT_ENDPOINT = new EnvVar("AWS_MEDIACONVERT_ENDPOINT")
   .isUrl()
   .toString();
+export const AWS_CLOUDFRONT_ID = new EnvVar("AWS_CLOUDFRONT_ID").toString();
