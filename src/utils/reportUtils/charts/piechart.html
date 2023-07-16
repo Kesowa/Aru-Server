@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PieChart - 1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            width: 100vw;
+            height: 100vh;
+        }
+        #heading {
+            width: 100vw;
+            height: 10vh;
+            text-align: center;
+            padding-top: 5vh;
+            font-size: 50px;
+            /* border: 2px solid red; */
+        }
+        #container {
+            height: 90vh;
+            width: 100vw;
+            display: flex;
+        }
+        #chart {
+            width: 50vw;
+            height: 90vh;
+            /* border: 2px solid green; */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #labels {
+            width: 50vw;
+            height: 90vh;
+            /* border: 2px solid orange; */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="heading"></h1>
+    <div id="container">
+        <div id="chart"></div>
+        <div id="labels"></div>
+    </div>
+    <script type="module">
+        import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+        function setHeading(data) {
+            const heading = document.getElementById("heading");
+            heading.innerText = data;
+        }
+
+        function genLabelElement(text, color) {
+            const div = document.createElement("div");
+            div.style = "width: 100%; padding-left: 10%; margin-bottom: 1vh; display: flex";
+            const labelColor = document.createElement("div");
+            labelColor.style = `width: 5vw; height: 100%; background-color:${color};`;
+            const labelText = document.createElement("div");
+            labelText.innerText = text;
+            labelText.style = `height: 100%; margin-left: 5%;`;
+            div.appendChild(labelColor);
+            div.appendChild(labelText);
+            return div;
+        }
+
+        function genPieChart(data) {
+        
+            const width = 0.35 * Math.max(window.innerHeight, window.innerWidth);
+            const height = width;
+
+            const pie = d3.pie().value(d => d.percent);
+
+            const arc = d3.arc()
+                .innerRadius(0)
+                .outerRadius(Math.min(width, height) / 2 - 1);
+
+            const labelRadius = arc.outerRadius()() * 0.5;
+
+            const arcLabel = d3.arc()
+                .innerRadius(labelRadius)
+                .outerRadius(labelRadius);
+
+            const arcs = pie(data);
+
+            const svg = d3
+                .select("#chart")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [-width / 2, -height / 2, width, height])
+                .attr("style", "font: 24px sans-serif;");
+
+            svg.append("g")
+                .attr("stroke", "white")
+                .selectAll()
+                .data(arcs)
+                .join("path")
+                .attr("fill", d => d.data.color)
+                .attr("d", arc);
+
+            svg.append("g")
+                .attr("text-anchor", "middle")
+                .selectAll()
+                .data(arcs)
+                .join("text")
+                .attr("transform", d => `translate(${arcLabel.centroid(d)})`)
+                .call(text => text.append("tspan")
+                    .attr("y", "-0.4em")
+                    .attr("font-weight", "bold")
+                    .attr("fill", "#000000")
+                    .text(d => `${d.data.percent.toLocaleString("en-US")}%`));
+                // .call(text => text.append("tspan")
+                //     .attr("y", "-0.4em")
+                //     .attr("font-weight", "bold")
+                //     .text(d => d.data.name))
+                // .call(text => text.filter(d => (d.endAngle - d.startAngle) > 0.25).append("tspan")
+                //     .attr("x", 0)
+                //     .attr("y", "0.7em")
+                //     .attr("font-weight", "bold")
+                //     .text(d => `${d.data.percent.toLocaleString("en-US")}%`));
+
+            const labels = document.getElementById("labels");
+            for(let d of data) {
+                labels.appendChild(genLabelElement(d.name,d.color));
+            }
+        }
+
+        // setHeading("PLOT DETAILS AC BLOCK");
+        // genPieChart([
+        //     {name: "Under Construction", percent: 9, color: "#ffc000"},
+        //     {name: "Empty", percent: 28, color: "#5b9bd5"},
+        //     {name: "Constructed", percent: 63, color: "#70ad47"},
+        // ]);
+    </script>
+</body>
+</html>

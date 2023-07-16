@@ -25,7 +25,17 @@ export const generateDocument = async (data: IData) => {
         deliverables,
     } = data;
 
-    const page7 = await reportPg7({
+    const pg1 = await page1({ 
+        missionHeading, 
+        missionSubHeading,
+        missionMapImgPath,
+        missionCode,
+        date,
+        users, 
+        emails, 
+        phoneNos
+    });
+    const pg7 = await reportPg7({
         heading: missionHeading, 
         subheading: "PLOT DETAILS - PART 02", 
         imgPaths: [],
@@ -37,95 +47,86 @@ export const generateDocument = async (data: IData) => {
             color: "D9D9D9",
         },
         sections: [
-            page1({ 
-                missionHeading, 
-                missionSubHeading,
-                missionMapImgPath,
-                missionCode,
-                date,
-                users, 
-                emails, 
-                phoneNos
-            }),
-            page2({ 
-                missionHeading, 
-                missionSubHeading,
-                missionMapImgPath,
-                missionCode,
-                area,
-                occupancy,
-            }),
-            page3({
-                missionCode,
-                roadData: [
-                    { name: "No of roads", value: `${roadCount}` },
-                    { name: "Road's Length", value: `${roadLength} mt.(Approx)` },
-                    { 
-                        name: "Roads are sharing with adjacent blocks:", 
-                        value: [
-                            { name: "Adjacent Block", value: "" },
-                            { name: "Street no. of roads", value: "" },
-                            { name: "Road Segment Length", value: "" },
-                            { 
-                                name: "Street no. sharing with adjacent block", 
-                                value: "-",
-                            },
-                        ],
-                    },
-                    { name: "Major Road Problem", value: "-" },
-                ],
-                footpathData: [
-                    { name: "Street with footpath", value: "-" },
-                    { name: "Street with partial footpath", value: "-" },
-                    { name: "Street without footpath", value: "-" },
-                ],
-                greeneryData: [
-                    { name: "Area", value: `${area.publicSpaces[4].value} sq. mt.` },
-                    { name: "No. of trees", value: "-" },
-                    { 
-                        name: "Green Verges and Public Parks", 
-                        value: "-",
-                    },
-                ],
-                canalData: "-",
-                waterBodyData: [
-                    { name: "Perimeter", value: "" },
-                    { name: "Area", value: `${area.publicSpaces[5].value} sq. mt.` },
-                    { name: "Clean", value: "-" },
-                    { name: "Swimmable", value: "-" },
-                ],
-                wasteBinData: "-",
-                constructionSitesData: "-",
-                cycleTrackData: [
-                    { name: "Cycle Track Length", value: `${cycleTrackLength} mt. (Approx)` },
-                    { name: "Street no. with cycle track", value: "-" },
-                    { name: "Major Problem", value: "-" },
-                    { name: "Cycle route", value: "-" },
-                ],
-                streetLightData: "-",
-                parkingData: "-",
-                publicMarketData: "-",
-                stubbleBurningData: "-",
-                policeAndFireStationsData: "-",
-                waterAndDrainageNetworkData: "-",
-                publicArtData: "-",
-                publicGymData: "-",
-                rooftopSolarData: "-",
-                othersData: "-",
-            }),
-            reportMapPage({
-                heading: missionHeading, 
-                subheading: "PLOT DETAILS - PART 01", 
-                imgPath: "",
-            }),
-            page7,
-            ...(deliverables.map((d) => {
-                    return reportMapPage({
-                        heading: missionHeading, 
-                        subheading: `${d.name}`, 
-                        imgPath: d.imgPath,
-                    });
-            })),
+            pg1,
+            // page2({ 
+            //     missionHeading, 
+            //     missionSubHeading,
+            //     missionMapImgPath,
+            //     missionCode,
+            //     area,
+            //     occupancy,
+            // }),
+            // page3({
+            //     missionCode,
+            //     roadData: [
+            //         { name: "No of roads", value: `${roadCount}` },
+            //         { name: "Road's Length", value: `${roadLength} mt.(Approx)` },
+            //         { 
+            //             name: "Roads are sharing with adjacent blocks:", 
+            //             value: [
+            //                 { name: "Adjacent Block", value: "" },
+            //                 { name: "Street no. of roads", value: "" },
+            //                 { name: "Road Segment Length", value: "" },
+            //                 { 
+            //                     name: "Street no. sharing with adjacent block", 
+            //                     value: "-",
+            //                 },
+            //             ],
+            //         },
+            //         { name: "Major Road Problem", value: "-" },
+            //     ],
+            //     footpathData: [
+            //         { name: "Street with footpath", value: "-" },
+            //         { name: "Street with partial footpath", value: "-" },
+            //         { name: "Street without footpath", value: "-" },
+            //     ],
+            //     greeneryData: [
+            //         { name: "Area", value: `${area.publicSpaces[4].value} sq. mt.` },
+            //         { name: "No. of trees", value: "-" },
+            //         { 
+            //             name: "Green Verges and Public Parks", 
+            //             value: "-",
+            //         },
+            //     ],
+            //     canalData: "-",
+            //     waterBodyData: [
+            //         { name: "Perimeter", value: "" },
+            //         { name: "Area", value: `${area.publicSpaces[5].value} sq. mt.` },
+            //         { name: "Clean", value: "-" },
+            //         { name: "Swimmable", value: "-" },
+            //     ],
+            //     wasteBinData: "-",
+            //     constructionSitesData: "-",
+            //     cycleTrackData: [
+            //         { name: "Cycle Track Length", value: `${cycleTrackLength} mt. (Approx)` },
+            //         { name: "Street no. with cycle track", value: "-" },
+            //         { name: "Major Problem", value: "-" },
+            //         { name: "Cycle route", value: "-" },
+            //     ],
+            //     streetLightData: "-",
+            //     parkingData: "-",
+            //     publicMarketData: "-",
+            //     stubbleBurningData: "-",
+            //     policeAndFireStationsData: "-",
+            //     waterAndDrainageNetworkData: "-",
+            //     publicArtData: "-",
+            //     publicGymData: "-",
+            //     rooftopSolarData: "-",
+            //     othersData: "-",
+            // }),
+            // reportMapPage({
+            //     heading: missionHeading, 
+            //     subheading: "PLOT DETAILS - PART 01", 
+            //     imgPath: "",
+            // }),
+            // pg7,
+            // ...(deliverables.map((d) => {
+            //         return reportMapPage({
+            //             heading: missionHeading, 
+            //             subheading: `${d.name}`, 
+            //             imgPath: d.imgPath,
+            //         });
+            // })),
         ]
     });
 }

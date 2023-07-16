@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { Paragraph, AlignmentType, TextRun, ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, FrameAnchorType, Table, TableRow, HeightRule, TableCell, VerticalAlign } from "docx";
-import { commonPageFooter, commonPageProperties } from "./reportUtils";
+import { commonPageFooter, commonPageProperties, genScreenshot } from "./reportUtils";
 import { IPage1Properties } from "./types";
 import path from "path";
 
@@ -96,11 +96,12 @@ const headings = (missionHeading: string, missionSubHeading: string) => {
     });
 };
 
-const missionMapImage = (missionMapImgPath: string) => { 
+const missionMapImage = async (missionMapImgPath: string) => { 
+    const pngBuffer = await genScreenshot();
     return new Paragraph({
         children: [
             new ImageRun({
-                data: fs.readFileSync(missionMapImgPath),
+                data: pngBuffer,
                 transformation: {
                     width: 500,
                     height: 365,
@@ -301,12 +302,13 @@ const idTextBox = (missionCode:string) => {
     });
 }
 
-export const page1 = (properties: IPage1Properties) => {
+export const page1 = async (properties: IPage1Properties) => {
     const { missionHeading, missionSubHeading, missionCode, date, users, emails, phoneNos } = properties;
     let { missionMapImgPath } = properties;
     if(missionMapImgPath == "") {
         missionMapImgPath = path.join(__dirname, "images", "fallback.png");
     }
+    const mapImg = await missionMapImage(missionMapImgPath);
     return {
         properties: commonPageProperties,
         footers: commonPageFooter,
@@ -314,7 +316,7 @@ export const page1 = (properties: IPage1Properties) => {
             NKDALogo,
             headings(missionHeading, missionSubHeading),
             FSIPLLogo,
-            missionMapImage(missionMapImgPath),
+            mapImg,
             pg1Table(missionSubHeading, date, users, emails, phoneNos),
             idTextBox(missionCode),
         ],
