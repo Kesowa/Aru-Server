@@ -3,6 +3,7 @@
 This folder contain the server codes of the Arya streaming platform.
 
 # Setup
+This server will be running on AWS ECS
 
 ## Steps
 
