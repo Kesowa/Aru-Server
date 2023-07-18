@@ -34,7 +34,7 @@ const CFClient = new CloudFrontClient({
 });
 const updateFile = async (paths: string | string[]) => {
   paths = Array.isArray(paths) ? paths : [paths];
-  paths = paths.map(p => p.startsWith("/") ? p : "/" + p);
+  paths = paths.map((p) => (p.startsWith("/") ? p : "/" + p));
   if (Mode.Dev == MODE) {
     return;
   }
