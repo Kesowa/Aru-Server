@@ -270,8 +270,16 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       }
     }
 
+    // all information received without errors, now can start report generation successfully
+    res.status(200).json({
+      status: true,
+      message: "Report generation started!",
+    });
+
+    console.info("Generating report...");
+
     // saving the document
-    const doc =await generateDocument(data);
+    const doc = await generateDocument(data);
     const buffer = await Packer.toBuffer(doc);
     const filename = `${missionId}-report.docx`;
     const filepath = DirPath(Directory.DOCUMENTS, filename);
@@ -292,21 +300,12 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       updatedBy: res.locals.user._id,
     });
     const savedDoc = await docDB.save();
+
+    console.info("Report Generation Complete");
+
     missionSpecificSocket
       .to(savedDoc.missionId.toString())
       .emit("DOCUMENT_CREATED", savedDoc);
     
-    if (savedDoc) {
-      res.status(201).json({
-        status: true,
-        message: "Report Generated!",
-        data: savedDoc,
-      });
-    } else {
-      res.status(500).json({
-        status: false,
-        message: "Failed to generate report",
-      });
-    }
   }
 };

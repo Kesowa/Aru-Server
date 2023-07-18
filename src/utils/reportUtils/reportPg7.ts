@@ -1,35 +1,11 @@
 import { Paragraph, FrameAnchorType, ShadingType, ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, AlignmentType, TextRun, Table, TableRow, HeightRule, TableCell, VerticalAlign } from "docx";
 import * as fs from "fs";
-import { commonPageProperties, commonPageFooter, genPieChart, genStackedBarChart } from "./reportUtils";
+import { commonPageProperties, commonPageFooter } from "./reportUtils";
 import { IPage7Properties } from "./types";
 import path from "path";
 
 export const reportPg7 = async (properties: IPage7Properties) => {
-    const { heading, subheading } = properties;
-    let { imgPaths } = properties;
-    while(imgPaths.length < 3) {
-        imgPaths.push(path.join(__dirname, "images", "fallback.png"));
-    }
-
-    const categoryData = [
-        {name: "Government", percent: 16, color: "#4472c4"},
-        {name: "Residential", percent: 84, color: "#ed7d31"},
-    ];
-    const statusData = [
-        {name: "Under Construction", percent: 9, color: "#ffc000"},
-        {name: "Empty", percent: 28, color: "#5b9bd5"},
-        {name: "Constructed", percent: 63, color: "#70ad47"},
-    ];
-    const barChartData = [
-        {name: "Government", underConstruction: 1, empty: 7, constructed: 3 },
-        {name: "Residential", underConstruction: 22, empty: 50, constructed: 157 },
-    ];
-
-    const categoryPieChart = await genPieChart(categoryData);
-    const statusPieChart = await genPieChart(statusData);
-    // const categoryPieChart = await genPieChart(categoryData, "Area Distribution By Plot Category");
-    // const statusPieChart = await genPieChart(statusData, "Area Distribution By Plot Status");
-    const barChart = await genStackedBarChart(barChartData);
+    const { heading, subheading, categoryPieChart, statusPieChart, barChart } = properties;
 
     const headings = new Paragraph({
         frame: {
@@ -60,81 +36,6 @@ export const reportPg7 = async (properties: IPage7Properties) => {
                 color: "FFFFFF",
                 bold: true,
                 break: 1,
-            }),
-        ]
-    });
-
-    const categoryPieChartHeading = new Paragraph({
-        frame: {
-            position: {
-                x: 8200,
-                y: 2000,
-            },
-            width: 4000,
-            height: 500,
-            anchor: {
-                horizontal: FrameAnchorType.MARGIN,
-                vertical: FrameAnchorType.MARGIN,
-            },
-        },
-        alignment: AlignmentType.CENTER,
-        children: [
-            new TextRun({
-                text: "Area Distribution By Plot Category",
-                size: "14pt",
-                font: "Calibri",
-                color: "000000",
-                bold: true,
-            }),
-        ]
-    });
-
-    const statusPieChartHeading = new Paragraph({
-        frame: {
-            position: {
-                x: 8200,
-                y: 6950,
-            },
-            width: 4000,
-            height: 500,
-            anchor: {
-                horizontal: FrameAnchorType.MARGIN,
-                vertical: FrameAnchorType.MARGIN,
-            },
-        },
-        alignment: AlignmentType.CENTER,
-        children: [
-            new TextRun({
-                text: "Area Distribution By Plot Status",
-                size: "14pt",
-                font: "Calibri",
-                color: "000000",
-                bold: true,
-            }),
-        ]
-    });
-
-    const barChartHeading = new Paragraph({
-        frame: {
-            position: {
-                x: 1000,
-                y: 2000,
-            },
-            width: 4000,
-            height: 500,
-            anchor: {
-                horizontal: FrameAnchorType.MARGIN,
-                vertical: FrameAnchorType.MARGIN,
-            },
-        },
-        alignment: AlignmentType.CENTER,
-        children: [
-            new TextRun({
-                text: "Plot Details",
-                size: "14pt",
-                font: "Calibri",
-                color: "000000",
-                bold: true,
             }),
         ]
     });
@@ -695,54 +596,54 @@ export const reportPg7 = async (properties: IPage7Properties) => {
             new ImageRun({
                 data: barChart,
                 transformation: {
-                    width: 350,
-                    height: 260,
+                    width: 450,
+                    height: 300,
                 },
                 floating: {
                     zIndex: 9,
                     horizontalPosition: {
                         relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                        offset: 514400,
+                        offset: 314400,
                     },
                     verticalPosition: {
                         relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-                        offset: 1804400,
+                        offset: 1704400,
                     }
                 },
             }),
             new ImageRun({
                 data: categoryPieChart,
                 transformation: {
-                    width: 270,
-                    height: 250,
+                    width: 400,
+                    height: 300,
                 },
                 floating: {
                     zIndex: 9,
                     horizontalPosition: {
                         relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                        offset: 5514400,
+                        offset: 5014400,
                     },
                     verticalPosition: {
                         relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-                        offset: 1904400,
+                        offset: 1704400,
                     }
                 },
             }),
             new ImageRun({
                 data: statusPieChart,
                 transformation: {
-                    width: 215,
+                    width: 300,
                     height: 200,
                 },
                 floating: {
                     zIndex: 9,
                     horizontalPosition: {
                         relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-                        offset: 5714400,
+                        offset: 5414400,
                     },
                     verticalPosition: {
                         relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-                        offset: 5000000,
+                        offset: 4800000,
                     }
                 },
             }),
@@ -839,9 +740,6 @@ export const reportPg7 = async (properties: IPage7Properties) => {
             table1,
             table2,
             headings,
-            categoryPieChartHeading,
-            statusPieChartHeading,
-            barChartHeading,
             idTextBox,
         ],
     };

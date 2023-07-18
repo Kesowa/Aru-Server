@@ -1,7 +1,7 @@
 export interface IPage1Properties {
     missionHeading: string, 
     missionSubHeading: string, 
-    missionMapImgPath: string, 
+    missionMapImg: Buffer, 
     missionCode: string, 
     date: string,
     users: string[], 
@@ -43,7 +43,9 @@ export interface IReportMapPageProperties {
 export interface IPage7Properties {
     heading: string,
     subheading: string,
-    imgPaths: string[],
+    categoryPieChart: Buffer,
+    statusPieChart: Buffer,
+    barChart: Buffer,
 }
 
 export interface IDeliverable {

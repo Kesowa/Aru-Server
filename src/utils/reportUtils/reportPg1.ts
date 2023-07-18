@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { Paragraph, AlignmentType, TextRun, ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, FrameAnchorType, Table, TableRow, HeightRule, TableCell, VerticalAlign } from "docx";
-import { commonPageFooter, commonPageProperties, genScreenshot } from "./reportUtils";
+import { commonPageFooter, commonPageProperties } from "./reportUtils";
 import { IPage1Properties } from "./types";
 import path from "path";
 
@@ -96,12 +96,11 @@ const headings = (missionHeading: string, missionSubHeading: string) => {
     });
 };
 
-const missionMapImage = async (missionMapImgPath: string) => { 
-    const pngBuffer = await genScreenshot();
+const missionMapImage = async (missionMapImg: Buffer) => {
     return new Paragraph({
         children: [
             new ImageRun({
-                data: pngBuffer,
+                data: missionMapImg,
                 transformation: {
                     width: 500,
                     height: 365,
@@ -303,12 +302,8 @@ const idTextBox = (missionCode:string) => {
 }
 
 export const page1 = async (properties: IPage1Properties) => {
-    const { missionHeading, missionSubHeading, missionCode, date, users, emails, phoneNos } = properties;
-    let { missionMapImgPath } = properties;
-    if(missionMapImgPath == "") {
-        missionMapImgPath = path.join(__dirname, "images", "fallback.png");
-    }
-    const mapImg = await missionMapImage(missionMapImgPath);
+    const { missionHeading, missionMapImg, missionSubHeading, missionCode, date, users, emails, phoneNos } = properties;
+    const mapImg = await missionMapImage(missionMapImg);
     return {
         properties: commonPageProperties,
         footers: commonPageFooter,

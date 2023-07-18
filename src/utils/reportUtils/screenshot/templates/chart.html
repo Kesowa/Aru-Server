@@ -136,12 +136,101 @@
             }
         }
 
-        // setHeading("PLOT DETAILS AC BLOCK");
+        function genBarChart(data) {
+            let groups = [];
+            let subgroups = Object.keys(data[0]).filter(g => (g != "name"));
+            
+            for(let d of data) groups.push(d.name);
+
+            let margin = {top: 50, right: 30, bottom: 20, left: 50};
+            const width = 500 - margin.left - margin.right;
+            const height = 500 - margin.top - margin.bottom;
+
+            const svg = d3
+                .select("#chart")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var x = d3.scaleBand()
+                .domain(groups)
+                .range([0, width])
+                .padding(0.2)
+            svg.append("g")
+                .attr("transform", `translate(${margin.left},${height + margin.top})`)
+                .attr("style", "font-size: 15px;")
+                .call(d3.axisBottom(x).tickSizeOuter(0));
+
+            var y = d3.scaleLinear()
+                .domain([0, 100])
+                .range([ height, 0 ]);
+            svg.append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`)
+                .attr("style", "font-size: 15px;")
+                .call(d3.axisLeft(y));
+
+            data = data.map((d) => {
+                let total = 0;
+                let normalized_d = {};
+                normalized_d["name"] = d["name"];
+                for (let sub of subgroups){ total += d[sub]; }
+                for (let sub of subgroups){ normalized_d[sub] = d[sub] / total * 100; }
+                return normalized_d;
+            });
+
+            const stackedData = d3.stack().keys(subgroups)(data);
+
+            var color = d3.scaleOrdinal()
+                .domain(subgroups)
+                .range(['#e01ea3', '#df7c12', '#8277da']);
+
+            var bar_groups = svg.append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`)
+                .selectAll("g")
+                .data(stackedData)
+                .enter().append("g")
+                .attr("fill", function(d) { return color(d.key); })
+
+            var bars = bar_groups.selectAll("g")
+                .data(function(d) { return d; })
+                .enter().append("g")
+            
+            bars.append('rect')
+                .attr("x", function(d) { return x(d.data.name); })
+                .attr("y", function(d) { return y(d[1]); })
+                .attr("height", function(d) { return y(d[0]) - y(d[1]); })
+                .attr("width", x.bandwidth());
+
+            bars.append("text")
+                .text(function(d) { return d3.format(".2s")(d[1]-d[0])+"%"; })
+                .attr("y", function(d) { return y(d[1])+(y(d[0]) - y(d[1]))/2; })
+                .attr("x", function(d) { return x(d.data.name) + (x.bandwidth() * 0.4); })
+                .style("fill", '#000000')
+                .attr("font-size", "15")
+                .attr("font-weight", "bold");
+
+            const labels = document.getElementById("labels");
+            for(let s of subgroups) {
+                labels.appendChild(genLabelElement(s,color(s)));
+            }
+        }
+
+        window.setHeading = setHeading;
+        window.genPieChart = genPieChart;
+        window.genBarChart = genBarChart;
+
+        // Sample Run:
+        // 
+        setHeading("PLOT DETAILS AC BLOCK");
         // genPieChart([
         //     {name: "Under Construction", percent: 9, color: "#ffc000"},
         //     {name: "Empty", percent: 28, color: "#5b9bd5"},
         //     {name: "Constructed", percent: 63, color: "#70ad47"},
         // ]);
+        genBarChart([
+            {name: "Government", UnderConstruction: 1, Empty: 7, Constructed: 3 },
+            {name: "Residential", UnderConstruction: 22, Empty: 50, Constructed: 157 },
+        ]);
     </script>
 </body>
 </html>
