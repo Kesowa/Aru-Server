@@ -646,7 +646,7 @@ export const getListClient = async (req: Request, res: AuthResponse) => {
       userType: "tenant-client",
     })
       .populate<{ createdBy: IUser }>({ path: "createdBy", select: "name" })
-      .collation({ locale: "en" })
+      // .collation({ locale: "en" }) // collation not supported on mongoDB serverless
       .sort({ [sortBy]: order as SortOrder })
       .skip(limit * page)
       .limit(limit)
