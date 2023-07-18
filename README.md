@@ -10,6 +10,7 @@ This server will be running on AWS ECS
 2. NLB
 3. Autoscaling
 4. Fargate
+5. MongoDB Serverless (beware of runaway costs!)
 
 ## Steps
 
