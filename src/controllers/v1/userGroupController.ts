@@ -70,7 +70,7 @@ export const listUserGroupforTenant = async (
       tenantId: res.locals.user.tenantId._id,
     })
       .populate<{ permissions: IPermission }>("permissions", "name isClient")
-      .collation({ locale: "en" })
+      // .collation({ locale: "en" }) // collation not supported on mongoDB serverless
       .sort({ [sortBy]: sanitizeSort(order) });
     return res.json({
       status: true,
