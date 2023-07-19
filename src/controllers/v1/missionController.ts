@@ -5,9 +5,7 @@ import Layer from "../../models/layer";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { Types } from "mongoose";
 import { notificationSocket } from "../../socket";
-import {
-  missionByLocationPipe,
-} from "../../pipelines/missionPipeline";
+import { missionByLocationPipe } from "../../pipelines/missionPipeline";
 import Alert from "../../models/alert";
 import Document from "../../models/document";
 import VOD from "../../models/vod";
