@@ -5,10 +5,7 @@ import Layer from "../../models/layer";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { Types } from "mongoose";
 import { notificationSocket } from "../../socket";
-import {
-  getNumberOfTypesOfMissions,
-  missionByLocationPipe,
-} from "../../pipelines/missionPipeline";
+import { missionByLocationPipe } from "../../pipelines/missionPipeline";
 import Alert from "../../models/alert";
 import Document from "../../models/document";
 import VOD from "../../models/vod";
@@ -469,7 +466,7 @@ export const fetchAllMissionsForTenant = async (
     const startIndex = (page - 1) * limit;
 
     // // Executing query
-    let results = await missions.lean();
+    let results = await missions.skip(startIndex).limit(limit).lean();
 
     if (req.query.client === "true") {
       results = results.filter(
@@ -552,9 +549,7 @@ export const fetchAllMissionsForTenant = async (
       return i < limit;
     });
 
-    const allMissionsCount = await Mission.aggregate(
-      getNumberOfTypesOfMissions(tenantId)
-    );
+    const allMissionsCount = res.locals.user.tenantId.actualMissionCount;
 
     if (String(req.query.sort).split(":")[0] === "flight") {
       const order: string = String(req.query.sort).split(":")[1];
