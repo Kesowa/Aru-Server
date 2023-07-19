@@ -7,7 +7,10 @@ import { ITenant } from "../schemas/tenant";
 export type AuthResponse = Response & {
   locals: {
     user: LeanDocument<
-      Omit<IUser, "customPermissions" | "tenantId"> & { customPermissions: IPermission[], tenantId: ITenant }
+      Omit<IUser, "customPermissions" | "tenantId"> & {
+        customPermissions: IPermission[];
+        tenantId: ITenant;
+      }
     >;
     log: logFace;
     advancedResults: any;
