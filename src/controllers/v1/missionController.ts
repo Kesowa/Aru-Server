@@ -6,7 +6,6 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import { Types } from "mongoose";
 import { notificationSocket } from "../../socket";
 import {
-  getNumberOfTypesOfMissions,
   missionByLocationPipe,
 } from "../../pipelines/missionPipeline";
 import Alert from "../../models/alert";
