@@ -1,17 +1,14 @@
 FROM node:19
-ARG FILE_PATH
-COPY $FILE_PATH /app/.env
 WORKDIR /app
 RUN apt-get update && apt-get -y install libtbb2
-ADD ffmpeg.tar.gz /bin
-ADD potree.tar.gz /bin
+ADD ./ffmpeg.tar.gz /bin
+ADD ./potree.tar.gz /bin
 RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
-COPY package*.json ./
+COPY ./package*.json ./
 RUN npm ci
-COPY src ./src
-COPY tsconfig.json ./
+COPY ./src ./src
+COPY ./tsconfig.json ./
 RUN npm run build
-COPY .env /app/dist
 WORKDIR /app/dist
 # USER node
 ENV MODE=production
