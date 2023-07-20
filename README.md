@@ -17,3 +17,6 @@ This server will be running on AWS ECS
 - Install `docker` and `docker compose`
 - To start the server and all dependencies, run `start_full.sh`
 - To stop the server and clean up, run `stop_full.sh`
+
+## Deployment
+Automatically, using AWS CDK
