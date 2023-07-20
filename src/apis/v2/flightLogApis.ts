@@ -23,7 +23,7 @@ flightLogApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const {
       flightLogId,
@@ -48,7 +48,7 @@ flightLogApi.get(
           sort: {
             [orderBy]: asc ? "asc" : "desc",
           },
-        },
+        }
       )
       .skip(offset)
       .limit(limit)
@@ -62,7 +62,7 @@ flightLogApi.get(
         count: data.length,
       },
     });
-  },
+  }
 );
 
 openApi.addPath(
@@ -114,12 +114,12 @@ openApi.addPath(
                 },
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default flightLogApi;

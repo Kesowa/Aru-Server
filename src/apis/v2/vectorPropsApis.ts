@@ -21,7 +21,7 @@ vectorApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const { vectorPropId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Vector.find(
@@ -33,7 +33,7 @@ vectorApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      },
+      }
     )
       .skip(offset)
       .limit(limit)
@@ -47,7 +47,7 @@ vectorApi.get(
         count: data.length,
       },
     });
-  },
+  }
 );
 
 openApi.addPath(
@@ -98,12 +98,12 @@ openApi.addPath(
                 },
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default vectorApi;

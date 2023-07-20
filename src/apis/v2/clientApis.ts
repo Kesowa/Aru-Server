@@ -31,7 +31,7 @@ clientApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const {
       clientId,
@@ -56,7 +56,7 @@ clientApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      },
+      }
     )
       .skip(offset)
       .limit(limit)
@@ -101,7 +101,8 @@ clientApi.get(
       const csv = new ObjectsToCsv(savedResult);
       const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
       await csv.toDisk(file);
-      resp.csvPath = "/" +
+      resp.csvPath =
+        "/" +
         file
           .split(/[\\\/]/)
           .slice(8)
@@ -109,7 +110,7 @@ clientApi.get(
     }
 
     res.json(resp);
-  },
+  }
 );
 
 openApi.addPath(
@@ -175,12 +176,12 @@ openApi.addPath(
                   "Path to csv file, returned only when generateCSV option was true in request",
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default clientApi;

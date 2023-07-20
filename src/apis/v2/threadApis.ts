@@ -17,7 +17,7 @@ threadApi.get(
         docType?: string;
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const { docId, docType } = req.query;
     const data = await Thread.findOne({
@@ -33,7 +33,7 @@ threadApi.get(
         data,
       });
     }
-  },
+  }
 );
 
 openApi.addPath(
@@ -58,12 +58,12 @@ openApi.addPath(
             properties: {
               data: ThreadType,
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default threadApi;

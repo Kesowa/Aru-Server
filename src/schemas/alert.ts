@@ -144,7 +144,7 @@ const alertSchema = new mongoose.Schema<IAlert>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 alertSchema.index({
   flightId: 1,
@@ -156,11 +156,11 @@ alertSchema.index({ locationId: 1 }, { sparse: true });
 alertSchema.pre<IAlert>("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } },
+    { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } }
   );
   await Mission.updateOne(
     { _id: this.missionId },
-    { $inc: { size: this.fileSize } },
+    { $inc: { size: this.fileSize } }
   );
 });
 alertSchema.post(
@@ -172,12 +172,12 @@ alertSchema.post(
   }) {
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allAlertSize: -this.fileSize } },
+      { $inc: { actualSize: -this.fileSize, allAlertSize: -this.fileSize } }
     );
     await Mission.updateOne(
       { _id: this.missionId },
-      { $inc: { size: -this.fileSize } },
+      { $inc: { size: -this.fileSize } }
     );
-  },
+  }
 );
 export default alertSchema;

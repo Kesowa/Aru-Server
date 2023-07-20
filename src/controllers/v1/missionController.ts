@@ -6,7 +6,6 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import { Types } from "mongoose";
 import { notificationSocket } from "../../socket";
 import {
-  getNumberOfTypesOfMissions,
   missionByLocationPipe,
 } from "../../pipelines/missionPipeline";
 import Alert from "../../models/alert";
@@ -552,7 +551,7 @@ export const fetchAllMissionsForTenant = async (
       return i < limit;
     });
 
-    const allMissionsCount = res.locals.user.tenantId.actualMissionCount; 
+    const allMissionsCount = res.locals.user.tenantId.actualMissionCount;
 
     if (String(req.query.sort).split(":")[0] === "flight") {
       const order: string = String(req.query.sort).split(":")[1];

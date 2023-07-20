@@ -20,7 +20,7 @@ permissionApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const { limit, offset, orderBy, asc, populate } = req.query;
     if (["super-admin", "tenant-root"].includes(res.locals.user.userType)) {
@@ -34,7 +34,7 @@ permissionApi.get(
           sort: {
             [orderBy]: asc ? "asc" : "desc",
           },
-        },
+        }
       )
         .skip(offset)
         .limit(limit)
@@ -51,7 +51,7 @@ permissionApi.get(
     } else {
       throw new Error("Access Denied");
     }
-  },
+  }
 );
 
 openApi.addPath(
@@ -100,12 +100,12 @@ openApi.addPath(
                 },
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default permissionApi;

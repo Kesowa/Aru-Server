@@ -21,7 +21,7 @@ manufacturerApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const { manufacturerId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Manufacturer.find(
@@ -34,7 +34,7 @@ manufacturerApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      },
+      }
     )
       .skip(offset)
       .limit(limit)
@@ -48,7 +48,7 @@ manufacturerApi.get(
         count: data.length,
       },
     });
-  },
+  }
 );
 
 openApi.addPath(
@@ -98,12 +98,12 @@ openApi.addPath(
                 },
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default manufacturerApi;

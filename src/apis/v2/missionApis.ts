@@ -26,7 +26,7 @@ missionApi.get(
         status?: string;
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const {
       missionId,
@@ -59,7 +59,7 @@ missionApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      },
+      }
     )
       .skip(offset)
       .limit(limit)
@@ -73,7 +73,7 @@ missionApi.get(
         count: data.length,
       },
     });
-  },
+  }
 );
 
 openApi.addPath(
@@ -132,12 +132,12 @@ openApi.addPath(
                 },
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default missionApi;

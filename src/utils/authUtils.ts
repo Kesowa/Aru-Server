@@ -62,9 +62,7 @@ const Authenticator = async (token: string, ip: string, agent: string) => {
     if (payload.agent != agent) return InvalidAuth.INVALID_AGENT;
   }
   const session = await sessionModel.findById(new ObjectId(payload.session));
-  const user = await User.findById(session?.owner)
-    .populate("tenantId")
-    .lean();
+  const user = await User.findById(session?.owner).populate("tenantId").lean();
 
   if (user && session) {
     if (user.userGroupId) {

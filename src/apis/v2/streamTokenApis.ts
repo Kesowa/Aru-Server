@@ -22,7 +22,7 @@ streamKeyApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const { isActive, flightId, limit, offset, orderBy, asc, populate } =
       req.query;
@@ -44,7 +44,7 @@ streamKeyApi.get(
           sort: {
             [orderBy]: asc ? "asc" : "desc",
           },
-        },
+        }
       )
       .skip(offset)
       .limit(limit)
@@ -58,7 +58,7 @@ streamKeyApi.get(
         count: data.length,
       },
     });
-  },
+  }
 );
 
 openApi.addPath(
@@ -110,12 +110,12 @@ openApi.addPath(
                 },
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default streamKeyApi;

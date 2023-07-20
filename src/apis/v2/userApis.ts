@@ -24,7 +24,7 @@ userApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const { genCSV, limit, offset, orderBy, asc, populate } = req.query;
     const data = await User.find(
@@ -37,7 +37,7 @@ userApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      },
+      }
     )
       .skip(offset)
       .limit(limit)
@@ -57,10 +57,11 @@ userApi.get(
       const csv = new ObjectsToCsv(data);
       const file = DirPath(
         Directory.CSV,
-        `${Math.floor(Math.random() * 62000000)}.csv`,
+        `${Math.floor(Math.random() * 62000000)}.csv`
       );
       await csv.toDisk(file);
-      resp.csvPath = "/" +
+      resp.csvPath =
+        "/" +
         file
           .split(/[\\\/]/)
           .slice(8)
@@ -68,7 +69,7 @@ userApi.get(
     }
 
     res.json(resp);
-  },
+  }
 );
 
 openApi.addPath(
@@ -117,12 +118,12 @@ openApi.addPath(
                 },
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default userApi;

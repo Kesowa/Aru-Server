@@ -25,7 +25,7 @@ alertApi.get(
         locationId?: string;
       };
     },
-    res: AuthResponse,
+    res: AuthResponse
   ) => {
     const {
       alertId,
@@ -56,7 +56,7 @@ alertApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      },
+      }
     )
       .skip(offset)
       .limit(limit)
@@ -70,7 +70,7 @@ alertApi.get(
         count: data.length,
       },
     });
-  },
+  }
 );
 
 openApi.addPath(
@@ -128,12 +128,12 @@ openApi.addPath(
                 },
               }),
             },
-          }),
+          })
         ),
       },
     },
   },
-  true,
+  true
 );
 
 export default alertApi;
