@@ -12,16 +12,13 @@ assetClassApi.get(
   "/",
   canListAssetClass,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         assetClassId?: string;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { assetClassId, populate } = req.query;
     const data = await assetClass
@@ -33,7 +30,7 @@ assetClassApi.get(
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -42,7 +39,7 @@ openApi.addPath(
     get: {
       summary: "Get assetclass data",
       description:
-        "This operation retrives assetclass information which specify the types of assets",
+        "This operation retrieves assetclass information which specify the types of assets",
       operationId: "GetAssetClass",
       requestSchema: {
         query: {
@@ -59,12 +56,12 @@ openApi.addPath(
             properties: {
               data: Types.Array({ arrayType: AssetClassType }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default assetClassApi;

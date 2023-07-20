@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -7,7 +8,7 @@ import { LayerType } from "../../schemas/layer";
 import { LayerFileType } from "../../schemas/layerFiles";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Flight from "../../models/flight";
-import { DirPath, Directory } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 
 const layerApi = Router();
@@ -15,11 +16,8 @@ const layerApi = Router();
 layerApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         layerId?: string;
         missionId?: string;
         orderBy: string;
@@ -34,9 +32,9 @@ layerApi.get(
         limit: number;
         offset: number;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const {
       layerId,
@@ -75,7 +73,7 @@ layerApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -104,7 +102,7 @@ layerApi.get(
         },
         {
           centerPoints: 1,
-        }
+        },
       );
       resp.centerPoints = flight.centerPoints;
     }
@@ -122,7 +120,7 @@ layerApi.get(
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -130,7 +128,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get layer data",
-      description: "This operation retrives layer information",
+      description: "This operation retrieves layer information",
       operationId: "GetLayer",
       requestSchema: {
         query: {
@@ -200,12 +198,12 @@ openApi.addPath(
                   "Link to download the layer's file(geojson or tiff). Present in response only if layerId is passed (single layer fetched).",
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 layerApi.get(
@@ -224,7 +222,7 @@ layerApi.get(
         populate: string[];
       }
     >,
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { layerId, sysId, isReview, limit, offset, populate } = req.query;
     const data = await LayerFile.find({
@@ -246,7 +244,7 @@ layerApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -254,7 +252,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get layer file data",
-      description: "This operation retrives layer file information",
+      description: "This operation retrieves layer file information",
       operationId: "GetLayerFile",
       requestSchema: {
         query: {
@@ -296,12 +294,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default layerApi;

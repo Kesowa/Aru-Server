@@ -1,33 +1,31 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
 import Flight from "../../models/flight";
 import { FlightType, IFlight } from "../../schemas/flight";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, PipelineStage } from "mongoose";
 
 const flightApi = Router();
 
 flightApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         locationId?: string;
         hasNoMission?: boolean;
         limit: number;
         offset: number;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { locationId, hasNoMission, limit, offset, populate } = req.query;
     let data: HydratedDocument<IFlight>[];
-    const query = [
+    const query: PipelineStage[] = [
       {
         $match: {
           tenant: res.locals.user.tenantId._id,
@@ -51,7 +49,7 @@ flightApi.get(
           $match: {
             mission: [],
           },
-        }
+        },
       );
     }
     data = await Flight.aggregate(query);
@@ -70,7 +68,7 @@ flightApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -119,12 +117,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default flightApi;

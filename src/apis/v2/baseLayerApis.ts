@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -14,7 +15,7 @@ const baseLayerApi = Router();
 const getAlertLocationGeojson = async (
   tenantId: mongoose.Types.ObjectId,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) => {
   const alerts = await Alert.find({
     tenantId,
@@ -58,7 +59,7 @@ const getAlertLocationGeojson = async (
 const getVideoLocationGeojson = async (
   tenantId: mongoose.Types.ObjectId,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) => {
   const videos = await VOD.aggregate([
     {
@@ -137,11 +138,8 @@ const getVideoLocationGeojson = async (
 baseLayerApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         type?: string;
         isPublic?: boolean;
         mapRef?: string;
@@ -150,9 +148,9 @@ baseLayerApi.get(
         limit: number;
         offset: number;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const {
       type,
@@ -164,7 +162,7 @@ baseLayerApi.get(
       offset,
       populate,
     } = req.query;
-    let tenantId = "";
+    let tenantId: mongoose.Types.ObjectId;
     if (mapRef) {
       const tenant = await Tenant.findOne(
         {
@@ -172,7 +170,7 @@ baseLayerApi.get(
         },
         {
           _id: 1,
-        }
+        },
       );
       tenantId = tenant._id;
     }
@@ -187,32 +185,34 @@ baseLayerApi.get(
       .populate(populate)
       .lean();
 
-    const resp: any = {
+    const resp = {
       data,
       pagination: {
         limit,
         offset,
         count: data.length,
       },
+      alertGeojson: null,
+      vodGeojson: null,
     };
-
+    // !TODO only provide geojson data when requested
     if (startDate && endDate) {
       const alertData = await getAlertLocationGeojson(
         res.locals.user.tenantId._id,
         startDate,
-        endDate
+        endDate,
       );
       resp.alertGeojson = alertData;
       const vodData = await getVideoLocationGeojson(
         res.locals.user.tenantId._id,
         startDate,
-        endDate
+        endDate,
       );
       resp.vodGeojson = vodData;
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -220,7 +220,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get base layer data",
-      description: "This operation retrives base layer information",
+      description: "This operation retrieves base layer information",
       operationId: "GetBaseLayer",
       requestSchema: {
         query: {
@@ -280,12 +280,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default baseLayerApi;

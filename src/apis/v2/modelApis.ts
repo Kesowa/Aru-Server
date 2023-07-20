@@ -12,20 +12,17 @@ modelApi.get(
   "/",
   canListModel,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         modelId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { modelId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Model.find(
@@ -38,7 +35,7 @@ modelApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -52,7 +49,7 @@ modelApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -60,7 +57,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get model data",
-      description: "This operation retrives device(drone) model information",
+      description: "This operation retrieves device(drone) model information",
       operationId: "GetModel",
       requestSchema: {
         query: {
@@ -102,12 +99,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default modelApi;

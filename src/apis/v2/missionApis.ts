@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,11 +11,8 @@ const missionApi = Router();
 missionApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         missionId?: string;
         createdBy?: string;
         pilotId?: string;
@@ -26,9 +24,9 @@ missionApi.get(
         populate: string[];
         locationId?: string;
         status?: string;
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const {
       missionId,
@@ -61,7 +59,7 @@ missionApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -75,7 +73,7 @@ missionApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -83,7 +81,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get a mission data",
-      description: "This operation retrives mission information",
+      description: "This operation retrieves mission information",
       operationId: "GetMission",
       requestSchema: {
         query: {
@@ -134,12 +132,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default missionApi;

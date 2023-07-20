@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,11 +11,8 @@ const alertApi = Router();
 alertApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         alertId?: string;
         missionId?: string;
         flightId?: string;
@@ -25,9 +23,9 @@ alertApi.get(
         asc: boolean;
         populate: string[];
         locationId?: string;
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const {
       alertId,
@@ -58,7 +56,7 @@ alertApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -72,7 +70,7 @@ alertApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -80,7 +78,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get an alert data",
-      description: "This operation retrives alert/drone image information",
+      description: "This operation retrieves alert/drone image information",
       operationId: "GetAlert",
       requestSchema: {
         query: {
@@ -130,12 +128,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default alertApi;

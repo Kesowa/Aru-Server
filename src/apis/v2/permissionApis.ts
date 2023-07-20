@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,19 +11,16 @@ const permissionApi = Router();
 permissionApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { limit, offset, orderBy, asc, populate } = req.query;
     if (["super-admin", "tenant-root"].includes(res.locals.user.userType)) {
@@ -36,7 +34,7 @@ permissionApi.get(
           sort: {
             [orderBy]: asc ? "asc" : "desc",
           },
-        }
+        },
       )
         .skip(offset)
         .limit(limit)
@@ -53,7 +51,7 @@ permissionApi.get(
     } else {
       throw new Error("Access Denied");
     }
-  }
+  },
 );
 
 openApi.addPath(
@@ -61,7 +59,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get a permission data",
-      description: "This operation retrives permission information",
+      description: "This operation retrieves permission information",
       operationId: "GetPermission",
       requestSchema: {
         query: {
@@ -102,12 +100,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default permissionApi;

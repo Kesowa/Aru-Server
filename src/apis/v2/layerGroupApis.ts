@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,20 +11,17 @@ const layerGroupApis = Router();
 layerGroupApis.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         layerGroupId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { layerGroupId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await LayerGroup.find(
@@ -36,7 +34,7 @@ layerGroupApis.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -50,7 +48,7 @@ layerGroupApis.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -58,7 +56,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get layer group information",
-      description: "This operation retrives layer group information",
+      description: "This operation retrieves layer group information",
       operationId: "GetLayerGroup",
       requestSchema: {
         query: {
@@ -100,12 +98,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default layerGroupApis;

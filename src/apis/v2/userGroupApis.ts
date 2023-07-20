@@ -12,20 +12,17 @@ userGroupApi.get(
   "/",
   canListUserGroup,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         userGroupId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { userGroupId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await UserGroup.find(
@@ -38,7 +35,7 @@ userGroupApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -52,7 +49,7 @@ userGroupApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -60,7 +57,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get usergroup data",
-      description: "This operation retrives usergroup information",
+      description: "This operation retrieves usergroup information",
       operationId: "GetUserGroup",
       requestSchema: {
         query: {
@@ -102,12 +99,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default userGroupApi;

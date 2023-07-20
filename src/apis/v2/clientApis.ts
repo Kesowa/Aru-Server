@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -9,7 +10,7 @@ import { MissionType } from "../../schemas/mission";
 import Tenant from "../../models/tenant";
 import ObjectsToCsv from "objects-to-csv";
 import path from "path";
-import { DirPath, Directory } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 import { createDirIfNotExists } from "../../utils/fileUtils";
 
 const clientApi = Router();
@@ -17,11 +18,8 @@ const clientApi = Router();
 clientApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         clientId?: string;
         email?: string;
         generateCSV?: boolean;
@@ -31,9 +29,9 @@ clientApi.get(
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const {
       clientId,
@@ -58,7 +56,7 @@ clientApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -103,8 +101,7 @@ clientApi.get(
       const csv = new ObjectsToCsv(savedResult);
       const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
       await csv.toDisk(file);
-      resp.csvPath =
-        "/" +
+      resp.csvPath = "/" +
         file
           .split(/[\\\/]/)
           .slice(8)
@@ -112,7 +109,7 @@ clientApi.get(
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -120,7 +117,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get client data",
-      description: "This operation retrives client information",
+      description: "This operation retrieves client information",
       operationId: "GetClient",
       requestSchema: {
         query: {
@@ -178,12 +175,12 @@ openApi.addPath(
                   "Path to csv file, returned only when generateCSV option was true in request",
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default clientApi;

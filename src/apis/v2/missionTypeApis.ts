@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,20 +11,17 @@ const missionTypeApi = Router();
 missionTypeApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         isActive: boolean;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { isActive, limit, offset, orderBy, asc, populate } = req.query;
     const data = await MissionType.find(
@@ -35,7 +33,7 @@ missionTypeApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -49,7 +47,7 @@ missionTypeApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -57,7 +55,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get mission types data",
-      description: "This operation retrives the different types of missions",
+      description: "This operation retrieves the different types of missions",
       operationId: "GetMissionType",
       requestSchema: {
         query: {
@@ -99,12 +97,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default missionTypeApi;

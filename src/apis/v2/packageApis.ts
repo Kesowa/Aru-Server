@@ -12,20 +12,17 @@ packageApi.get(
   "/",
   onlySuperAdminAccess,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         isActive: boolean;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { isActive, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Package.find(
@@ -37,7 +34,7 @@ packageApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -51,7 +48,7 @@ packageApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -59,7 +56,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get package data",
-      description: "This operation retrives package information",
+      description: "This operation retrieves package information",
       operationId: "GetPackage",
       requestSchema: {
         query: {
@@ -101,12 +98,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default packageApi;

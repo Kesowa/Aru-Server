@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,16 +11,13 @@ const threadApi = Router();
 threadApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         docId?: string;
         docType?: string;
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { docId, docType } = req.query;
     const data = await Thread.findOne({
@@ -35,7 +33,7 @@ threadApi.get(
         data,
       });
     }
-  }
+  },
 );
 
 openApi.addPath(
@@ -43,7 +41,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get thread data",
-      description: "This operation retrives thread information",
+      description: "This operation retrieves thread information",
       operationId: "GetThread",
       requestSchema: {
         query: {
@@ -60,12 +58,12 @@ openApi.addPath(
             properties: {
               data: ThreadType,
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default threadApi;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,20 +11,17 @@ const rasterApi = Router();
 rasterApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         rasterPropId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { rasterPropId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Raster.find(
@@ -35,7 +33,7 @@ rasterApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -49,7 +47,7 @@ rasterApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -58,7 +56,7 @@ openApi.addPath(
     get: {
       summary: "Get raster prop data",
       description:
-        "This operation retrives information about different types of rasters",
+        "This operation retrieves information about different types of rasters",
       operationId: "GetRasterProp",
       requestSchema: {
         query: {
@@ -100,12 +98,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default rasterApi;

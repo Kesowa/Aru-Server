@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,11 +11,8 @@ const locationApi = Router();
 locationApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         locationId?: string;
         lat?: number;
         lng?: number;
@@ -24,9 +22,9 @@ locationApi.get(
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const {
       locationId,
@@ -51,7 +49,7 @@ locationApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -82,7 +80,7 @@ locationApi.get(
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -90,7 +88,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get location information",
-      description: "This operation retrives location information",
+      description: "This operation retrieves location information",
       operationId: "GetLocation",
       requestSchema: {
         query: {
@@ -140,12 +138,12 @@ openApi.addPath(
                 arrayType: LocationType,
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default locationApi;

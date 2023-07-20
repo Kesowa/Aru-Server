@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { thermalStatus, thermalStatusType } from "./sharedSchemas";
+import { thermalStatusEnum, thermalStatusType } from "./sharedSchemas";
 import { Types } from "ts-openapi";
 
 export interface IAlert {
@@ -52,6 +52,7 @@ export const AlertType = {
   locationId: Types.String(), // index
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
+  thermalStatus: Types.StringEnum({ values: [...thermalStatusEnum] }),
 };
 const alertSchema = new mongoose.Schema<IAlert>(
   {
@@ -135,11 +136,15 @@ const alertSchema = new mongoose.Schema<IAlert>(
     updatedAt: {
       type: Date,
     },
-    thermalStatus,
+    thermalStatus: {
+      default: "null",
+      enum: thermalStatusEnum,
+      type: String,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 alertSchema.index({
   flightId: 1,
@@ -148,14 +153,14 @@ alertSchema.index({
   type: 1,
 });
 alertSchema.index({ locationId: 1 }, { sparse: true });
-alertSchema.pre("save", async function () {
+alertSchema.pre<IAlert>("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } }
+    { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } },
   );
   await Mission.updateOne(
     { _id: this.missionId },
-    { $inc: { size: this.fileSize } }
+    { $inc: { size: this.fileSize } },
   );
 });
 alertSchema.post(
@@ -167,12 +172,12 @@ alertSchema.post(
   }) {
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allAlertSize: -this.fileSize } }
+      { $inc: { actualSize: -this.fileSize, allAlertSize: -this.fileSize } },
     );
     await Mission.updateOne(
       { _id: this.missionId },
-      { $inc: { size: -this.fileSize } }
+      { $inc: { size: -this.fileSize } },
     );
-  }
+  },
 );
 export default alertSchema;

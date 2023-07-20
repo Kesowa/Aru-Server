@@ -12,16 +12,13 @@ assetApi.get(
   "/",
   canListAsset,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         assetId?: string;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { assetId, populate } = req.query;
     const data = await Asset.find({
@@ -33,7 +30,7 @@ assetApi.get(
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -41,7 +38,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get asset data",
-      description: "This operation retrives asset(drone) information",
+      description: "This operation retrieves asset(drone) information",
       operationId: "GetAsset",
       requestSchema: {
         query: {
@@ -58,12 +55,12 @@ openApi.addPath(
             properties: {
               data: Types.Array({ arrayType: AssetType }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default assetApi;

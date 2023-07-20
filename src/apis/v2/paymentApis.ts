@@ -13,19 +13,16 @@ paymentApi.get(
   "/",
   environmentGuard(Mode.Dev),
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { limit, offset, orderBy, asc, populate } = req.query;
     const data = await Payment.find(
@@ -37,7 +34,7 @@ paymentApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -51,7 +48,7 @@ paymentApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -60,7 +57,7 @@ openApi.addPath(
     get: {
       summary: "Get payment data",
       description:
-        "This operation retrives information about all payments of current tenant (tenant under whom current user is)",
+        "This operation retrieves information about all payments of current tenant (tenant under whom current user is)",
       operationId: "GetPayment",
       requestSchema: {
         query: {
@@ -101,12 +98,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default paymentApi;

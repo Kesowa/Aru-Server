@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -13,20 +14,17 @@ tenantApi.get(
   "/admin",
   onlySuperAdminAccess,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         tenantId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { tenantId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Tenant.find(
@@ -38,7 +36,7 @@ tenantApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -63,29 +61,26 @@ tenantApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 tenantApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { populate } = req.query;
     const data = await Tenant.findById(res.locals.user.tenantId._id).populate(
-      populate
+      populate,
     );
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -93,7 +88,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get tenant data for admin",
-      description: "This operation retrives all tenants' information",
+      description: "This operation retrieves all tenants' information",
       operationId: "GetTenantAdmin",
       requestSchema: {
         query: {
@@ -125,12 +120,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 openApi.addPath(
@@ -138,7 +133,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get tenant data for user",
-      description: "This operation retrives current tenant's information",
+      description: "This operation retrieves current tenant's information",
       operationId: "GetTenant",
       requestSchema: {
         query: {
@@ -154,12 +149,12 @@ openApi.addPath(
             properties: {
               data: TenantType,
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default tenantApi;

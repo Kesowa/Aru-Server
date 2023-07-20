@@ -6,7 +6,7 @@ import { UserType } from "../../schemas/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUsers } from "../../utils/authUtils";
 import ObjectsToCsv from "objects-to-csv";
-import { DirPath, Directory } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 
 const userApi = Router();
 
@@ -14,20 +14,17 @@ userApi.get(
   "/",
   canListUsers,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         genCSV?: boolean;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { genCSV, limit, offset, orderBy, asc, populate } = req.query;
     const data = await User.find(
@@ -40,7 +37,7 @@ userApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -60,11 +57,10 @@ userApi.get(
       const csv = new ObjectsToCsv(data);
       const file = DirPath(
         Directory.CSV,
-        `${Math.floor(Math.random() * 62000000)}.csv`
+        `${Math.floor(Math.random() * 62000000)}.csv`,
       );
       await csv.toDisk(file);
-      resp.csvPath =
-        "/" +
+      resp.csvPath = "/" +
         file
           .split(/[\\\/]/)
           .slice(8)
@@ -72,7 +68,7 @@ userApi.get(
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -80,7 +76,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get user data",
-      description: "This operation retrives user information",
+      description: "This operation retrieves user information",
       operationId: "GetUser",
       requestSchema: {
         query: {
@@ -121,12 +117,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default userApi;

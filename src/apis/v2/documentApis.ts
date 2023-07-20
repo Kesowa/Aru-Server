@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -5,7 +6,7 @@ import Document from "../../models/document";
 import { DocumentType } from "../../schemas/document";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import archiver from "archiver";
-import { DirPath, Directory } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 import { missionSpecificSocket } from "../../socket";
 import { createDirIfNotExists } from "../../utils/fileUtils";
 import fs from "fs";
@@ -15,11 +16,8 @@ const documentApi = Router();
 documentApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         missionId?: string;
         isFlagged?: boolean;
         folderName?: string;
@@ -29,9 +27,9 @@ documentApi.get(
         limit: number;
         offset: number;
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const {
       missionId,
@@ -56,7 +54,7 @@ documentApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -98,7 +96,7 @@ documentApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -106,7 +104,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get document data",
-      description: "This operation retrives document information",
+      description: "This operation retrieves document information",
       operationId: "GetDocument",
       requestSchema: {
         query: {
@@ -151,12 +149,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default documentApi;

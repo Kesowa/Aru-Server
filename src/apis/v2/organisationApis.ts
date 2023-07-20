@@ -12,15 +12,12 @@ organisationApi.get(
   "/",
   onlyTenantRootAccess,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         populate: string[];
-      }
-    >,
-    res: AuthResponse
+      };
+    },
+    res: AuthResponse,
   ) => {
     const { populate } = req.query;
     const data = await Tenant.findById(res.locals.user.tenantId._id)
@@ -29,7 +26,7 @@ organisationApi.get(
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -38,7 +35,7 @@ openApi.addPath(
     get: {
       summary: "Get organisation data",
       description:
-        "This operation retrives information about currently logged in user's organisation",
+        "This operation retrieves information about currently logged in user's organisation",
       operationId: "GetOrganisation",
       requestSchema: {
         query: {
@@ -54,12 +51,12 @@ openApi.addPath(
             properties: {
               data: TenantType,
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default organisationApi;
