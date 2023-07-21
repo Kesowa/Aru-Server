@@ -28,7 +28,7 @@ export interface IAreaData {
 export interface IPage2Properties {
     missionHeading: string, 
     missionSubHeading: string, 
-    missionMapImgPath: string, 
+    missionMapImg: Buffer, 
     missionCode: string, 
     area: IAreaData, 
     occupancy: IOccupancyDesc[],
@@ -37,7 +37,7 @@ export interface IPage2Properties {
 export interface IReportMapPageProperties {
     heading: string,
     subheading: string,
-    imgPath: string,
+    imgBuffer: Buffer,
 }
 
 export interface IPage7Properties {
@@ -46,11 +46,6 @@ export interface IPage7Properties {
     categoryPieChart: Buffer,
     statusPieChart: Buffer,
     barChart: Buffer,
-}
-
-export interface IDeliverable {
-    name: string,
-    imgPath: string,
 }
 
 export interface IData {
@@ -70,5 +65,20 @@ export interface IData {
     roadLength: number,
     cycleTrackLength: number,
     // map pages
-    deliverables: IDeliverable[],
+    deliverables: {
+      "OVERVIEW": string[],
+      "BOUNDARY"?: string[],
+      "BUILT-UP AREA"?: string[],
+      "AMENITIES AND POI"?: string[],
+      "OTHER FEATURES"?: string[],
+      "ACTIONABLE POINTS"?: string[],
+      "OCCUPIED UNTAXED AREA (ENCROACHMENT)"?: string[],
+      "ROAD DETAILS"?: string[],
+      "FOOTPATH DETAILS"?: string[],
+      "CYCLE TRACK DETAILS"?: string[],
+      "WATERBODIES DETAILS"?: string[],
+      "GREENERY DETAILS"?: string[],
+      "WATER TANK"?: string[],
+      "STREET-LIGHT DETAILS"?: string[],
+    }
 }

@@ -754,11 +754,11 @@ const textBoxBelowTable2 = new Paragraph({
     ],
 });
 
-const mapImagePage2 = (missionMapImgPath:string) => {
+const mapImagePage2 = (missionMapImg:Buffer) => {
     return new Paragraph({
         children: [
             new ImageRun({
-                data: fs.readFileSync(missionMapImgPath),
+                data: missionMapImg,
                 transformation: {
                     width: 350,
                     height: 250,
@@ -908,11 +908,7 @@ const designBorderTextBox = new Paragraph({
 });
 
 export const page2 = (properties:IPage2Properties) => {
-    const { missionHeading, missionSubHeading, missionCode, area, occupancy } = properties;
-    let { missionMapImgPath } = properties;
-    if(missionMapImgPath == "") {
-        missionMapImgPath = path.join(__dirname, "images", "fallback.png");
-    }
+    const { missionHeading, missionSubHeading, missionCode, area, occupancy, missionMapImg } = properties;
     return {
         properties: commonPageProperties,
         footers: commonPageFooter,
@@ -920,7 +916,7 @@ export const page2 = (properties:IPage2Properties) => {
             table1(area),
             table2(occupancy),
             textBoxBelowTable2,
-            mapImagePage2(missionMapImgPath),
+            mapImagePage2(missionMapImg),
             missionNameTextBox(missionHeading, missionSubHeading),
             headingTextBox,
             idTextBox(missionCode),

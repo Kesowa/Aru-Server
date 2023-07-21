@@ -1,17 +1,17 @@
 import { promises as fs } from "fs";
-import turf from "@turf/turf";
+import * as turf from "@turf/turf";
 import { Request } from "express";
 import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { IVector } from "../../schemas/vectorprops";
-import { DirPath, Directory } from "../../constants";
+import { DirPath, Directory, PUBLIC_SERVER } from "../../constants";
 import { generateDocument } from "../../utils/reportUtils/report";
 import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/types";
 import Flight from "../../models/flight";
 import { IUser } from "../../schemas/user";
-import { privateCommercialLayerTypes, residentialLayerTypes, govtCommercialLayerTypes, housingComplexLayerTypes, govtLayerTypes, motorableRoadsLayerTypes, footpathLayerTypes, cycleTrackLayerTypes, greeneryLayerTypes, waterBodyLayerTypes, vacantTypes, underConstructionTypes } from "../../utils/reportUtils/reportUtils";
+import { privateCommercialLayerTypes, residentialLayerTypes, govtCommercialLayerTypes, housingComplexLayerTypes, govtLayerTypes, motorableRoadsLayerTypes, footpathLayerTypes, cycleTrackLayerTypes, greeneryLayerTypes, waterBodyLayerTypes, vacantTypes, underConstructionTypes, deliverableTypes } from "../../utils/reportUtils/reportUtils";
 import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
 
@@ -150,23 +150,9 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       roadCount: 0,
       roadLength: 0,
       cycleTrackLength: 0,
-      deliverables: [
-        { name: "OVERVIEW", imgPath: "" },
-        { name: "BOUNDARY", imgPath: "" },
-        { name: "BUILT-UP AREA", imgPath: "" },
-        { name: "AMENITIES AND POI", imgPath: "" },
-        { name: "OTHER FEATURES", imgPath: "" },
-        { name: "ACTIONABLE POINTS", imgPath: "" },
-        { name: "OCCUPIED UNTAXED AREA (ENCROACHMENT)", imgPath: "" },
-        { name: "ROAD DETAILS", imgPath: "" },
-        { name: "FOOTPATH DETAILS", imgPath: "" },
-        { name: "CYCLE TRACK DETAILS", imgPath: "" },
-        { name: "WATERBODIES DETAILS", imgPath: "" },
-        { name: "GREENERY DETAILS", imgPath: "" },
-        { name: "WATERBODIES DETAILS", imgPath: "" },
-        { name: "WATER TANK", imgPath: "" },
-        { name: "STREET-LIGHT DETAILS", imgPath: "" },
-      ]
+      deliverables: {
+        "OVERVIEW": [],
+      },
     };
 
     // mission details filling
@@ -268,6 +254,18 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       } else {
         data.area.other += currLayerArea;
       }
+
+      // categorizing the geojson for map
+      for(let d in deliverableTypes) {
+        if(deliverableTypes[d].includes(layer.vector.name)) {
+          if(!data.deliverables[d]) {
+            data.deliverables[d] = [PUBLIC_SERVER+layer.layerpath];
+          } else {
+            data.deliverables[d].push(PUBLIC_SERVER+layer.layerpath);
+          }
+        }
+      }
+      
     }
 
     // all information received without errors, now can start report generation successfully

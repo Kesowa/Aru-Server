@@ -21,8 +21,19 @@ export class ScreenshotGenerator {
     chartPage: Page;
     mapboxPage: Page;
 
+    mapboxHtml: string;
+    chartHtml: string;
+
     static PIE_CHART = "pie chart";
     static BAR_CHART = "bar chart";
+
+    async loadHtmlToPage(page: Page, html: string) {
+        await page.goto(`data: text/html, ${html}`, { 
+            waitUntil: "networkidle0" 
+        });
+        await page.setContent(html);
+        await page.emulateMediaType("screen");
+    }
 
     async init() {
         // Launch the browser instance
@@ -36,27 +47,19 @@ export class ScreenshotGenerator {
             headless: true,
         });
 
-        async function loadHtmlToPage(page: Page, html: string) {
-            await page.goto(`data: text/html, ${html}`, { 
-                waitUntil: "networkidle0" 
-            });
-            await page.setContent(html);
-            await page.emulateMediaType("screen");
-        }
-
         // Open the pages
 
         try {
-            const mapboxHtml = await fs.readFile(path.join(__dirname, "templates", "mapbox.html"), "utf-8");
+            this.mapboxHtml = await fs.readFile(path.join(__dirname, "templates", "mapbox.html"), "utf-8");
             this.mapboxPage = await this.browser.newPage();
-            await loadHtmlToPage(this.mapboxPage, mapboxHtml);
+            await this.loadHtmlToPage(this.mapboxPage, this.mapboxHtml);
     
-            const chartHtml = await fs.readFile(path.join(__dirname, "templates", "chart.html"), "utf-8");
+            this.chartHtml = await fs.readFile(path.join(__dirname, "templates", "chart.html"), "utf-8");
             this.chartPage = await this.browser.newPage();
-            await loadHtmlToPage(this.chartPage, chartHtml);
+            await this.loadHtmlToPage(this.chartPage, this.chartHtml);
         } catch(error) {
             console.error(error);
-            await this.browser.close();
+            // await this.browser.close();
         }
 
     }
@@ -77,15 +80,16 @@ export class ScreenshotGenerator {
             return pngBuff;
         } catch(error) {
             console.error(error);
-            await this.destroy();
+            // await this.destroy();
         }
     }
 
     async getMapSS(cogServerUrl: string, vectorFilePaths: string[]) {
         try {
+            await this.loadHtmlToPage(this.mapboxPage, this.mapboxHtml); // refreshing the page kindof
             await this.mapboxPage.evaluate((cogServerUrl, vectorFilePaths) => {
+                document.getElementById("map").innerHTML = "";
                 window.isMapLoaded = false;
-        
                 window.setupMap("map", cogServerUrl).then(() => {
                     // Render all given geojsons
                     window.renderVector(vectorFilePaths).then(() => {
@@ -101,7 +105,7 @@ export class ScreenshotGenerator {
             return pngBuff;
         } catch(error) {
             console.error(error);
-            await this.destroy();
+            // await this.destroy();
         }
     }
 

@@ -4,7 +4,7 @@ import { commonPageProperties, commonPageFooter } from "./reportUtils";
 import { IPage7Properties } from "./types";
 import path from "path";
 
-export const reportPg7 = async (properties: IPage7Properties) => {
+export const reportPg4 = async (properties: IPage7Properties) => {
     const { heading, subheading, categoryPieChart, statusPieChart, barChart } = properties;
 
     const headings = new Paragraph({

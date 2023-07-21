@@ -5,11 +5,8 @@ import { commonPageProperties, commonPageFooter } from "./reportUtils";
 import { IReportMapPageProperties } from "./types";
 
 export const reportMapPage = (properties: IReportMapPageProperties) => {
-    const { heading, subheading } = properties;
-    let { imgPath } = properties;
-    if(imgPath == "") {
-        imgPath = path.join(__dirname, "images", "fallback.png");
-    }
+    const { heading, subheading, imgBuffer } = properties;
+
     const headings = new Paragraph({
         frame: {
             position: {
@@ -62,7 +59,7 @@ export const reportMapPage = (properties: IReportMapPageProperties) => {
         },
         children: [
             new ImageRun({
-                data: fs.readFileSync(imgPath),
+                data: imgBuffer,
                 transformation: {
                     width: 950,
                     height: 558,

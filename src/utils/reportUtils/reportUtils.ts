@@ -1,9 +1,5 @@
 import { LevelFormat, AlignmentType, convertInchesToTwip, PageOrientation, Footer, PageNumber, Paragraph, TextRun } from "docx";
 
-import * as d3 from "d3";
-import { JSDOM } from "jsdom";
-import sharp from "sharp";
-
 // =============================== DOCX GENERATION UTILS ===============================================================================
 
 const levelOptions = [
@@ -173,85 +169,19 @@ export const vacantTypes = ["Vacant Plot"];
 
 // ===================================================================================================================================
 
-export const genStackedBarChart = async (data: any[]) => {
-    const document = new JSDOM().window.document;
-    
-    let groups: any[] = [];
-    let subgroups: any[] = Object.keys(data[0]).filter(g => (g != "name"));
-    
-    for(let d of data) groups.push(d.name);
-
-    let margin = {top: 50, right: 30, bottom: 20, left: 50};
-    const width = 500 - margin.left - margin.right;
-    const height = 500 - margin.top - margin.bottom;
-
-    const svg = d3
-        .select(document.body)
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom);
-
-    var x = d3.scaleBand()
-        .domain(groups)
-        .range([0, width])
-        .padding(0.2)
-    svg.append("g")
-        .attr("transform", `translate(${margin.left},${height + margin.top})`)
-        .attr("style", "font-size: 15px;")
-        .call(d3.axisBottom(x).tickSizeOuter(0));
-
-    var y = d3.scaleLinear()
-        .domain([0, 100])
-        .range([ height, 0 ]);
-    svg.append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`)
-        .attr("style", "font-size: 15px;")
-        .call(d3.axisLeft(y));
-
-    data = data.map((d) => {
-        let total = 0;
-        let normalized_d: any = {};
-        normalized_d["name"] = d["name"];
-        for (let sub of subgroups){ total += d[sub]; }
-        for (let sub of subgroups){ normalized_d[sub] = d[sub] / total * 100; }
-        return normalized_d;
-      });
-
-    const stackedData = d3.stack().keys(subgroups)(data);
-
-    var color = d3.scaleOrdinal()
-        .domain(subgroups)
-        .range(['#e01ea3', '#df7c12', '#8277da']);
-
-    var bar_groups = svg.append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`)
-        .selectAll("g")
-        .data(stackedData)
-        .enter().append("g")
-        .attr("fill", function(d) { return color(d.key); })
-
-    var bars = bar_groups.selectAll("g")
-        .data(function(d) { return d; })
-        .enter().append("g")
-    
-    bars.append('rect')
-        .attr("x", function(d) { return x(d.data.name); })
-        .attr("y", function(d) { return y(d[1]); })
-        .attr("height", function(d) { return y(d[0]) - y(d[1]); })
-        .attr("width", x.bandwidth());
-
-    bars.append("text")
-        .text(function(d) { return d3.format(".2s")(d[1]-d[0])+"%"; })
-        .attr("y", function(d) { return y(d[1])+(y(d[0]) - y(d[1]))/2; })
-        .attr("x", function(d) { return x(d.data.name) + (x.bandwidth() * 0.4); })
-        .style("fill", '#000000')
-        .attr("font-size", "15")
-        .attr("font-weight", "bold");
-
-    const buff = Buffer.from(svg.node().outerHTML);
-
-    const pngBuff = await sharp(buff).png().toBuffer();
-
-    return pngBuff;
-}
-
+export const deliverableTypes = {
+  "OVERVIEW": ["Plot"],
+  "BOUNDARY": [],
+  "BUILT-UP AREA": ["Building Footprint"],
+  "AMENITIES AND POI": [],
+  "OTHER FEATURES": [],
+  "ACTIONABLE POINTS": [],
+  "OCCUPIED UNTAXED AREA (ENCROACHMENT)": [],
+  "ROAD DETAILS": ["Road"],
+  "FOOTPATH DETAILS": ["Footpath"],
+  "CYCLE TRACK DETAILS": ["Cycle Track"],
+  "WATERBODIES DETAILS": ["Drainage Network", "Canal", "Sewerage Network", "Waterbody"],
+  "GREENERY DETAILS": ["Playground", "Park", "Green Verge", "Jungle" ],
+  "WATER TANK": [],
+  "STREET-LIGHT DETAILS": [],
+};

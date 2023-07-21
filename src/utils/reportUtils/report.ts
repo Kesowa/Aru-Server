@@ -4,7 +4,7 @@ import { page2 } from "./reportPg2";
 import { page3 } from "./reportPg3";
 import { numberings } from "./reportUtils";
 import { reportMapPage } from "./reportMapPage";
-import { reportPg7 } from "./reportPg7";
+import { reportPg4 } from "./reportPg4";
 import { IData } from "./types";
 import { ScreenshotGenerator } from "./screenshot";
 
@@ -26,28 +26,85 @@ export const generateDocument = async (data: IData) => {
         deliverables,
     } = data;
 
+    let residentialArea = data.area.privateSpaces.find((obj) => { return obj.name === "Residential"; }).value;
+    let governmentArea = data.area.publicSpaces.find((obj) => { return obj.name === "Government"; }).value;
+    let total = residentialArea + governmentArea;
+    if(total !== 0) {
+        residentialArea = residentialArea/total;
+        governmentArea = governmentArea/total;
+    }
+
+    let totalOccupied = 0, totalUnderConstruction = 0, totalVacant = 0;
+    for(let d of data.occupancy) {
+        totalOccupied += d.occupied;
+        totalUnderConstruction += d.underConstruction;
+        totalVacant += d.vacant;
+    }
+    total = totalOccupied + totalUnderConstruction + totalVacant;
+    if(total !== 0) {
+        totalOccupied = totalOccupied/total;
+        totalUnderConstruction = totalUnderConstruction/total;
+        totalVacant = totalVacant/total;
+    }
+
+    const govtBarChartData = data.occupancy.find((obj) => { return obj.name === "Government"; })
+    const residentialBarChartData = data.occupancy.find((obj) => { return obj.name === "Residential"; })
+
     // Take all necessary screenshots
 
     const ssGenerator = new ScreenshotGenerator();
     await ssGenerator.init();
-    const missionMapImg = await ssGenerator.getMapSS("https://cog-nk.kesowa.com", [
-        "https://cdn-dev.kesowa.com/vector/00854a1e-568d-42db-84e9-a310df7593c9.geojson",
-        "https://cdn-dev.kesowa.com/vector/59af3119-fd68-48d0-966a-9a0008ec2b18.geojson"
-    ]);
+
+    console.error("Browser Launched for screenshots...");
+
+    const missionMapImg = await ssGenerator.getMapSS("https://cog-nk.kesowa.com", data.deliverables["OVERVIEW"]);
+
+    console.error("Mission Map Image Captured...");
+
     const categoryPieChart = await ssGenerator.getChartSS("Area Distribution By Plot Category", [
-        {name: "Government", percent: 16, color: "#4472c4"},
-        {name: "Residential", percent: 84, color: "#ed7d31"},
+        {name: "Government", percent: governmentArea*100, color: "#4472c4"},
+        {name: "Residential", percent: residentialArea*100, color: "#ed7d31"},
     ], ScreenshotGenerator.PIE_CHART);
+    
+    console.error("Category Pie Chart Image Captured...");
+
     const statusPieChart = await ssGenerator.getChartSS("Area Distribution By Plot Status", [
-        {name: "Under Construction", percent: 9, color: "#ffc000"},
-        {name: "Empty", percent: 28, color: "#5b9bd5"},
-        {name: "Constructed", percent: 63, color: "#70ad47"},
+        {name: "Under Construction", percent: totalUnderConstruction*100, color: "#ffc000"},
+        {name: "Empty", percent: totalVacant*100, color: "#5b9bd5"},
+        {name: "Constructed", percent: totalOccupied*100, color: "#70ad47"},
     ], ScreenshotGenerator.PIE_CHART);
+
+    console.error("Status Pie Chart Image Captured...");
+
     const barChart = await ssGenerator.getChartSS("Plot Details", [
-        {name: "Government", UnderConstruction: 1, Empty: 7, Constructed: 3 },
-        {name: "Residential", UnderConstruction: 22, Empty: 50, Constructed: 157 },
+        {
+            name: "Government", 
+            UnderConstruction: govtBarChartData.underConstruction, 
+            Empty: govtBarChartData.vacant, 
+            Constructed: govtBarChartData.occupied 
+        },
+        {
+            name: "Residential", 
+            UnderConstruction: residentialBarChartData.underConstruction, 
+            Empty: residentialBarChartData.vacant, 
+            Constructed: residentialBarChartData.occupied 
+        },
     ], ScreenshotGenerator.BAR_CHART);
+
+    console.error("Bar Chart Image Captured...");
+
+    const deliverableBuffers: any = {};
+    for(let d in deliverables) {
+        console.error(`Capturing image for: ${d}...`)
+        deliverableBuffers[d] = await ssGenerator.getMapSS("https://cog-nk.kesowa.com", deliverables[d]);
+        console.error("Captured...");
+    }
+
+    console.error("All Images Captured... Generating document...");
+    
     await ssGenerator.destroy();
+
+    console.error("Browser Closed...");
 
     const pg1 = await page1({ 
         missionHeading, 
@@ -59,9 +116,9 @@ export const generateDocument = async (data: IData) => {
         emails, 
         phoneNos
     });
-    const pg7 = await reportPg7({
+    const pg4 = await reportPg4({
         heading: missionHeading, 
-        subheading: "PLOT DETAILS - PART 02", 
+        subheading: "PLOT DETAILS", 
         categoryPieChart,
         statusPieChart,
         barChart,
@@ -74,85 +131,80 @@ export const generateDocument = async (data: IData) => {
         },
         sections: [
             pg1,
-            // page2({ 
-            //     missionHeading, 
-            //     missionSubHeading,
-            //     missionMapImgPath,
-            //     missionCode,
-            //     area,
-            //     occupancy,
-            // }),
-            // page3({
-            //     missionCode,
-            //     roadData: [
-            //         { name: "No of roads", value: `${roadCount}` },
-            //         { name: "Road's Length", value: `${roadLength} mt.(Approx)` },
-            //         { 
-            //             name: "Roads are sharing with adjacent blocks:", 
-            //             value: [
-            //                 { name: "Adjacent Block", value: "" },
-            //                 { name: "Street no. of roads", value: "" },
-            //                 { name: "Road Segment Length", value: "" },
-            //                 { 
-            //                     name: "Street no. sharing with adjacent block", 
-            //                     value: "-",
-            //                 },
-            //             ],
-            //         },
-            //         { name: "Major Road Problem", value: "-" },
-            //     ],
-            //     footpathData: [
-            //         { name: "Street with footpath", value: "-" },
-            //         { name: "Street with partial footpath", value: "-" },
-            //         { name: "Street without footpath", value: "-" },
-            //     ],
-            //     greeneryData: [
-            //         { name: "Area", value: `${area.publicSpaces[4].value} sq. mt.` },
-            //         { name: "No. of trees", value: "-" },
-            //         { 
-            //             name: "Green Verges and Public Parks", 
-            //             value: "-",
-            //         },
-            //     ],
-            //     canalData: "-",
-            //     waterBodyData: [
-            //         { name: "Perimeter", value: "" },
-            //         { name: "Area", value: `${area.publicSpaces[5].value} sq. mt.` },
-            //         { name: "Clean", value: "-" },
-            //         { name: "Swimmable", value: "-" },
-            //     ],
-            //     wasteBinData: "-",
-            //     constructionSitesData: "-",
-            //     cycleTrackData: [
-            //         { name: "Cycle Track Length", value: `${cycleTrackLength} mt. (Approx)` },
-            //         { name: "Street no. with cycle track", value: "-" },
-            //         { name: "Major Problem", value: "-" },
-            //         { name: "Cycle route", value: "-" },
-            //     ],
-            //     streetLightData: "-",
-            //     parkingData: "-",
-            //     publicMarketData: "-",
-            //     stubbleBurningData: "-",
-            //     policeAndFireStationsData: "-",
-            //     waterAndDrainageNetworkData: "-",
-            //     publicArtData: "-",
-            //     publicGymData: "-",
-            //     rooftopSolarData: "-",
-            //     othersData: "-",
-            // }),
-            // reportMapPage({
-            //     heading: missionHeading, 
-            //     subheading: "PLOT DETAILS - PART 01", 
-            //     imgPath: "",
-            // }),
-            pg7,
-            // ...(deliverables.map((d) => {
-            //         return reportMapPage({
-            //             heading: missionHeading, 
-            //             subheading: `${d.name}`, 
-            //             imgPath: d.imgPath,
-            //         });
-            // })),
+            page2({ 
+                missionHeading, 
+                missionSubHeading,
+                missionMapImg,
+                missionCode,
+                area,
+                occupancy,
+            }),
+            page3({
+                missionCode,
+                roadData: [
+                    { name: "No of roads", value: `${roadCount}` },
+                    { name: "Road's Length", value: `${roadLength} mt.(Approx)` },
+                    { 
+                        name: "Roads are sharing with adjacent blocks:", 
+                        value: [
+                            { name: "Adjacent Block", value: "" },
+                            { name: "Street no. of roads", value: "" },
+                            { name: "Road Segment Length", value: "" },
+                            { 
+                                name: "Street no. sharing with adjacent block", 
+                                value: "-",
+                            },
+                        ],
+                    },
+                    { name: "Major Road Problem", value: "-" },
+                ],
+                footpathData: [
+                    { name: "Street with footpath", value: "-" },
+                    { name: "Street with partial footpath", value: "-" },
+                    { name: "Street without footpath", value: "-" },
+                ],
+                greeneryData: [
+                    { name: "Area", value: `${area.publicSpaces[4].value} sq. mt.` },
+                    { name: "No. of trees", value: "-" },
+                    { 
+                        name: "Green Verges and Public Parks", 
+                        value: "-",
+                    },
+                ],
+                canalData: "-",
+                waterBodyData: [
+                    { name: "Perimeter", value: "" },
+                    { name: "Area", value: `${area.publicSpaces[5].value} sq. mt.` },
+                    { name: "Clean", value: "-" },
+                    { name: "Swimmable", value: "-" },
+                ],
+                wasteBinData: "-",
+                constructionSitesData: "-",
+                cycleTrackData: [
+                    { name: "Cycle Track Length", value: `${cycleTrackLength} mt. (Approx)` },
+                    { name: "Street no. with cycle track", value: "-" },
+                    { name: "Major Problem", value: "-" },
+                    { name: "Cycle route", value: "-" },
+                ],
+                streetLightData: "-",
+                parkingData: "-",
+                publicMarketData: "-",
+                stubbleBurningData: "-",
+                policeAndFireStationsData: "-",
+                waterAndDrainageNetworkData: "-",
+                publicArtData: "-",
+                publicGymData: "-",
+                rooftopSolarData: "-",
+                othersData: "-",
+            }),
+            pg4,
+            ...Object.keys(deliverableBuffers).map((key) => {
+                return reportMapPage({
+                    heading: missionHeading,
+                    subheading: key,
+                    imgBuffer: deliverableBuffers[key],
+                });
+            }),
         ]
     });
 }
