@@ -4,11 +4,12 @@ import { page2 } from "./reportPg2";
 import { page3 } from "./reportPg3";
 import { numberings } from "./reportUtils";
 import { reportMapPage } from "./reportMapPage";
-import { reportPg4 } from "./reportPg4";
+import { page4 } from "./reportPg4";
 import { IData } from "./types";
 import { ScreenshotGenerator } from "./screenshot";
+import { pino } from "pino";
 
-export const generateDocument = async (data: IData) => {
+export const generateDocument = async (data: IData, logger: pino.Logger) => {
     const { 
         missionHeading, 
         missionSubHeading, 
@@ -52,21 +53,21 @@ export const generateDocument = async (data: IData) => {
 
     // Take all necessary screenshots
 
-    const ssGenerator = new ScreenshotGenerator();
+    const ssGenerator = new ScreenshotGenerator(logger);
     await ssGenerator.init();
 
-    console.error("Browser Launched for screenshots...");
+    logger.info("Browser Launched for screenshots...");
 
     const missionMapImg = await ssGenerator.getMapSS("https://cog-nk.kesowa.com", data.deliverables["OVERVIEW"]);
 
-    console.error("Mission Map Image Captured...");
+    logger.info("Mission Map Image Captured...");
 
     const categoryPieChart = await ssGenerator.getChartSS("Area Distribution By Plot Category", [
         {name: "Government", percent: governmentArea*100, color: "#4472c4"},
         {name: "Residential", percent: residentialArea*100, color: "#ed7d31"},
     ], ScreenshotGenerator.PIE_CHART);
     
-    console.error("Category Pie Chart Image Captured...");
+    logger.info("Category Pie Chart Image Captured...");
 
     const statusPieChart = await ssGenerator.getChartSS("Area Distribution By Plot Status", [
         {name: "Under Construction", percent: totalUnderConstruction*100, color: "#ffc000"},
@@ -74,7 +75,7 @@ export const generateDocument = async (data: IData) => {
         {name: "Constructed", percent: totalOccupied*100, color: "#70ad47"},
     ], ScreenshotGenerator.PIE_CHART);
 
-    console.error("Status Pie Chart Image Captured...");
+    logger.info("Status Pie Chart Image Captured...");
 
     const barChart = await ssGenerator.getChartSS("Plot Details", [
         {
@@ -91,38 +92,20 @@ export const generateDocument = async (data: IData) => {
         },
     ], ScreenshotGenerator.BAR_CHART);
 
-    console.error("Bar Chart Image Captured...");
+    logger.info("Bar Chart Image Captured...");
 
     const deliverableBuffers: any = {};
     for(let d in deliverables) {
-        console.error(`Capturing image for: ${d}...`)
+        logger.info(`Capturing image for: ${d}...`)
         deliverableBuffers[d] = await ssGenerator.getMapSS("https://cog-nk.kesowa.com", deliverables[d]);
-        console.error("Captured...");
     }
 
-    console.error("All Images Captured... Generating document...");
+    logger.info("All Images Captured... Generating document...");
     
     await ssGenerator.destroy();
 
-    console.error("Browser Closed...");
+    logger.info("Browser Closed...");
 
-    const pg1 = await page1({ 
-        missionHeading, 
-        missionSubHeading,
-        missionMapImg,
-        missionCode,
-        date,
-        users, 
-        emails, 
-        phoneNos
-    });
-    const pg4 = await reportPg4({
-        heading: missionHeading, 
-        subheading: "PLOT DETAILS", 
-        categoryPieChart,
-        statusPieChart,
-        barChart,
-    });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     return new Document({
         numbering: numberings,
@@ -130,7 +113,16 @@ export const generateDocument = async (data: IData) => {
             color: "D9D9D9",
         },
         sections: [
-            pg1,
+            page1({ 
+                missionHeading, 
+                missionSubHeading,
+                missionMapImg,
+                missionCode,
+                date,
+                users, 
+                emails, 
+                phoneNos
+            }),
             page2({ 
                 missionHeading, 
                 missionSubHeading,
@@ -197,7 +189,15 @@ export const generateDocument = async (data: IData) => {
                 rooftopSolarData: "-",
                 othersData: "-",
             }),
-            pg4,
+            page4({
+                heading: missionHeading, 
+                subheading: "PLOT DETAILS", 
+                categoryPieChart,
+                statusPieChart,
+                barChart,
+                area,
+                occupancy,
+            }),
             ...Object.keys(deliverableBuffers).map((key) => {
                 return reportMapPage({
                     heading: missionHeading,

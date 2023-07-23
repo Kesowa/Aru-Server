@@ -1,6 +1,7 @@
 import puppeteer, { Browser, Page } from 'puppeteer-core';
 import fs from "fs/promises";
 import path from "path";
+import { pino } from 'pino';
 
 export interface IPieChartData {
     name: string,
@@ -24,8 +25,14 @@ export class ScreenshotGenerator {
     mapboxHtml: string;
     chartHtml: string;
 
+    logger: pino.Logger;
+
     static PIE_CHART = "pie chart";
     static BAR_CHART = "bar chart";
+
+    constructor(logger: pino.Logger) {
+        this.logger = logger;
+    }
 
     async loadHtmlToPage(page: Page, html: string) {
         await page.goto(`data: text/html, ${html}`, { 
@@ -37,15 +44,20 @@ export class ScreenshotGenerator {
 
     async init() {
         // Launch the browser instance
-        this.browser = await puppeteer.launch({
-            executablePath: "/usr/bin/google-chrome",
-            args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage"
-            ],
-            headless: true,
-        });
+        try {
+            this.browser = await puppeteer.launch({
+                executablePath: "/usr/bin/google-chrome",
+                args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage"
+                ],
+                headless: true,
+            });
+        } catch(error) {
+            this.logger.error("Error while launching browser for screenshots: ");
+            this.logger.error(error);
+        }
 
         // Open the pages
 
@@ -58,8 +70,8 @@ export class ScreenshotGenerator {
             this.chartPage = await this.browser.newPage();
             await this.loadHtmlToPage(this.chartPage, this.chartHtml);
         } catch(error) {
-            console.error(error);
-            // await this.browser.close();
+            this.logger.error("Error while loading html to puppeteer page: ");
+            this.logger.error(error);
         }
 
     }
@@ -79,8 +91,8 @@ export class ScreenshotGenerator {
             const pngBuff = await this.chartPage.screenshot({ type: "png" });
             return pngBuff;
         } catch(error) {
-            console.error(error);
-            // await this.destroy();
+            this.logger.error("Error while generating chart screenshot: ");
+            this.logger.error(error);
         }
     }
 
@@ -96,16 +108,16 @@ export class ScreenshotGenerator {
                         window.setTimeout(() => {
                             window.isMapLoaded = true; // map loaded and stabilized (all transition animations over)
                         }, 7000);
-                    }).catch(console.error);
+                    }).catch(this.logger.error);
                 })
-                .catch((error: any) => console.error("Error loading map", error));
+                .catch((error: any) => this.logger.error("Error loading map", error));
             }, cogServerUrl, vectorFilePaths);
             await this.mapboxPage.waitForFunction("window.isMapLoaded === true"); // wait for mapbox to load up and stablizie the map
             const pngBuff = await this.mapboxPage.screenshot({ type: "png" });
             return pngBuff;
         } catch(error) {
-            console.error(error);
-            // await this.destroy();
+            this.logger.error("Error while generating map screenshot: ");
+            this.logger.error(error);
         }
     }
 

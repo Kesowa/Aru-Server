@@ -274,10 +274,10 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       message: "Report generation started!",
     });
 
-    console.info("Generating report...");
+    req.log.info("Generating report...");
 
     // saving the document
-    const doc = await generateDocument(data);
+    const doc = await generateDocument(data, req.log);
     const buffer = await Packer.toBuffer(doc);
     const filename = `${missionId}-report.docx`;
     const filepath = DirPath(Directory.DOCUMENTS, filename);
@@ -299,7 +299,7 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
     });
     const savedDoc = await docDB.save();
 
-    console.info("Report Generation Complete");
+    req.log.info("Report Generation Complete");
 
     missionSpecificSocket
       .to(savedDoc.missionId.toString())

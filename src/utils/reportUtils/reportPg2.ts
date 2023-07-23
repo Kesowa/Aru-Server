@@ -9,7 +9,6 @@ const sqMtrToAcres = (sqMtr:number) => { return roundOffTo2DecimalPlaces(0.00024
 const sqMtrToSqKm = (sqMtr:number) => { return roundOffTo2DecimalPlaces(0.000001*sqMtr); } // correct to last 2 decimal places
 
 const table1 = (area: IAreaData) => {
-    if(area.total == 0) area.total = 1; // to avoid (...)/0 and NaN while converting from sq. mtr. to acres
     return new Table({
         width: {
             size: "13.97cm",
@@ -326,7 +325,11 @@ const table1 = (area: IAreaData) => {
                         width: { 
                             size: "20%" 
                         }, 
-                        children: [new Paragraph(roundOffTo2DecimalPlaces(((area.privateSpaces[0].value)/(area.total))*100).toString())],
+                        children: [new Paragraph(roundOffTo2DecimalPlaces(
+                            (area.total === 0) ?
+                            0 :
+                            ((area.privateSpaces[0].value)/(area.total))*100
+                        ).toString())],
                         borders: {
                             right: {
                                 style: BorderStyle.THICK,
@@ -367,7 +370,11 @@ const table1 = (area: IAreaData) => {
                             width: { 
                                 size: "20%" 
                             }, 
-                            children: [new Paragraph(roundOffTo2DecimalPlaces(((ps.value)/(area.total))*100).toString())], 
+                            children: [new Paragraph(roundOffTo2DecimalPlaces(
+                                (area.total === 0) ?
+                                0 :
+                                ((ps.value)/(area.total))*100
+                            ).toString())], 
                             borders: {
                                 right: {
                                     style: BorderStyle.THICK,
@@ -456,7 +463,11 @@ const table1 = (area: IAreaData) => {
                         width: { 
                             size: "20%" 
                         }, 
-                        children: [new Paragraph(roundOffTo2DecimalPlaces(((area.publicSpaces[0].value)/(area.total))*100).toString())],
+                        children: [new Paragraph(roundOffTo2DecimalPlaces(
+                            (area.total === 0) ?
+                            0 :
+                            ((area.publicSpaces[0].value)/(area.total))*100
+                        ).toString())],
                         borders: {
                             right: {
                                 style: BorderStyle.THICK,
@@ -497,7 +508,11 @@ const table1 = (area: IAreaData) => {
                             width: { 
                                 size: "20%" 
                             }, 
-                            children: [new Paragraph(roundOffTo2DecimalPlaces(((ps.value)/(area.total))*100).toString())], 
+                            children: [new Paragraph(roundOffTo2DecimalPlaces(
+                                (area.total === 0) ?
+                                0 :
+                                ((ps.value)/(area.total))*100
+                            ).toString())], 
                             borders: {
                                 right: {
                                     style: BorderStyle.THICK,
@@ -560,7 +575,11 @@ const table1 = (area: IAreaData) => {
                         width: { 
                             size: "20%" 
                         }, 
-                        children: [new Paragraph(roundOffTo2DecimalPlaces(((area.other)/(area.total))*100).toString())],
+                        children: [new Paragraph(roundOffTo2DecimalPlaces(
+                            (area.total === 0) ?
+                            0 :
+                            ((area.other)/(area.total))*100
+                        ).toString())],
                         borders: {
                             bottom: {
                                 style: BorderStyle.THICK,

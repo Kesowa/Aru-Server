@@ -46,6 +46,8 @@ export interface IPage7Properties {
     categoryPieChart: Buffer,
     statusPieChart: Buffer,
     barChart: Buffer,
+    area: IAreaData,
+    occupancy: IOccupancyDesc[],
 }
 
 export interface IData {

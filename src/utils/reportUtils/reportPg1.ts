@@ -96,7 +96,7 @@ const headings = (missionHeading: string, missionSubHeading: string) => {
     });
 };
 
-const missionMapImage = async (missionMapImg: Buffer) => {
+const missionMapImage = (missionMapImg: Buffer) => {
     return new Paragraph({
         children: [
             new ImageRun({
@@ -301,9 +301,8 @@ const idTextBox = (missionCode:string) => {
     });
 }
 
-export const page1 = async (properties: IPage1Properties) => {
+export const page1 = (properties: IPage1Properties) => {
     const { missionHeading, missionMapImg, missionSubHeading, missionCode, date, users, emails, phoneNos } = properties;
-    const mapImg = await missionMapImage(missionMapImg);
     return {
         properties: commonPageProperties,
         footers: commonPageFooter,
@@ -311,7 +310,7 @@ export const page1 = async (properties: IPage1Properties) => {
             NKDALogo,
             headings(missionHeading, missionSubHeading),
             FSIPLLogo,
-            mapImg,
+            missionMapImage(missionMapImg),
             pg1Table(missionSubHeading, date, users, emails, phoneNos),
             idTextBox(missionCode),
         ],

@@ -4,8 +4,8 @@ import { commonPageProperties, commonPageFooter } from "./reportUtils";
 import { IPage7Properties } from "./types";
 import path from "path";
 
-export const reportPg4 = async (properties: IPage7Properties) => {
-    const { heading, subheading, categoryPieChart, statusPieChart, barChart } = properties;
+export const page4 = (properties: IPage7Properties) => {
+    const { heading, subheading, categoryPieChart, statusPieChart, barChart, area, occupancy } = properties;
 
     const headings = new Paragraph({
         frame: {
@@ -148,7 +148,7 @@ export const reportPg4 = async (properties: IPage7Properties) => {
                             color: "FFFFFF"
                         },
                         children: [
-                            new Paragraph("14259.071"),
+                            new Paragraph(area.publicSpaces.find(obj => obj.name === "Government").value.toString()),
                         ],
                         verticalAlign: VerticalAlign.CENTER,
                     }),
@@ -161,7 +161,13 @@ export const reportPg4 = async (properties: IPage7Properties) => {
                             color: "FFFFFF"
                         },
                         children: [
-                            new Paragraph("11"),
+                            new Paragraph(
+                                (
+                                    occupancy.find(obj => obj.name === "Government").occupied +
+                                    occupancy.find(obj => obj.name === "Government").underConstruction +
+                                    occupancy.find(obj => obj.name === "Government").vacant
+                                ).toString()
+                            ),
                         ],
                         verticalAlign: VerticalAlign.CENTER,
                     }),
@@ -195,7 +201,7 @@ export const reportPg4 = async (properties: IPage7Properties) => {
                             color: "FFFFFF"
                         },
                         children: [
-                            new Paragraph("76473.782"),
+                            new Paragraph(area.privateSpaces.find(obj => obj.name === "Residential").value.toString()),
                         ],
                         verticalAlign: VerticalAlign.CENTER,
                     }),
@@ -208,7 +214,13 @@ export const reportPg4 = async (properties: IPage7Properties) => {
                             color: "FFFFFF"
                         },
                         children: [
-                            new Paragraph("229"),
+                            new Paragraph(
+                                (
+                                    occupancy.find(obj => obj.name === "Residential").occupied +
+                                    occupancy.find(obj => obj.name === "Residential").underConstruction +
+                                    occupancy.find(obj => obj.name === "Residential").vacant
+                                ).toString()
+                            ),
                         ],
                         verticalAlign: VerticalAlign.CENTER,
                     }),
@@ -252,7 +264,10 @@ export const reportPg4 = async (properties: IPage7Properties) => {
                             new Paragraph({
                                 children: [
                                     new TextRun({
-                                        text: "90732.853",
+                                        text: (
+                                            area.publicSpaces.find(obj => obj.name === "Government").value + 
+                                            area.privateSpaces.find(obj => obj.name === "Residential").value
+                                        ).toString(),
                                         bold: true,
                                     })
                                 ]
@@ -272,7 +287,14 @@ export const reportPg4 = async (properties: IPage7Properties) => {
                             new Paragraph({
                                 children: [
                                     new TextRun({
-                                        text: "229",
+                                        text: (
+                                            occupancy.find(obj => obj.name === "Residential").occupied +
+                                            occupancy.find(obj => obj.name === "Residential").underConstruction +
+                                            occupancy.find(obj => obj.name === "Residential").vacant +
+                                            occupancy.find(obj => obj.name === "Government").occupied +
+                                            occupancy.find(obj => obj.name === "Government").underConstruction +
+                                            occupancy.find(obj => obj.name === "Government").vacant
+                                        ).toString(),
                                         bold: true,
                                     })
                                 ]
