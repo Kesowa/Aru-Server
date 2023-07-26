@@ -1,6 +1,7 @@
 # Welcome to Arya!
 
 This folder contain the server codes of the Arya streaming platform.
+This branch is hosted at api-aru.kesowa.com
 
 # Setup
 This server will be running on AWS ECS
