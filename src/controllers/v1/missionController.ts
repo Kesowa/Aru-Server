@@ -541,14 +541,6 @@ export const fetchAllMissionsForTenant = async (
       });
     }
 
-    missionsList = missionsList.filter((mission, i) => {
-      return i >= startIndex;
-    });
-
-    missionsList = missionsList.filter((mission, i) => {
-      return i < limit;
-    });
-
     const allMissionsCount = await Mission.aggregate(
       getNumberOfTypesOfMissions(tenantId)
     );
