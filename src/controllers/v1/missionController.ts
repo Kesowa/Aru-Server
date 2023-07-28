@@ -432,7 +432,6 @@ export const fetchAllMissionsForTenant = async (
     const tenantId = res.locals.user.tenantId._id;
     const filter = req.query.filter;
     let missions;
-    let total;
     const query: any = { tenantId };
 
     if (req.query.missionType) {
@@ -542,16 +541,6 @@ export const fetchAllMissionsForTenant = async (
       });
     }
 
-    total = missionsList.length;
-
-    missionsList = missionsList.filter((mission, i) => {
-      return i >= startIndex;
-    });
-
-    missionsList = missionsList.filter((mission, i) => {
-      return i < limit;
-    });
-
     const allMissionsCount = await Mission.aggregate(
       getNumberOfTypesOfMissions(tenantId)
     );
@@ -568,7 +557,7 @@ export const fetchAllMissionsForTenant = async (
       status: true,
       message: "Here are all the missions",
       data: missionsList,
-      total,
+      total: res.locals.user.tenantId.actualMissionCount,
       missionCount: allMissionsCount,
     };
 
