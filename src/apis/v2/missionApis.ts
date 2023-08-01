@@ -53,6 +53,7 @@ missionApi.get(
           $gte: timespan?.[0],
           $lte: timespan?.[1],
         },
+        [res.locals.user.userType == "tenant-client" && "clientId"]: res.locals.user._id, 
       },
       {},
       {
