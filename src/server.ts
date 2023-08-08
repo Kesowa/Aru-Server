@@ -87,9 +87,6 @@ const worker = async () => {
   await mongoose.connect(MONGODB_CONNECTION_STRING);
   //create http server
   const server = http.createServer(app);
-  server.requestTimeout = 1000 * 60 * 60 * 2;
-  server.headersTimeout = 1000 * 60 * 60 * 2;
-  server.keepAliveTimeout = 0;
 
   //create socket server
   const io = new Server(server, {
@@ -109,6 +106,9 @@ const worker = async () => {
   ioHandler(io);
 
   server.listen(PORT, () => logger.info(`server listening on port ${PORT}`));
+  server.on("connection", (socket) => {
+    socket.setTimeout(1000 * 60 * 60 * 2);
+  });
 };
 worker()
   .then(() => logger.info("Server started"))
