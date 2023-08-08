@@ -106,6 +106,9 @@ const worker = async () => {
   ioHandler(io);
 
   server.listen(PORT, () => logger.info(`server listening on port ${PORT}`));
+  server.on("connection", function(socket) {
+    socket.setTimeout(1000 * 60 * 60);
+  });
 };
 worker()
   .then(() => logger.info("Server started"))
