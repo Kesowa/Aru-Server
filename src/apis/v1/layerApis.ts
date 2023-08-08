@@ -85,7 +85,6 @@ const uploadPicToMap = multer({
 router.post(
   "/create/:type",
   isAuthenticated,
-  requestTimeout(60_000),
   upload.single("file"),
   body("name").notEmpty().trim(),
   // REGEX

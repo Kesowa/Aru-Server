@@ -52,9 +52,8 @@ const expiredSubs = async () => {
           "Kesowa Infinite Ventures Pvt. Ltd",
           "",
           `               
-                        <p>Your subscription is expiring in ${
-                          30 - diffInDays
-                        } days.</b>
+                        <p>Your subscription is expiring in ${30 - diffInDays
+          } days.</b>
                         <p>Best regards,</p>
                         <p><b>Team Kesowa</b></p>
                         `,
@@ -86,7 +85,10 @@ const expiredSubs = async () => {
 const worker = async () => {
   await mongoose.connect(MONGODB_CONNECTION_STRING);
   //create http server
-  const server = http.createServer(app);
+  const server = http.createServer({
+    requestTimeout: 0,
+    connectionsCheckingInterval: 60 * 60 * 1e3
+  }, app);
 
   //create socket server
   const io = new Server(server, {
@@ -106,9 +108,6 @@ const worker = async () => {
   ioHandler(io);
 
   server.listen(PORT, () => logger.info(`server listening on port ${PORT}`));
-  server.on("connection", (socket) => {
-    socket.setTimeout(1000 * 60 * 60 * 2);
-  });
 };
 worker()
   .then(() => logger.info("Server started"))
