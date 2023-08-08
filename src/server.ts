@@ -93,7 +93,10 @@ const expiredSubs = async () => {
 const worker = async () => {
   await mongoose.connect(MONGODB_CONNECTION_STRING);
   //create http server
-  const server = http.createServer(app);
+  const server = http.createServer({
+    requestTimeout: 0,
+    connectionsCheckingInterval: 60 * 60 * 1e3
+  }, app);
 
   //create socket server
   const io = new Server(server, {

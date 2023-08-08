@@ -47,12 +47,6 @@ export const RobustRunner = <A, B, C, D, T extends Response>(
   };
 };
 
-export const requestTimeout: (seconds: number) => RequestHandler =
-  (seconds) => (req, _res, next) => {
-    req.setTimeout(seconds * 1000);
-    next();
-  };
-
 export const environmentGuard =
   (env: Mode) => (_: Request, res: Response, next: NextFunction) => {
     if (env != MODE) {

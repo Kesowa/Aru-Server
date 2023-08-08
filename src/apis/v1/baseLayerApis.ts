@@ -37,7 +37,6 @@ import { isSize } from "../../utils/sizePermission";
 import { isLayerCount } from "../../utils/countPermission";
 import { body, query } from "express-validator";
 import {
-  requestTimeout,
   validator,
   RobustRunner,
 } from "../../utils/requestHelpers";
@@ -184,7 +183,6 @@ router.delete(
 router.post(
   "/create-base-raster-upload/Raster",
   isAuthenticated,
-  requestTimeout(60_000),
   upload.single("file"),
   body("name").notEmpty().trim(),
   body("raster").notEmpty().isMongoId(),

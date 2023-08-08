@@ -58,7 +58,6 @@ import { isLayerCount } from "../../utils/countPermission";
 import { isSize } from "../../utils/sizePermission";
 import { body, oneOf, query, param } from "express-validator";
 import {
-  requestTimeout,
   validator,
   RobustRunner,
 } from "../../utils/requestHelpers";
@@ -81,7 +80,6 @@ const uploadlayerfile = multer({
 router.post(
   "/create/:type",
   isAuthenticated,
-  requestTimeout(60_000),
   upload.single("file"),
   body("name").notEmpty().trim(),
   // REGEX
