@@ -39,17 +39,17 @@ export enum Directory {
 /**
  * Get file path for use in MongoDB documents and URL
  */
-export const docPath = (dir: Directory, filePath: string): DocPath =>
-  path.join("/", dir, filePath);
+export const docPath = (dir: Directory, filename: string): DocPath =>
+  path.join("/", dir, filename);
 
 /**
  * Get relative path from Public directory, or for use as S3 object key
  */
-export const relPath = (dir: Directory, filePath: string): DirPath =>
-  path.join(dir, filePath);
+export const relPath = (dir: Directory, filename: string): DirPath =>
+  path.join(dir, filename);
 
 /**
  * Get absolute path to file on system
  */
-export const absPath = (dir: Directory, filePath: string) =>
-  path.join(PUBLIC_DIR, dir, filePath);
+export const absPath = (dir: Directory, filename: string) =>
+  path.join(PUBLIC_DIR, dir, filename);
