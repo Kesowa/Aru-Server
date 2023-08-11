@@ -6,7 +6,7 @@ import fs from "fs";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { generateToken } from "./streamTokenController";
-import { VODEvents } from "../../utils/videoUtils";
+import { extractTelemetry, transcodeVideo } from "../../utils/videoUtils";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
@@ -19,6 +19,9 @@ import {
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
 import Flight from "../../models/flight";
+import * as pathUtils from "../../utils/pathUtils";
+import Location from "../../models/location";
+import { findHlsSize } from "../../utils/fileUtils";
 
 export const saveVOD = async (
   req: Request<
@@ -313,30 +316,48 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
       }
     }
     if (req.file) {
-      const originalName = req.file.originalname;
-      const fullPath = req.file.path;
-      const fullPath2 = DirPath(Directory.VOD);
-      const tenantID = res.locals.user.tenantId._id;
-      const size: number = Number(
-        (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-      );
-      // let size: number = fileSizes(filename)
-      VODEvents.emit("PROCESS_VIDEO", {
-        missionID,
-        flightID,
-        fullPath2,
-        locationID,
-        fullPath,
-        filename,
-        tenantID,
-        originalName,
-        size,
-      });
       res.json({
         status: true,
         message: "Sucessfully uploaded the video",
         file: `temp/${filename}.mp4`,
       });
+      const filepath = pathUtils.relPath(
+        pathUtils.Directory.TEMP,
+        req.file.filename
+      );
+      const transcodeData = await transcodeVideo(filepath);
+      const telemetryData = await extractTelemetry(filepath);
+      if (telemetryData && !locationID) {
+        const location = await Location.create({
+          properties: {
+            name: req.file.originalname,
+          },
+          tenantId: res.locals.user.tenantId._id,
+          geometry: {
+            type: "Point",
+            coordinates: {
+              lng: telemetryData.metadata.stats.GPS.LONGITUDE,
+              lat: telemetryData.metadata.stats.GPS.LATITUDE,
+            },
+          },
+        });
+        locationID = location._id;
+      }
+      const fileSize = await findHlsSize(path.basename(transcodeData.hlsPath));
+      const vod = await VOD.create({
+        videoName: req.file.originalname,
+        missionID: missionID,
+        flightID: flightID,
+        locationID: locationID,
+        videoPath: transcodeData.hlsPath,
+        thumbnail: transcodeData.thumbnailPath,
+        tenantId: res.locals.user.tenantId._id,
+        isSRT: telemetryData ? true : false,
+        fileSize: fileSize,
+      });
+      missionSpecificSocket
+        .to(String(missionID))
+        .emit("PROCESS_VIDEO_FINISHED", vod);
     }
   }
 };

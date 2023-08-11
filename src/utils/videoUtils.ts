@@ -10,8 +10,87 @@ import mongoose from "mongoose";
 import { findHlsSize } from "./fileUtils";
 import { Directory, DirPath } from "../constants";
 import Location from "../models/location";
+import * as pathUtils from "./pathUtils";
+import { promisify } from "util";
+import path from "path";
+const asyncExec = promisify(exec);
+const matchExt = /\.\w+$/;
 
-// import path from "node:path";
+/**
+ * Supply mp4/flv video path, generate HLS files, thumbnail, and flv file
+ * DELETES VOD AFTER CONVERSION!!!
+ * */
+export const transcodeVideo = async (
+  filePath: pathUtils.DirPath | pathUtils.DocPath
+) => {
+  const doc = pathUtils.docPath(pathUtils.Directory.ROOT, filePath);
+  const docPath = pathUtils.docPath(
+    pathUtils.Directory.VOD,
+    path.basename(filePath)
+  );
+  const paths = {
+    hlsPath: docPath.replace(matchExt, ".m3u8"),
+    thumbnailPath: docPath.replace(matchExt, ".jpg"),
+    flvPath: docPath.replace(matchExt, ".flv"),
+  };
+
+  const absFilePath = pathUtils.absPath(pathUtils.Directory.ROOT, doc);
+  const command =
+    "/bin/ffmpeg -i " +
+    absFilePath +
+    " -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls " +
+    pathUtils.absPath(pathUtils.Directory.ROOT, paths.hlsPath) +
+    " -ss 00:00:05.000 -vframes 1 " +
+    pathUtils.absPath(pathUtils.Directory.ROOT, paths.thumbnailPath) +
+    " " +
+    pathUtils.absPath(pathUtils.Directory.ROOT, paths.flvPath);
+
+  await asyncExec(command);
+  await fs.promises.rm(absFilePath);
+  return paths;
+};
+
+/**
+ * Supply mp4/flv video path, generate srt and geojson files, and get metadata
+ * Returns undefined if no srt found
+ */
+export const extractTelemetry = async (
+  filePath: pathUtils.DirPath | pathUtils.DocPath
+) => {
+  const geojsonPath = pathUtils.docPath(
+    pathUtils.Directory.VOD,
+    path.basename(filePath).replace(matchExt, ".geojson")
+  );
+  const srtPath = pathUtils.docPath(
+    pathUtils.Directory.VOD,
+    path.basename(filePath).replace(matchExt, ".srt")
+  );
+  const absSrtPath = pathUtils.absPath(pathUtils.Directory.ROOT, srtPath);
+  const command =
+    "/bin/ffmpeg -i" +
+    pathUtils.absPath(pathUtils.Directory.ROOT, filePath) +
+    " -map 0:s:0 " +
+    absSrtPath;
+  try {
+    await asyncExec(command);
+    const srtData = await fs.promises.readFile(absSrtPath, "utf8");
+    const djiData = DJISRTParser(srtData, absSrtPath);
+    const geojsonData = djiData.toGeoJSON(false, true, false);
+    await fs.promises.writeFile(
+      pathUtils.absPath(pathUtils.Directory.ROOT, geojsonPath),
+      JSON.stringify(geojsonData)
+    );
+    const metadata = djiData.metadata();
+    await fs.promises.rm(absSrtPath);
+    return {
+      geojsonPath,
+      srtPath,
+      metadata,
+    };
+  } catch (error) {
+    return undefined;
+  }
+};
 
 export type ProcessVideoData = {
   fullPath: string;
@@ -143,22 +222,7 @@ const exitOnce = async (code: Number, d: ProcessVideoData) => {
 };
 const videoProcessHandler = (d: ProcessVideoData) => {
   console.log("Now Starting");
-  const ps = exec(
-    `/bin/ffmpeg -i "${
-      d.fullPath
-    }" -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls "${DirPath(
-      Directory.VOD,
-      d.filename + ".m3u8"
-    )}" -ss 00:00:05.000 -vframes 1 "${DirPath(
-      Directory.VOD,
-      d.filename + ".jpg"
-    )}" "${DirPath(Directory.VOD, d.filename + ".flv")}"`,
-    (error, stdout, stderr) => {
-      if (error) console.error(error);
-      if (stderr) console.error(stderr);
-      if (stdout) console.info("video conversion complete", d);
-    }
-  );
+  const ps = exec;
 
   missionSpecificSocket
     .to(d.missionID.toString())

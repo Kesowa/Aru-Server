@@ -45,8 +45,10 @@ export const docPath = (dir: Directory, filename: string): DocPath =>
 /**
  * Get relative path from Public directory, or for use as S3 object key
  */
-export const relPath = (dir: Directory, filename: string): DirPath =>
-  path.join(dir, filename);
+export const relPath = (dir: Directory, filename: string): DirPath => {
+  filename = filename.replace(/^\//, "");
+  return path.join(dir, filename);
+};
 
 /**
  * Get absolute path to file on system

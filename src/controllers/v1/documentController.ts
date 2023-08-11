@@ -24,6 +24,7 @@ import {
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
+import { saveThumbnails } from "../../utils/imageUtils";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
@@ -106,27 +107,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       const filesize: number = Number(
         (Number(req.file.size) / (1024 * 1024)).toFixed(5)
       );
-      if (
-        (req.body.folderName == "rawPhotos" ||
-          req.body.folderName == "photos") &&
-        (req.file.mimetype == "image/jpeg" || req.file.mimetype == "image/png")
-      ) {
-        const x1FilePath = DirPath(
-          Directory.DOCUMENTS,
-          `1x_${req.file.filename}`
-        );
-        const x2FilePath = DirPath(
-          Directory.DOCUMENTS,
-          `2x_${req.file.filename}`
-        );
-        await sharp(req.file.path)
-          .resize(1280, 720, { fit: "inside" })
-          .toFile(x2FilePath);
 
-        await sharp(x2FilePath)
-          .resize(120, 120, { fit: "inside" })
-          .toFile(x1FilePath);
-      }
       const doc = new Document({
         name: req.file.originalname,
         modDate: new Date(),
@@ -139,8 +120,15 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
         createdBy: res.locals.user._id,
         updatedBy: res.locals.user._id,
       });
+      if (
+        (req.body.folderName == "rawPhotos" ||
+          req.body.folderName == "photos") &&
+        (req.file.mimetype == "image/jpeg" || req.file.mimetype == "image/png")
+      ) {
+        req.log.debug("Uploading Thumbnails");
+        await saveThumbnails(doc.filePath);
+      }
       const savedDoc = await doc.save();
-      const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
       missionSpecificSocket
         .to(savedDoc.missionId.toString())
         .emit("DOCUMENT_CREATED", savedDoc);
