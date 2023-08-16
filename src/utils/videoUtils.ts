@@ -67,7 +67,7 @@ export const extractTelemetry = async (
   );
   const absSrtPath = pathUtils.absPath(pathUtils.Directory.ROOT, srtPath);
   const command =
-    "/bin/ffmpeg -i" +
+    "/bin/ffmpeg -i " +
     pathUtils.absPath(pathUtils.Directory.ROOT, filePath) +
     " -map 0:s:0 " +
     absSrtPath;
@@ -78,7 +78,7 @@ export const extractTelemetry = async (
     const geojsonData = djiData.toGeoJSON(false, true, false);
     await fs.promises.writeFile(
       pathUtils.absPath(pathUtils.Directory.ROOT, geojsonPath),
-      JSON.stringify(geojsonData)
+      geojsonData
     );
     const metadata = djiData.metadata();
     await fs.promises.rm(absSrtPath);

@@ -325,8 +325,8 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
         pathUtils.Directory.TEMP,
         req.file.filename
       );
-      const transcodeData = await transcodeVideo(filepath);
       const telemetryData = await extractTelemetry(filepath);
+      const transcodeData = await transcodeVideo(filepath);
       if (telemetryData && !locationID) {
         const location = await Location.create({
           properties: {

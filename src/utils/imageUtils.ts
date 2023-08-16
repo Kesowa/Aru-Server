@@ -6,6 +6,9 @@ import { exec } from "child_process";
 import { promisify } from "util";
 const asyncExec = promisify(exec);
 
+/**
+ * Input image buffer and filename|desired format, output two buffers with different resolutions
+*/
 export const createThumbnails = async (img: Buffer, filename: string) => {
   let format: "jpg" | "png" = "jpg";
   if (path.extname(filename).toLowerCase() === ".png") format = "png";
@@ -25,6 +28,9 @@ export const createThumbnails = async (img: Buffer, filename: string) => {
   };
 };
 
+/**
+ * Input non-absolute path to image, generate 1x and 2x variants in the same directory
+*/
 export const saveThumbnails = async (img: DirPath | DocPath) => {
   const imgPath = absPath(Directory.ROOT, img);
   const imgData = await fs.readFile(imgPath);
