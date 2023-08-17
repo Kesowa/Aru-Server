@@ -7,12 +7,10 @@ import Mission from "../../models/mission";
 import fs from "fs";
 import archiver from "archiver";
 import path from "path";
-import sharp from "sharp";
 import rimraf from "rimraf";
 import { missionSpecificSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import { exec } from "child_process";
-import resizer from "node-image-resizer";
 import {
   deleteDirFileUsingName,
   deletePublicFileUsingPath,
@@ -471,25 +469,7 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
       });
       if (doc) {
-        const newFilename = DirPath(Directory.DEFAULT, doc.filePath);
-        if (await checkFileExists(newFilename)) {
-          await resizer(newFilename, {
-            versions: [
-              {
-                quality: 90,
-                prefix: "2x_",
-                width: 1280,
-                height: 720,
-              },
-              {
-                quality: 80,
-                prefix: "1x_",
-                width: 120,
-                height: 120,
-              },
-            ],
-          });
-        }
+        await saveThumbnails(doc.filePath);
         res.status(200).json({
           status: true,
           message: `Successfully generated 2x files`,

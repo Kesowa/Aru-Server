@@ -3,8 +3,6 @@ import Alert from "../../models/alert";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { notificationSocket } from "../../socket";
 import Tenant from "../../models/tenant";
-import sharp from "sharp";
-import resizer from "node-image-resizer";
 import { Types } from "mongoose";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
 import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
@@ -14,7 +12,7 @@ import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IFlight } from "../../schemas/flight";
 import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
-import { checkFileExists, getFileSize } from "../../utils/fileUtils";
+import { getFileSize } from "../../utils/fileUtils";
 import path from "path";
 import { WiproInterface } from "../../utils/wipro";
 import { saveThumbnails } from "../../utils/imageUtils";
@@ -759,23 +757,7 @@ export const convertImageToThumbnail = async (
   });
   if (result.length) {
     for (let i = 0; i < result.length; i++) {
-      const newFilename = DirPath(Directory.DEFAULT, result[i].image);
-      if (await checkFileExists(newFilename)) {
-        await resizer(newFilename, {
-          all: {
-            path: DirPath(Directory.ALERT_IMAGES),
-            quality: 80,
-          },
-          versions: [
-            {
-              quality: 100,
-              prefix: "1x_",
-              width: 120,
-              height: 120,
-            },
-          ],
-        });
-      }
+      await saveThumbnails(pathUtils.docPath(pathUtils.Directory.ROOT, result[i].image));
     }
     res.status(200).json({
       status: true,

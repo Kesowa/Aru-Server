@@ -2,38 +2,22 @@ import { Request } from "express";
 import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import path from "path";
-import sharp from "sharp";
-import resizer from "node-image-resizer";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { checkFileExists } from "../../utils/fileUtils";
 import { Directory, DirPath } from "../../constants";
+import { saveThumbnails } from "../../utils/imageUtils";
+import * as pathUtils from "../../utils/pathUtils";
 
 //pupload file
 export const uploadFile = async (req: Request, res: AuthResponse) => {
   {
     if (req.file?.fieldname == "image") {
-      const img_path = DirPath(Directory.ALERT_IMAGES, req.file?.filename);
       if (
         req.file?.mimetype === "image/jpeg" ||
         req.file?.mimetype === "image/png"
       ) {
-        if (await checkFileExists(img_path)) {
-          await resizer(img_path, {
-            all: {
-              path: DirPath(Directory.ALERT_IMAGES),
-              quality: 80,
-            },
-            versions: [
-              {
-                quality: 100,
-                prefix: "1x_",
-                width: 120,
-                height: 120,
-              },
-            ],
-          });
-        }
+        await saveThumbnails(pathUtils.docPath(pathUtils.Directory.ALERT_IMAGES, req.file.filename));
       }
       if (req.file) {
         res.status(201).json({
@@ -115,11 +99,8 @@ export const uploadFileforUSer = async (req: Request, res: AuthResponse) => {
       req.file?.mimetype === "image/png"
     ) {
       if (await checkFileExists(img_path)) {
-        const newfileName = `2x_${req.file?.filename}`;
         try {
-          await sharp(req.file?.path)
-            .resize(250, 250, { withoutEnlargement: true })
-            .toFile(DirPath(Directory.TEMP_IMAGES, newfileName));
+          await saveThumbnails(pathUtils.docPath(pathUtils.Directory.TEMP_IMAGES, req.file.filename));
         } catch (err) {
           req.log.error(err);
         }

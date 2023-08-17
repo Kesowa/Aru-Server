@@ -2,7 +2,6 @@ import { Namespace, Socket } from "socket.io";
 import { stat } from "../v1/droneLocationController";
 import fs from "fs";
 import axios from "axios";
-import sharp from "sharp";
 import Tenant from "../../models/tenant";
 import Alert from "../../models/alert";
 import { AIRequest } from "../../utils/socketUtils";
@@ -19,6 +18,7 @@ import {
 } from "../../constants";
 import { getFileSize } from "../../utils/fileUtils";
 import { logger } from "../../app";
+import { saveThumbnails } from "../../utils/imageUtils";
 const geoMapApi = "https://maps.googleapis.com/maps/api/geocode/json";
 
 /*
@@ -129,13 +129,7 @@ const alertSocketController = (alertSocket: Namespace) => {
               .catch((err) => {
                 console.error(err);
               });
-            sharp(filename)
-              .resize(120, 120, { withoutEnlargement: true })
-              .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
-              .then((result) => {})
-              .catch((err) => {
-                console.error(err);
-              });
+            await saveThumbnails(alert.image);
             const tenant = await Tenant.findOne({ _id: data.tenantId });
             if (tenant.actualAlertCount >= 0) {
               await Tenant.updateOne(

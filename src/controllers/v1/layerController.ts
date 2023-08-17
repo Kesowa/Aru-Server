@@ -1,4 +1,5 @@
 import shp2json from "shpjs";
+import * as pathUtils from "../../utils/pathUtils";
 import type { Request } from "express";
 import type { AuthResponse } from "../../utils/interfaceUtils";
 import fetch from "node-fetch";
@@ -6,7 +7,6 @@ import Layer from "../../models/layer";
 import layerFiles from "../../models/layerFiles";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
-import sharp from "sharp";
 import { ObjectId } from "bson";
 import ObjectsToCsv from "objects-to-csv";
 import Mission from "../../models/mission";
@@ -18,7 +18,6 @@ import {
 const tj = require("@mapbox/togeojson"),
   DOMParser = require("xmldom").DOMParser;
 import tokml from "tokml";
-import resizer from "node-image-resizer";
 import {
   modGeoJson,
   readGeoJson,
@@ -57,6 +56,7 @@ import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
+import { saveThumbnails } from "../../utils/imageUtils";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
@@ -661,25 +661,10 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
     if (!req.file) {
       throw new Error("no file in request");
     }
-    const x1FilePath = DirPath(
-      Directory.GEOJSON_IMAGES,
-      `1x_${req.file.filename}`
-    );
-    const x2FilePath = DirPath(
-      Directory.GEOJSON_IMAGES,
-      `2x_${req.file.filename}`
-    );
     if (!(req.body.type == "image/jpeg" || req.body.type == "image/png")) {
       throw new Error("invalid file format");
     }
-    // await removeExifData(req.file.path); // REVISIT: this will break image orientation
-    await sharp(req.file.path, { failOn: "truncated" })
-      .resize(1280, 720, { fit: "inside" })
-      .toFile(x2FilePath);
-
-    await sharp(x2FilePath, { failOn: "truncated" })
-      .resize(120, 120, { fit: "inside" })
-      .toFile(x1FilePath);
+    await saveThumbnails(pathUtils.docPath(pathUtils.Directory.GEOJSON_IMAGES, req.file.filename));
     const size: number = Number(
       (Number(req.file.size) / (1024 * 1024)).toFixed(5)
     );
@@ -699,7 +684,6 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
     });
 
     const savedDoc = await featureFile.save();
-    const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
     if (savedDoc) {
       res.status(201).json({
         status: true,
@@ -1525,26 +1509,11 @@ export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
     const fname = req.file?.originalname;
     const fpath = "/layerFiles/" + req.file?.filename;
     const layerId = req.body.layerId;
-    const newFilename = `1x_${req.file?.filename}`;
-    const newFilename2 = `2x_${req.file?.filename}`;
     if (
       req.file?.mimetype == "image/jpeg" ||
       req.file?.mimetype == "image/png"
     ) {
-      sharp(req.file?.path)
-        .resize(120, 120, { withoutEnlargement: true })
-        .toFile(DirPath(Directory.LAYER_FILES, newFilename))
-        .then((result) => {})
-        .catch((err) => {
-          req.log.error(err);
-        });
-      sharp(req.file?.path)
-        .resize(1280, 720, { withoutEnlargement: true })
-        .toFile(DirPath(Directory.LAYER_FILES, newFilename2))
-        .then((result) => {})
-        .catch((err) => {
-          req.log.error(err);
-        });
+      await saveThumbnails(fpath);
     }
     const size: number = Number(
       (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
@@ -1812,42 +1781,11 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           };
           const fpath = "/images/geojson/" + files[j].filename;
           req.log.info("file path:", fpath);
-          const newFilename = `1x_${files[j].filename}`;
           if (
             files[j].mimetype == "image/jpeg" ||
             files[j].mimetype == "image/png"
           ) {
-            await sharp(files[j].path)
-              .resize(120, 120, { withoutEnlargement: true })
-              .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
-              .then((result) => {})
-              .catch((err) => {
-                req.log.error("thumbnail creation failed");
-              });
-            //? why not created both thumbnails at once
-            if (
-              await checkFileExists(
-                DirPath(Directory.GEOJSON_IMAGES, files[j].filename)
-              )
-            ) {
-              await resizer(
-                DirPath(Directory.GEOJSON_IMAGES, files[j].filename),
-                {
-                  all: {
-                    path: DirPath(Directory.GEOJSON_IMAGES),
-                    quality: 80,
-                  },
-                  versions: [
-                    {
-                      quality: 100,
-                      prefix: "2x_",
-                      width: 1280,
-                      height: 720,
-                    },
-                  ],
-                }
-              );
-            }
+            await saveThumbnails(fpath);
           }
           const size: number = Number(
             (Number(files[j].size) / (1024 * 1024)).toFixed(5)
@@ -2163,32 +2101,7 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
     if (docs.length) {
       for (let i = 0; i < docs.length; i++) {
         if (docs[i].fileType == "image/jpeg") {
-          const newFilename = DirPath(Directory.DEFAULT, docs[i].filePath);
-          if (!(await checkFileExists(newFilename))) {
-            await resizer(newFilename, {
-              all: {
-                path: DirPath(Directory.GEOJSON_IMAGES),
-                quality: 80,
-              },
-              versions: [
-                {
-                  quality: 100,
-                  prefix: "2x_",
-                  width: 1280,
-                  height: 720,
-                },
-              ],
-            });
-          }
-          // let filename = docs[i].filePath.split('/')[3]
-          // let newfileName = `2x_${filename}`
-          // sharp(DirPath(Directory.GEOJSON_IMAGES, filename))
-          //   .resize(1280, 720, { withoutEnlargement: true })
-          //   .toFile(DirPath(Directory.GEOJSON_IMAGES, newfileName))
-          //   .then((result) => {
-          //   }).catch((err) => {
-          //     req.log.error(err)
-          //   });
+          await saveThumbnails(docs[i].filePath);
         }
       }
       res.status(200).json({
@@ -2453,45 +2366,10 @@ export const picktoMapUseForLayerCreate = async (
             const savedDoc = await featureFile.save();
             if (savedDoc) flag = true;
             try {
-              if (
-                await checkFileExists(
-                  DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename)
-                )
-              ) {
-                // sharp(allImageData[i].path)
-                //   .resize(120, 120, { withoutEnlargement: true })
-                //   .toFile(DirPath(Directory.GEOJSON_IMAGES, newFilename))
-                //   .then((result) => {})
-                //   .catch((err) => {
-                //     req.log.error(err);
-                //   });
-                await resizer(
-                  DirPath(Directory.GEOJSON_IMAGES, allImageData[i].filename),
-                  {
-                    all: {
-                      path: DirPath(Directory.GEOJSON_IMAGES, "/"),
-                      quality: 80,
-                    },
-                    versions: [
-                      {
-                        prefix: "2x_",
-                        width: 1280,
-                        height: 720,
-                      },
-                      {
-                        prefix: "1x_",
-                        width: 120,
-                        height: 120,
-                      },
-                    ],
-                  }
-                );
-              }
+              await saveThumbnails(featureFile.filePath);
             } catch (err) {
               req.log.error(err);
             }
-            // }
-            // }
           }
           if (flag == true) {
             const data = { badImages, result: savedDoc1 };
