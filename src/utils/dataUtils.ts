@@ -13,12 +13,8 @@ export const savePointcloud = async (doc: pathUtils.DirPath | pathUtils.DocPath)
   const filename = path.parse(doc).name;
   const outputDirPath = pathUtils.docPath(pathUtils.Directory.DOCUMENTS, "/");
   const absOutputPath = pathUtils.absPath(pathUtils.Directory.ROOT, outputDirPath);
-  try {
-    await asyncExec(
-      `/bin/PotreeConverter ${absDocPath} -o ${absOutputPath} --generate-page ${filename}`
-    );
-    return outputDirPath + ".html"
-  } catch (err) {
-    return undefined;
-  }
+  await asyncExec(
+    `/bin/PotreeConverter ${absDocPath} -o ${absOutputPath} --generate-page ${filename}`
+  );
+  return outputDirPath + ".html"
 }

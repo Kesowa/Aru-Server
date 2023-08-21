@@ -27,37 +27,45 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
     if (!req.file) {
       throw new Error("no file in request");
     }
-    if (req.body.type == "pointCloud") {
+    if (req.body.type !== "pointCloud") {
       const { missionId } = req.body;
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
+      req.log.info("POINTCLOUD_EXTRACTION_STARTED");
       const webviewPath = await savePointcloud(path.relative(PUBLIC_DIR, req.file.path));
       if (webviewPath) {
-          const doc = new Document({
-            name: req.file.originalname,
-            modDate: new Date(),
-            fileSize: req.file.size / (1024*1024),
-            folderName: req.body.folderName,
-            fileType: req.body.type,
-            filePath: webviewPath,
-            missionId,
-            tenantId: res.locals.user.tenantId,
-            createdBy: res.locals.user._id,
-            updatedBy: res.locals.user._id,
-          });
-          const savedDoc = await doc.save();
-          missionSpecificSocket
-            .to(missionId)
-            .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
+        const doc = new Document({
+          name: req.file.originalname,
+          modDate: new Date(),
+          fileSize: req.file.size / (1024 * 1024),
+          folderName: req.body.folderName,
+          fileType: req.body.type,
+          filePath: webviewPath,
+          missionId,
+          tenantId: res.locals.user.tenantId,
+          createdBy: res.locals.user._id,
+          updatedBy: res.locals.user._id,
+        });
+        const savedDoc = await doc.save();
+        missionSpecificSocket
+          .to(missionId)
+          .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
+        res.status(201).json({
+          status: true,
+          message: "New Document(s) Uploaded",
+          data: savedDoc,
+        });
+        return;
       }
       else {
-          missionSpecificSocket
-            .to(missionId)
-            .emit("POINTCLOUD_EXTRACTION_FAILED");
+        missionSpecificSocket
+          .to(missionId)
+          .emit("POINTCLOUD_EXTRACTION_FAILED");
+        res.status(500).json({
+          status: false,
+          message: "Failed to upload documents",
+        });
+        return;
       }
-      res.json({
-        status: true,
-        message: "Point Cloud creation Started",
-      });
     } else {
       const missionId = req.body.missionId;
       const filesize: number = Number(
