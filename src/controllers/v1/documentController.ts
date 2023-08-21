@@ -27,11 +27,11 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
     if (!req.file) {
       throw new Error("no file in request");
     }
-    if (req.body.type !== "pointCloud") {
+    if (req.body.type === "pointCloud") {
       const { missionId } = req.body;
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
       req.log.info("POINTCLOUD_EXTRACTION_STARTED");
-      const webviewPath = await savePointcloud(path.relative(PUBLIC_DIR, req.file.path));
+      const webviewPath = await savePointcloud(path.relative(PUBLIC_DIR, req.file.path), req.log);
       if (webviewPath) {
         const doc = new Document({
           name: req.file.originalname,
