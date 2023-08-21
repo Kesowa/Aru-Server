@@ -7,22 +7,20 @@ import Mission from "../../models/mission";
 import fs from "fs";
 import archiver from "archiver";
 import path from "path";
-import rimraf from "rimraf";
 import { missionSpecificSocket } from "../../socket";
-import Tenant from "../../models/tenant";
-import { exec } from "child_process";
 import {
   deleteDirFileUsingName,
   deletePublicFileUsingPath,
   deletePublicFolderUsingPath,
 } from "../../utils/fileDeleteUtils";
-import { Directory, DirPath } from "../../constants";
+import { Directory, DirPath, PUBLIC_DIR } from "../../constants";
 import {
   checkFileExists,
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
+import { savePointcloud } from "../../utils/dataUtils";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
@@ -31,71 +29,31 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
     }
     if (req.body.type == "pointCloud") {
       const { missionId } = req.body;
-      const folderNamee = Date.now();
-      const fileNamee = req.file?.originalname.split(/\.(?=[^\.]+$)/)[0];
-      const doc_loc = DirPath(Directory.DOCUMENTS, req.file?.filename);
-      req.log.info("Prining point cloud file location" + doc_loc);
-      const extract_loc = DirPath(Directory.DOCUMENTS, String(folderNamee));
-      await createDirIfNotExists(extract_loc, req.log);
-      req.log.info("Extract location ++++++++++++++++++" + extract_loc);
-      req.log.info("Starting conversion");
-      //In the below line the first command is the path to the potree execuatble file after compiliation
-      // For windows: `C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
-      const ps = exec(
-        `/bin/PotreeConverter ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
-      );
-      //const ps = exec(`C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe "${doc_loc}" -o "${extract_loc}" --generate-page "${fileNamee}"`);
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
-      const onExit = async (exitCode: Number) => {
-        const flag: any = 1;
-        const size: number = Number(
-          (Number(req.file.size) / (1024 * 1024)).toFixed(5)
-        );
-        if (flag == 1) {
-          const doc: any = new Document({
-            name: req?.file?.originalname,
+      const webviewPath = await savePointcloud(path.relative(PUBLIC_DIR, req.file.path));
+      if (webviewPath) {
+          const doc = new Document({
+            name: req.file.originalname,
             modDate: new Date(),
-            fileSize: size,
+            fileSize: req.file.size / (1024*1024),
             folderName: req.body.folderName,
             fileType: req.body.type,
-            filePath: `/documents/${folderNamee}/${fileNamee}.html`,
+            filePath: webviewPath,
             missionId,
             tenantId: res.locals.user.tenantId,
             createdBy: res.locals.user._id,
             updatedBy: res.locals.user._id,
           });
           const savedDoc = await doc.save();
-          const tenant: any = Tenant.findOne({ _id: res.locals.user.tenantId });
           missionSpecificSocket
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
-        } else {
-          rimraf(extract_loc, function (err) {
-            if (err) {
-              throw err;
-            } else {
-              req.log.info("Removed pointCloud data after extraction");
-            }
-          });
+      }
+      else {
           missionSpecificSocket
             .to(missionId)
             .emit("POINTCLOUD_EXTRACTION_FAILED");
-        }
-        await fs.promises.unlink(doc_loc);
-        req.log.info("Removed zip after extraction");
-      };
-
-      ps.once("exit", onExit);
-
-      // TODO: Attach proper loggers
-      // NOTE: Async task, will have to handle logging separately
-      ps?.stdout?.on("data", console.log);
-      ps?.stdout?.on("close", console.log);
-      ps?.stdout?.on("error", console.error);
-      ps?.on("message", console.log);
-      ps?.stderr?.on("data", console.error);
-      ps?.stderr?.on("end", console.error);
-
+      }
       res.json({
         status: true,
         message: "Point Cloud creation Started",
