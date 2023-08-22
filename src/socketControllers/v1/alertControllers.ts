@@ -97,7 +97,8 @@ const alertSocketController = (alertSocket: Namespace) => {
         data.image = filePath;
         data.locationName = mapResponse?.data?.results[0]?.formatted_address;
         data.createdBy = new Types.ObjectId("6099204ee930187488a1487b");
-        data.fileSize = size;
+        const thumbs = await saveThumbnails(data.image);
+        data.fileSize = thumbs.size;
         data.onSite = true;
         data.note = "Alert captured using net!";
         const alert = new Alert({ ...data });
@@ -129,7 +130,6 @@ const alertSocketController = (alertSocket: Namespace) => {
               .catch((err) => {
                 console.error(err);
               });
-            await saveThumbnails(alert.image);
             const tenant = await Tenant.findOne({ _id: data.tenantId });
             if (tenant.actualAlertCount >= 0) {
               await Tenant.updateOne(

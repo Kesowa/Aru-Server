@@ -45,13 +45,13 @@ export const genThermal = async (
     });
     return;
   }
-  const thermalPath = await saveThermal(filePath);
-  if (thermalPath) {
-    await doc.updateOne({ thermalStatus: "converted" });
+  const thermalImg = await saveThermal(filePath);
+  if (thermalImg) {
+    await doc.updateOne({ thermalStatus: "converted", $inc: { fileSize: thermalImg.size } });
     res.status(200).json({
       status: true,
       message: "conversion successful",
-      thermalPath,
+      thermalPath: thermalImg.thermalPath,
     });
   } else {
     req.log.error("thermal conversion failed");

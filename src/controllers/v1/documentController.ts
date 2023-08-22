@@ -90,7 +90,8 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
         (req.file.mimetype == "image/jpeg" || req.file.mimetype == "image/png")
       ) {
         req.log.debug("Uploading Thumbnails");
-        await saveThumbnails(doc.filePath);
+        const thumbs = await saveThumbnails(doc.filePath);
+        doc.fileSize = thumbs.size;
       }
       const savedDoc = await doc.save();
       missionSpecificSocket

@@ -45,7 +45,7 @@ export const saveThumbnails = async (img: DirPath | DocPath) => {
     fs.writeFile(absPath(Directory.ROOT, paths.small), small),
     fs.writeFile(absPath(Directory.ROOT, paths.medium), medium),
   ]);
-  return paths;
+  return { ...paths, size: (imgData.byteLength + small.byteLength + medium.byteLength) / (1024 * 1024) };
 };
 
 /**
@@ -53,10 +53,11 @@ export const saveThumbnails = async (img: DirPath | DocPath) => {
  */
 export const saveThermal = async (img: DirPath | DocPath) => {
   const thermalPath = docPath(Directory.AI_ML, path.parse(img).name + ".raw");
-  const command = "dji_irp -s " + absPath(Directory.ROOT, img) + " -a measure --measurefmt float32 -o " + absPath(Directory.ROOT, thermalPath);
+  const absThermalPath = absPath(Directory.ROOT, img);
+  const command = "dji_irp -s " + absThermalPath + " -a measure --measurefmt float32 -o " + absPath(Directory.ROOT, thermalPath);
   try {
     await asyncExec(command);
-    return thermalPath
+    return { thermalPath, size: (await fs.stat(absThermalPath)).size / (1024 * 1024) }
   }
   catch (error) {
     return undefined

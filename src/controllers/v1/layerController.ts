@@ -664,15 +664,12 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
     if (!(req.body.type == "image/jpeg" || req.body.type == "image/png")) {
       throw new Error("invalid file format");
     }
-    await saveThumbnails(pathUtils.docPath(pathUtils.Directory.GEOJSON_IMAGES, req.file.filename));
-    const size: number = Number(
-      (Number(req.file.size) / (1024 * 1024)).toFixed(5)
-    );
+    const thumbs = await saveThumbnails(pathUtils.docPath(pathUtils.Directory.GEOJSON_IMAGES, req.file.filename));
     const featureFile = new layerFiles({
       name: req.file.originalname,
       layerId: layerId,
       filePath: "/images/geojson/" + req.file.filename,
-      fileSize: size,
+      fileSize: thumbs.size,
       isReview: true,
       featureLabel: req.body.featureLabel,
       centerPoints: req.body.centerPoints,
@@ -1509,15 +1506,16 @@ export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
     const fname = req.file?.originalname;
     const fpath = "/layerFiles/" + req.file?.filename;
     const layerId = req.body.layerId;
+    let size: number = Number(
+      (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
+    );
     if (
       req.file?.mimetype == "image/jpeg" ||
       req.file?.mimetype == "image/png"
     ) {
-      await saveThumbnails(fpath);
+      const thumbs = await saveThumbnails(fpath);
+      size = thumbs.size;
     }
-    const size: number = Number(
-      (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-    );
     const layerfile = new layerFiles({
       name: fname,
       layerId: layerId,
@@ -1781,15 +1779,16 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           };
           const fpath = "/images/geojson/" + files[j].filename;
           req.log.info("file path:", fpath);
+          let size: number = Number(
+            (Number(files[j].size) / (1024 * 1024)).toFixed(5)
+          );
           if (
             files[j].mimetype == "image/jpeg" ||
             files[j].mimetype == "image/png"
           ) {
-            await saveThumbnails(fpath);
+            const thumbs = await saveThumbnails(fpath);
+            size = thumbs.size;
           }
-          const size: number = Number(
-            (Number(files[j].size) / (1024 * 1024)).toFixed(5)
-          );
           req.log.info("file size", size);
           const featureFile = new layerFiles({
             name: files[j].originalname,
@@ -2363,13 +2362,14 @@ export const picktoMapUseForLayerCreate = async (
               createdBy: res.locals.user._id,
               updatedBy: res.locals.user._id,
             });
-            const savedDoc = await featureFile.save();
-            if (savedDoc) flag = true;
             try {
-              await saveThumbnails(featureFile.filePath);
+              const thumbs = await saveThumbnails(featureFile.filePath);
+              featureFile.fileSize = thumbs.size;
             } catch (err) {
               req.log.error(err);
             }
+            const savedDoc = await featureFile.save();
+            if (savedDoc) flag = true;
           }
           if (flag == true) {
             const data = { badImages, result: savedDoc1 };

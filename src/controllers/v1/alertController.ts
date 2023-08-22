@@ -832,7 +832,7 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
 export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
     const img_path = pathUtils.docPath(pathUtils.Directory.ALERT_IMAGES, req.file.filename);
-    await saveThumbnails(img_path);
+    const thumbs = await saveThumbnails(img_path);
     const ff = await readCoords(img_path);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
@@ -853,7 +853,7 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: req.file.size / (1024 * 1024),
+      fileSize: thumbs.size,
       image: img_path
     });
 
