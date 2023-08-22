@@ -2,6 +2,7 @@ import sharp from "sharp";
 import fs from "fs/promises";
 import { DirPath, Directory, DocPath, absPath, docPath } from "./pathUtils";
 import path from "path";
+import exifr from "exifr";
 import { exec } from "child_process";
 import { promisify } from "util";
 const asyncExec = promisify(exec);
@@ -60,4 +61,23 @@ export const saveThermal = async (img: DirPath | DocPath) => {
   catch (error) {
     return undefined
   }
+}
+
+/**
+ * Takes image path or buffer, returns coordinates. Default {lat: 0, lng: 0}
+ */
+export const readCoords = async (img: DirPath | DocPath | Buffer) => {
+  let metadata: any;
+
+  if (typeof img == "string") {
+    const absImgPath = absPath(Directory.ROOT, img);
+    metadata = await exifr.parse(absImgPath);
+  }
+  else {
+    metadata = await exifr.parse(img);
+  }
+  return {
+    lat: metadata.latitude ?? 0,
+    lng: metadata.longitude ?? 0,
+  };
 }

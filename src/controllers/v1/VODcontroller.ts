@@ -1,27 +1,19 @@
 import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
 import format from "date-fns/format";
-import path from "path";
-import fs from "fs";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { generateToken } from "./streamTokenController";
-import { extractTelemetry, transcodeVideo } from "../../utils/videoUtils";
+import { deleteVideo, extractTelemetry, getVodSize, transcodeVideo } from "../../utils/videoUtils";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
 import { IMission } from "../../schemas/mission";
-import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
+import { ARU_INSTANCE, Instance } from "../../constants";
 import { WiproInterface } from "../../utils/wipro";
-import {
-  deleteDirFileUsingName,
-  deleteHlsVodUsingIndex,
-  deletePublicFileUsingPath,
-} from "../../utils/fileDeleteUtils";
 import Flight from "../../models/flight";
 import * as pathUtils from "../../utils/pathUtils";
 import Location from "../../models/location";
-import { findHlsSize } from "../../utils/fileUtils";
 
 export const saveVOD = async (
   req: Request<
@@ -50,9 +42,7 @@ export const saveVOD = async (
           .catch(console.error);
       }, 10_000);
     }
-    const stats = await fs.promises.stat(
-      DirPath(Directory.VOD, `${req.body.filename}.flv`)
-    );
+    const vodSize = await getVodSize(pathUtils.docPath(pathUtils.Directory.VOD, req.body.filename));
     const VODdoc = new VOD({
       flightID: flightID,
       missionID: missionID,
@@ -61,7 +51,7 @@ export const saveVOD = async (
       thumbnail: `/vod/${req.body.filename}.jpg`,
       tenantId: tenantId,
       videoName: req.body.filename,
-      fileSize: stats.size / (1024 * 1024),
+      fileSize: vodSize,
     });
     const dbsave = await VODdoc.save();
     const tenant = await Tenant.findOne({ _id: tenantId });
@@ -343,7 +333,6 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
         });
         locationID = location._id;
       }
-      const fileSize = await findHlsSize(path.basename(transcodeData.hlsPath));
       const vod = await VOD.create({
         videoName: req.file.originalname,
         missionID: missionID,
@@ -353,7 +342,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
         thumbnail: transcodeData.thumbnailPath,
         tenantId: res.locals.user.tenantId._id,
         isSRT: telemetryData ? true : false,
-        fileSize: fileSize,
+        fileSize: transcodeData.size + (telemetryData ? telemetryData.geojsonSize : 0),
       });
       missionSpecificSocket
         .to(String(missionID))
@@ -371,20 +360,7 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (doc) {
-      const docpath = doc.videoPath;
-      // TODO: Put HLS chunks for a video in a single folder, then replace this
-      const indexFile = path.parse(docpath).base;
-      const conf = await deleteHlsVodUsingIndex(indexFile);
-      await deletePublicFileUsingPath(doc.thumbnail);
-      await deleteDirFileUsingName(
-        Directory.VOD,
-        path.parse(docpath).name + ".flv"
-      );
-      if (conf) {
-        req.log.info("Files deleted");
-      } else {
-        req.log.warn("Files does not exist");
-      }
+      await deleteVideo(doc.videoPath);
     } else {
       res.status(404).json({
         status: false,
@@ -393,7 +369,7 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       return;
     }
     const resp = await doc.delete();
-    const tenant: any = await Tenant.findOne({ _id: res.locals.user.tenantId });
+    const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
     if (resp && tenant.actualVodCount) {
       await Tenant.updateOne(
         { _id: res.locals.user.tenantId },
@@ -430,19 +406,7 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
     if (docs && docs.length > 0) {
       for (let index = 0; index < docs.length; index++) {
         const doc = docs[index];
-        const docpath = doc.videoPath;
-        const indexFile = path.parse(docpath).base;
-        const conf = await deleteHlsVodUsingIndex(indexFile);
-        await deletePublicFileUsingPath(doc.thumbnail);
-        await deletePublicFileUsingPath(path.parse(docpath).name + ".flv");
-        if (conf) {
-          req.log.info("Files deleted");
-        } else {
-          req.log.warn("Files does not exist");
-          errors.push(doc._id.toString());
-          continue;
-        }
-
+        await deleteVideo(doc.videoPath);
         const res2 = await VOD.findByIdAndDelete(doc._id);
         if (res2) {
           deleted.push(doc._id.toString());

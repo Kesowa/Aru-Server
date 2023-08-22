@@ -2,22 +2,15 @@ import { EventEmitter } from "events";
 import { exec } from "child_process";
 import fs from "fs";
 export const VODEvents = new EventEmitter();
-import VOD from "../models/vod";
-import Tenant from "../models/tenant";
-import { missionSpecificSocket } from "../socket";
-import DJISRTParser, { AllFunctions } from "dji_srt_parser";
-import mongoose from "mongoose";
-import { findHlsSize } from "./fileUtils";
-import { Directory, DirPath } from "../constants";
-import Location from "../models/location";
 import * as pathUtils from "./pathUtils";
 import { promisify } from "util";
 import path from "path";
+import DJISRTParser from "dji_srt_parser";
 const asyncExec = promisify(exec);
 const matchExt = /\.\w+$/;
 
 /**
- * Supply mp4/flv video path, generate HLS files, thumbnail, and flv file
+ * Supply mp4/flv video path, generate HLS files, thumbnail, and flv file. Also returns size of all files.
  * DELETES VOD AFTER CONVERSION!!!
  * */
 export const transcodeVideo = async (
@@ -47,7 +40,8 @@ export const transcodeVideo = async (
 
   await asyncExec(command);
   await fs.promises.rm(absFilePath);
-  return paths;
+  const totalSize = await getVodSize(paths.flvPath);
+  return { ...paths, size: totalSize };
 };
 
 /**
@@ -86,192 +80,83 @@ export const extractTelemetry = async (
       geojsonPath,
       srtPath,
       metadata,
+      geojsonSize: geojsonData.length / (1024 * 1024)
     };
   } catch (error) {
     return undefined;
   }
 };
 
-export type ProcessVideoData = {
-  fullPath: string;
-  filename: string;
-  missionID: mongoose.Types.ObjectId;
-  fullPath2: string;
-  flightID: mongoose.Types.ObjectId;
-  locationID: mongoose.Types.ObjectId;
-  tenantID: mongoose.Types.ObjectId;
-  originalName: string;
-};
-const exitOnce = async (code: Number, d: ProcessVideoData) => {
-  console.log("Hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
-  let srtFlag = false;
-  if (code == 0) {
-    console.log(
-      "SRT Extraction successful, now Exiting!---------------------------------------------------------------------"
-    );
-    const srtOutpath = DirPath(Directory.VOD, d.filename + ".srt");
-    const geoJSONoutPath = DirPath(Directory.VOD, d.filename + ".geojson");
-    let data: string;
-    let json: string;
-    let DJIData: AllFunctions;
-    try {
-      data = await fs.promises.readFile(srtOutpath, "utf8");
-      DJIData = DJISRTParser(data, srtOutpath);
-      json = DJIData.toGeoJSON(false, true, false);
-    } catch (err) {
-      console.error(err);
-    }
-    console.log(data);
-    if (json) {
-      console.log("Set to true----------------------");
-      srtFlag = true;
-      const metadata = DJIData.metadata();
-      const lat = metadata.stats.GPS.LATITUDE.avg;
-      const lng = metadata.stats.GPS.LONGITUDE.avg;
-      const newLocation = await Location.create({
-        properties: {
-          name: d.originalName,
-        },
-        tenantId: d.tenantID,
-        geometry: {
-          type: "Point",
-          coordinates: { lng, lat },
-        },
-      });
-      d.locationID = newLocation._id;
-    }
-    try {
-      await fs.promises.writeFile(geoJSONoutPath, json);
-      srtFlag = true;
-    } catch (error) {
-      console.error(error);
-      srtFlag = false;
-    }
-  } else {
-    srtFlag = false;
-  }
-  if (srtFlag == true) {
-    const size1 = await findHlsSize(d.filename + ".m3u8");
-
-    const VODdoc = new VOD({
-      flightID: d.flightID,
-      missionID: d.missionID,
-      locationID: d.locationID,
-      videoPath: `/vod/${d.filename}.m3u8`,
-      thumbnail: `/vod/${d.filename}.jpg`,
-      fileSize: size1,
-      tenantId: d.tenantID,
-      videoName: d.originalName.slice(0, -4),
-      isSRT: true,
-    });
-    const saveToDb = async () => {
-      const dbsave = await VODdoc.save();
-      if (dbsave) {
-        console.log(dbsave);
-        missionSpecificSocket
-          .to(d.missionID.toString())
-          .emit("PROCESS_VIDEO_FINISHED", d);
-        await fs.promises.unlink(d.fullPath);
-      }
-      const tenant = await Tenant.findOne({ _id: d.tenantID });
-      if (dbsave && tenant.actualVodCount >= 0) {
-        await Tenant.updateOne(
-          { _id: d.tenantID },
-          { $inc: { actualVodCount: 1 } }
-        );
-      }
-    };
-    await saveToDb();
-  } else {
-    const size1: number = await findHlsSize(d.filename + ".m3u8");
-
-    const VODdoc = new VOD({
-      flightID: d.flightID,
-      missionID: d.missionID,
-      locationID: d.locationID,
-      videoPath: `/vod/${d.filename}.m3u8`,
-      thumbnail: `/vod/${d.filename}.jpg`,
-      fileSize: size1,
-      tenantId: d.tenantID,
-      videoName: d.originalName.slice(0, -4),
-      isSRT: false,
-    });
-    const saveToDb = async () => {
-      const dbsave = await VODdoc.save();
-      if (dbsave) {
-        console.log(dbsave);
-        missionSpecificSocket
-          .to(d.missionID.toString())
-          .emit("PROCESS_VIDEO_FINISHED", d);
-        await fs.promises.unlink(d.fullPath);
-      }
-      const tenant = await Tenant.findOne({ _id: d.tenantID });
-      if (dbsave && tenant.actualVodCount >= 0) {
-        await Tenant.updateOne(
-          { _id: d.tenantID },
-          { $inc: { actualVodCount: 1 } }
-        );
-      }
-    };
-    saveToDb()
-      .then(() => console.log(`Saved video ${d.filename} to db`))
-      .catch((err) =>
-        console.error(`Failed to save video ${d.filename} to db`, err)
-      );
-  }
-};
-const videoProcessHandler = (d: ProcessVideoData) => {
-  console.log("Now Starting");
-  const ps = exec;
-
-  missionSpecificSocket
-    .to(d.missionID.toString())
-    .emit("PROCESS_VIDEO_STARTED", d);
-  console.log(d);
-  const onExit = (exitCode: number) => {
-    console.log(
-      "File conversion successful, now Existing!---------------------------------------------------------------------"
-    );
-    let hlsFlag = false;
-    if (exitCode == 0) {
-      hlsFlag = true;
-      if (hlsFlag == true) {
-        console.log("Now Starting SRT extraction");
-        const pss = exec(
-          `/bin/ffmpeg -i "${d.fullPath}" -map 0:s:0 "${DirPath(
-            Directory.VOD,
-            d.filename + ".srt"
-          )}"`,
-          (error, stdout, stderr) => {
-            if (error) console.error(error);
-            if (stderr) console.error(stderr);
-            if (stdout) console.info("video conversion complete", d);
-          }
-        );
-        pss.once("exit", (code) => {
-          exitOnce(code, d).then(console.log).catch(console.error);
-        });
-        // pss?.stdout?.on("data", console.log);
-        // pss?.stdout?.on("close", console.log);
-        // pss?.stdout?.on("error", (err) => {
-        //   srtFlag = false;
-        //   console.error("Failed to save srt", d.filename, err);
-        // });
-        // pss?.on("message", console.log);
-        // pss?.stderr?.on("data", console.error);
-        // pss?.stderr?.on("end", console.error);
-      }
-    }
-  };
-
-  ps.once("exit", onExit);
-
-  // ps?.stdout?.on("data", console.log);
-  // ps?.stdout?.on("close", console.log);
-  // ps?.stdout?.on("error", console.error);
-  // ps?.on("message", console.log);
-  // ps?.stderr?.on("data", console.error);
-  // ps?.stderr?.on("end", console.error);
+/**
+ * Takes absolute path to index.m3u8 file, returns approx size of entire HLS stream in bytes
+ */
+const getHlsSize = async (indexPath: string) => {
+  const index = await fs.promises.readFile(indexPath, "utf8");
+  const dir = path.dirname(index);
+  const vodFiles = index
+    .split("\n")
+    .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
+  const partSize = (
+    await fs.promises.stat(
+      path.join(dir, vodFiles[Math.floor(vodFiles.length / 2)])
+    )
+  ).size;
+  const hlsSize = index.length + vodFiles.length * partSize;
+  return hlsSize;
 };
 
-VODEvents.on("PROCESS_VIDEO", videoProcessHandler);
+/**
+ * Takes non-abs path to video file (hls, flv, mp4, etc), returns approx size of all video files in MegaBytes
+ */
+export const getVodSize = async (vodFile: pathUtils.DirPath | pathUtils.DocPath) => {
+  const absVodPath = pathUtils.absPath(pathUtils.Directory.ROOT, vodFile).replace(matchExt, "");
+  const absFlvPath = absVodPath + ".flv";
+  const absMp4Path = absVodPath + ".mp4";
+  const absHlsPath = absVodPath + ".m3u8";
+  const absThumbPath = absVodPath + ".jpg";
+
+  const getSize = async (filePath: string) => { return (await fs.promises.stat(filePath)).size };
+
+  const getAllSizes = [
+    getSize(absFlvPath),
+    getSize(absMp4Path),
+    getSize(absThumbPath),
+    getHlsSize(absHlsPath),
+  ];
+
+  const allSizes = await Promise.allSettled(getAllSizes);
+  const totalSize = allSizes.map(val => val.status === "fulfilled" ? val.value : 0).reduce((prevVal, currVal) => prevVal + currVal);
+  return totalSize / (1024 * 1024);
+}
+
+/**
+ * Takes absolute path to HLS index.m3u8 file, and completely erases entire HLS stream
+ */
+const deleteHls = async (indexPath: string) => {
+  const index = await fs.promises.readFile(indexPath, "utf8");
+  const dir = path.dirname(indexPath);
+  const vodFiles = index
+    .split("\n")
+    .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
+  vodFiles.push(path.basename(indexPath));
+  await Promise.allSettled(vodFiles.map(filename => path.join(dir, filename)).map(filepath => fs.promises.rm(filepath)));
+}
+
+/**
+ * Takes non-abs path to video file (hls, flv, mp4, etc), and completely erases it
+ */
+export const deleteVideo = async (vodFile: pathUtils.DirPath | pathUtils.DocPath) => {
+  const absVodPath = pathUtils.absPath(pathUtils.Directory.ROOT, vodFile).replace(matchExt, "");
+  const absFlvPath = absVodPath + ".flv";
+  const absMp4Path = absVodPath + ".mp4";
+  const absHlsPath = absVodPath + ".m3u8";
+  const absThumbPath = absVodPath + ".jpg";
+  const absGeojsonPath = absVodPath + ".geojson";
+  await Promise.allSettled([
+    fs.promises.rm(absFlvPath),
+    fs.promises.rm(absMp4Path),
+    fs.promises.rm(absThumbPath),
+    fs.promises.rm(absGeojsonPath),
+    deleteHls(absHlsPath),
+  ]);
+}

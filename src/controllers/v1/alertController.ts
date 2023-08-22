@@ -15,7 +15,7 @@ import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
 import { getFileSize } from "../../utils/fileUtils";
 import path from "path";
 import { WiproInterface } from "../../utils/wipro";
-import { saveThumbnails } from "../../utils/imageUtils";
+import { readCoords, saveThumbnails } from "../../utils/imageUtils";
 import * as pathUtils from "../../utils/pathUtils";
 
 
@@ -833,13 +833,13 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
     const img_path = pathUtils.docPath(pathUtils.Directory.ALERT_IMAGES, req.file.filename);
     await saveThumbnails(img_path);
-    const ff: any = await exifr.parse(pathUtils.absPath(pathUtils.Directory.ROOT, img_path));
+    const ff = await readCoords(img_path);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
     req.body.location = {
-      lat: ff ? ff.latitude : 0,
-      long: ff ? ff.longitude : 0,
+      lat: ff ? ff.lat: 0,
+      long: ff ? ff.lng : 0,
     };
     const newAlert = new Alert({
       locationName,
