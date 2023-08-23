@@ -1,4 +1,3 @@
-import shp2json from "shpjs";
 import * as pathUtils from "../../utils/pathUtils";
 import type { Request } from "express";
 import type { AuthResponse } from "../../utils/interfaceUtils";
@@ -10,14 +9,11 @@ import { missionSpecificSocket } from "../../socket";
 import { ObjectId } from "bson";
 import ObjectsToCsv from "objects-to-csv";
 import Mission from "../../models/mission";
-import fs, { promises as Fs } from "fs";
+import tokml from "tokml";
 import {
   deleteDirFileUsingName,
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
-const tj = require("@mapbox/togeojson"),
-  DOMParser = require("xmldom").DOMParser;
-import tokml from "tokml";
 import {
   modGeoJson,
   readGeoJson,
@@ -57,87 +53,62 @@ import type { ITenant } from "../../schemas/tenant";
 import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
+import { saveVectorLayer } from "../../utils/dataUtils";
+import fs from "fs";
+import { randomUUID } from "crypto";
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
   {
     let layer: HydratedDocument<ILayer>;
     if (req.params.type == "Vector") {
-      const fileExt = path.extname(req.file.originalname).slice(1);
-      let pathee2: string;
-      let filePath: string;
-      if (fileExt === "kml") {
-        const pathh1 = DirPath(Directory.VECTOR, req.file?.filename);
-        const fileData = await fs.promises.readFile(pathh1, "utf8");
-        const kml1 = new DOMParser().parseFromString(fileData);
-        const converted = tj.kml(kml1, { styles: true });
-        pathee2 = pathh1.split(".")[0] + ".geojson";
-        filePath = `/vector/${req.file.filename.replace(".kml", ".geojson")}`;
-        await fs.promises.writeFile(pathee2, JSON.stringify(converted));
-        await fs.promises.unlink(pathh1);
-      } else if (fileExt === "shp" || fileExt === "zip") {
-        const filename = path.basename(req.file.filename, fileExt);
-        const pathh1 = DirPath(Directory.VECTOR, req.file.filename);
-        const shpFile = await Fs.readFile(pathh1);
-        pathee2 = filename + "geojson";
-        filePath = `/${Directory.VECTOR}/${pathee2}`;
-        pathee2 = DirPath(Directory.VECTOR, pathee2);
-        const geojson = await shp2json(shpFile);
-        await Fs.writeFile(pathee2, JSON.stringify(geojson));
-      } else if (fileExt === "geojson") {
-        filePath = `/${Directory.VECTOR}/${req.file.filename}`;
-        pathee2 = req.file.path;
-      } else {
-        req.log.error({ fileExt }, "unsupported vector format");
-        res.status(400).json({
+      let geojsonPath = "";
+      let size = 0;
+      let featureCount = 0;
+      let flagColor = "";
+      try {
+        const vectorLayer = await saveVectorLayer(pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename), req.body.inHeritOriginalColorFromFile ? {
+          icon: req.body.icon,
+          color: req.body.color
+        } : undefined);
+
+        if (vectorLayer == undefined) {
+          res.status(400).json({
+            status: false,
+            message: "vector format not supported"
+          });
+          return
+        }
+
+        geojsonPath = vectorLayer.geojsonPath;
+        size = vectorLayer.size;
+        featureCount = vectorLayer.featureCount;
+        flagColor = vectorLayer.flagColor;
+      } catch (error) {
+        req.log.error(error, "vector layer conversion failed");
+        res.status(500).json({
           status: false,
-          message: "file format not supported",
+          message: "file conversion failed",
         });
         return;
       }
-      const dir = pathee2 || req.file.path;
       const {
         name,
         type,
         vector,
         captureDate,
         missionId,
-        color,
         layerGroupId,
       } = req.body;
-
-      const geojson = await readGeoJson(dir);
-      const fc = geojson.features.length;
-      if (geojson == null) {
-        return res.json({
-          status: false,
-          message: "file path not exist! ",
-        });
-      }
-      if (req.body.inHeritOriginalColorFromFile == "false") {
-        const modCheck = await modGeoJson(
-          req.body.icon,
-          req.body.color,
-          geojson,
-          dir
-        );
-        if (modCheck == 0) {
-          return res.json({
-            status: false,
-            message: "Color selection error",
-          });
-        }
-        const size = Number(
-          (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-        );
-        layer = new Layer({
+      layer =
+        new Layer({
           name,
           type,
           vector,
-          color,
-          layerpath: filePath,
+          color: flagColor,
+          layerpath: geojsonPath,
           fileSize: size,
-          featureCount: fc,
+          featureCount: featureCount,
           layerGroupId,
           captureDate,
           missionId,
@@ -145,43 +116,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           createdBy: res.locals.user._id,
           updatedBy: res.locals.user._id,
         });
-      } else {
-        if (geojson.features[0].properties.color) {
-          let flagColor = geojson.features[0].properties.color;
-          for (let i = 0; i < geojson.features.length; i++) {
-            if (flagColor != geojson.features[i].properties.color) {
-              flagColor = "multiColor";
-              break;
-            }
-          }
 
-          await modGeoJson(null, null, geojson, dir);
-          const size: number = Number(
-            (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-          );
-          layer = new Layer({
-            name,
-            type,
-            vector,
-            color: flagColor,
-            layerpath:
-              fileExt == "kml" ? filePath : `/vector/${req.file?.filename}`,
-            fileSize: size,
-            featureCount: fc,
-            layerGroupId,
-            captureDate,
-            missionId,
-            tenantId: res.locals.user.tenantId,
-            createdBy: res.locals.user._id,
-            updatedBy: res.locals.user._id,
-          });
-        } else {
-          res.json({
-            status: false,
-            message: "Failed! GEOJSON does not have color",
-          });
-        }
-      }
     } else if (req.params.type == "Raster") {
       const tif_loc = `/raster/${req.file?.filename}`;
 
@@ -878,48 +813,11 @@ export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
 
 export const createVectorLayer = async (req: Request, res: AuthResponse) => {
   {
-    const filepath =
-      "/vector/" +
-      String(Date.now()) +
-      "_" +
-      String(req.body.name) +
-      ".geojson";
+    const filepath = pathUtils.docPath(pathUtils.Directory.TEMP, randomUUID() + ".geojson");
     const file = DirPath(Directory.DEFAULT, filepath);
     await fs.promises.writeFile(file, JSON.stringify(req.body.geoJSON));
-
-    const geojson = await readGeoJson(file);
-    // let fc: any = geojson.features.length;
-    if (geojson == null) {
-      return res.json({
-        status: false,
-        message: "file path not exist! ",
-      });
-    }
-
-    const modCheck = await modGeoJson(null, null, geojson, file);
-    if (modCheck == 0) {
-      return res.json({
-        status: false,
-        message: "Color selection error",
-      });
-    }
-
-    const color = req.body.geoJSON.features[0].properties.color;
-    const size: number = await getFileSize(file);
-    const docCount = await Tenant.findOne({
-      _id: res.locals.user.tenantId,
-    })
-      .populate<{ activePackage: IPackage }>("activePackage")
-      .lean();
-
-    const ress = await isSizeVector(size, docCount, file);
-    if (ress !== true) {
-      return res.status(403).json({
-        status: false,
-        message: "Actual storage exceeded the Limit of Set storage!",
-      });
-    }
-    const vectorLayer = new Layer({
+    const vectorLayer = await saveVectorLayer(filepath);
+    const layer = await Layer.create({
       name: req.body.name,
       type: "Vector",
       vector: req.body.vectorId,
@@ -927,29 +825,27 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
-      color: color,
-      fileSize: size,
-      layerpath: filepath,
+      color: vectorLayer.flagColor,
+      fileSize: vectorLayer.size,
+      layerpath: vectorLayer.geojsonPath,
+      featureCount: vectorLayer.featureCount,
       captureDate: new Date(),
     });
 
-    if (vectorLayer) {
-      const savedDoc = await vectorLayer.save();
+    if (layer) {
       const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,
       });
-      if (savedDoc && tenant.actualLayerCount >= 0) {
+      if (tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },
           { $inc: { actualLayerCount: 1 } }
         );
-        // tenant.actualLayerCount = Number(tenant.actualLayerCount) + 1;
-        // await tenant.save();
       }
       res.status(201).json({
         status: true,
         message: "Sucessfully created vector layer",
-        data: savedDoc,
+        data: layer,
       });
     } else {
       res.status(201).json({
@@ -1407,9 +1303,8 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${
-              ar.length - 1
-            } and data index should start from 0`,
+            message: `Your data must be less than equal to ${ar.length - 1
+              } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -2504,7 +2399,7 @@ export const sys_id_Inject_to_layerfiles = async (
             req.log.info("Modified Doc");
           }
         }
-        await Fs.writeFile(p, JSON.stringify(gjson));
+        await fs.promises.writeFile(p, JSON.stringify(gjson));
         res.status(200).json({
           status: true,
           message: "Generated sysIds successfully",
@@ -2573,9 +2468,8 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${
-        req.body.flag ? "flagged" : "unflagged"
-      } successfully`,
+      message: `feature ${req.body.flag ? "flagged" : "unflagged"
+        } successfully`,
     });
   } else {
     res.status(501).json({
