@@ -6,7 +6,8 @@ import { Logger } from "pino";
 import fs from "fs/promises";
 import kmlToGjson from "tokml";
 import shp2json from "shpjs";
-import { GeoJson, modGeoJson } from "./geojsonUtils";
+import { GeoJson } from "./geojsonUtils";
+import { randomUUID } from "crypto";
 
 const asyncExec = promisify(exec);
 
@@ -39,43 +40,52 @@ const getFlagColor = (geojson: GeoJson) => {
 /**
  * Takes layer path, converts to geojson if necessary, and returns the geojson path. Also cleans up.
  */
-export const saveVectorLayer = async (layerPath: pathUtils.DocPath | pathUtils.DirPath, options?: {
+export const saveVectorLayer = async (layer: pathUtils.DocPath | pathUtils.DirPath | GeoJson, options?: {
   icon: string,
   color: string,
 }) => {
+  let layerPath = "";
+  let geojsonData: GeoJson;
+  if (typeof layer == "string") {
+    layerPath = layer;
+  }
+  else {
+    geojsonData = layer;
+    layerPath = randomUUID();
+  }
   const ext = path.extname(layerPath).toLowerCase();
   const absLayerPath = pathUtils.absPath(pathUtils.Directory.ROOT, layerPath);
   const geojsonPath = pathUtils.docPath(pathUtils.Directory.VECTOR, path.parse(layerPath).name + ".geojson");
   const absGeojsonPath = pathUtils.absPath(pathUtils.Directory.ROOT, geojsonPath);
   let flagColor = "multiColor";
-  let geojsonData: GeoJson;
-  if (ext == ".geojson") {
-    geojsonData = JSON.parse(await fs.readFile(absLayerPath, "utf8"));
-  }
-  if (ext == ".kml") {
-    const fileData = await fs.readFile(absLayerPath, "utf8");
-    const kmlData = new DOMParser().parseFromString(fileData, "text/xml");
-    geojsonData = kmlToGjson.kml(kmlData, { styles: true });
-  }
-  if (ext == ".shp" || ext == ".zip") {
-    const fileData = await fs.readFile(absLayerPath);
-    geojsonData = await shp2json(fileData);
-  }
-  if (geojsonData) {
-    if (options) {
-      geojsonData.features.forEach(feature => feature.properties = {
-        ...feature.properties,
-        ...options,
-      });
-      flagColor = options.color;
+  try {
+    if (ext == ".geojson") {
+      geojsonData = JSON.parse(await fs.readFile(absLayerPath, "utf8"));
     }
-    else {
-      flagColor = getFlagColor(geojsonData);
+    if (ext == ".kml") {
+      const fileData = await fs.readFile(absLayerPath, "utf8");
+      const kmlData = new DOMParser().parseFromString(fileData, "text/xml");
+      geojsonData = kmlToGjson.kml(kmlData, { styles: true });
     }
-    const stringData = JSON.stringify(geojsonData);
-    await fs.writeFile(absGeojsonPath, stringData);
-    await fs.rm(absLayerPath);
-    return { geojsonPath, size: stringData.length / (1024 * 1024), featureCount: geojsonData.features.length, flagColor };
-  }
-  return undefined;
+    if (ext == ".shp" || ext == ".zip") {
+      const fileData = await fs.readFile(absLayerPath);
+      geojsonData = await shp2json(fileData);
+    }
+    if (geojsonData) {
+      if (options) {
+        geojsonData.features.forEach(feature => feature.properties = {
+          ...feature.properties,
+          ...options,
+        });
+        flagColor = options.color;
+      }
+      else {
+        flagColor = getFlagColor(geojsonData);
+      }
+      const stringData = JSON.stringify(geojsonData);
+      await fs.writeFile(absGeojsonPath, stringData);
+      try { await fs.rm(absLayerPath); } catch { };
+      return { geojsonPath, size: stringData.length / (1024 * 1024), featureCount: geojsonData.features.length, flagColor };
+    }
+  } catch { return undefined; }
 }

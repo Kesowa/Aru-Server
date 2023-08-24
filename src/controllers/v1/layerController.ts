@@ -813,10 +813,7 @@ export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
 
 export const createVectorLayer = async (req: Request, res: AuthResponse) => {
   {
-    const filepath = pathUtils.docPath(pathUtils.Directory.TEMP, randomUUID() + ".geojson");
-    const file = DirPath(Directory.DEFAULT, filepath);
-    await fs.promises.writeFile(file, JSON.stringify(req.body.geoJSON));
-    const vectorLayer = await saveVectorLayer(filepath);
+    const vectorLayer = await saveVectorLayer(req.body.geoJSON);
     const layer = await Layer.create({
       name: req.body.name,
       type: "Vector",
