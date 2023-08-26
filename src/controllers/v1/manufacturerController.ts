@@ -35,7 +35,7 @@ export const getManufacturer = async (req: Request, res: AuthResponse) => {
       .lean();
     res.json({
       status: true,
-      message: "Missions fetched sucessfully.",
+      message: "Manufacturers fetched sucessfully.",
       data: dbResp,
     });
   }
