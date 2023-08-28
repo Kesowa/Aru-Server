@@ -223,7 +223,6 @@ db.users.insertMany([
     password: "$2a$10$tUth515EOFQs0Gzz6iFI9uPYjorlrxz2Inl10wJZGIxnM9H5qgISy",
     phoneNo: "9903032571",
     userType: "super-admin",
-    tenantId: ObjectId("5f204f03b9445726102781a8"),
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
     __v: 0,
