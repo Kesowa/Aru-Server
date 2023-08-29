@@ -871,7 +871,7 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
 export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
   {
     const id: any = req.query.id;
-    const doc = await Layer.findById({
+    const doc = await Layer.findOne({
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     });
@@ -2052,7 +2052,7 @@ export const unreviewedLayerfiles = async (req: Request, res: AuthResponse) => {
     const docs = await layerFiles.find({
       layerId: req.query.layerId,
       isReview: false,
-      tenantId: res.locals.user.tenantId,
+      tenantId: res.locals.user.tenantId._id,
     });
     if (docs.length) {
       return res.status(200).json({
@@ -2128,7 +2128,7 @@ export const downloadassetbyIDtoKml = async (
 ) => {
   {
     const id: any = req.query.id;
-    const doc = await Layer.findById({
+    const doc = await Layer.findOne({
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     });

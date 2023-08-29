@@ -188,7 +188,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
 export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
   {
     const doc = await User.find({
-      tenantId: res.locals.user.tenantId,
+      tenantId: res.locals.user.tenantId._id,
       userType: { $ne: "tenant-client" },
     }).populate<{
       createdBy: IUser;
@@ -213,7 +213,7 @@ export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
 export const userCsv = async (req: Request, res: AuthResponse) => {
   {
     const data = await User.find(
-      { tenantId: res.locals.user.tenantId },
+      { tenantId: res.locals.user.tenantId._id },
       { _id: 0, name: 1, email: 1, phoneNo: 1, userType: 1 }
     ).lean();
     if (data.length) {

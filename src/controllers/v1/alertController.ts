@@ -98,44 +98,27 @@ export const fetchAllAlertByFlightorLocationId = async (
   res: AuthResponse
 ) => {
   {
-    if (req.query.flightID != undefined) {
-      const flightId = new Types.ObjectId(String(req.query.flightID));
-      const alert = await Alert.find({
-        flightId,
-        tenantId: res.locals.user.tenantId._id,
+    const { flightID, locationID } = req.query;
+    const alert = await Alert.find({
+      [flightID && "flightId"]: new Types.ObjectId(String(flightID)),
+      [locationID && "locationId"]: new Types.ObjectId(String(locationID)),
+      $or: [
+        { tenantId: res.locals.user.tenantId._id },
+        { createdBy: res.locals.user._id },
+      ]
+    });
+
+    if (alert.length) {
+      res.status(200).json({
+        status: true,
+        message: "Alerts fetched successfully",
+        data: alert,
       });
-      if (alert.length) {
-        res.status(200).json({
-          status: true,
-          message: "Alerts fetched successfully",
-          data: alert,
-        });
-      } else {
-        res.status(404).json({
-          status: false,
-          message: "Wrong Input",
-        });
-      }
     } else {
-      const locationId = new Types.ObjectId(String(req.query.locationID));
-      if (locationId != undefined) {
-        const alert = await Alert.find({
-          locationId,
-          tenantId: res.locals.user.tenantId._id,
-        });
-        if (alert) {
-          res.status(200).json({
-            status: true,
-            message: "Alert fetched successfully",
-            data: alert,
-          });
-        } else {
-          res.status(404).json({
-            status: false,
-            message: "Wrong input",
-          });
-        }
-      }
+      res.status(404).json({
+        status: false,
+        message: "Wrong Input",
+      });
     }
   }
 };
@@ -148,7 +131,10 @@ export const fetchAllAlertByAlertId = async (
   {
     const alert = await Alert.find({
       _id: req.query.id,
-      tenantId: res.locals.user.tenantId._id,
+      $or: [
+        { tenantId: res.locals.user.tenantId._id },
+        { createdBy: res.locals.user._id },
+      ],
     }).populate<{ createdBy: IUser }>({ path: "createdBy" });
     if (alert) {
       res.status(200).json({
@@ -171,10 +157,12 @@ export const fetchAllAlertByLocationId = async (
   res: AuthResponse
 ) => {
   {
-    // let locationId = req.query.id;
     const alert = await Alert.find({
       locationId: req.query.id,
-      tenantId: res.locals.user.tenantId._id,
+      $or: [
+        { tenantId: res.locals.user.tenantId._id },
+        { createdBy: res.locals.user._id },
+      ],
     });
     let data = [];
 
@@ -205,11 +193,13 @@ export const fetchNumberofAlertsByLocationId = async (
   res: AuthResponse
 ) => {
   {
-    // let locationId = Types.ObjectId(String(req.query.id));
     const alert = await Alert.find(
       {
         locationId: new Types.ObjectId(String(req.query.id)),
-        tenantId: res.locals.user.tenantId._id,
+        $or: [
+          { tenantId: res.locals.user.tenantId._id },
+          { createdBy: res.locals.user._id },
+        ],
       },
       {
         _id: 0,
@@ -238,69 +228,50 @@ export const fetchAlertsUsePaginationByMissionID = async (
   res: AuthResponse
 ) => {
   {
-    const page = Number(req.query.page);
-    const limit = Number(req.query.limit);
-    const startIndex = (page - 1) * limit;
+    const { page, limit, sortBy, id, isFlagged, alertType } = req.query;
 
-    const sort: any = {};
-    if (req.query.sortBy) {
-      const parts = String(req.query.sortBy).split(":");
-      sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
-    }
     const query = {
-      missionId: new Types.ObjectId(String(req.query.id)),
-      tenantId: res.locals.user.tenantId._id,
+      [id && "missionId"]: new Types.ObjectId(String(id)),
+      [isFlagged && "isFlagged"]: isFlagged,
+      $or: [
+        { tenantId: res.locals.user.tenantId._id },
+        { createdBy: res.locals.user._id },
+      ],
     };
-    if (req.query.isFlagged !== undefined) {
-      query["isFlagged"] = req.query.isFlagged;
-    }
+
     const total = await Alert.countDocuments(query);
 
-    let result: any;
-    if (req.query.alertType) {
-      result = await Alert.find(
-        {
-          ...query,
-          type: String(req.query.alertType),
-        },
-        null,
-        { sort: sort }
-      )
-        .populate<{ missionId: IMission }>({
-          path: "missionId",
-          select: "name",
-          options: { sort: sort },
-        })
-        .populate<{ flightId: IFlight }>({
-          path: "flightId",
-          select: "name",
-          options: { sort: sort },
-        })
-        .populate<{ createdBy: IUser }>({
-          path: "createdBy",
-          options: { sort: sort },
-        })
-        .limit(limit)
-        .skip(startIndex);
-    } else {
-      result = await Alert.find(query, null, { sort: sort })
-        .populate<{ missionId: IMission }>({
-          path: "missionId",
-          select: "name",
-          options: { sort: sort },
-        })
-        .populate<{ flightId: IFlight }>({
-          path: "flightId",
-          select: "name",
-          options: { sort: sort },
-        })
-        .populate<{ createdBy: IUser }>({
-          path: "createdBy",
-          options: { sort: sort },
-        })
-        .limit(limit)
-        .skip(startIndex);
+    const startIndex = (Number(page) - 1) * Number(limit);
+
+    let orderBy: string, order: number;
+    if (sortBy) {
+      const parts = String(sortBy).split(":");
+      orderBy = parts[0];
+      order = parts[1] === "desc" ? -1 : 1;
     }
+
+    const result = await Alert.find({
+      ...query,
+      [alertType && "type"]: String(alertType),
+    }, null, {
+      sort: { [orderBy]: order }
+    })
+    .populate<{ missionId: IMission }>({
+      path: "missionId",
+      select: "name",
+      options: { sort: { [orderBy]: order } },
+    })
+    .populate<{ flightId: IFlight }>({
+      path: "flightId",
+      select: "name",
+      options: { sort: { [orderBy]: order } },
+    })
+    .populate<{ createdBy: IUser }>({
+      path: "createdBy",
+      options: { sort: { [orderBy]: order } },
+    })
+    .limit(Number(limit))
+    .skip(startIndex);
 
     if (result) {
       res.status(200).json({
@@ -324,34 +295,40 @@ export const fetchAlertsUsePaginationByLocationId = async (
   res: AuthResponse
 ) => {
   {
-    const page = Number(req.query.page);
-    const limit = Number(req.query.limit);
-    const startIndex = (page - 1) * limit;
-    const sort: any = {};
-    if (req.query.sortBy) {
-      const parts = String(req.query.sortBy).split(":");
-      sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
+    const { id, sortBy, page, limit } = req.query;
+    const startIndex = (Number(page) - 1) * Number(limit);
+    let orderBy: string, order: number;
+    if (sortBy) {
+      const parts = String(sortBy).split(":");
+      orderBy = parts[0];
+      order = parts[1] === "desc" ? -1 : 1;
     }
     const result = await Alert.find(
-      { locationId: new Types.ObjectId(String(req.query.id)) },
+      { 
+        locationId: new Types.ObjectId(String(id)),
+        $or: [
+          { tenantId: res.locals.user.tenantId._id },
+          { createdBy: res.locals.user._id },
+        ],
+      },
       null,
-      { sort: sort }
+      { sort: { [orderBy]: order } }
     )
       .populate<{ missionId: IMission }>({
         path: "missionId",
         select: "name",
-        options: { sort: sort },
+        options: { sort: { [orderBy]: order } },
       })
       .populate<{ flightId: IFlight }>({
         path: "flightId",
         select: "name",
-        options: { sort: sort },
+        options: { sort: { [orderBy]: order } },
       })
       .populate<{ createdBy: IUser }>({
         path: "createdBy",
-        options: { sort: sort },
+        options: { sort: { [orderBy]: order } },
       })
-      .limit(limit)
+      .limit(Number(limit))
       .skip(startIndex);
     if (result.length) {
       res.status(200).json({
@@ -375,12 +352,13 @@ export const fetchAllAlertsByMissionMapref = async (
   res: AuthResponse
 ) => {
   {
-    const match: any = {};
-    match.tenantId = res.locals.user.tenantId._id;
     const data = await Alert.find(
       {
         missionId: new Types.ObjectId(String(req.query.id)),
-        tenantId: res.locals.user.tenantId._id,
+        $or: [
+          { tenantId: res.locals.user.tenantId._id },
+          { createdBy: res.locals.user._id },
+        ],
       },
       {
         image: 1,
@@ -389,7 +367,7 @@ export const fetchAllAlertsByMissionMapref = async (
       }
     ).populate<{ missionId: IMission }>({
       path: "missionId",
-      match,
+      match: { tenantId: res.locals.user.tenantId._id },
     });
     const result: any[] = [];
     for (let i = 0; i < data.length; i++) {
@@ -459,7 +437,7 @@ export const fetchAllAlertByLocationIdAndTime = async (
     //let timeType = String(req.body.time.split(" ")[1]).toLowerCase();
 
     const endTime = new Date();
-    let startTime: any;
+    let startTime: Date;
     switch (timeType) {
       case "days":
       case "day":
@@ -482,16 +460,19 @@ export const fetchAllAlertByLocationIdAndTime = async (
         break;
 
       default:
-        throw `Invalid time ${req.query.time}`;
+        throw `Invalid time ${req.query.time.toString()}`;
     }
     const data = await Alert.find(
       {
         locationId: new Types.ObjectId(String(req.query.locationID)),
-        tenantId: res.locals.user.tenantId._id,
         createdAt: {
           $gte: startTime,
           $lte: endTime,
         },
+        $or: [
+          { tenantId: res.locals.user.tenantId._id },
+          { createdBy: res.locals.user._id },
+        ],
       },
       {
         image: 1,
@@ -511,13 +492,13 @@ export const fetchAllAlertByLocationIdAndTime = async (
     if (data.length) {
       res.status(200).json({
         status: true,
-        message: `Total Alerts for ${req.query.locationID} is ${data.length}`,
+        message: `Total Alerts for ${req.query.locationID.toString()} is ${data.length}`,
         data: result,
       });
     } else {
       res.status(404).json({
         status: false,
-        message: `No Alerts Alerts for ${req.query.locationID} in this time span`,
+        message: `No Alerts Alerts for ${req.query.locationID.toString()} in this time span`,
       });
     }
   }
@@ -564,7 +545,7 @@ export const fetchAllAlertByTenantId = async (
       const timeType = timeStr.split(" ")[1];
 
       const endTime = new Date();
-      let startTime: any;
+      let startTime: Date;
       switch (timeType) {
         case "days":
         case "day":
@@ -587,7 +568,7 @@ export const fetchAllAlertByTenantId = async (
           break;
 
         default:
-          throw `Invalid time ${req.query.time}`;
+          throw `Invalid time ${req.query.time.toString()}`;
       }
       data = await Alert.find(
         {
@@ -650,86 +631,66 @@ export const advancedAlertResultByTenantId = async (
   res: AuthResponse
 ) => {
   {
-    let data = [];
+    const { timeRange, time, page, limit, user } = req.query;
 
-    if (req.query.timeRange) {
-      const timeStr = String(req.query.timeRange).split(" ");
+    let createdAt: { $gte: Date, $lte: Date };
+
+    if (timeRange) {
+      const timeStr = String(timeRange).split(" ");
       const startTime = new Date(timeStr[0]);
       const endTime = new Date(timeStr[1]);
+      createdAt = {
+        $gte: startTime,
+        $lte: endTime,
+      };
+    } else if (time) {
+      const timeStr = String(time);
 
-      data = await Alert.find({
-        tenantId: res.locals.user.tenantId._id,
-        createdAt: {
-          $gte: startTime,
-          $lte: endTime,
-        },
-      });
-    } else if (req.query.time) {
-      const timeStr = String(req.query.time);
-      const time = Number(timeStr.split(" ")[0]);
-
+      const timeValue = Number(timeStr.split(" ")[0]);
       const timeType = timeStr.split(" ")[1];
 
       const endTime = new Date();
-      let startTime: any;
+      let startTime: Date;
       switch (timeType) {
         case "days":
         case "day":
-          startTime = subDays(endTime, time);
+          startTime = subDays(endTime, timeValue);
           break;
 
         case "weeks":
         case "week":
-          startTime = subWeeks(endTime, time);
+          startTime = subWeeks(endTime, timeValue);
           break;
 
         case "months":
         case "month":
-          startTime = subMonths(endTime, time);
+          startTime = subMonths(endTime, timeValue);
           break;
 
         case "years":
         case "year":
-          startTime = subYears(endTime, time);
+          startTime = subYears(endTime, timeValue);
           break;
 
         default:
-          throw `Invalid time ${req.query.time}`;
+          throw `Invalid time ${time.toString()}`;
       }
-
-      data = await Alert.find({
-        tenantId: res.locals.user.tenantId._id,
-        createdAt: {
-          $gte: startTime,
-          $lte: endTime,
-        },
-      });
-    } else {
-      data = await Alert.find({
-        tenantId: res.locals.user.tenantId._id,
-      });
-    }
-
-    if (req.query.user) {
-      data = data.filter((alert) => {
-        return req.query.user?.toString() === alert.createdBy.toString();
-      });
+      createdAt = {
+        $gte: startTime,
+        $lte: endTime,
+      };
     }
 
     //Pagination
-    const page = Number(req.query.page);
-    const limit = Number(req.query.limit);
-    const startIndex = (page - 1) * limit;
+    const startIndex = (Number(page) - 1) * Number(limit);
+
+    const data = await Alert.find({
+      [createdAt && "createdAt"]: createdAt,
+      [user && "createdBy"]: user,
+      tenantId: res.locals.user.tenantId._id,
+    }).skip(startIndex).limit(Number(limit));
 
     const total = data.length;
-
-    data = data.filter((i) => {
-      return i >= startIndex;
-    });
-
-    data = data.filter((i) => {
-      return i < limit;
-    });
 
     if (data.length) {
       res.json({
@@ -752,7 +713,10 @@ export const convertImageToThumbnail = async (
   res: AuthResponse
 ) => {
   const result = await Alert.find({
-    tenantId: res.locals.user.tenantId,
+    $or: [
+      { tenantId: res.locals.user.tenantId._id },
+      { createdBy: res.locals.user._id },
+    ],
   });
   if (result.length) {
     for (let i = 0; i < result.length; i++) {

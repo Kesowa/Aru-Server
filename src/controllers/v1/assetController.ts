@@ -72,7 +72,12 @@ export const getAsset = async (req: Request, res: AuthResponse) => {
     const assetID = req.query.assetID;
     const gotDoc = await Asset.find({
       _id: assetID,
-      tenantID: res.locals.user.tenantId._id,
+      $or: [
+        { tenantID: res.locals.user.tenantId._id },
+        { userID: res.locals.user._id },
+        { createdBy: res.locals.user._id },
+        { assetOwner: res.locals.user._id },
+      ],
     })
       .populate<{ userID: IUser }>("userID")
       .populate<{ tenantID: ITenant }>("tenantID")
@@ -189,7 +194,14 @@ export const toggleAsset = async (req: Request, res: AuthResponse) => {
 
 export const getallAsset = async (req: Request, res: AuthResponse) => {
   {
-    const gotDoc = await Asset.find({ tenantID: res.locals.user.tenantId._id })
+    const gotDoc = await Asset.find({
+      $or: [
+        { tenantID: res.locals.user.tenantId._id },
+        { userID: res.locals.user._id },
+        { createdBy: res.locals.user._id },
+        { assetOwner: res.locals.user._id },
+      ],
+    })
       .populate<{ createdBy: IUser }>({
         path: "createdBy",
         select: { _id: 1, name: 1 },
