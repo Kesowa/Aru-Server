@@ -105,7 +105,7 @@ export const fetchAllAlertByFlightorLocationId = async (
       $or: [
         { tenantId: res.locals.user.tenantId._id },
         { createdBy: res.locals.user._id },
-      ]
+      ],
     });
 
     if (alert.length) {
@@ -250,28 +250,32 @@ export const fetchAlertsUsePaginationByMissionID = async (
       order = parts[1] === "desc" ? -1 : 1;
     }
 
-    const result = await Alert.find({
-      ...query,
-      [alertType && "type"]: String(alertType),
-    }, null, {
-      sort: { [orderBy]: order }
-    })
-    .populate<{ missionId: IMission }>({
-      path: "missionId",
-      select: "name",
-      options: { sort: { [orderBy]: order } },
-    })
-    .populate<{ flightId: IFlight }>({
-      path: "flightId",
-      select: "name",
-      options: { sort: { [orderBy]: order } },
-    })
-    .populate<{ createdBy: IUser }>({
-      path: "createdBy",
-      options: { sort: { [orderBy]: order } },
-    })
-    .limit(Number(limit))
-    .skip(startIndex);
+    const result = await Alert.find(
+      {
+        ...query,
+        [alertType && "type"]: String(alertType),
+      },
+      null,
+      {
+        sort: { [orderBy]: order },
+      }
+    )
+      .populate<{ missionId: IMission }>({
+        path: "missionId",
+        select: "name",
+        options: { sort: { [orderBy]: order } },
+      })
+      .populate<{ flightId: IFlight }>({
+        path: "flightId",
+        select: "name",
+        options: { sort: { [orderBy]: order } },
+      })
+      .populate<{ createdBy: IUser }>({
+        path: "createdBy",
+        options: { sort: { [orderBy]: order } },
+      })
+      .limit(Number(limit))
+      .skip(startIndex);
 
     if (result) {
       res.status(200).json({
@@ -304,7 +308,7 @@ export const fetchAlertsUsePaginationByLocationId = async (
       order = parts[1] === "desc" ? -1 : 1;
     }
     const result = await Alert.find(
-      { 
+      {
         locationId: new Types.ObjectId(String(id)),
         $or: [
           { tenantId: res.locals.user.tenantId._id },
@@ -492,7 +496,9 @@ export const fetchAllAlertByLocationIdAndTime = async (
     if (data.length) {
       res.status(200).json({
         status: true,
-        message: `Total Alerts for ${req.query.locationID.toString()} is ${data.length}`,
+        message: `Total Alerts for ${req.query.locationID.toString()} is ${
+          data.length
+        }`,
         data: result,
       });
     } else {
@@ -633,7 +639,7 @@ export const advancedAlertResultByTenantId = async (
   {
     const { timeRange, time, page, limit, user } = req.query;
 
-    let createdAt: { $gte: Date, $lte: Date };
+    let createdAt: { $gte: Date; $lte: Date };
 
     if (timeRange) {
       const timeStr = String(timeRange).split(" ");
@@ -688,7 +694,9 @@ export const advancedAlertResultByTenantId = async (
       [createdAt && "createdAt"]: createdAt,
       [user && "createdBy"]: user,
       tenantId: res.locals.user.tenantId._id,
-    }).skip(startIndex).limit(Number(limit));
+    })
+      .skip(startIndex)
+      .limit(Number(limit));
 
     const total = data.length;
 

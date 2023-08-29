@@ -716,7 +716,10 @@ export const getClientByEmail = async (req: Request, res: AuthResponse) => {
         message: "no email supplied",
       });
     }
-    const client = await User.findOne({ email: email, tenantId: res.locals.user.tenantId._id }, { email: 1, name: 1 });
+    const client = await User.findOne(
+      { email: email, tenantId: res.locals.user.tenantId._id },
+      { email: 1, name: 1 }
+    );
     if (!client) {
       return res.status(404).json({
         status: false,

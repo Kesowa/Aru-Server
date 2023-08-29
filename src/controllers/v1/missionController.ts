@@ -479,7 +479,10 @@ export const fetchAllMissionsForTenant = async (
     let missionsList = await Promise.all(
       results.map(async (mission: any) => {
         const missionId = mission._id;
-        const flight = await Flight.findOne({ mission: missionId, tenant: res.locals.user.tenantId._id })
+        const flight = await Flight.findOne({
+          mission: missionId,
+          tenant: res.locals.user.tenantId._id,
+        })
           .populate("pilotID")
           .populate("locationID")
           .lean();
@@ -598,7 +601,10 @@ export const fetchMissionById = async (req: Request, res: AuthResponse) => {
     // mission.clientId = clients;
     // mission.invites = await inviteModel.find({missionID: mission._id, valid: true}, {email: 1});
 
-    const flight = await Flight.findOne({ mission: missionId, tenant: res.locals.user.tenantId._id })
+    const flight = await Flight.findOne({
+      mission: missionId,
+      tenant: res.locals.user.tenantId._id,
+    })
       .populate<{ locationID: ILocation }>("locationID")
       .populate<{ pilotID: IUser }>("pilotID");
 
@@ -899,7 +905,10 @@ export const missionStatusUpdate = async (req: Request, res: AuthResponse) => {
 export const autoComplete = async (req: Request, res: AuthResponse) => {
   {
     const query = String(req.query.query);
-    const dbResp = await Mission.find({ $text: { $search: query }, tenantId: res.locals.user.tenantId._id });
+    const dbResp = await Mission.find({
+      $text: { $search: query },
+      tenantId: res.locals.user.tenantId._id,
+    });
     if (dbResp.length > 0) {
       res.json({
         status: true,

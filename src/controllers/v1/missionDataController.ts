@@ -23,7 +23,10 @@ export const getMemoryUsage = async (req: Request, res: AuthResponse) => {
       });
     }
 
-    const missionDoc = await Mission.findOne({ _id: missionID, tenantId: res.locals.user.tenantId._id, });
+    const missionDoc = await Mission.findOne({
+      _id: missionID,
+      tenantId: res.locals.user.tenantId._id,
+    });
     if (!missionDoc) {
       return res.status(404).json({
         status: false,

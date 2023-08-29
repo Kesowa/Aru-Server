@@ -186,8 +186,8 @@ export const getByFlightOrLocationID = async (
     };
 
     const doc = await VOD.find(query)
-    .skip((page) ? Number(page)*10 : 0)
-    .limit(10);
+      .skip(page ? Number(page) * 10 : 0)
+      .limit(10);
 
     const len = await VOD.countDocuments(query);
 

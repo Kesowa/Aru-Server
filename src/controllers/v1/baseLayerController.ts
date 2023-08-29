@@ -1089,12 +1089,7 @@ export const updateBaseLayerByAttr = async (
 export const getBaseLayers = async (req: Request, res: AuthResponse) => {
   {
     const { type } = req.params;
-    if (
-      (type !== "Vector" &&
-        type !== "Raster" &&
-        type !== "All") ||
-      !type
-    ) {
+    if ((type !== "Vector" && type !== "Raster" && type !== "All") || !type) {
       return res.json({
         success: false,
         message: "Please provide a valid size",
@@ -1110,18 +1105,18 @@ export const getBaseLayers = async (req: Request, res: AuthResponse) => {
     //   "vector"
     // > & { vector: IVector })[];
     const data = await Layer.find({
-      [(type !== "All") && "type"]: type,
-      $and: [ {
-        $or: [
-          { missionId: { $exists: false } }, 
-          { missionId: null }
-        ],
-      }, {
-        $or: [
-          { tenantId: res.locals.user.tenantId._id },
-          { createdBy: res.locals.user._id },
-        ],
-      } ],
+      [type !== "All" && "type"]: type,
+      $and: [
+        {
+          $or: [{ missionId: { $exists: false } }, { missionId: null }],
+        },
+        {
+          $or: [
+            { tenantId: res.locals.user.tenantId._id },
+            { createdBy: res.locals.user._id },
+          ],
+        },
+      ],
     })
       .populate<{ raster: IRaster }>({ path: "raster" })
       .populate<{ vector: IVector }>({ path: "vector" });
