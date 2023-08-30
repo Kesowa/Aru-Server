@@ -437,17 +437,19 @@ export const fetchAllMissionsForTenant = async (
       },
       {
         path: "missionType",
-        select: { "name": 1 },
+        select: { name: 1 },
       },
       {
         path: "clientId",
-        select: { "name": 1 },
-      }
+        select: { name: 1 },
+      },
     ];
 
     let sortBy: string;
-    if(sort && (sort.toString().split(":")[0] !== "flight")) {
-      sortBy = `${(sort.toString().split(":")[1] === "descend") ? "-" : ""}${sort.toString().split(":")[0]}`;
+    if (sort && sort.toString().split(":")[0] !== "flight") {
+      sortBy = `${sort.toString().split(":")[1] === "descend" ? "-" : ""}${
+        sort.toString().split(":")[0]
+      }`;
     } else {
       sortBy = "-createdAt";
     }
@@ -457,27 +459,27 @@ export const fetchAllMissionsForTenant = async (
     const page = Number(req.query.page);
     const limit = Number(req.query.limit);
     const startIndex = (page - 1) * limit;
-    
+
     let missionsList: any[];
 
     const query = {
       tenantId: res.locals.user.tenantId._id,
       [missionType && "missionType"]: missionType,
-      [filter && (filter !== "all") && "status"]: filter,
+      [filter && filter !== "all" && "status"]: filter,
       [client && "clientId"]: { $exists: true },
     };
 
-    if(!searchFilters || searchFilters.toString().trim() === "") {
+    if (!searchFilters || searchFilters.toString().trim() === "") {
       // No search filters means we don't need to wait for populating or adding or flights
       // can paginate right away
-      
+
       const results: IMission[] = await Mission.find(query)
-      .sort(sortBy)
-      .skip(startIndex)
-      .limit(limit)
-      .populate(populate)
-      .lean();
-  
+        .sort(sortBy)
+        .skip(startIndex)
+        .limit(limit)
+        .populate(populate)
+        .lean();
+
       // Fetching the flights
       missionsList = await Promise.all(
         results.map(async (mission: IMission) => {
@@ -486,7 +488,7 @@ export const fetchAllMissionsForTenant = async (
             .populate("pilotID")
             .populate("locationID")
             .lean();
-  
+
           mission["flight"] = flight;
           return mission;
         })
@@ -494,16 +496,15 @@ export const fetchAllMissionsForTenant = async (
 
       // Finding total number of results matching the rest of the query
       total = await Mission.count(query);
-
     } else {
       // when there are search filters, some of which are based on populated results and flights, we first need to populate and add flights
       // then filter, then finally we can paginate
-      
+
       const results: IMission[] = await Mission.find(query)
-      .sort(sortBy)
-      .populate(populate)
-      .lean();
-  
+        .sort(sortBy)
+        .populate(populate)
+        .lean();
+
       // Fetching the flights
       missionsList = await Promise.all(
         results.map(async (mission: IMission) => {
@@ -512,12 +513,12 @@ export const fetchAllMissionsForTenant = async (
             .populate("pilotID")
             .populate("locationID")
             .lean();
-  
+
           mission["flight"] = flight;
           return mission;
         })
       );
-  
+
       // Filtering
       const filters = searchFilters.toString().split(",");
       missionsList = missionsList.filter((mission: any) => {
@@ -545,13 +546,16 @@ export const fetchAllMissionsForTenant = async (
         });
         return shouldReturn;
       });
-  
+
       // Storing total before pagination
       total = missionsList.length; // length before pagination but after applying all filters
-  
+
       // Pagination
-      if(startIndex < missionsList.length) {
-        missionsList = missionsList.slice(startIndex, Math.min(startIndex + limit, missionsList.length));
+      if (startIndex < missionsList.length) {
+        missionsList = missionsList.slice(
+          startIndex,
+          Math.min(startIndex + limit, missionsList.length)
+        );
       }
     }
 

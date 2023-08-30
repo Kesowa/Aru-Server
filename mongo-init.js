@@ -272,7 +272,7 @@ db.users.insertMany([
     __v: 0,
     passwordResetToken: "",
     isTermsAccepted: true,
-  }
+  },
 ]);
 
 db.packages.insertMany([
