@@ -1088,41 +1088,38 @@ export const updateBaseLayerByAttr = async (
 
 export const getBaseLayers = async (req: Request, res: AuthResponse) => {
   {
-    if (
-      (req.params.type !== "Vector" &&
-        req.params.type !== "Raster" &&
-        req.params.type !== "All") ||
-      !req.params.type
-    ) {
+    const { type } = req.params;
+    if ((type !== "Vector" && type !== "Raster" && type !== "All") || !type) {
       return res.json({
         success: false,
         message: "Please provide a valid size",
       });
     }
-    let data: (Omit<
-      Omit<
-        mongoose.Document<unknown, any, ILayer> &
-          ILayer &
-          Required<{ _id: mongoose.Types.ObjectId }>,
-        "raster"
-      > & { raster: IRaster },
-      "vector"
-    > & { vector: IVector })[];
-    if (req.params.type !== "All")
-      data = await Layer.find({
-        type: req.params.type,
-        $or: [{ missionId: { $exists: false } }, { missionId: null }],
-        tenantId: res.locals.user.tenantId._id,
-      })
-        .populate<{ raster: IRaster }>({ path: "raster" })
-        .populate<{ vector: IVector }>({ path: "vector" });
-    else
-      data = await Layer.find({
-        $or: [{ missionId: { $exists: false } }, { missionId: null }],
-        tenantId: res.locals.user.tenantId._id,
-      })
-        .populate<{ raster: IRaster }>({ path: "raster" })
-        .populate<{ vector: IVector }>({ path: "vector" });
+    // let data: (Omit<
+    //   Omit<
+    //     mongoose.Document<unknown, any, ILayer> &
+    //       ILayer &
+    //       Required<{ _id: mongoose.Types.ObjectId }>,
+    //     "raster"
+    //   > & { raster: IRaster },
+    //   "vector"
+    // > & { vector: IVector })[];
+    const data = await Layer.find({
+      [type !== "All" && "type"]: type,
+      $and: [
+        {
+          $or: [{ missionId: { $exists: false } }, { missionId: null }],
+        },
+        {
+          $or: [
+            { tenantId: res.locals.user.tenantId._id },
+            { createdBy: res.locals.user._id },
+          ],
+        },
+      ],
+    })
+      .populate<{ raster: IRaster }>({ path: "raster" })
+      .populate<{ vector: IVector }>({ path: "vector" });
 
     res.status(200).json({
       success: true,

@@ -457,7 +457,7 @@ export const fetchAllMissionsForTenant = async (
     const page = Number(req.query.page);
     const limit = Number(req.query.limit);
     const startIndex = (page - 1) * limit;
-
+    
     let missionsList: any[];
 
     const query = {
@@ -622,7 +622,10 @@ export const fetchMissionById = async (req: Request, res: AuthResponse) => {
     // mission.clientId = clients;
     // mission.invites = await inviteModel.find({missionID: mission._id, valid: true}, {email: 1});
 
-    const flight = await Flight.findOne({ mission: missionId })
+    const flight = await Flight.findOne({
+      mission: missionId,
+      tenant: res.locals.user.tenantId._id,
+    })
       .populate<{ locationID: ILocation }>("locationID")
       .populate<{ pilotID: IUser }>("pilotID");
 
@@ -923,7 +926,10 @@ export const missionStatusUpdate = async (req: Request, res: AuthResponse) => {
 export const autoComplete = async (req: Request, res: AuthResponse) => {
   {
     const query = String(req.query.query);
-    const dbResp = await Mission.find({ $text: { $search: query } });
+    const dbResp = await Mission.find({
+      $text: { $search: query },
+      tenantId: res.locals.user.tenantId._id,
+    });
     if (dbResp.length > 0) {
       res.json({
         status: true,
@@ -1041,16 +1047,20 @@ export const getDocumentCountForMission = async (
   {
     const totalAlert = await Alert.countDocuments({
       missionId: new Types.ObjectId(String(req.query.missionId)),
+      tenantId: res.locals.user.tenantId._id,
     });
     const totalVOD = await VOD.countDocuments({
       missionID: new Types.ObjectId(String(req.query.missionId)),
+      tenantId: res.locals.user.tenantId._id,
     });
     const totalImages = await Document.countDocuments({
       missionId: new Types.ObjectId(String(req.query.missionId)),
+      tenantId: res.locals.user.tenantId._id,
       folderName: "photos",
     });
     const totalDocs = await Document.countDocuments({
       missionId: new Types.ObjectId(String(req.query.missionId)),
+      tenantId: res.locals.user.tenantId._id,
       folderName: { $ne: "photos" },
     });
     res.status(200).json({
@@ -1119,7 +1129,7 @@ export const getMissionCsvForTenantOrUser = async (
     const result = await Mission.find(
       {
         user: req.body.userId,
-        tenantId: res.locals.user.tenantId,
+        tenantId: res.locals.user.tenantId._id,
         status: req.body.status,
       },
       { name: 1, status: 1, deliverables: 1, missionType: 1 }
@@ -1212,6 +1222,7 @@ export const getMissionLayerFiles = async (
       {
         $match: {
           missionId: new Types.ObjectId(req.params.id),
+          tenantId: res.locals.user.tenantId._id,
           type: "Vector",
         },
       },

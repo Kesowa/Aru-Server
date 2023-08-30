@@ -91,9 +91,9 @@ export const fetchLayergroup = async (req: Request, res: AuthResponse) => {
     const doc = req.body._id
       ? await LayerGroup.find({
           _id: req.body._id,
-          tenantId: res.locals.user.tenantId,
+          tenantId: res.locals.user.tenantId._id,
         })
-      : await LayerGroup.find({ tenantId: res.locals.user.tenantId });
+      : await LayerGroup.find({ tenantId: res.locals.user.tenantId._id });
     if (doc.length) {
       return res.status(200).json({
         status: true,

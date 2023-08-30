@@ -148,7 +148,7 @@ export const callbackVodViolence = async (
     });
     return;
   }
-  const filename = `${task.infer}_${task._id}.json`;
+  const filename = `${task.infer}_${String(task._id)}.json`;
   const dataLoc = DirPath(Directory.AI_ML, filename);
   await writeFile(dataLoc, JSON.stringify(req.body));
   task.status = "completed";
@@ -177,11 +177,16 @@ export const fetchAimlTasks = async (
   const query = {
     docModel: req.params.docModel,
     doc: req.params.docId,
-    tenant: res.locals.user.tenantId._id,
+    $or: [
+      { tenant: res.locals.user.tenantId._id },
+      { createdBy: res.locals.user._id },
+      { updatedBy: res.locals.user._id },
+    ],
   };
   if (req.query.infer) query["infer"] = req.query.infer;
 
-  const tasks = await aimlModel.find();
+  const tasks = await aimlModel.find(query);
+
   if (tasks) {
     res.status(200).json({
       status: true,
