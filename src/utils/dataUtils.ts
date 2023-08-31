@@ -104,7 +104,9 @@ export const saveVectorLayer = async (
       await fs.writeFile(absGeojsonPath, stringData);
       try {
         await fs.rm(absLayerPath);
-      } catch {}
+      } catch {
+        // do nothing
+      }
       return {
         geojsonPath,
         size: stringData.length / (1024 * 1024),
@@ -117,7 +119,10 @@ export const saveVectorLayer = async (
   }
 };
 
-const populateMultiGeojson = async (geojsons: pathUtils.DocPath[]) => {
+const populateMultiGeojson = async (
+  geojsons: { path: pathUtils.DocPath; map?: Record<string, string> }[],
+  options?: { color?: string; icon?: string }
+): Promise<GeoJson> => {
   const geojsonObject = {
     type: "FeatureCollection",
     name: "geojson",
@@ -134,10 +139,30 @@ const populateMultiGeojson = async (geojsons: pathUtils.DocPath[]) => {
     geojsons.map(async (geojsonFile) => {
       const geojson = JSON.parse(
         await fs.readFile(
-          pathUtils.absPath(pathUtils.Directory.ROOT, geojsonFile),
+          pathUtils.absPath(pathUtils.Directory.ROOT, geojsonFile.path),
           "utf8"
         )
       ) as GeoJson;
+      const map = geojsonFile.map;
+      if (map || options) {
+        geojson.features.forEach((feature) => {
+          if (map) {
+            const property = {};
+            for (const key of Object.keys(map)) {
+              if (map[key]) {
+                property[map[key]] = feature.properties[key];
+              }
+            }
+            feature.properties = property;
+          }
+          if (options) {
+            feature.properties = {
+              ...feature.properties,
+              ...options,
+            };
+          }
+        });
+      }
       geojsonObject.features.push(...geojson.features);
     })
   );
@@ -148,81 +173,92 @@ const populateMultiGeojson = async (geojsons: pathUtils.DocPath[]) => {
  * Takes geojson object or non-abs path and attributes to filter, returns new geojson path
  */
 export const saveGeojson = async (
-  geojson: GeoJson | pathUtils.DirPath | pathUtils.DocPath[],
-  {
-    filter,
-    mapping,
-    inplace = false,
-    name,
-    color,
-  }: {
-    filter?: string[];
-    mapping?: Record<string, string>;
-    inplace?: boolean;
-    name?: string;
+  geojson: pathUtils.DocPath | GeoJson,
+  options?: {
     color?: string;
+    name?: string;
+    filter?: string[];
+    inplace?: boolean;
   }
 ) => {
-  const clonedGeojsonPath = inplace
-    ? pathUtils.docPath(pathUtils.Directory.VECTOR, randomUUID() + ".geojson")
-    : pathUtils.docPath(pathUtils.Directory.ROOT, geojson as string);
+  let geojsonObject: GeoJson;
+  let geojsonPath = "";
+  let absGeojsonPath = "";
+  if (typeof geojson == "string") {
+    absGeojsonPath = pathUtils.absPath(pathUtils.Directory.ROOT, geojson);
+    geojsonPath = geojson;
+    const stringData = await fs.readFile(absGeojsonPath, "utf8");
+    geojsonObject = JSON.parse(stringData) as GeoJson;
+  } else {
+    geojsonObject = geojson;
+  }
+  if (!options?.inplace) {
+    geojsonPath = pathUtils.docPath(
+      pathUtils.Directory.VECTOR,
+      randomUUID() + ".geojson"
+    );
+    absGeojsonPath = pathUtils.absPath(pathUtils.Directory.ROOT, geojsonPath);
+  }
+  if (options?.color || options?.filter) {
+    geojsonObject.features.forEach((feature) => {
+      if (options.filter) {
+        for (const key of Object.keys(feature.properties)) {
+          const property = {};
+          if (options.filter.includes(key)) {
+            property[key] = feature.properties[key];
+          }
+          feature.properties = property;
+        }
+      }
+      if (options.color) {
+        feature.properties.color = options.color;
+      }
+    });
+  }
+  if (options?.name) geojsonObject.name = options.name;
+  await fs.writeFile(absGeojsonPath, JSON.stringify(geojsonObject));
+  return geojsonPath;
+};
+
+/**
+ * Takes geojson object or non-abs path and attributes to filter, returns new geojson path
+ */
+export const saveMultiGeojson = async (
+  geojsons: { path: pathUtils.DocPath; map?: Record<string, string> }[],
+  {
+    name,
+    color,
+    filter,
+  }: {
+    name?: string;
+    color?: string;
+    filter?: string[];
+  }
+) => {
+  const clonedGeojsonPath = pathUtils.docPath(
+    pathUtils.Directory.VECTOR,
+    randomUUID() + ".geojson"
+  );
   const absClonedPath = pathUtils.absPath(
     pathUtils.Directory.ROOT,
     clonedGeojsonPath
   );
-  let featureCount = 0;
-  if (filter) {
-    let geojsonObject: GeoJson;
-    if (typeof geojson == "string") {
-      geojsonObject = JSON.parse(
-        await fs.readFile(
-          pathUtils.absPath(pathUtils.Directory.ROOT, geojson),
-          "utf8"
-        )
-      ) as GeoJson;
-    } else if (Array.isArray(geojson)) {
-      geojsonObject = await populateMultiGeojson(geojson);
-    } else {
-      geojsonObject = geojson;
-    }
+  const geojsonObject = await populateMultiGeojson(geojsons, { color });
+  if (filter)
     geojsonObject.features.forEach((feature) => {
-      if (color) {
-        feature.properties["color"] = color;
-      }
-      if (mapping) {
-        for (const key of Object.keys(mapping)) {
-          if (mapping[key]) {
-            feature.properties[mapping[key]] = feature.properties[key];
-            delete feature.properties[key];
-          }
-        }
-      }
       for (const key of Object.keys(feature.properties)) {
-        if (!filter.includes(key)) {
-          delete feature.properties[key];
+        const property = {};
+        if (filter.includes(key)) {
+          property[key] = feature.properties[key];
         }
+        feature.properties = property;
       }
     });
-    if (name) {
-      geojsonObject.name = name;
-    }
-    featureCount = geojsonObject.features.length;
-    await fs.writeFile(absClonedPath, JSON.stringify(geojsonObject));
-  } else {
-    if (typeof geojson == "string") {
-      await fs.copyFile(geojson, absClonedPath);
-    } else if (Array.isArray(geojson)) {
-      const geojsonObject = await populateMultiGeojson(geojson);
-      if (name) {
-        geojsonObject.name = name;
-      }
-      featureCount = geojsonObject.features.length;
-      await fs.writeFile(absClonedPath, JSON.stringify(geojsonObject));
-    } else {
-      featureCount = geojson.features.length;
-      await fs.writeFile(absClonedPath, JSON.stringify(geojson));
-    }
+  if (name) {
+    geojsonObject.name = name;
   }
+  const featureCount = geojsonObject.features.length;
+  await fs.writeFile(absClonedPath, JSON.stringify(geojsonObject));
   const size = (await fs.stat(absClonedPath)).size / (1024 * 1024);
   return { path: clonedGeojsonPath, size, featureCount };
 };
