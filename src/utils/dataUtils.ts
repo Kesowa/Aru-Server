@@ -61,7 +61,7 @@ export const saveVectorLayer = async (
     layerPath = layer;
   } else {
     geojsonData = layer;
-    layerPath = randomUUID();
+    layerPath = pathUtils.docPath(pathUtils.Directory.VECTOR, randomUUID() + ".geojson");
   }
   const ext = path.extname(layerPath).toLowerCase();
   const absLayerPath = pathUtils.absPath(pathUtils.Directory.ROOT, layerPath);
@@ -101,12 +101,12 @@ export const saveVectorLayer = async (
         flagColor = getFlagColor(geojsonData);
       }
       const stringData = JSON.stringify(geojsonData);
-      await fs.writeFile(absGeojsonPath, stringData);
       try {
         await fs.rm(absLayerPath);
-      } catch {
-        // do nothing
+      } catch (err) {
+        console.error(err);
       }
+      await fs.writeFile(absGeojsonPath, stringData);
       return {
         geojsonPath,
         size: stringData.length / (1024 * 1024),
@@ -114,7 +114,8 @@ export const saveVectorLayer = async (
         flagColor,
       };
     }
-  } catch {
+  } catch (error) {
+    console.error(error);
     return undefined;
   }
 };
