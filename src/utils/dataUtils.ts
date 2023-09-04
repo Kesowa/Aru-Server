@@ -91,10 +91,10 @@ export const saveVectorLayer = async (
       if (options) {
         geojsonData.features.forEach(
           (feature) =>
-            (feature.properties = {
-              ...feature.properties,
-              ...options,
-            })
+          (feature.properties = {
+            ...feature.properties,
+            ...options,
+          })
         );
         flagColor = options.color;
       } else {
@@ -112,6 +112,7 @@ export const saveVectorLayer = async (
         size: stringData.length / (1024 * 1024),
         featureCount: geojsonData.features.length,
         flagColor,
+        properties: geojsonData.features[0]?.properties,
       };
     }
   } catch (error) {
@@ -148,13 +149,11 @@ const populateMultiGeojson = async (
       if (map || options) {
         geojson.features.forEach((feature) => {
           if (map) {
-            const property = {};
             for (const key of Object.keys(map)) {
-              if (map[key]) {
-                property[map[key]] = feature.properties[key];
+              if (!map[key]) {
+                delete feature.properties[key];
               }
             }
-            feature.properties = property;
           }
           if (options) {
             feature.properties = {
@@ -204,11 +203,9 @@ export const saveGeojson = async (
     geojsonObject.features.forEach((feature) => {
       if (options.filter) {
         for (const key of Object.keys(feature.properties)) {
-          const property = {};
-          if (options.filter.includes(key)) {
-            property[key] = feature.properties[key];
+          if (!options.filter.includes(key)) {
+            delete feature.properties[key];
           }
-          feature.properties = property;
         }
       }
       if (options.color) {
@@ -248,11 +245,9 @@ export const saveMultiGeojson = async (
   if (filter)
     geojsonObject.features.forEach((feature) => {
       for (const key of Object.keys(feature.properties)) {
-        const property = {};
-        if (filter.includes(key)) {
-          property[key] = feature.properties[key];
+        if (!filter.includes(key)) {
+          delete feature.properties[key];
         }
-        feature.properties = property;
       }
     });
   if (name) {

@@ -63,7 +63,9 @@ app.use(
     frameguard: false,
   })
 );
-app.use(cors());
+app.use(cors({
+  maxAge: 60 * 60 * 24,
+}));
 app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
 
 //static files

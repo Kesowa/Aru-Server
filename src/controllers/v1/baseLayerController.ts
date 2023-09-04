@@ -98,104 +98,43 @@ export const getMetadataForBaseLayer = async (
         });
       }
 
-      const layerData = data.map((layer) => {
+      const layerGeojson = await Promise.all(data.map(async (layer) => {
         return {
+          _id: layer._id.toString(),
+          name: layer.name,
+          mission: layer.missionId.name,
+          missionId: layer.missionId._id.toString(),
+          properties: Object.keys((await readGeoJson(DirPath(Directory.DEFAULT, layer.layerpath))).features[0]?.properties),
+        }
+      }));
+
+      const response: {
+        missionId: string,
+        missionName: string,
+        layers: {
+          _id: string,
+          name: string,
+          fields: string[]
+        }[]
+      }[] = [];
+
+      layerGeojson.forEach(layer => {
+        const mission = response.find(res => res.missionId == layer.missionId);
+        const minLayer =
+        {
           _id: layer._id,
           name: layer.name,
-          layerpath: layer.layerpath,
-          mission: layer.missionId.name,
-          missionId: layer.missionId._id,
-        };
-      });
-
-      const missionMap: Map<string, missionMapVal> = new Map();
-      const attrMap: Map<string, attrMapVal> = new Map();
-
-      for (const layer of layerData) {
-        const gjson = await readGeoJson(
-          DirPath(Directory.DEFAULT, layer.layerpath)
-        );
-        const feature = gjson.features[0];
-
-        if (missionMap.get(layer.missionId.toString())) {
-          missionMap.get(layer.missionId.toString()).layers.push({
-            _id: layer._id,
-            name: layer.name,
-            fields: [],
-          });
-        } else {
-          missionMap.set(layer.missionId.toString(), {
+          fields: layer.properties
+        }
+        if (mission)
+          mission.layers.push(minLayer)
+        else
+          response.push({
             missionId: layer.missionId,
             missionName: layer.mission,
-            layers: [
-              {
-                _id: layer._id,
-                name: layer.name,
-                fields: [],
-              },
-            ],
-          });
-        }
-
-        for (const p of Object.entries(feature.properties)) {
-          missionMap
-            .get(layer.missionId.toString())
-            .layers[
-              missionMap.get(layer.missionId.toString()).layers.length - 1
-            ].fields.push(p[0]);
-
-          if (attrMap.get(p[0])) {
-            attrMap.get(p[0]).layerMatches.push({
-              layerId: layer._id,
-              layerName: layer.name,
-              missionName: layer.mission,
-            });
-          } else {
-            attrMap.set(p[0], {
-              key: p[0],
-              value: p[1],
-              layerMatches: [
-                {
-                  layerId: layer._id,
-                  layerName: layer.name,
-                  missionName: layer.mission,
-                },
-              ],
-            });
-          }
-        }
-      }
-
-      const response: any = [];
-
-      for (const [missionId, missionData] of Object.entries<any>(missionMap)) {
-        response.push({
-          ...missionData,
-          layers: missionData.layers.map(
-            (layer: { fields: any[]; _id: { toString: () => string } }) => {
-              return {
-                ...layer,
-                fields: layer.fields.map((f: string) => {
-                  const lm = attrMap
-                    .get(f)
-                    .layerMatches.filter(
-                      (l) => l.layerId.toString() !== layer._id.toString()
-                    );
-                  return {
-                    ...attrMap.get(f),
-                    layerMatches:
-                      lm.length === 0
-                        ? "No Other Mathces"
-                        : lm.length === layerData.length - 1
-                        ? "Matches With All"
-                        : lm,
-                  };
-                }),
-              };
-            }
-          ),
-        });
-      }
+            layers: [minLayer]
+          })
+      });
 
       res.json({
         status: true,
@@ -211,18 +150,19 @@ export const createVectorBaseLayer = async (
   req: Request,
   res: AuthResponse
 ) => {
-  let geojsonPath = "";
-  let size = 0;
-  let featureCount = 0;
-  let flagColor = "";
+  let geojsonPath: string;
+  let size: number;
+  let featureCount: number;
+  let flagColor: string;
+  let properties: Record<string, any>;
   try {
     const vectorLayer = await saveVectorLayer(
       pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
       req.body.inHeritOriginalColorFromFile
         ? {
-            icon: req.body.icon,
-            color: req.body.color,
-          }
+          icon: req.body.icon,
+          color: req.body.color,
+        }
         : undefined
     );
 
@@ -238,6 +178,7 @@ export const createVectorBaseLayer = async (
     size = vectorLayer.size;
     featureCount = vectorLayer.featureCount;
     flagColor = vectorLayer.flagColor;
+    properties = vectorLayer.properties;
   } catch (error) {
     req.log.error(error, "vector layer conversion failed");
 
@@ -285,6 +226,7 @@ export const createVectorBaseLayer = async (
       message: "New Layer Created",
       data: {
         layer,
+        properties,
       },
     });
   } else {
@@ -297,15 +239,19 @@ export const createVectorBaseLayer = async (
 
 export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
   {
+    const doc = await Layer.findOne({ _id: req.body.id, tenantId: res.locals.user.tenantId._id }).populate<{
+      vector: IVector;
+    }>("vector");
+    if (!doc) {
+      res.status(404).json({
+        success: false,
+        message: "layer does not exist"
+      })
+    }
     const clonedGeojson = await saveGeojson(req.body.path, {
       filter: [...req.body.pattr, "color", "icon", "sys_id"],
       inplace: true,
     });
-    const id = req.body.id;
-
-    const doc = await Layer.findOneAndUpdate({ _id: id }).populate<{
-      vector: IVector;
-    }>("vector");
 
     res.json({
       success: true,
@@ -652,8 +598,8 @@ export const getMetadataForUpdatingBaseLayer = async (
           missionMap
             .get(layer.missionId.toString())
             .layers[
-              missionMap.get(layer.missionId.toString()).layers.length - 1
-            ].fields.push(p[0]);
+            missionMap.get(layer.missionId.toString()).layers.length - 1
+          ].fields.push(p[0]);
           if (attrMap.get(p[0])) {
             attrMap.get(p[0]).layerMatches.push({
               layerId: layer._id,
@@ -696,8 +642,8 @@ export const getMetadataForUpdatingBaseLayer = async (
                     lm.length === 0
                       ? "No Other Mathces"
                       : lm.length === layerData.length - 1
-                      ? "Matches With All"
-                      : lm,
+                        ? "Matches With All"
+                        : lm,
                 };
               }),
             };
@@ -813,8 +759,8 @@ export const getBaseLayers = async (req: Request, res: AuthResponse) => {
     let data: (Omit<
       Omit<
         mongoose.Document<unknown, any, ILayer> &
-          ILayer &
-          Required<{ _id: mongoose.Types.ObjectId }>,
+        ILayer &
+        Required<{ _id: mongoose.Types.ObjectId }>,
         "raster"
       > & { raster: IRaster },
       "vector"
