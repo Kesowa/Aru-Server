@@ -957,6 +957,9 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
       const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,
       });
+      const vectorProp = await vector.findById(savedDoc.vector);
+      const newLayer = JSON.parse(JSON.stringify(savedDoc));
+      newLayer.vector = vectorProp;
       if (savedDoc && tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },
@@ -968,7 +971,7 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
       res.status(201).json({
         status: true,
         message: "Sucessfully created vector layer",
-        data: savedDoc,
+        data: newLayer,
       });
     } else {
       res.status(201).json({
