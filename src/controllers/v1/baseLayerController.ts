@@ -27,6 +27,7 @@ import {
 import { getFileSize } from "../../utils/fileUtils";
 import Alert from "../../models/alert";
 import VOD from "../../models/vod";
+import vector from "../../models/vectorprops";
 import { ILayer } from "../../schemas/layer";
 import kmlToGjson from "@mapbox/togeojson";
 import shp2json from "shpjs";
@@ -1989,6 +1990,9 @@ export const createBaseVectorLayer = async (
           actualLayerCount: 1,
         }
       );
+      const vectorProp = await vector.findById(savedDoc.vector);
+      const newLayer = JSON.parse(JSON.stringify(savedDoc));
+      newLayer.vector = vectorProp;
       if (savedDoc && tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },
@@ -2000,7 +2004,7 @@ export const createBaseVectorLayer = async (
       res.status(201).json({
         status: true,
         message: "Sucessfully created base vector layer",
-        data: savedDoc,
+        data: newLayer,
       });
     } else {
       res.status(201).json({
