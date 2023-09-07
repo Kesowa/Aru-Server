@@ -1980,8 +1980,8 @@ export const createBaseVectorLayer = async (
     });
 
     if (vectorLayer) {
-      const savedDoc: any = await vectorLayer.save();
-      const tenant: any = await Tenant.findOne(
+      const savedDoc = await vectorLayer.save();
+      const tenant = await Tenant.findOne(
         {
           _id: res.locals.user.tenantId,
         },
@@ -1989,6 +1989,7 @@ export const createBaseVectorLayer = async (
           actualLayerCount: 1,
         }
       );
+      await savedDoc.populate("vector");
       if (savedDoc && tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },

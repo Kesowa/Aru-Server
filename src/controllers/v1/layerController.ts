@@ -957,6 +957,7 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
       const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,
       });
+      await savedDoc.populate("vector");
       if (savedDoc && tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },
