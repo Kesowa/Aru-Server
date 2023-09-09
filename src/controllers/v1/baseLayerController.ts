@@ -182,9 +182,9 @@ export const createVectorBaseLayer = async (
       pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
       req.body.inHeritOriginalColorFromFile
         ? {
-            icon: req.body.icon,
-            color: req.body.color,
-          }
+          icon: req.body.icon,
+          color: req.body.color,
+        }
         : undefined,
     );
 
@@ -287,11 +287,24 @@ export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
 };
 
 export const createBaseLayerByAttr = async (
-  req: Request,
+  req: Request<unknown, unknown, {
+    layers: {
+      attrMapping: Record<string, string>,
+      layerId: string,
+    }[],
+    color: string,
+    name: string,
+    pattr: {
+      attribute: string,
+      key: number,
+      occurs: "Present in all layers",
+    }[],
+    vectorTypeId: string,
+  }>,
   res: AuthResponse,
 ) => {
   if (req.body.layers) {
-    const ids = req.body.layers.map((l: { layerId: any }) => l.layerId);
+    const ids = req.body.layers.map(l => l.layerId);
 
     const data = await Layer.find(
       {
@@ -303,12 +316,12 @@ export const createBaseLayerByAttr = async (
       },
     ).populate<{ missionId: IMission }>("missionId");
 
-    const color = req.body.color || "#000000";
+    const color = req.body.color && req.body.color.length > 0 ? req.body.color : "#000000";
 
     const clonedGeojson = await saveMultiGeojson(
-      data.map((d) => ({ path: d.layerpath })),
+      data.map((d) => ({ path: d.layerpath, map: req.body.layers.find(l => l.layerId == d._id.toString()).attrMapping })),
       {
-        filter: [...req.body.pattr, "color", "icon", "sys_id"],
+        filter: [...req.body.pattr.map(attr => attr.attribute), "color", "icon", "sys_id"],
         name: req.body.name,
         color,
       },
@@ -623,8 +636,8 @@ export const getMetadataForUpdatingBaseLayer = async (
           missionMap
             .get(layer.missionId.toString())
             .layers[
-              missionMap.get(layer.missionId.toString()).layers.length - 1
-            ].fields.push(p[0]);
+            missionMap.get(layer.missionId.toString()).layers.length - 1
+          ].fields.push(p[0]);
           if (attrMap.get(p[0])) {
             attrMap.get(p[0]).layerMatches.push({
               layerId: layer._id,
@@ -667,8 +680,8 @@ export const getMetadataForUpdatingBaseLayer = async (
                     lm.length === 0
                       ? "No Other Mathces"
                       : lm.length === layerData.length - 1
-                      ? "Matches With All"
-                      : lm,
+                        ? "Matches With All"
+                        : lm,
                 };
               }),
             };
@@ -784,8 +797,8 @@ export const getBaseLayers = async (req: Request, res: AuthResponse) => {
     let data: (Omit<
       Omit<
         mongoose.Document<unknown, any, ILayer> &
-          ILayer &
-          Required<{ _id: mongoose.Types.ObjectId }>,
+        ILayer &
+        Required<{ _id: mongoose.Types.ObjectId }>,
         "raster"
       > & { raster: IRaster },
       "vector"

@@ -149,10 +149,8 @@ const populateMultiGeojson = async (
       if (map || options) {
         geojson.features.forEach((feature) => {
           if (map) {
-            for (const key of Object.keys(map)) {
-              if (!map[key]) {
-                delete feature.properties[key];
-              }
+            for (const [key, val] of Object.entries(map)) {
+              feature.properties[val] = feature.properties[key];
             }
           }
           if (options) {
