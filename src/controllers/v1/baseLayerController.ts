@@ -579,6 +579,7 @@ export const createBaseLayerByAttr = async (
             },
           }
         );
+        await savedDoc.populate("vector");
       }
       return res.status(201).json({
         status: true,
