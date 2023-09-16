@@ -176,7 +176,7 @@ router.patch(
 router.patch(
   "/upload-file-geojson",
   isAuthenticated,
-  upload.single("file"),
+  uploadPicToMap.single("file"),
   // req.body is of type layerFile, schema in schemas/layerFile.ts
   body("layerId").notEmpty().isMongoId(),
   body("sys_Id").notEmpty().isString(),
