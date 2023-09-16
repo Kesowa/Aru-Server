@@ -4,9 +4,11 @@ This folder contain the server codes of the Arya streaming platform.
 This branch is hosted at api-aru.kesowa.com
 
 # Setup
+
 This server will be running on AWS ECS
 
 ## Structure
+
 1. ECS
 2. NLB
 3. Autoscaling
@@ -20,4 +22,5 @@ This server will be running on AWS ECS
 - To stop the server and clean up, run `stop_full.sh`
 
 ## Deployment
+
 Automatically, using AWS CDK
