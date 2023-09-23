@@ -1,4 +1,4 @@
-import { Table, BorderStyle, TableRow, HeightRule, TableCell, ShadingType, Paragraph, AlignmentType, TextRun, VerticalAlign, FrameAnchorType, convertInchesToTwip } from "docx";
+import { Table, BorderStyle, TableRow, HeightRule, TableCell, ShadingType, Paragraph, AlignmentType, TextRun, VerticalAlign, FrameAnchorType } from "docx";
 import { commonPageFooter, commonPageProperties } from "./reportUtils";
 
 const pg3Heading = new Paragraph({
@@ -28,7 +28,7 @@ const pg3Heading = new Paragraph({
 const renderTableCellFromData = (data: any, numberingRef: string, currLevel: number): Paragraph[] => {
     if(Array.isArray(data)) { // for data which needs numbering
         let components: Paragraph[] = [];
-        for(let d of data) {
+        for(const d of data) {
             if(typeof d.value === "string") { // base condition, no further need for numbering
                 components.push(
                     new Paragraph({
@@ -49,7 +49,7 @@ const renderTableCellFromData = (data: any, numberingRef: string, currLevel: num
                         }
                     }),
                 );
-                let subComponents = renderTableCellFromData(d.value, numberingRef, currLevel + 1);
+                const subComponents = renderTableCellFromData(d.value, numberingRef, currLevel + 1);
                 components = components.concat(subComponents);
             }
         }
@@ -158,7 +158,7 @@ const pg3Table1 = (table1Data: Array<any>) => {
             })
         ]
     });
-;}
+}
 
 const pg3Table2 = (table2Data: Array<any>) => {
     const headings = ["Water Bodies", "Waste Bin", "Major Construction Sites", "Cycle Track"];

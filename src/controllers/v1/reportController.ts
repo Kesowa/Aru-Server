@@ -257,7 +257,7 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         }
   
         // categorizing the geojson for map
-        for(let d in deliverableTypes) {
+        for(const d in deliverableTypes) {
           if(deliverableTypes[d].includes(layer.vector.name)) {
             if(!data.deliverables[d]) {
               data.deliverables[d] = [PUBLIC_SERVER+layer.layerpath];

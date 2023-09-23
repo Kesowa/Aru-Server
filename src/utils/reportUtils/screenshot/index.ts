@@ -7,14 +7,14 @@ export interface IPieChartData {
     name: string,
     color: string,
     percent: number,
-};
+}
 
 export interface IBarChartData {
     name: string, 
     UnderConstruction: number, 
     Empty: number, 
     Constructed: number,
-};
+}
 
 export class ScreenshotGenerator {
 
@@ -126,4 +126,4 @@ export class ScreenshotGenerator {
             await this.browser.close();
         }
     }
-};
+}

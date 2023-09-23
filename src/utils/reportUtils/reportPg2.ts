@@ -1,8 +1,6 @@
-import * as fs from "fs";
-import { Table, TableRow, HeightRule, TableCell, Paragraph, TextRun, BorderStyle, VerticalAlign, FrameAnchorType, HorizontalPositionRelativeFrom, ImageRun, VerticalPositionRelativeFrom, AlignmentType, HorizontalPositionAlign, ShadingType, VerticalPositionAlign, Footer, PageNumber, PageOrientation } from "docx";
+import { Table, TableRow, HeightRule, TableCell, Paragraph, TextRun, BorderStyle, VerticalAlign, FrameAnchorType, HorizontalPositionRelativeFrom, ImageRun, VerticalPositionRelativeFrom, AlignmentType, HorizontalPositionAlign, ShadingType, VerticalPositionAlign } from "docx";
 import { commonPageFooter, commonPageProperties } from "./reportUtils";
 import { IAreaData, IAreaDesc, IOccupancyDesc, IPage2Properties } from "./types";
-import path from "path";
 
 const roundOffTo2DecimalPlaces = (val:number) => { return Math.round(val*100)/100; }
 const sqMtrToAcres = (sqMtr:number) => { return roundOffTo2DecimalPlaces(0.000247105*sqMtr); } // correct to last 2 decimal places

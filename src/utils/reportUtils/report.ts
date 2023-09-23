@@ -36,7 +36,7 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
     }
 
     let totalOccupied = 0, totalUnderConstruction = 0, totalVacant = 0;
-    for(let d of data.occupancy) {
+    for(const d of data.occupancy) {
         totalOccupied += d.occupied;
         totalUnderConstruction += d.underConstruction;
         totalVacant += d.vacant;
@@ -95,7 +95,7 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
     logger.info("Bar Chart Image Captured...");
 
     const deliverableBuffers: any = {};
-    for(let d in deliverables) {
+    for(const d in deliverables) {
         logger.info(`Capturing image for: ${d}...`)
         deliverableBuffers[d] = await ssGenerator.getMapSS("https://cog-nk.kesowa.com", deliverables[d]);
     }
