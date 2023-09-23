@@ -1720,7 +1720,7 @@ db.permissions.insertMany(
     __v: 0,
     isClient: false || isClient,
     isPilot: false,
-  })),
+  }))
 );
 db.permissions.insertMany([
   {

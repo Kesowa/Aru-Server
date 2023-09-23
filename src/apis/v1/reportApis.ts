@@ -7,11 +7,12 @@ import { validator } from "../../utils/requestHelpers";
 
 const router = express.Router();
 
-router.post("/", 
-    isAuthenticated, 
-    body("missionId").notEmpty().isMongoId(),
-    validator,
-    generateReport
+router.post(
+  "/",
+  isAuthenticated,
+  body("missionId").notEmpty().isMongoId(),
+  validator,
+  generateReport
 );
 
 export default router;

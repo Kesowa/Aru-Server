@@ -102,7 +102,7 @@
           const parsedGeojson = await (await fetch(geojsonFilePath)).json();
           // Center the map on the points using Turf.js
           const pointFeatures = parsedGeojson.features.filter(
-            (feature) => feature.geometry.type === "MultiPolygon",
+            (feature) => feature.geometry.type === "MultiPolygon"
           );
           const bound = turf.bbox(turf.featureCollection(pointFeatures));
           bounds.push([bound[0], bound[1]]);
@@ -156,7 +156,7 @@
       }
 
       // Sample Run :
-      // 
+      //
       //    // Turn component with given id into mapbox
       //    // Use the given COG server url for rendering the raster layers
       //    setupMap("map", "https://cog-nk.kesowa.com").then(() => {
@@ -168,7 +168,7 @@
       //        ]).then(() => {
       //            console.log("rendered vector")
       //        }).catch(console.error);
-          
+
       //        // Center on first raster url
       //        // Render all given ortho urls
       //        // renderRaster([
@@ -177,7 +177,6 @@
       //        // ])
       //    })
       //    .catch((error) => console.error("Error loading map", error));
-
     </script>
   </body>
 </html>

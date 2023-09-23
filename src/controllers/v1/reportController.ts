@@ -11,7 +11,21 @@ import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/types";
 import Flight from "../../models/flight";
 import { IUser } from "../../schemas/user";
-import { privateCommercialLayerTypes, residentialLayerTypes, govtCommercialLayerTypes, housingComplexLayerTypes, govtLayerTypes, motorableRoadsLayerTypes, footpathLayerTypes, cycleTrackLayerTypes, greeneryLayerTypes, waterBodyLayerTypes, vacantTypes, underConstructionTypes, deliverableTypes } from "../../utils/reportUtils/reportUtils";
+import {
+  privateCommercialLayerTypes,
+  residentialLayerTypes,
+  govtCommercialLayerTypes,
+  housingComplexLayerTypes,
+  govtLayerTypes,
+  motorableRoadsLayerTypes,
+  footpathLayerTypes,
+  cycleTrackLayerTypes,
+  greeneryLayerTypes,
+  waterBodyLayerTypes,
+  vacantTypes,
+  underConstructionTypes,
+  deliverableTypes,
+} from "../../utils/reportUtils/reportUtils";
 import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
 
@@ -82,8 +96,7 @@ export async function countPolygons(gjson: any) {
     for (const feature of gjson.features) {
       if (feature.geometry.type === "Polygon") {
         count++;
-      }
-      else if(feature.geometry.type === "MultiPolygon") {
+      } else if (feature.geometry.type === "MultiPolygon") {
         count += feature.geometry.coordinates.length;
       }
     }
@@ -152,13 +165,13 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         roadLength: 0,
         cycleTrackLength: 0,
         deliverables: {
-          "OVERVIEW": [],
+          OVERVIEW: [],
         },
       };
-  
+
       // mission details filling
       const mission = await Mission.findOne(
-        { _id: missionId }, 
+        { _id: missionId },
         { name: 1, user: 1 }
       ).populate<{ user: IUser }>({
         path: "user",
@@ -170,7 +183,7 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       });
       data.missionHeading = mission.name;
       // TODO: missionCode(??), missionMapImgPath(scrape screenshot)
-  
+
       // date
       const now = new Date();
       const yyyy = now.getFullYear().toString();
@@ -179,7 +192,7 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       if (parseInt(dd) < 10) dd = "0" + dd;
       if (parseInt(mm) < 10) mm = "0" + mm;
       data.date = dd + "/" + mm + "/" + yyyy;
-  
+
       // pilot details (names, phone numbers, emails)
       const flight = await Flight.findOne(
         { mission: missionId },
@@ -198,27 +211,28 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       data.emails.push(flight.pilotID.email);
       data.phoneNos.push(mission.user.phoneNo);
       data.phoneNos.push(flight.pilotID.phoneNo);
-  
+
       // area details filling (for page 2 tables)
       const vectorLayers = await Layer.find({
         missionId: missionId,
         type: "Vector",
       }).populate<{ vector: IVector }>("vector");
-  
+
       function assignOccupancy(layerType: string, idx: number) {
-        if(vacantTypes.includes(layerType)) {
+        if (vacantTypes.includes(layerType)) {
           data.occupancy[idx].vacant++;
-        }
-        else if(underConstructionTypes.includes(layerType)) {
+        } else if (underConstructionTypes.includes(layerType)) {
           data.occupancy[idx].underConstruction++;
-        } 
-        else {
+        } else {
           data.occupancy[idx].occupied++;
         }
       }
-  
+
       for (const layer of vectorLayers) {
-        const layerData = await fs.readFile(DirPath(Directory.DEFAULT, layer.layerpath), "utf-8");
+        const layerData = await fs.readFile(
+          DirPath(Directory.DEFAULT, layer.layerpath),
+          "utf-8"
+        );
         const gjson = JSON.parse(layerData);
         const currLayerArea = await findArea(gjson);
         const currLayerLength = await findLength(gjson);
@@ -255,39 +269,38 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         } else {
           data.area.other += currLayerArea;
         }
-  
+
         // categorizing the geojson for map
-        for(const d in deliverableTypes) {
-          if(deliverableTypes[d].includes(layer.vector.name)) {
-            if(!data.deliverables[d]) {
-              data.deliverables[d] = [PUBLIC_SERVER+layer.layerpath];
+        for (const d in deliverableTypes) {
+          if (deliverableTypes[d].includes(layer.vector.name)) {
+            if (!data.deliverables[d]) {
+              data.deliverables[d] = [PUBLIC_SERVER + layer.layerpath];
             } else {
-              data.deliverables[d].push(PUBLIC_SERVER+layer.layerpath);
+              data.deliverables[d].push(PUBLIC_SERVER + layer.layerpath);
             }
           }
         }
-        
       }
-  
+
       // all information received without errors, now can start report generation successfully
       res.status(200).json({
         status: true,
         message: "Report generation started!",
       });
-  
+
       req.log.info("Generating report...");
-    
+
       // saving the document
       const doc = await generateDocument(data, req.log);
       const buffer = await Packer.toBuffer(doc);
       const filename = `${missionId}-report.docx`;
       const filepath = DirPath(Directory.DOCUMENTS, filename);
       await fs.writeFile(filepath, buffer);
-  
+
       const fileStats = await fs.stat(filepath);
-  
+
       await Document.findOneAndDelete({ name: filename });
-  
+
       const docDB = new Document({
         name: filename,
         modDate: new Date(),
@@ -301,13 +314,13 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         updatedBy: res.locals.user._id,
       });
       const savedDoc = await docDB.save();
-  
+
       req.log.info("Report Generation Complete");
-  
+
       missionSpecificSocket
         .to(missionId.toString())
         .emit("REPORT_GENERATION_COMPLETE", savedDoc);
-    } catch(error) {
+    } catch (error) {
       req.log.error(error);
       res.status(500).json({
         status: false,
@@ -317,6 +330,5 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         .to(missionId.toString())
         .emit("REPORT_GENERATION_FAILED", error);
     }
-    
   }
 };
