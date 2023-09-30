@@ -4,9 +4,8 @@ import Layer from "../../models/layer";
 import fetch from "node-fetch";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Feature, readGeoJson } from "../../utils/geojsonUtils";
+import { Feature, featureUpdate, readGeoJson } from "../../utils/geojsonUtils";
 import Tenant from "../../models/tenant";
-import fs from "fs";
 import { isSizeVector } from "../../utils/sizePermission";
 
 import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
@@ -870,7 +869,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     if (
       geojson.features[0].geometry.type !== bgjson.features[0].geometry.type
     ) {
-      await fs.promises.unlink(dir);
+      await deleteDirFileUsingName(Directory.VECTOR, req.file?.filename);
       return res.status(400).json({
         success: false,
         message: "The file must be of same type as base layer",
@@ -918,7 +917,7 @@ export const updateBaseLayerByUploadedFile = async (
     // const dir = path.join(__dirname, "/../../", `${req.body.filePath}`);
     const dir = DirPath(Directory.DEFAULT, req.body.filePath);
 
-    const geojson: any = await readGeoJson(dir);
+    const geojson = await readGeoJson(dir);
 
     if (geojson == null) {
       return res.json({
@@ -955,10 +954,10 @@ export const updateBaseLayerByUploadedFile = async (
 
     const features = geojson.features;
 
-    const newFeatures: any = [];
+    const newFeatures: Feature[] = [];
 
     for (const f of features) {
-      let feature: any = {
+      let feature = {
         ...f,
       };
       const properties = {
@@ -989,9 +988,9 @@ export const updateBaseLayerByUploadedFile = async (
       newFeatures.push(feature);
     }
 
-    bgjson.features = [...bgjson.features, ...newFeatures];
+    await featureUpdate(baseLayer.layerpath, newFeatures, bgjson);
 
-    await fs.promises.writeFile(baseLayerPath, JSON.stringify(bgjson));
+    bgjson.features = [...bgjson.features, ...newFeatures];
 
     const size: number = await getFileSize(baseLayerPath);
 
@@ -1032,7 +1031,7 @@ export const updateBaseLayerByUploadedFile = async (
       { $inc: { actualSize: newSize } },
     );
 
-    await fs.promises.unlink(dir);
+    await deleteDirFileUsingName(Directory.DEFAULT, req.body.filePath);
 
     const layer = await Layer.findOne({ _id: baseLayer._id })
       .populate<{ vector: IVector }>("vector")

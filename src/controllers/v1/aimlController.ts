@@ -5,16 +5,15 @@ import {
   API_SERVER,
   CDN_URL,
   Directory,
-  DirPath,
 } from "../../constants";
 import VOD from "../../models/vod";
 import aimlModel from "../../models/aimlTask";
 import { IVOD } from "../../schemas/VOD";
 import { HydratedDocument } from "mongoose";
-import { writeFile } from "fs/promises";
 import fetch from "node-fetch";
 import moment from "moment";
 import { notificationSocket } from "../../socket";
+import { saveAIMLFile } from "../../utils/dataUtils";
 
 export const inferVodViolence = async (
   req: Request<{ vodId: string }>,
@@ -149,8 +148,7 @@ export const callbackVodViolence = async (
     return;
   }
   const filename = `${task.infer}_${task._id}.json`;
-  const dataLoc = DirPath(Directory.AI_ML, filename);
-  await writeFile(dataLoc, JSON.stringify(req.body));
+  await saveAIMLFile(filename, JSON.stringify(req.body));
   task.status = "completed";
   task.data = `${Directory.AI_ML}/${filename}`;
   await task.save();

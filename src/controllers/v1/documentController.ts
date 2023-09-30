@@ -4,7 +4,6 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import fs from "fs";
 import archiver from "archiver";
 import path from "path";
 import { missionSpecificSocket } from "../../socket";
@@ -16,6 +15,7 @@ import {
 import { Directory, DirPath, PUBLIC_DIR } from "../../constants";
 import {
   checkFileExists,
+  createDirFileWriteStreamUsingName,
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
@@ -348,7 +348,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         const dir = DirPath(Directory.ZIP);
         await createDirIfNotExists(dir, req.log);
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = fs.createWriteStream(`${dir}${fname}`);
+        const output = createDirFileWriteStreamUsingName(Directory.ZIP, fname);
         const archive = archiver("zip", {
           zlib: { level: 9 }, // Sets the compression level.
         });
@@ -394,7 +394,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         await createDirIfNotExists(dir, req.log);
 
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = fs.createWriteStream(`${dir}${fname}`);
+        const output = createDirFileWriteStreamUsingName(Directory.ZIP, fname);
         const archive = archiver("zip", {
           zlib: { level: 9 }, // Sets the compression level.
         });

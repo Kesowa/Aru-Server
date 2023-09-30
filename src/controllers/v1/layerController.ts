@@ -20,6 +20,8 @@ import {
   editGeoJsonForAll,
   deleteGeoJsonFeature,
   featureAddition,
+  GeoJson,
+  Feature,
 } from "../../utils/geojsonUtils";
 import * as turf from "@turf/turf";
 import nearestPoint from "@turf/nearest-point";
@@ -45,6 +47,7 @@ import { type HydratedDocument, Types } from "mongoose";
 import type { ILayerFile } from "../../schemas/layerFiles";
 import {
   checkFileExists,
+  createDirFileWriteStreamUsingName,
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
@@ -53,9 +56,8 @@ import type { ITenant } from "../../schemas/tenant";
 import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
-import { saveVectorLayer } from "../../utils/dataUtils";
-import fs from "fs";
-import { randomUUID } from "crypto";
+import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+
 // ********* create ***********
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
@@ -1913,7 +1915,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       const dir = DirPath(Directory.TEMP);
       await createDirIfNotExists(dir, req.log);
       const fname = `${req.query.missionId}_layers_${Date.now()}.zip`;
-      const output = fs.createWriteStream(`${dir}${fname}`);
+      const output = createDirFileWriteStreamUsingName(Directory.TEMP, fname);
       const archive = archiver("zip", {
         zlib: { level: 9 }, // Sets the compression level.
       });
@@ -1956,20 +1958,13 @@ export const downloadassetbyIDtoKml = async (
   res: AuthResponse
 ) => {
   {
-    const id: any = req.query.id;
+    const id = String(req.query.id);
     const doc = await Layer.findById({
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     });
-    const dir: string = DirPath(Directory.DEFAULT, doc.layerpath);
-    const geojson: any = await fs.promises.readFile(dir, "utf-8");
-    const dir2: string = String(dir.replace(".geojson", ".kml"));
-    await fs.promises.writeFile(
-      dir.replace(".geojson", ".kml"),
-      tokml(JSON.parse(geojson))
-    );
-
-    const downloadlink = doc.layerpath.replace(".geojson", ".kml");
+    const geojson = await readGeoJson(DirPath(Directory.DEFAULT, doc.layerpath));
+    const downloadlink = await saveAsKML(geojson, doc.layerpath);
     res.json({
       status: true,
       message: `Download Link generated for LayerID: ${id}`,
@@ -2075,8 +2070,19 @@ export const picktoMapUseForLayerCreate = async (
   {
     const files = req.files as Express.Multer.File[];
     if (files) {
-      const geojson: any = {};
-      const features: any = [];
+      const geojson: GeoJson = {
+        type: "",
+        name: "",
+        crs: {
+          type: "",
+          properties: {
+            name: "",
+          },
+        },
+        features: [],
+        errno: 0,
+      };
+      const features: Feature[] = [];
       const allImageData: any = [];
       const badImages: any = [];
       const today = new Date();
@@ -2156,13 +2162,11 @@ export const picktoMapUseForLayerCreate = async (
         }
       }
       if (features.length) {
-        geojson["features"] = features;
-        geojson["type"] = req.body.type ? req.body.type : "FeatureCollection";
-        geojson["name"] = req.body.name ? req.body.name : "";
-        const filepath =
-          "/vector/" + String(Date.now()) + "_" + req.body.name + ".geojson";
+        geojson.features = features;
+        geojson.type = req.body.type ? String(req.body.type) : "FeatureCollection";
+        geojson.name = req.body.name ? String(req.body.name) : "";
+        const filepath = await saveGeojson(geojson, { inplace: false });
         const file = DirPath(Directory.DEFAULT, filepath);
-        await fs.promises.writeFile(file, JSON.stringify(geojson));
         const size1: number = await getFileSize(file);
         const docCount = await Tenant.findOne({
           _id: res.locals.user.tenantId,
@@ -2378,25 +2382,23 @@ export const sys_id_Inject_to_layerfiles = async (
           });
         }
 
-        if (gjson) {
-          for (let j = 0; j < gjson.features.length; j++) {
-            if (
-              !gjson.features[j].properties.sys_id ||
-              gjson.features[j].properties.sys_id == "undefined"
-            )
-              gjson.features[j].properties.sys_id =
-                new ObjectId().toHexString();
+        const modCheck = await modGeoJson(null, null, gjson, p); // add sys_ids to geojson
+
+        if (modCheck === 1) {
+          // update new sys_ids in layerfiles
+          const modifiedGjson = await readGeoJson(p);
+          for (let j = 0; j < modifiedGjson.features.length; j++) {
             await layerFiles.updateMany(
               {
                 layerId: docs._id,
-                featureLabel: gjson.features[j].properties[docs.layerLabel],
+                featureLabel: modifiedGjson.features[j].properties[docs.layerLabel],
               },
-              { sys_Id: gjson.features[j].properties.sys_id }
+              { sys_Id: modifiedGjson.features[j].properties.sys_id }
             );
             req.log.info("Modified Doc");
           }
         }
-        await fs.promises.writeFile(p, JSON.stringify(gjson));
+
         res.status(200).json({
           status: true,
           message: "Generated sysIds successfully",

@@ -8,6 +8,8 @@ import kmlToGjson from "tokml";
 import shp2json from "shpjs";
 import { GeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
+import tokml from "tokml";
+import { DirPath, Directory } from "../constants";
 
 const asyncExec = promisify(exec);
 
@@ -175,6 +177,7 @@ export const saveGeojson = async (
   options?: {
     color?: string;
     name?: string;
+    type?: string,
     filter?: string[];
     inplace?: boolean;
   }
@@ -212,6 +215,7 @@ export const saveGeojson = async (
     });
   }
   if (options?.name) geojsonObject.name = options.name;
+  if (options?.type) geojsonObject.type = options.type;
   await fs.writeFile(absGeojsonPath, JSON.stringify(geojsonObject));
   return geojsonPath;
 };
@@ -255,4 +259,30 @@ export const saveMultiGeojson = async (
   await fs.writeFile(absClonedPath, JSON.stringify(geojsonObject));
   const size = (await fs.stat(absClonedPath)).size / (1024 * 1024);
   return { path: clonedGeojsonPath, size, featureCount };
+};
+
+export const saveAsKML = async (
+  geojson: GeoJson,
+  layerpath: string,
+) => {
+  try {
+    const kmlData = String(tokml(JSON.parse(JSON.stringify(geojson))));
+    const kmlPath = layerpath.replace(".geojson", ".kml");
+    await fs.writeFile(DirPath(Directory.DEFAULT, kmlPath), kmlData);
+    return kmlPath;
+  } catch (error) {
+    return "";
+  }
+};
+
+export const saveAIMLFile = async (
+  filename: string,
+  data: string,
+) => {
+  try {
+    await fs.writeFile(DirPath(Directory.AI_ML, filename), data);
+    return true;
+  } catch (error) {
+    return false;
+  }
 };

@@ -1,14 +1,14 @@
 import { Request } from "express";
-import fsp from "fs/promises";
 import { Types } from "mongoose";
 import flightLog from "../../models/flightLog";
 import { AuthResponse } from "../../utils/interfaceUtils";
+import { renameFile } from "../../utils/moveFileUtils";
 
 export const createFlightLog = async (req: Request, res: AuthResponse) => {
   {
     if (req.file) {
       //adding extension to file
-      await fsp.rename(
+      await renameFile(
         req.file.path,
         req.file.path + "." + req.file.mimetype.split("/")[1]
       );
