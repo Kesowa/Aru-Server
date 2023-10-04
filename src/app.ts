@@ -41,6 +41,7 @@ import settingApis from "./apis/v1/settingApis";
 import aimlApis from "./apis/v1/aimlApis";
 import threadApis from "./apis/v1/threadApis";
 import dataApis from "./apis/v1/dataApis";
+import reportApis from "./apis/v1/reportApis";
 
 import {
   ARU_INSTANCE,
@@ -187,6 +188,7 @@ app.use("/apis/v1/setting", settingApis);
 app.use("/apis/v1/aiml", aimlApis);
 app.use("/apis/v1/thread", threadApis);
 app.use("/apis/v1/data", dataApis);
+app.use("/apis/v1/report", reportApis);
 
 // 404 route
 app.use(function (req, res, next) {
