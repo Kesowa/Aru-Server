@@ -85,10 +85,11 @@ export const createThermalPoint = async (
     temperature: string,
     color: string,
     documentId: string,
+    label: string,
   }>,
   res: AuthResponse
 ) => {
-  const { posX, posY, temperature, color, documentId } = req.body;
+  const { posX, posY, temperature, color, documentId, label } = req.body;
   try {
     const exists = await ThermalPoint.findOne({
       posX: Number(posX),
@@ -96,24 +97,32 @@ export const createThermalPoint = async (
       documentId: new mongoose.Types.ObjectId(documentId)
     });
     if(exists) {
-      return res.status(400).json({
-        status: false,
-        message: "Thermal Point with given position already exists on given document!",
+      const doc = await ThermalPoint.findByIdAndUpdate(exists._id, {
+        temperature: Number(temperature),
+        color,
+        label: label ? label : "",
+      }, { new: true });
+      res.status(200).json({
+        status: true,
+        message: "Thermal Point created!",
+        data: doc,
+      });
+    } else {
+      const doc = await ThermalPoint.create({
+        posX: Number(posX),
+        posY: Number(posY),
+        temperature: Number(temperature),
+        color,
+        label: label ? label : "",
+        documentId: new mongoose.Types.ObjectId(documentId),
+      });
+      res.status(200).json({
+        status: true,
+        message: "Thermal Point created!",
+        data: doc,
       });
     }
 
-    const doc = await ThermalPoint.create({
-      posX: Number(posX),
-      posY: Number(posY),
-      temperature: Number(temperature),
-      color,
-      documentId: new mongoose.Types.ObjectId(documentId),
-    });
-    res.status(200).json({
-      status: true,
-      message: "Thermal Point created!",
-      data: doc,
-    });
   } catch (error) {
     req.log.error(error, "failed to create thermal point");
     res.status(500).json({

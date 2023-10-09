@@ -21,6 +21,7 @@ dataRouter.post(
   body("posY").notEmpty().isNumeric(),
   body("temperature").notEmpty().isNumeric(),
   body("color").notEmpty().isString().matches(/#(([0-9a-f]{6})|([0-9A-F]{6}))/),
+  body("label").optional().isString(),
   body("documentId").notEmpty().isMongoId(),
   validator,
   isAuthenticated,

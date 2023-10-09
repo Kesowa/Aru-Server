@@ -7,6 +7,7 @@ export interface IThermalPoint {
   posY: number;
   color: string;
   temperature: number;
+  label: string;
   documentId: mongoose.Types.ObjectId;
 }
 
@@ -16,6 +17,7 @@ export const ThermalPointType = {
     posY: Types.Number(),
     color: Types.String(),
     temperature: Types.Number(),
+    label: Types.Number(),
     documentId: Types.String(),
 };
 
@@ -35,6 +37,10 @@ const thermalPointSchema = new mongoose.Schema<IThermalPoint>(
     },
     temperature: {
       type: Number,
+      required: true,
+    },
+    label: {
+      type: String,
       required: true,
     },
     documentId: {
