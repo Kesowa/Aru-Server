@@ -79,14 +79,18 @@ export const genThermal = async (
 };
 
 export const createThermalPoint = async (
-  req: Request<{}, {}, {
-    posX: string,
-    posY: string,
-    temperature: string,
-    color: string,
-    documentId: string,
-    label: string,
-  }>,
+  req: Request<
+    {},
+    {},
+    {
+      posX: string;
+      posY: string;
+      temperature: string;
+      color: string;
+      documentId: string;
+      label: string;
+    }
+  >,
   res: AuthResponse
 ) => {
   const { posX, posY, temperature, color, documentId, label } = req.body;
@@ -94,14 +98,18 @@ export const createThermalPoint = async (
     const exists = await ThermalPoint.findOne({
       posX: Number(posX),
       posY: Number(posY),
-      documentId: new mongoose.Types.ObjectId(documentId)
+      documentId: new mongoose.Types.ObjectId(documentId),
     });
-    if(exists) {
-      const doc = await ThermalPoint.findByIdAndUpdate(exists._id, {
-        temperature: Number(temperature),
-        color,
-        label: label ? label : "",
-      }, { new: true });
+    if (exists) {
+      const doc = await ThermalPoint.findByIdAndUpdate(
+        exists._id,
+        {
+          temperature: Number(temperature),
+          color,
+          label: label ? label : "",
+        },
+        { new: true }
+      );
       res.status(200).json({
         status: true,
         message: "Thermal Point created!",
@@ -122,7 +130,6 @@ export const createThermalPoint = async (
         data: doc,
       });
     }
-
   } catch (error) {
     req.log.error(error, "failed to create thermal point");
     res.status(500).json({
@@ -138,7 +145,7 @@ export const fetchThermalPoint = async (req: Request, res: AuthResponse) => {
   const documentId = new mongoose.Types.ObjectId(String(req.query.documentId));
   try {
     const doc = await ThermalPoint.findOne({ posX, posY, documentId });
-    if(doc) {
+    if (doc) {
       res.status(200).json({
         status: true,
         message: "Thermal Point fetched successfully!",
@@ -160,11 +167,15 @@ export const fetchThermalPoint = async (req: Request, res: AuthResponse) => {
 };
 
 export const deleteThermalPoint = async (
-  req: Request<{}, {}, {
-    posX: string,
-    posY: string,
-    documentId: string 
-  }>,
+  req: Request<
+    {},
+    {},
+    {
+      posX: string;
+      posY: string;
+      documentId: string;
+    }
+  >,
   res: AuthResponse
 ) => {
   const posX = Number(req.body.posX);
@@ -185,7 +196,10 @@ export const deleteThermalPoint = async (
   }
 };
 
-export const fetchAllThermalPointsForImage = async (req: Request, res: AuthResponse) => {
+export const fetchAllThermalPointsForImage = async (
+  req: Request,
+  res: AuthResponse
+) => {
   const documentId = new mongoose.Types.ObjectId(String(req.query.documentId));
   try {
     const docs = await ThermalPoint.find({ documentId });
