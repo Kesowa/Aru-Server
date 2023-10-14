@@ -2,7 +2,14 @@ import { Router } from "express";
 import { body, query } from "express-validator";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
 import { isAuthenticated } from "../../utils/authUtils";
-import { createThermalPoint, deleteAllThermalPointsForImage, deleteThermalPoint, fetchAllThermalPointsForImage, fetchThermalPoint, genThermal } from "../../controllers/v1/dataController";
+import {
+  createThermalPoint,
+  deleteAllThermalPointsForImage,
+  deleteThermalPoint,
+  fetchAllThermalPointsForImage,
+  fetchThermalPoint,
+  genThermal,
+} from "../../controllers/v1/dataController";
 
 const dataRouter = Router();
 
@@ -20,12 +27,15 @@ dataRouter.post(
   body("posX").notEmpty().isNumeric(),
   body("posY").notEmpty().isNumeric(),
   body("temperature").notEmpty().isNumeric(),
-  body("color").notEmpty().isString().matches(/#(([0-9a-f]{6})|([0-9A-F]{6}))/),
+  body("color")
+    .notEmpty()
+    .isString()
+    .matches(/#(([0-9a-f]{6})|([0-9A-F]{6}))/),
   body("label").optional().isString(),
   body("documentId").notEmpty().isMongoId(),
   validator,
   isAuthenticated,
-  RobustRunner(createThermalPoint),
+  RobustRunner(createThermalPoint)
 );
 
 dataRouter.get(
@@ -35,7 +45,7 @@ dataRouter.get(
   query("documentId").notEmpty().isMongoId(),
   validator,
   isAuthenticated,
-  RobustRunner(fetchThermalPoint),
+  RobustRunner(fetchThermalPoint)
 );
 
 dataRouter.delete(
@@ -45,7 +55,7 @@ dataRouter.delete(
   body("documentId").notEmpty().isMongoId(),
   validator,
   isAuthenticated,
-  RobustRunner(deleteThermalPoint),
+  RobustRunner(deleteThermalPoint)
 );
 
 dataRouter.get(
@@ -61,7 +71,7 @@ dataRouter.delete(
   body("documentId").notEmpty().isMongoId(),
   validator,
   isAuthenticated,
-  RobustRunner(deleteAllThermalPointsForImage),
+  RobustRunner(deleteAllThermalPointsForImage)
 );
 
 export default dataRouter;
