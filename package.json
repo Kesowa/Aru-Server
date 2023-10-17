@@ -5,10 +5,10 @@
   "main": "src/server.ts",
   "private": "true",
   "scripts": {
-    "start": "node ./dist/server.js",
+    "start": "node ./src/server.js",
     "dev": "ts-node-dev --transpile-only ./src/server.ts",
     "dev:debug": "ts-node-dev --transpile-only --respawn --inspect=4321 --project tsconfig.json src/server.ts",
-    "build": "tsc || true && cp -r src/views dist/",
+    "build": "tsc",
     "test": "jest --watchAll -w 4 --detectOpenHandles --max_old_space_size=4096",
     "lint": "eslint",
     "format": "prettier",
