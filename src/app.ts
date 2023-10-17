@@ -52,7 +52,6 @@ import {
   SEQ_SERVER_URL,
 } from "./constants";
 import cors from "cors";
-import { randomUUID } from "crypto";
 import cookie from "cookie";
 import routerV2 from "./apis/v2/routerV2";
 
