@@ -4,9 +4,6 @@ import { RobustRunner, validator } from "../../utils/requestHelpers";
 import { isAuthenticated } from "../../utils/authUtils";
 import {
   createThermalPoint,
-  deleteAllThermalPointsForImage,
-  deleteThermalPoint,
-  fetchAllThermalPointsForImage,
   fetchThermalPoint,
   genThermal,
 } from "../../controllers/v1/dataController";
@@ -23,55 +20,23 @@ dataRouter.post(
 );
 
 dataRouter.post(
-  "/thermalpoint/create",
-  body("posX").notEmpty().isNumeric(),
-  body("posY").notEmpty().isNumeric(),
-  body("temperature").notEmpty().isNumeric(),
-  body("color")
-    .notEmpty()
-    .isString()
-    .matches(/#(([0-9a-f]{6})|([0-9A-F]{6}))/),
+  "/thermal/table",
+  body("id").isString().notEmpty(),
+  body("doc").isString().notEmpty().isIn(["alerts", "documents"]),
+  body("table").isArray().notEmpty(),
   body("label").optional().isString(),
-  body("documentId").notEmpty().isMongoId(),
   validator,
   isAuthenticated,
   RobustRunner(createThermalPoint)
 );
 
 dataRouter.get(
-  "/thermalpoint/get",
-  query("posX").notEmpty().isNumeric(),
-  query("posY").notEmpty().isNumeric(),
-  query("documentId").notEmpty().isMongoId(),
+  "/thermalpoint/table",
+  query("id").isString().notEmpty(),
+  query("doc").isString().notEmpty().isIn(["alerts", "documents"]),
   validator,
   isAuthenticated,
   RobustRunner(fetchThermalPoint)
-);
-
-dataRouter.delete(
-  "/thermalpoint/delete",
-  body("posX").notEmpty().isNumeric(),
-  body("posY").notEmpty().isNumeric(),
-  body("documentId").notEmpty().isMongoId(),
-  validator,
-  isAuthenticated,
-  RobustRunner(deleteThermalPoint)
-);
-
-dataRouter.get(
-  "/thermalpoint/getall",
-  query("documentId").notEmpty().isMongoId(),
-  validator,
-  isAuthenticated,
-  RobustRunner(fetchAllThermalPointsForImage)
-);
-
-dataRouter.delete(
-  "/thermalpoint/deleteall",
-  body("documentId").notEmpty().isMongoId(),
-  validator,
-  isAuthenticated,
-  RobustRunner(deleteAllThermalPointsForImage)
 );
 
 export default dataRouter;

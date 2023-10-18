@@ -78,6 +78,32 @@ export const genThermal = async (
   }
 };
 
+const checkUint = (num) => typeof num == "number" && Number.isInteger(num) && num >= 0;
+const checkFloat = (num) => typeof num == "number";
+const colorReg = /^#[0-9a-f]{3,6}#/i;
+const checkColor = (color) => typeof color =="string" && colorReg.test(color);
+const checkTable = (table) => {
+  if (Array.isArray(table) && table.length > 0) {
+    const correct = table.every(({posX, posY, temp, color, label}) => 
+      checkUint(posX) &&
+      checkUint(posY) &&
+      checkFloat(temp) &&
+      checkColor(color) &&
+      typeof label == "string"
+    );
+    if (!correct) {
+      return false;
+    }
+    return table as Array<{
+      posX: number,
+      posY: number,
+      temp: number,
+      color: string,
+      label: string,
+    }>;
+  }
+  return false;
+}
 export const createThermalPoint = async (
   req: Request<
     {},
@@ -93,7 +119,18 @@ export const createThermalPoint = async (
   >,
   res: AuthResponse
 ) => {
-  const { posX, posY, temperature, color, documentId, label } = req.body;
+  const {doc, id, table} = req.body;
+  const realTable = checkTable(table);
+  if (!realTable) {
+    res.status(400).json({
+      status: false,
+      message: "bad request",
+      errors: {
+        table: "table format is incorrect",
+      }
+    })
+    return;
+  }
   try {
     const exists = await ThermalPoint.findOne({
       posX: Number(posX),
