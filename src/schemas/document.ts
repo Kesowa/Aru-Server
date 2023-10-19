@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { thermalStatusEnum, thermalStatusType } from "./sharedSchemas";
 import { Types } from "ts-openapi";
 
 export interface IDocument {
@@ -21,7 +20,6 @@ export interface IDocument {
   commentCount: number;
   createdAt: Date;
   updatedAt: Date;
-  thermalStatus: thermalStatusType;
 }
 export const DocumentType = {
   _id: Types.String(),
@@ -94,12 +92,7 @@ const documentSchema = new mongoose.Schema<IDocument>(
     },
     updatedAt: {
       type: Date,
-    },
-    thermalStatus: {
-      default: "null",
-      enum: thermalStatusEnum,
-      type: String,
-    },
+    }
   },
   {
     timestamps: true,

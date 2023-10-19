@@ -5,13 +5,33 @@ import path from "path";
 import { exec } from "child_process";
 import Alert from "../../models/alert";
 import Document from "../../models/document";
-import mongoose from "mongoose";
-import ThermalPoint from "../../models/thermalPoint";
+import aimlModel from "../../models/aimlTask";
 
-export const genThermal = async (
+export const getThermal = async (
   req: Request<{}, {}, { id: string; doc: "alerts" | "documents" }>,
   res: AuthResponse
 ) => {
+  let thermalDoc = await aimlModel.findOne({
+    doc: req.query.id,
+    docModel: req.query.doc,
+    infer: "thermal",
+  });
+  if (thermalDoc) {
+    if (thermalDoc.status == "failed") {
+      res.status(404).json({
+        status: false,
+        message: "cannot convert",
+      });
+      return;
+    } else {
+      res.json({
+        status: true,
+        message: "already converted",
+        data: thermalDoc,
+      });
+      return;
+    }
+  }
   const [doc, filePath] = await (async () => {
     if (req.body.doc == "alerts") {
       const doc = await Alert.findById(req.body.id);
@@ -35,20 +55,7 @@ export const genThermal = async (
   const fileName = path.parse(filePath).name + ".raw";
   const rawFilePath = `/${Directory.AI_ML}/${fileName}`;
   const outPath = DirPath(Directory.AI_ML, fileName);
-  if (doc.thermalStatus == "failed") {
-    res.status(503).json({
-      status: false,
-      message: "cannot convert",
-    });
-    return;
-  } else if (doc.thermalStatus == "converted") {
-    res.status(200).json({
-      status: true,
-      message: "already converted",
-      rawFilePath,
-    });
-    return;
-  }
+
   try {
     await new Promise((res, rej) => {
       exec(
@@ -62,64 +69,85 @@ export const genThermal = async (
         }
       );
     });
-    await doc.updateOne({ thermalStatus: "converted" });
-    res.status(200).json({
+    thermalDoc = await aimlModel.create({
+      doc: req.query.id,
+      docModel: req.query.doc,
+      infer: "thermal",
+      status: "completed",
+      createdBy: res.locals.user._id,
+      updatedBy: res.locals.user._id,
+      tenant: res.locals.user.tenantId._id,
+      data: {
+        file: rawFilePath,
+        table: [],
+      },
+    });
+    res.json({
       status: true,
       message: "conversion successful",
-      rawFilePath,
+      data: thermalDoc,
     });
   } catch (err) {
     req.log.error(err, "thermal conversion failed");
-    await doc.updateOne({ thermalStatus: "failed" });
+    thermalDoc = await aimlModel.create({
+      doc: req.query.id,
+      docModel: req.query.doc,
+      infer: "thermal",
+      status: "failed",
+      createdBy: res.locals.user._id,
+      updatedBy: res.locals.user._id,
+      tenant: res.locals.user.tenantId._id,
+      data: null,
+    });
     res.status(404).json({
       status: false,
       message: "not a thermal image",
+      data: thermalDoc,
     });
   }
 };
 
-const checkUint = (num) => typeof num == "number" && Number.isInteger(num) && num >= 0;
+const checkUint = (num) =>
+  typeof num == "number" && Number.isInteger(num) && num >= 0;
 const checkFloat = (num) => typeof num == "number";
 const colorReg = /^#[0-9a-f]{3,6}#/i;
-const checkColor = (color) => typeof color =="string" && colorReg.test(color);
+const checkColor = (color) => typeof color == "string" && colorReg.test(color);
 const checkTable = (table) => {
   if (Array.isArray(table) && table.length > 0) {
-    const correct = table.every(({posX, posY, temp, color, label}) => 
-      checkUint(posX) &&
-      checkUint(posY) &&
-      checkFloat(temp) &&
-      checkColor(color) &&
-      typeof label == "string"
+    const correct = table.every(
+      ({ x, y, temp, color, label }) =>
+        checkUint(x) &&
+        checkUint(y) &&
+        checkFloat(temp) &&
+        checkColor(color) &&
+        typeof label == "string"
     );
     if (!correct) {
       return false;
     }
     return table as Array<{
-      posX: number,
-      posY: number,
-      temp: number,
-      color: string,
-      label: string,
+      x: number;
+      y: number;
+      temp: number;
+      color: string;
+      label: string;
     }>;
   }
   return false;
-}
-export const createThermalPoint = async (
+};
+export const createThermalTable = async (
   req: Request<
     {},
     {},
     {
-      posX: string;
-      posY: string;
-      temperature: string;
-      color: string;
-      documentId: string;
-      label: string;
+      id: string;
+      doc: string;
+      table: unknown;
     }
   >,
   res: AuthResponse
 ) => {
-  const {doc, id, table} = req.body;
+  const { doc, id, table } = req.body;
   const realTable = checkTable(table);
   if (!realTable) {
     res.status(400).json({
@@ -127,149 +155,30 @@ export const createThermalPoint = async (
       message: "bad request",
       errors: {
         table: "table format is incorrect",
-      }
-    })
+      },
+    });
     return;
   }
-  try {
-    const exists = await ThermalPoint.findOne({
-      posX: Number(posX),
-      posY: Number(posY),
-      documentId: new mongoose.Types.ObjectId(documentId),
-    });
-    if (exists) {
-      const doc = await ThermalPoint.findByIdAndUpdate(
-        exists._id,
-        {
-          temperature: Number(temperature),
-          color,
-          label: label ? label : "",
-        },
-        { new: true }
-      );
-      res.status(200).json({
-        status: true,
-        message: "Thermal Point created!",
-        data: doc,
-      });
-    } else {
-      const doc = await ThermalPoint.create({
-        posX: Number(posX),
-        posY: Number(posY),
-        temperature: Number(temperature),
-        color,
-        label: label ? label : "",
-        documentId: new mongoose.Types.ObjectId(documentId),
-      });
-      res.status(200).json({
-        status: true,
-        message: "Thermal Point created!",
-        data: doc,
-      });
-    }
-  } catch (error) {
-    req.log.error(error, "failed to create thermal point");
-    res.status(500).json({
+  const thermalDoc = await aimlModel.findOne({
+    doc: id,
+    docModel: doc,
+    status: "completed",
+    infer: "thermal",
+    tenant: res.locals.user.tenantId._id,
+  });
+  if (!thermalDoc) {
+    res.status(404).json({
       status: false,
-      message: "Server Error",
+      message: "thermal doc not found",
     });
+    return;
   }
-};
-
-export const fetchThermalPoint = async (req: Request, res: AuthResponse) => {
-  const posX = Number(req.query.posX);
-  const posY = Number(req.query.posY);
-  const documentId = new mongoose.Types.ObjectId(String(req.query.documentId));
-  try {
-    const doc = await ThermalPoint.findOne({ posX, posY, documentId });
-    if (doc) {
-      res.status(200).json({
-        status: true,
-        message: "Thermal Point fetched successfully!",
-        data: doc,
-      });
-    } else {
-      res.status(404).json({
-        status: true,
-        message: "Thermal Point not found!",
-      });
-    }
-  } catch (error) {
-    req.log.error(error, "failed to fetch thermal point");
-    res.status(500).json({
-      status: false,
-      message: "Server Error",
-    });
-  }
-};
-
-export const deleteThermalPoint = async (
-  req: Request<
-    {},
-    {},
-    {
-      posX: string;
-      posY: string;
-      documentId: string;
-    }
-  >,
-  res: AuthResponse
-) => {
-  const posX = Number(req.body.posX);
-  const posY = Number(req.body.posY);
-  const documentId = new mongoose.Types.ObjectId(String(req.body.documentId));
-  try {
-    await ThermalPoint.findOneAndDelete({ posX, posY, documentId });
-    res.status(200).json({
-      status: true,
-      message: "Thermal Point deleted successfully!",
-    });
-  } catch (error) {
-    req.log.error(error, "failed to delete thermal point");
-    res.status(500).json({
-      status: false,
-      message: "Server Error",
-    });
-  }
-};
-
-export const fetchAllThermalPointsForImage = async (
-  req: Request,
-  res: AuthResponse
-) => {
-  const documentId = new mongoose.Types.ObjectId(String(req.query.documentId));
-  try {
-    const docs = await ThermalPoint.find({ documentId });
-    res.status(200).json({
-      status: true,
-      message: "Thermal Points fetched successfully!",
-      data: docs,
-    });
-  } catch (error) {
-    req.log.error(error, "failed to fetch thermal points");
-    res.status(500).json({
-      status: false,
-      message: "Server Error",
-    });
-  }
-};
-
-export const deleteAllThermalPointsForImage = async (
-  req: Request<{}, {}, { documentId: string }>,
-  res: AuthResponse
-) => {
-  const documentId = new mongoose.Types.ObjectId(String(req.body.documentId));
-  try {
-    await ThermalPoint.deleteMany({ documentId });
-    res.status(200).json({
-      status: true,
-      message: "Thermal Points deleted successfully!",
-    });
-  } catch (error) {
-    req.log.error(error, "failed to delete thermal points");
-    res.status(500).json({
-      status: false,
-      message: "Server Error",
-    });
-  }
+  // always true
+  if (thermalDoc.infer == "thermal") thermalDoc.data.table = realTable;
+  await thermalDoc.save();
+  res.json({
+    status: true,
+    message: "thermal table updated",
+    data: thermalDoc,
+  });
 };
