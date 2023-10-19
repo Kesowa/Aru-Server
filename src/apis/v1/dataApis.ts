@@ -12,7 +12,7 @@ const dataRouter = Router();
 dataRouter.get(
   "/thermal",
   query("id").isString().notEmpty(),
-  query("doc").isString().notEmpty().isIn(["alerts", "documents"]),
+  query("doc").isString().notEmpty().isIn(["alert", "document"]),
   validator,
   isAuthenticated,
   RobustRunner(getThermal)
@@ -21,7 +21,7 @@ dataRouter.get(
 dataRouter.post(
   "/thermal/table",
   body("id").isString().notEmpty(),
-  body("doc").isString().notEmpty().isIn(["alerts", "documents"]),
+  body("doc").isString().notEmpty().isIn(["alert", "document"]),
   body("table").isArray().notEmpty(),
   validator,
   isAuthenticated,

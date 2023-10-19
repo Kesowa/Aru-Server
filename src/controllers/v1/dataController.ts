@@ -8,7 +8,7 @@ import Document from "../../models/document";
 import aimlModel from "../../models/aimlTask";
 
 export const getThermal = async (
-  req: Request<{}, {}, { id: string; doc: "alerts" | "documents" }>,
+  req: Request<{}, {}, { id: string; doc: "alert" | "document" }>,
   res: AuthResponse
 ) => {
   let thermalDoc = await aimlModel.findOne({
@@ -33,10 +33,10 @@ export const getThermal = async (
     }
   }
   const [doc, filePath] = await (async () => {
-    if (req.body.doc == "alerts") {
+    if (req.body.doc == "alert") {
       const doc = await Alert.findById(req.body.id);
       return [doc, doc.image];
-    } else if (req.body.doc == "documents") {
+    } else if (req.body.doc == "document") {
       const doc = await Document.findById(req.body.id);
       if (doc.folderName == "photos") {
         return [doc, doc.filePath];
