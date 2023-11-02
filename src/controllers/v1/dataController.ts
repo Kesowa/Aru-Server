@@ -6,6 +6,9 @@ import { exec } from "child_process";
 import Alert from "../../models/alert";
 import Document from "../../models/document";
 import aimlModel from "../../models/aimlTask";
+import { HydratedDocument } from "mongoose";
+import { IAlert } from "../../schemas/alert";
+import { IDocument } from "../../schemas/document";
 
 export const getThermal = async (
   req: Request<{}, {}, { id: string; doc: "alert" | "document" }>,
@@ -32,18 +35,17 @@ export const getThermal = async (
       return;
     }
   }
-  const [doc, filePath] = await (async () => {
-    if (req.body.doc == "alert") {
-      const doc = await Alert.findById(req.body.id);
-      return [doc, doc.image];
-    } else if (req.body.doc == "document") {
-      const doc = await Document.findById(req.body.id);
-      if (doc.folderName == "photos") {
-        return [doc, doc.filePath];
-      }
-      return null;
+  let doc: HydratedDocument<IAlert | IDocument>, filePath: string;
+  if (req.query.doc == "alert") {
+    doc = await Alert.findById(req.query.id);
+    filePath = doc.image;
+  } else if (req.query.doc == "document") {
+    const docx = await Document.findById(req.query.id);
+    if (docx.folderName == "photos") {
+      doc = docx;
+      filePath = doc.filePath;
     }
-  })();
+  }
   if (!doc) {
     res.status(404).json({
       status: false,
