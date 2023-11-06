@@ -20,6 +20,7 @@ import { ILocation } from "../../schemas/location";
 import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
 import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
+import ejs from "ejs";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -385,14 +386,14 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
   }
 };
 
-export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
+export const deleteCientforTenant = async (req: Request<{}, {}, { id: string }>, res: AuthResponse) => {
   {
     const doc = await User.findOne({
       _id: req.body.id,
       tenantId: res.locals.user.tenantId,
     });
     if (doc) {
-      const _updatedMissions = await Mission.updateMany(
+      await Mission.updateMany(
         {
           clientId: req.body.id,
           tenantId: res.locals.user.tenantId,
@@ -403,10 +404,9 @@ export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
           },
         }
       );
-      let size = 0;
       try {
         const docPath = DirPath(Directory.DEFAULT, doc.avatar);
-        size = await getFileSize(docPath);
+        await getFileSize(docPath);
         await deletePublicFileUsingPath(doc.avatar);
       } catch (error) {
         req.log.warn("failed to delete client avatar");
@@ -416,7 +416,7 @@ export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
 
       doc.tenantId = DUMMY_TENANT; //dummy tenant id
       const d = await doc.save();
-      const tenant: any = await Tenant.findOne(
+      const tenant = await Tenant.findOne(
         {
           _id: res.locals.user.tenantId,
         },
@@ -432,6 +432,28 @@ export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
         // tenant.actualClientCount = Number(tenant.actualClientCount) - 1;
         // await tenant.save();
       }
+
+      try {
+        const creator = await User.findById(doc.createdBy);
+        const html = await ejs.renderFile(
+          path.join(__dirname, "..", "..", "views", "mails", "clientDeletionNotification.ejs"),
+          {
+            name: doc.name,
+            id: doc._id,
+          },
+          { async: true }
+        );
+        await sendMail(
+          creator.email,
+          "Client Deletion Notification || Kesowa Infinite Ventures Pvt. Ltd",
+          "",
+          html,
+          ""
+        );
+      } catch (error) {
+        req.log.warn("failed to send email to the creator", error);
+      }
+
       return res.status(200).json({
         status: true,
         message: "client deleted successfully!",
