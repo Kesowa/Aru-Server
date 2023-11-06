@@ -99,7 +99,10 @@ export const getThermal = async (
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
       tenant: res.locals.user.tenantId._id,
-      data: null,
+      data: {
+        file: "",
+        table: []
+      },
     });
     res.status(404).json({
       status: false,
@@ -112,7 +115,7 @@ export const getThermal = async (
 const checkUint = (num) =>
   typeof num == "number" && Number.isInteger(num) && num >= 0;
 const checkFloat = (num) => typeof num == "number";
-const colorReg = /^#[0-9a-f]{3,6}#/i;
+const colorReg = /^#[0-9a-f]{3,6}$/i;
 const checkColor = (color) => typeof color == "string" && colorReg.test(color);
 const checkTable = (table) => {
   if (Array.isArray(table) && table.length > 0) {
