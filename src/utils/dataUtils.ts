@@ -10,6 +10,8 @@ import { GeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
 import tokml from "tokml";
 import { DirPath, Directory } from "../constants";
+import archiver from "archiver";
+import { createWriteStream } from "fs";
 
 const asyncExec = promisify(exec);
 
@@ -286,3 +288,21 @@ export const saveAIMLFile = async (
     return false;
   }
 };
+
+export const createArchive = async (files: pathUtils.DocPath[]) => {
+  const archivePath = pathUtils.docPath(
+    pathUtils.Directory.TEMP,
+    randomUUID() + ".zip"
+  );
+  const absArchivePath = pathUtils.absPath(pathUtils.Directory.ROOT, archivePath);
+  const output = createWriteStream(absArchivePath);
+  const archive = archiver("zip", {
+    zlib: { level: 9 }, // Sets the compression level.
+  });
+  files.forEach(file => {
+    archive.file(pathUtils.absPath(pathUtils.Directory.ROOT, file), { name: file })
+  })
+  archive.pipe(output);
+  await archive.finalize();
+  return archivePath;
+}

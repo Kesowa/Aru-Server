@@ -4,7 +4,6 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import archiver from "archiver";
 import path from "path";
 import { missionSpecificSocket } from "../../socket";
 import {
@@ -20,7 +19,7 @@ import {
   getFileSize,
 } from "../../utils/fileUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
-import { savePointcloud } from "../../utils/dataUtils";
+import { createArchive, savePointcloud } from "../../utils/dataUtils";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
@@ -345,33 +344,10 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, req.log);
-        const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = createDirFileWriteStreamUsingName(Directory.ZIP, fname);
-        const archive = archiver("zip", {
-          zlib: { level: 9 }, // Sets the compression level.
-        });
-        // output.on('close', function () {
-        //     req.log.info(archive.pointer() + ' total bytes');
-        //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
-        // });
-        archive.pipe(output);
-        for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.DEFAULT, d[i].filePath), {
-            name: d[i].filePath.split("/")[2],
-          });
-        }
-        try {
-          const _archiveFinalized = await archive.finalize();
-          const link = `/zip/${fname}`;
-          missionSpecificSocket
-            .to(missionId)
-            .emit("DOCUMENT_ZIP_COMPLETED", link);
-        } catch (error) {
-          req.log.error(error);
-          missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_FAILED");
-        }
+      const zipFile = await createArchive(d.map(d=> d.filePath));
+      missionSpecificSocket
+          .to(missionId)
+          .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
       } else {
         res.status(200).json({
           status: false,
