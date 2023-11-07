@@ -789,7 +789,7 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
 export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
   {
     const id: any = req.query.id;
-    const doc = await Layer.findById({
+    const doc = await Layer.findOne({
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     });
@@ -835,7 +835,8 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
       const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,
       });
-      if (tenant.actualLayerCount >= 0) {
+      await savedDoc.populate("vector");
+      if (savedDoc && tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },
           { $inc: { actualLayerCount: 1 } }
@@ -1883,7 +1884,7 @@ export const unreviewedLayerfiles = async (req: Request, res: AuthResponse) => {
     const docs = await layerFiles.find({
       layerId: req.query.layerId,
       isReview: false,
-      tenantId: res.locals.user.tenantId,
+      tenantId: res.locals.user.tenantId._id,
     });
     if (docs.length) {
       return res.status(200).json({

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PieChart - 1</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 100vw;
+        height: 100vh;
+      }
+      #heading {
+        width: 100vw;
+        height: 10vh;
+        text-align: center;
+        padding-top: 5vh;
+        font-size: 50px;
+        /* border: 2px solid red; */
+      }
+      #container {
+        height: 90vh;
+        width: 100vw;
+        display: flex;
+      }
+      #chart {
+        width: 50vw;
+        height: 90vh;
+        /* border: 2px solid green; */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #labels {
+        width: 50vw;
+        height: 90vh;
+        /* border: 2px solid orange; */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        font-size: 40px;
+        font-weight: 800;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="heading"></h1>
+    <div id="container">
+      <div id="chart"></div>
+      <div id="labels"></div>
+    </div>
+    <script type="module">
+      import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+      function setHeading(data) {
+        const heading = document.getElementById("heading");
+        heading.innerText = data;
+      }
+
+      function genLabelElement(text, color) {
+        const div = document.createElement("div");
+        div.style =
+          "width: 100%; padding-left: 10%; margin-bottom: 1vh; display: flex";
+        const labelColor = document.createElement("div");
+        labelColor.style = `width: 5vw; height: 100%; background-color:${color};`;
+        const labelText = document.createElement("div");
+        labelText.innerText = text;
+        labelText.style = `height: 100%; margin-left: 5%;`;
+        div.appendChild(labelColor);
+        div.appendChild(labelText);
+        return div;
+      }
+
+      function genPieChart(data) {
+        const width = 0.35 * Math.max(window.innerHeight, window.innerWidth);
+        const height = width;
+
+        const pie = d3.pie().value((d) => d.percent);
+
+        const arc = d3
+          .arc()
+          .innerRadius(0)
+          .outerRadius(Math.min(width, height) / 2 - 1);
+
+        const labelRadius = arc.outerRadius()() * 0.5;
+
+        const arcLabel = d3
+          .arc()
+          .innerRadius(labelRadius)
+          .outerRadius(labelRadius);
+
+        const arcs = pie(data);
+
+        const svg = d3
+          .select("#chart")
+          .append("svg")
+          .attr("width", width)
+          .attr("height", height)
+          .attr("viewBox", [-width / 2, -height / 2, width, height])
+          .attr("style", "font: 24px sans-serif;");
+
+        svg
+          .append("g")
+          .attr("stroke", "white")
+          .selectAll()
+          .data(arcs)
+          .join("path")
+          .attr("fill", (d) => d.data.color)
+          .attr("d", arc);
+
+        svg
+          .append("g")
+          .attr("text-anchor", "middle")
+          .selectAll()
+          .data(arcs)
+          .join("text")
+          .attr("transform", (d) => `translate(${arcLabel.centroid(d)})`)
+          .call((text) =>
+            text
+              .append("tspan")
+              .attr("y", "-0.4em")
+              .attr("font-weight", "bold")
+              .attr("fill", "#000000")
+              .text((d) => `${d.data.percent.toLocaleString("en-US")}%`)
+          );
+        // .call(text => text.append("tspan")
+        //     .attr("y", "-0.4em")
+        //     .attr("font-weight", "bold")
+        //     .text(d => d.data.name))
+        // .call(text => text.filter(d => (d.endAngle - d.startAngle) > 0.25).append("tspan")
+        //     .attr("x", 0)
+        //     .attr("y", "0.7em")
+        //     .attr("font-weight", "bold")
+        //     .text(d => `${d.data.percent.toLocaleString("en-US")}%`));
+
+        const labels = document.getElementById("labels");
+        for (let d of data) {
+          labels.appendChild(genLabelElement(d.name, d.color));
+        }
+      }
+
+      function genBarChart(data) {
+        let groups = [];
+        let subgroups = Object.keys(data[0]).filter((g) => g != "name");
+
+        for (let d of data) groups.push(d.name);
+
+        let margin = { top: 50, right: 30, bottom: 20, left: 50 };
+        const width = 500 - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        const svg = d3
+          .select("#chart")
+          .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom);
+
+        var x = d3.scaleBand().domain(groups).range([0, width]).padding(0.2);
+        svg
+          .append("g")
+          .attr("transform", `translate(${margin.left},${height + margin.top})`)
+          .attr("style", "font-size: 15px;")
+          .call(d3.axisBottom(x).tickSizeOuter(0));
+
+        var y = d3.scaleLinear().domain([0, 100]).range([height, 0]);
+        svg
+          .append("g")
+          .attr("transform", `translate(${margin.left},${margin.top})`)
+          .attr("style", "font-size: 15px;")
+          .call(d3.axisLeft(y));
+
+        data = data.map((d) => {
+          let total = 0;
+          let normalized_d = {};
+          normalized_d["name"] = d["name"];
+          for (let sub of subgroups) {
+            total += d[sub];
+          }
+          for (let sub of subgroups) {
+            normalized_d[sub] = (d[sub] / total) * 100;
+          }
+          return normalized_d;
+        });
+
+        const stackedData = d3.stack().keys(subgroups)(data);
+
+        var color = d3
+          .scaleOrdinal()
+          .domain(subgroups)
+          .range(["#e01ea3", "#df7c12", "#8277da"]);
+
+        var bar_groups = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left},${margin.top})`)
+          .selectAll("g")
+          .data(stackedData)
+          .enter()
+          .append("g")
+          .attr("fill", function (d) {
+            return color(d.key);
+          });
+
+        var bars = bar_groups
+          .selectAll("g")
+          .data(function (d) {
+            return d;
+          })
+          .enter()
+          .append("g");
+
+        bars
+          .append("rect")
+          .attr("x", function (d) {
+            return x(d.data.name);
+          })
+          .attr("y", function (d) {
+            return y(d[1]);
+          })
+          .attr("height", function (d) {
+            return y(d[0]) - y(d[1]);
+          })
+          .attr("width", x.bandwidth());
+
+        bars
+          .append("text")
+          .text(function (d) {
+            return d3.format(".2s")(d[1] - d[0]) + "%";
+          })
+          .attr("y", function (d) {
+            return y(d[1]) + (y(d[0]) - y(d[1])) / 2;
+          })
+          .attr("x", function (d) {
+            return x(d.data.name) + x.bandwidth() * 0.4;
+          })
+          .style("fill", "#000000")
+          .attr("font-size", "15")
+          .attr("font-weight", "bold");
+
+        const labels = document.getElementById("labels");
+        for (let s of subgroups) {
+          labels.appendChild(genLabelElement(s, color(s)));
+        }
+      }
+
+      window.setHeading = setHeading;
+      window.genPieChart = genPieChart;
+      window.genBarChart = genBarChart;
+
+      // Sample Run:
+      //
+      setHeading("PLOT DETAILS AC BLOCK");
+      // genPieChart([
+      //     {name: "Under Construction", percent: 9, color: "#ffc000"},
+      //     {name: "Empty", percent: 28, color: "#5b9bd5"},
+      //     {name: "Constructed", percent: 63, color: "#70ad47"},
+      // ]);
+      genBarChart([
+        { name: "Government", UnderConstruction: 1, Empty: 7, Constructed: 3 },
+        {
+          name: "Residential",
+          UnderConstruction: 22,
+          Empty: 50,
+          Constructed: 157,
+        },
+      ]);
+    </script>
+  </body>
+</html>
