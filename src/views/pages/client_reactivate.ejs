@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <title>Client Reactivation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+    .wrapper {
+      min-height: calc(100vh - 150px);
+    }
+    .container {
+      width: 700px;
+      margin: auto;
+    }
+    .container2 {
+      width: 500px;
+      margin: auto;
+    }
+    .container3 {
+      width: 800px;
+      margin: auto;
+    }
+    .footer {
+      height: 50px;
+    }
+    </style>
+  </head>
+  <body>
+      <div class="wrapper">
+        <section class="section">
+            <div class="container">
+              <% if (isSuccess && name) { %>
+                <h1 class="title">
+                  Client Reactivation Successful
+                </h1>
+                <br />
+                <p class="subtitle">
+                  The client <strong><%= name %></strong> has been successfully reactivated!
+                </p>
+              <% } else { %>
+                <h1 class="title">
+                  Client Reactivation Error
+                </h1>
+                <br />
+                <p class="subtitle">
+                  The client to be activated either doesn't exist or is already active!
+                </p>
+              <% } %>
+            </div>
+        </section>
+      </div>
+    <footer class="footer">
+        <div class="content has-text-centered">
+          <p>
+            <strong>ARU</strong> by <a href="https://www.kesowa.com">Kesowa Infinite Ventures Pvt. Ltd</a>. 
+          </p>
+        </div>
+      </footer>
+      
+  </body>
+</html>

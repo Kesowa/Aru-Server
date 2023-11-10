@@ -17,10 +17,11 @@ import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
 import { IMission } from "../../schemas/mission";
 import { ILocation } from "../../schemas/location";
-import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
+import { API_SERVER, Directory, DirPath, DUMMY_TENANT, SECRET_KEY } from "../../constants";
 import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
+import { iv } from "../../utils/authUtils";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -435,11 +436,19 @@ export const deleteCientforTenant = async (req: Request<{}, {}, { id: string }>,
 
       try {
         const creator = await User.findById(doc.createdBy);
+        const cipher = crypto.createCipheriv(
+          "aes192",
+          Buffer.from(SECRET_KEY, "base64"),
+          iv
+        );
+        let token = cipher.update(String(doc.email), "utf8", "base64");
+        token += cipher.final("base64");
+        const reactivateClientUrl = `${API_SERVER}/apis/v1/client/reactivate-client/${token}`;
         const html = await ejs.renderFile(
           path.join(__dirname, "..", "..", "views", "mails", "clientDeletionNotification.ejs"),
           {
             name: doc.name,
-            id: doc._id,
+            reactivateClientUrl
           },
           { async: true }
         );
@@ -451,7 +460,8 @@ export const deleteCientforTenant = async (req: Request<{}, {}, { id: string }>,
           ""
         );
       } catch (error) {
-        req.log.warn("failed to send email to the creator", error);
+        req.log.error("failed to send email to the creator");
+        req.log.error(error);
       }
 
       return res.status(200).json({
@@ -464,6 +474,61 @@ export const deleteCientforTenant = async (req: Request<{}, {}, { id: string }>,
         status: false,
         message: "clientId does not match!",
       });
+  }
+};
+
+export const reactivateClient = async (req: Request, res: AuthResponse) => {
+  {
+    const decipher = crypto.createDecipheriv(
+      "aes192",
+      Buffer.from(SECRET_KEY, "base64"),
+      iv
+    );
+    let email = decipher.update(req.params.token, "base64", "utf8");
+    email += decipher.final("utf8");
+
+    const client = await User.findOne({ 
+      email: email,
+      userType: "standalone-user",
+      isActive: false,
+      tenantId: DUMMY_TENANT,
+    });
+    if(client) {
+      const creator = await User.findById(client.createdBy);
+
+      client.userType = "tenant-client";
+      client.isActive = true;
+      client.tenantId = creator.tenantId;
+
+      const d = await client.save();
+
+      const tenant = await Tenant.findOne(
+        {
+          _id: creator.tenantId,
+        },
+        {
+          actualClientCount: 1,
+        }
+      );
+      if (d && tenant.actualClientCount) {
+        await Tenant.updateOne(
+          { _id: creator.tenantId },
+          { $inc: { actualClientCount: 1 } }
+        );
+      }
+
+      return res.render("pages/client_reactivate", {
+        isSuccess: true,
+        name: client.name,
+      });
+
+    } else {
+      req.log.error("Client either doesn't exist or is not deactivated!")
+      return res.render("pages/client_reactivate", {
+        isSuccess: false,
+      });
+
+    }
   }
 };
 

@@ -27,9 +27,29 @@
             "
           >
             <p>
-              We are sorry to inform you that the client <b><%= name %></b> having id: <b><%= id %></b> created by you has been deleted.
+              We are sorry to inform you that the client <b><%= name %></b> created by you has been deactivated.
             </p>
             <br />
+            <p>
+              Want to reactivate them? Use the below link:
+            </p>
+            <br />
+            <a
+              style="
+                color: white;
+                background-color: rgb(107, 55, 228);
+                border-radius: 10px;
+                padding: 10px;
+                text-decoration: none;
+              "
+              href="<%= reactivateClientUrl %>"
+              >RE-ACTIVATE CLIENT</a
+            >
+            <br />
+            <br />
+            <p>
+              Please do not share this email or the link!
+            </p>
             <p>Best regards,</p>
             <p><b>Team Kesowa</b></p>
           </div>
