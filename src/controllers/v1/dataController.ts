@@ -57,7 +57,8 @@ export const getThermal = async (
   const fileName = path.parse(filePath).name + ".raw";
   const rawFilePath = `/${Directory.AI_ML}/${fileName}`;
   const outPath = DirPath(Directory.AI_ML, fileName);
-
+  
+  let converted = false;
   try {
     await new Promise((res, rej) => {
       exec(
@@ -71,11 +72,15 @@ export const getThermal = async (
         }
       );
     });
+    converted = true;
+  } catch (err) {
+    req.log.error(err, "thermal conversion failed");
+  }
     thermalDoc = await aimlModel.create({
       doc: req.query.id,
       docModel: req.query.doc,
       infer: "thermal",
-      status: "completed",
+      status: converted?"completed": "failed",
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
       tenant: res.locals.user.tenantId._id,
@@ -84,32 +89,11 @@ export const getThermal = async (
         table: [],
       },
     });
-    res.json({
-      status: true,
-      message: "conversion successful",
+    res.status(converted?200:404).json({
+      status: converted,
+      message: converted ? "conversion successful" : "conversion failed",
       data: thermalDoc,
     });
-  } catch (err) {
-    req.log.error(err, "thermal conversion failed");
-    thermalDoc = await aimlModel.create({
-      doc: req.query.id,
-      docModel: req.query.doc,
-      infer: "thermal",
-      status: "failed",
-      createdBy: res.locals.user._id,
-      updatedBy: res.locals.user._id,
-      tenant: res.locals.user.tenantId._id,
-      data: {
-        file: "",
-        table: []
-      },
-    });
-    res.status(404).json({
-      status: false,
-      message: "not a thermal image",
-      data: thermalDoc,
-    });
-  }
 };
 
 const checkUint = (num) =>
