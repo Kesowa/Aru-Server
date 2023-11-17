@@ -14,10 +14,27 @@ export const getThermal = async (
   req: Request<{}, {}, { id: string; doc: "alert" | "document" }>,
   res: AuthResponse
 ) => {
-  let thermalDoc = await aimlModel.findOne({
+  const thermalDoc = await aimlModel.findOneAndUpdate({
     doc: req.query.id,
     docModel: req.query.doc,
     infer: "thermal",
+  }, {
+    $setOnInsert: {
+      doc: req.query.id,
+      docModel: req.query.doc,
+      infer: "thermal",
+      status: "started",
+      createdBy: res.locals.user._id,
+      updatedBy: res.locals.user._id,
+      tenant: res.locals.user.tenantId._id,
+      data: {
+        file: "",
+        table: [],
+      },
+    }
+  }, {
+    upsert: true,
+    new: true,
   });
   if (thermalDoc) {
     if (thermalDoc.status == "failed") {
@@ -26,7 +43,7 @@ export const getThermal = async (
         message: "cannot convert",
       });
       return;
-    } else {
+    } else if (thermalDoc.status == "completed") {
       res.json({
         status: true,
         message: "already converted",
@@ -34,6 +51,13 @@ export const getThermal = async (
       });
       return;
     }
+  }
+  else {
+    res.status(500).json({
+      status: false,
+      message: "unable to create thermal doc",
+    });
+    return;
   }
   let doc: HydratedDocument<IAlert | IDocument>, filePath: string;
   if (req.query.doc == "alert") {
@@ -73,22 +97,13 @@ export const getThermal = async (
       );
     });
     converted = true;
+    req.log.info("thermal conversion successful");
   } catch (err) {
     req.log.error(err, "thermal conversion failed");
   }
-  thermalDoc = await aimlModel.create({
-    doc: req.query.id,
-    docModel: req.query.doc,
-    infer: "thermal",
-    status: converted ? "completed" : "failed",
-    createdBy: res.locals.user._id,
-    updatedBy: res.locals.user._id,
-    tenant: res.locals.user.tenantId._id,
-    data: {
-      file: rawFilePath,
-      table: [],
-    },
-  });
+  thermalDoc.status = converted ? "completed" : "failed";
+  thermalDoc.data.file = converted ? rawFilePath : "";
+  await thermalDoc.updateOne({ status: thermalDoc.status, "data.file": thermalDoc.data.file });
   res.status(converted ? 200 : 404).json({
     status: converted,
     message: converted ? "conversion successful" : "conversion failed",
