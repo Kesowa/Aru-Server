@@ -93,9 +93,8 @@ export const createClientformissionGroup = async (
             );
           }
           if (req.body.avatar && modDoc) {
-            modDoc.avatar = `/images/client/${
-              req.body.avatar.split(/[\\\/]/)[3]
-            }`;
+            modDoc.avatar = `/images/client/${req.body.avatar.split(/[\\\/]/)[3]
+              }`;
             await modDoc.save();
           }
           if (req.body.avatar && modDoc) {
@@ -165,9 +164,8 @@ export const createClientformissionGroup = async (
             );
           }
           if (req.body.avatar && createDoc) {
-            createDoc.avatar = `/images/client/${
-              req.body.avatar.split(/[\\\/]/)[3]
-            }`;
+            createDoc.avatar = `/images/client/${req.body.avatar.split(/[\\\/]/)[3]
+              }`;
             await createDoc.save();
           }
           if (req.body.avatar && createDoc) {
@@ -307,9 +305,8 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
         } else
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${
-              result.length - 1
-            }`,
+            message: `Your data must be less than equal to ${result.length - 1
+              }`,
             data: result,
           });
       } else
@@ -365,9 +362,8 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
             req.body.avatar,
             `/images/client/${req.body.avatar.split(/[\\\/]/)[3]}`
           );
-          modDoc.avatar = `/images/client/${
-            req.body.avatar.split(/[\\\/]/)[3]
-          }`;
+          modDoc.avatar = `/images/client/${req.body.avatar.split(/[\\\/]/)[3]
+            }`;
           await modDoc.save();
           await deletePublicFileUsingPath(req.body.avatar);
           await deletePublicFileUsingPath(bSavePath);
@@ -386,6 +382,33 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
       });
   }
 };
+
+export const clientReactivationMail = async (user: { email: string, name: string }, client: { email: string, name: string }) => {
+  const cipher = crypto.createCipheriv(
+    "aes192",
+    Buffer.from(SECRET_KEY, "base64"),
+    iv
+  );
+  let token = cipher.update(client.email, "utf8", "base64");
+  token += cipher.final("base64");
+  token = encodeURIComponent(token);
+  const reactivateClientUrl = `${API_SERVER}/apis/v1/client/reactivate-client/${token}`;
+  const html = await ejs.renderFile(
+    path.join(__dirname, "..", "..", "views", "mails", "clientDeletionNotification.ejs"),
+    {
+      name: user.name,
+      reactivateClientUrl
+    },
+    { async: true }
+  );
+  await sendMail(
+    user.email,
+    "Client Deletion Notification || Kesowa Infinite Ventures Pvt. Ltd",
+    "",
+    html,
+    ""
+  );
+}
 
 export const deleteCientforTenant = async (req: Request<{}, {}, { id: string }>, res: AuthResponse) => {
   {
@@ -430,35 +453,11 @@ export const deleteCientforTenant = async (req: Request<{}, {}, { id: string }>,
           { _id: res.locals.user.tenantId },
           { $inc: { actualClientCount: -1 } }
         );
-        // tenant.actualClientCount = Number(tenant.actualClientCount) - 1;
-        // await tenant.save();
       }
 
       try {
         const creator = await User.findById(doc.createdBy);
-        const cipher = crypto.createCipheriv(
-          "aes192",
-          Buffer.from(SECRET_KEY, "base64"),
-          iv
-        );
-        let token = cipher.update(String(doc.email), "utf8", "base64");
-        token += cipher.final("base64");
-        const reactivateClientUrl = `${API_SERVER}/apis/v1/client/reactivate-client/${token}`;
-        const html = await ejs.renderFile(
-          path.join(__dirname, "..", "..", "views", "mails", "clientDeletionNotification.ejs"),
-          {
-            name: doc.name,
-            reactivateClientUrl
-          },
-          { async: true }
-        );
-        await sendMail(
-          creator.email,
-          "Client Deletion Notification || Kesowa Infinite Ventures Pvt. Ltd",
-          "",
-          html,
-          ""
-        );
+        await clientReactivationMail(creator, doc);
       } catch (error) {
         req.log.error("failed to send email to the creator");
         req.log.error(error);
@@ -487,18 +486,19 @@ export const reactivateClient = async (req: Request, res: AuthResponse) => {
     let email = decipher.update(req.params.token, "base64", "utf8");
     email += decipher.final("utf8");
 
-    const client = await User.findOne({ 
+    const client = await User.findOne({
       email: email,
       userType: "standalone-user",
       isActive: false,
       tenantId: DUMMY_TENANT,
     });
-    if(client) {
+    if (client) {
       const creator = await User.findById(client.createdBy);
 
       client.userType = "tenant-client";
       client.isActive = true;
       client.tenantId = creator.tenantId;
+      client.expiryDatee = new Date((new Date()).getTime() + 1000 * 60 * 60 * 24 * 365.25);
 
       const d = await client.save();
 

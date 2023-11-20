@@ -20,24 +20,20 @@ import {
   PUBLIC_DIR,
   REDIS_URI,
 } from "./constants";
+import { IUser } from "./schemas/user";
+import { clientReactivationMail } from "./controllers/v1/clientController";
 
 const tempCleanup = async () => {
   logger.info("Running Cron Job");
   logger.info("Expiry check started for client");
-  const doc = await User.find({ userType: "tenant-client" });
+  const doc = await User.find({ userType: "tenant-client", expiryDatee: { $lte: (new Date()).getTime() }, isActive: true }).populate<{ createdBy: IUser }>("createdBy");
   for (let i = 0; i < doc.length; i++) {
-    const date1 = doc[i].expiryDatee;
-    const date2 = new Date(Date.now());
-    const oneDay = 1000 * 60 * 60 * 24;
-    const diffInTime = date1.getTime() - date2.getTime();
-    const diffInDays = Math.round(diffInTime / oneDay);
-    if (diffInDays < 0) {
-      await deletePublicFileUsingPath(doc[i].avatar);
-      doc[i].userType = "standalone-user";
-      doc[i].isActive = false;
-      doc[i].tenantId = DUMMY_TENANT;
-      await doc[i].save();
-    }
+    await deletePublicFileUsingPath(doc[i].avatar);
+    doc[i].userType = "standalone-user";
+    doc[i].isActive = false;
+    doc[i].tenantId = DUMMY_TENANT;
+    await doc[i].save();
+    await clientReactivationMail(doc[i].createdBy, doc[i]);
   }
   const TMP_IMG = path.join(PUBLIC_DIR, "/images/temp/");
   const files = await asyncFS.readdir(TMP_IMG);
@@ -59,9 +55,8 @@ const expiredSubs = async () => {
           "Kesowa Infinite Ventures Pvt. Ltd",
           "",
           `               
-                        <p>Your subscription is expiring in ${
-                          30 - diffInDays
-                        } days.</b>
+                        <p>Your subscription is expiring in ${30 - diffInDays
+          } days.</b>
                         <p>Best regards,</p>
                         <p><b>Team Kesowa</b></p>
                         `,
