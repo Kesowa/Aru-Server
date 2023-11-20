@@ -17,7 +17,13 @@ import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
 import { IMission } from "../../schemas/mission";
 import { ILocation } from "../../schemas/location";
-import { API_SERVER, Directory, DirPath, DUMMY_TENANT, SECRET_KEY } from "../../constants";
+import {
+  API_SERVER,
+  Directory,
+  DirPath,
+  DUMMY_TENANT,
+  SECRET_KEY,
+} from "../../constants";
 import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
@@ -93,8 +99,9 @@ export const createClientformissionGroup = async (
             );
           }
           if (req.body.avatar && modDoc) {
-            modDoc.avatar = `/images/client/${req.body.avatar.split(/[\\\/]/)[3]
-              }`;
+            modDoc.avatar = `/images/client/${
+              req.body.avatar.split(/[\\\/]/)[3]
+            }`;
             await modDoc.save();
           }
           if (req.body.avatar && modDoc) {
@@ -164,8 +171,9 @@ export const createClientformissionGroup = async (
             );
           }
           if (req.body.avatar && createDoc) {
-            createDoc.avatar = `/images/client/${req.body.avatar.split(/[\\\/]/)[3]
-              }`;
+            createDoc.avatar = `/images/client/${
+              req.body.avatar.split(/[\\\/]/)[3]
+            }`;
             await createDoc.save();
           }
           if (req.body.avatar && createDoc) {
@@ -305,8 +313,9 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
         } else
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${result.length - 1
-              }`,
+            message: `Your data must be less than equal to ${
+              result.length - 1
+            }`,
             data: result,
           });
       } else
@@ -362,8 +371,9 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
             req.body.avatar,
             `/images/client/${req.body.avatar.split(/[\\\/]/)[3]}`
           );
-          modDoc.avatar = `/images/client/${req.body.avatar.split(/[\\\/]/)[3]
-            }`;
+          modDoc.avatar = `/images/client/${
+            req.body.avatar.split(/[\\\/]/)[3]
+          }`;
           await modDoc.save();
           await deletePublicFileUsingPath(req.body.avatar);
           await deletePublicFileUsingPath(bSavePath);
@@ -383,7 +393,10 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
   }
 };
 
-export const clientReactivationMail = async (user: { email: string, name: string }, client: { email: string, name: string }) => {
+export const clientReactivationMail = async (
+  user: { email: string; name: string },
+  client: { email: string; name: string }
+) => {
   const cipher = crypto.createCipheriv(
     "aes192",
     Buffer.from(SECRET_KEY, "base64"),
@@ -394,10 +407,17 @@ export const clientReactivationMail = async (user: { email: string, name: string
   token = encodeURIComponent(token);
   const reactivateClientUrl = `${API_SERVER}/apis/v1/client/reactivate-client/${token}`;
   const html = await ejs.renderFile(
-    path.join(__dirname, "..", "..", "views", "mails", "clientDeletionNotification.ejs"),
+    path.join(
+      __dirname,
+      "..",
+      "..",
+      "views",
+      "mails",
+      "clientDeletionNotification.ejs"
+    ),
     {
       name: user.name,
-      reactivateClientUrl
+      reactivateClientUrl,
     },
     { async: true }
   );
@@ -408,9 +428,12 @@ export const clientReactivationMail = async (user: { email: string, name: string
     html,
     ""
   );
-}
+};
 
-export const deleteCientforTenant = async (req: Request<{}, {}, { id: string }>, res: AuthResponse) => {
+export const deleteCientforTenant = async (
+  req: Request<{}, {}, { id: string }>,
+  res: AuthResponse
+) => {
   {
     const doc = await User.findOne({
       _id: req.body.id,
@@ -498,7 +521,9 @@ export const reactivateClient = async (req: Request, res: AuthResponse) => {
       client.userType = "tenant-client";
       client.isActive = true;
       client.tenantId = creator.tenantId;
-      client.expiryDatee = new Date((new Date()).getTime() + 1000 * 60 * 60 * 24 * 365.25);
+      client.expiryDatee = new Date(
+        new Date().getTime() + 1000 * 60 * 60 * 24 * 365.25
+      );
 
       const d = await client.save();
 
@@ -521,13 +546,11 @@ export const reactivateClient = async (req: Request, res: AuthResponse) => {
         isSuccess: true,
         name: client.name,
       });
-
     } else {
-      req.log.error("Client either doesn't exist or is not deactivated!")
+      req.log.error("Client either doesn't exist or is not deactivated!");
       return res.render("pages/client_reactivate", {
         isSuccess: false,
       });
-
     }
   }
 };

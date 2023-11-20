@@ -26,7 +26,11 @@ import { clientReactivationMail } from "./controllers/v1/clientController";
 const tempCleanup = async () => {
   logger.info("Running Cron Job");
   logger.info("Expiry check started for client");
-  const doc = await User.find({ userType: "tenant-client", expiryDatee: { $lte: (new Date()).getTime() }, isActive: true }).populate<{ createdBy: IUser }>("createdBy");
+  const doc = await User.find({
+    userType: "tenant-client",
+    expiryDatee: { $lte: new Date().getTime() },
+    isActive: true,
+  }).populate<{ createdBy: IUser }>("createdBy");
   for (let i = 0; i < doc.length; i++) {
     await deletePublicFileUsingPath(doc[i].avatar);
     doc[i].userType = "standalone-user";
@@ -55,8 +59,9 @@ const expiredSubs = async () => {
           "Kesowa Infinite Ventures Pvt. Ltd",
           "",
           `               
-                        <p>Your subscription is expiring in ${30 - diffInDays
-          } days.</b>
+                        <p>Your subscription is expiring in ${
+                          30 - diffInDays
+                        } days.</b>
                         <p>Best regards,</p>
                         <p><b>Team Kesowa</b></p>
                         `,
