@@ -1,6 +1,8 @@
 FROM node@sha256:92f06fc13bcc09f1ddc51f6ebf1aa3d21a6532b74f076f224f188bc6b9317570
 WORKDIR /app
-RUN apt-get update && apt-get -y install libtbb2
+RUN apt-get update && apt-get -y install libtbb2 wget
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN apt install -y ./google-chrome-stable_current_amd64.deb
 ADD ./ffmpeg.tar.gz /bin
 ADD  ./potree.tar.gz /bin
 ADD ./dji_bin.tar.gz /bin

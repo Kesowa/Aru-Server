@@ -170,55 +170,32 @@ export const getByFlightOrLocationID = async (
   res: AuthResponse
 ) => {
   {
-    if (req.query.flightID != undefined) {
-      const flightID = new Types.ObjectId(String(req.query.flightID));
-      const page = Number(req.query.page);
-      const len = await VOD.countDocuments({
-        flightID: flightID,
-        tenantId: res.locals.user.tenantId._id,
+    const { flightID, locationID, page } = req.query;
+
+    const query = {
+      tenantId: res.locals.user.tenantId._id,
+      [flightID && "flightID"]: flightID,
+      [locationID && "locationID"]: locationID,
+    };
+
+    const doc = await VOD.find(query)
+      .skip(page ? Number(page) * 10 : 0)
+      .limit(10);
+
+    const len = await VOD.countDocuments(query);
+
+    if (doc.length) {
+      res.json({
+        status: true,
+        message: "sucessfully fetched the VODs",
+        TotalPages: Math.ceil(len / 10),
+        data: doc,
       });
-      const doc = await VOD.find({
-        flightID: flightID,
-        tenantId: res.locals.user.tenantId._id,
-      })
-        .skip(page * 10)
-        .limit(10);
-      if (doc.length) {
-        res.json({
-          status: true,
-          message: "sucessfully fetched the VODs",
-          TotalPages: Math.ceil(len / 10),
-          data: doc,
-        });
-      } else {
-        res.status(404).json({
-          status: false,
-          message: "No Document found",
-        });
-      }
     } else {
-      if (req.query.locationID != undefined) {
-        const vod = await VOD.find({
-          locationID: new Types.ObjectId(String(req.query.locationID)),
-        });
-        if (vod.length) {
-          res.json({
-            status: true,
-            message: "sucessfully fetched the VODs",
-            data: vod,
-          });
-        } else {
-          res.status(404).json({
-            status: false,
-            message: "Wrong input",
-          });
-        }
-      } else {
-        res.status(404).json({
-          status: false,
-          message: "An error occured",
-        });
-      }
+      res.status(404).json({
+        status: false,
+        message: "No Document found",
+      });
     }
   }
 };

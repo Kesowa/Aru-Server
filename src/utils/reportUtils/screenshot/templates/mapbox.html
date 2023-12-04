@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Mapbox Raster and Vector Layers</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      let map;
+      let cogServerUrl;
+      async function setupMap(containerId, serverUrl) {
+        mapboxgl.accessToken =
+          "pk.eyJ1IjoibmVlbGR1dHRhMTkiLCJhIjoiY2tweG9mN3F4MThrNTJ4cDk0enVjcTN4dCJ9.uxa_h0rjqumTxFMI1QELKQ"; // Replace with your Mapbox access token
+
+        cogServerUrl = serverUrl;
+
+        map = new mapboxgl.Map({
+          container: containerId,
+          style: "mapbox://styles/mapbox/streets-v11", // Replace with your preferred map style
+          center: [-74.5, 40], // Replace with your desired initial center coordinates
+          zoom: 9, // Replace with your desired initial zoom level
+        });
+
+        // Add zoom controls
+        // const zoomControls = new mapboxgl.NavigationControl();
+        // map.addControl(zoomControls, "top-right");
+
+        await new Promise((res) => map.on("load", res));
+      }
+
+      // Add raster layer from GeoJSON
+      async function renderRaster(rasterFilePaths) {
+        const bounds = [];
+        for (const rasterFilePath of rasterFilePaths) {
+          const rasterSourceId = `raster-source-${rasterFilePath}`;
+          const rasterLayerId = `raster-layer-${rasterFilePath}`;
+
+          //-------handle for detail:not found----
+          const metaDataURL = `${cogServerUrl}/cog/info?url=${rasterFilePath}`;
+          const response = await fetch(metaDataURL, {
+            method: "GET",
+          });
+          const metadata = await response.json();
+          console.log("metadata", metadata);
+
+          bounds.push([metadata["bounds"][0], metadata["bounds"][1]]);
+          bounds.push([metadata["bounds"][2], metadata["bounds"][3]]);
+
+          // Add the raster source
+          map.addSource(rasterSourceId, {
+            type: "raster",
+            tiles: [
+              `${cogServerUrl}/cog/tiles/{z}/{x}/{y}.png?url=${rasterFilePath}`,
+            ], // Replace with the path to your raster tiles
+            tileSize: 256,
+          });
+
+          // Add the raster layer
+          map.addLayer({
+            id: rasterLayerId,
+            type: "raster",
+            source: rasterSourceId,
+            /*paint: {
+              // Apply your desired paint properties here
+              //"raster-opacity": 0.7,
+              //"raster-hue-rotate": 180,
+              // Add more paint properties as needed
+            },*/
+          });
+        }
+        const allBounds = turf.multiPoint(bounds);
+        map.fitBounds(turf.bbox(allBounds));
+      }
+
+      // Add vector layer from GeoJSON
+      async function renderVector(geojsonFilePaths) {
+        const bounds = [];
+        for (const geojsonFilePath of geojsonFilePaths) {
+          const parsedGeojson = await (await fetch(geojsonFilePath)).json();
+          // Center the map on the points using Turf.js
+          const pointFeatures = parsedGeojson.features.filter(
+            (feature) => feature.geometry.type === "MultiPolygon"
+          );
+          const bound = turf.bbox(turf.featureCollection(pointFeatures));
+          bounds.push([bound[0], bound[1]]);
+          bounds.push([bound[2], bound[3]]);
+
+          map.addSource(geojsonFilePath, {
+            type: "geojson",
+            data: parsedGeojson,
+          });
+
+          map.addLayer({
+            id: `vector-layer-${geojsonFilePath}`,
+            type: "fill",
+            source: geojsonFilePath,
+            paint: {
+              "fill-color": ["coalesce", ["get", "fill"]],
+              "fill-opacity": ["coalesce", ["get", "fill-opacity"], 0.3],
+            },
+            filter: ["==", ["geometry-type"], "Polygon"],
+          });
+
+          map.addLayer({
+            id: `vector-layer-outline-${geojsonFilePath}`,
+            type: "line",
+            source: geojsonFilePath,
+            paint: {
+              "line-color": ["coalesce", ["get", "stroke"]],
+              "line-width": ["coalesce", ["get", "stroke-width"], 2],
+              "line-opacity": ["coalesce", ["get", "stroke-opacity"], 1],
+            },
+            filter: ["==", ["geometry-type"], "Polygon"],
+          });
+
+          map.addLayer({
+            id: `vector-layer-line-${geojsonFilePath}`,
+            type: "line",
+            source: geojsonFilePath,
+            paint: {
+              "line-color": ["coalesce", ["get", "stroke"]],
+              "line-width": ["coalesce", ["get", "stroke-width"], 2],
+              "line-opacity": ["coalesce", ["get", "stroke-opacity"], 1],
+            },
+            filter: ["==", ["geometry-type"], "LineString"],
+          });
+        }
+        console.log(bounds);
+        const allBounds = turf.multiPoint(bounds);
+        const points = turf.bbox(allBounds);
+        console.log(points);
+        map.fitBounds(points);
+      }
+
+      // Sample Run :
+      //
+      //    // Turn component with given id into mapbox
+      //    // Use the given COG server url for rendering the raster layers
+      //    setupMap("map", "https://cog-nk.kesowa.com").then(() => {
+      //        // Center on first geojson url
+      //        // Render all given geojson urls
+      //        renderVector([
+      //        "https://cdn-dev.kesowa.com/vector/00854a1e-568d-42db-84e9-a310df7593c9.geojson",
+      //        "https://cdn-dev.kesowa.com/vector/59af3119-fd68-48d0-966a-9a0008ec2b18.geojson"
+      //        ]).then(() => {
+      //            console.log("rendered vector")
+      //        }).catch(console.error);
+
+      //        // Center on first raster url
+      //        // Render all given ortho urls
+      //        // renderRaster([
+      //        //   // "http://172.17.0.1:5151/raster/a0789482-62c7-4ab5-b9a4-9f83694d0a9e.tif",
+      //        //   "http://172.17.0.1:5151/raster/f6b443a1-7724-4bd6-9be9-4f33fd0fc98c.tif"
+      //        // ])
+      //    })
+      //    .catch((error) => console.error("Error loading map", error));
+    </script>
+  </body>
+</html>

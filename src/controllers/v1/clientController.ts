@@ -246,7 +246,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
       resultt = await Mission.find({
         clientId: req.query.clientId,
         status: match.status,
-        tenantId: res.locals.user.tenantId,
+        tenantId: res.locals.user.tenantId._id,
       })
         .populate<{ clientId: IUser }>("clientId")
         .populate<{ missionType: IMission }>("missionType")
@@ -267,7 +267,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
     } else if (req.query.status == "All") {
       resultt = await Mission.find({
         clientId: req.query.clientId,
-        tenantId: res.locals.user.tenantId,
+        tenantId: res.locals.user.tenantId._id,
       })
         .populate<{ clientId: IUser }>("clientId")
         .populate<{ missionType: IMission }>("missionType")
@@ -561,7 +561,7 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
   {
     const result: Array<any> = await User.find(
       {
-        tenantId: res.locals.user.tenantId,
+        tenantId: res.locals.user.tenantId._id,
         userType: "tenant-client",
       },
       {
@@ -649,7 +649,7 @@ export const getListClient = async (req: Request, res: AuthResponse) => {
     );
 
     const results = await User.find({
-      tenantId: res.locals.user.tenantId,
+      tenantId: res.locals.user.tenantId._id,
       userType: "tenant-client",
     })
       .populate<{ createdBy: IUser }>({ path: "createdBy", select: "name" })
@@ -716,7 +716,10 @@ export const getClientByEmail = async (req: Request, res: AuthResponse) => {
         message: "no email supplied",
       });
     }
-    const client = await User.findOne({ email: email }, { email: 1, name: 1 });
+    const client = await User.findOne(
+      { email: email, tenantId: res.locals.user.tenantId._id },
+      { email: 1, name: 1 }
+    );
     if (!client) {
       return res.status(404).json({
         status: false,

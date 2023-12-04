@@ -11,6 +11,6 @@ RUN npm ci
 COPY src ./src
 COPY tsconfig.json ./
 RUN npm run build
-WORKDIR /app/dist
+WORKDIR /app/src
 ENV NODE_ENV=production
 CMD ["node", "server.js"]
