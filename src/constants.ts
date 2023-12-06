@@ -1,6 +1,7 @@
 import { existsSync } from "fs";
 import { Types } from "mongoose";
 import path from "path";
+import { Directory } from "./utils/pathUtils";
 
 export const DUMMY_TENANT = new Types.ObjectId("629aeb50ea5ed2cee054870b");
 
@@ -132,27 +133,7 @@ export enum Mode {
 }
 export const MODE = new EnvVar("MODE").isEnum(Mode).toEnum<Mode>();
 
-export enum Directory {
-  CSV = "csv",
-  DOCUMENTS = "documents",
-  FLIGHT_LOGS = "flight_logs",
-  ALERT_IMAGES = "images/alertImages",
-  GEOJSON_IMAGES = "images/geojson",
-  PACKAGE_POSTERS = "images/packagePosters",
-  TEMP_IMAGES = "images/temp",
-  USER_AVATARS = "images/userAvatars",
-  TENANT_LOGOS = "images/tenantLogos",
-  LAYER_FILES = "layerFiles",
-  RASTER = "raster",
-  TEMP = "temp",
-  VECTOR = "vector",
-  ZIP = "zip",
-  VOD = "vod",
-  ICON = "icons",
-  IMAGE = "images",
-  AI_ML = "aiml",
-  DEFAULT = "",
-}
+export { Directory as Directory };
 
 export const DirPath = (dir: Directory, filename?: string | undefined) =>
   filename == undefined

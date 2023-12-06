@@ -12,6 +12,7 @@ import tokml from "tokml";
 import { DirPath, Directory } from "../constants";
 import archiver from "archiver";
 import { createWriteStream } from "fs";
+import { Stream } from "stream";
 
 const asyncExec = promisify(exec);
 
@@ -305,4 +306,10 @@ export const createArchive = async (files: pathUtils.DocPath[]) => {
   archive.pipe(output);
   await archive.finalize();
   return archivePath;
+}
+
+export const saveFile = async (directory: pathUtils.Directory, filename: string, data: string | NodeJS.ArrayBufferView | Iterable<string | NodeJS.ArrayBufferView> | AsyncIterable<string | NodeJS.ArrayBufferView> | Stream) => {
+  const abspath = pathUtils.absPath(directory, filename);
+  await fs.writeFile(abspath, data);
+  return await fs.stat(abspath);
 }
