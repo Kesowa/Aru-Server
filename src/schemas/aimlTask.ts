@@ -1,27 +1,45 @@
 import { Schema, Types } from "mongoose";
 
-const docModels = <const>["vod", "layer"];
+const docModels = <const>["vod", "layer", "alert", "document"];
 export type docTypes = typeof docModels[number];
 
 const status = <const>["started", "completed", "failed"];
 export type statusType = typeof status[number];
 
-const inferences = <const>["violence", "deepforest"];
+const inferences = <const>["violence", "deepforest", "thermal"];
 export type inferTypes = typeof inferences[number];
 
-export type IAimlTask = {
+type TaskTemp<docModel, inference, data> = {
   _id: Types.ObjectId;
   doc: Types.ObjectId;
-  docModel: docTypes;
-  infer: inferTypes;
+  docModel: docModel;
+  infer: inference;
   status: statusType;
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
   updatedBy: Types.ObjectId;
   tenant: Types.ObjectId;
-  data: string;
+  data: data;
 };
+
+export type IAimlTask =
+  | TaskTemp<"vod", "violence", string>
+  | TaskTemp<"layer", "deepforest", string>
+  | TaskTemp<
+      "alert" | "document",
+      "thermal",
+      {
+        file: string;
+        table: Array<{
+          x: number;
+          y: number;
+          temp: number;
+          color: string;
+          label: string;
+        }>;
+      }
+    >;
 
 export const AimlTaskSchema = new Schema<IAimlTask>(
   {
@@ -57,7 +75,7 @@ export const AimlTaskSchema = new Schema<IAimlTask>(
       ref: "tenant",
     },
     data: {
-      type: String,
+      type: Schema.Types.Mixed,
       required: true,
       default: null,
     },

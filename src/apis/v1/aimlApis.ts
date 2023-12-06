@@ -29,7 +29,7 @@ router.get(
   "/:docModel/:docId",
   param("docModel").isString(),
   param("docId").isMongoId(),
-  query("infer").optional().isString(),
+  query("infer").optional().isString().isIn(["violence", "deepforest"]),
   validator,
   isAuthenticated,
   RobustRunner(fetchAimlTasks)
