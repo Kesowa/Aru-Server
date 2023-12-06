@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { thermalStatusEnum, thermalStatusType } from "./sharedSchemas";
 import { Types } from "ts-openapi";
 
 export interface IAlert {
@@ -27,7 +26,6 @@ export interface IAlert {
   locationId?: mongoose.Types.ObjectId; // index
   createdAt: Date;
   updatedAt: Date;
-  thermalStatus: thermalStatusType;
 }
 export const AlertType = {
   _id: Types.String(),
@@ -52,7 +50,6 @@ export const AlertType = {
   locationId: Types.String(), // index
   createdAt: Types.DateTime(),
   updatedAt: Types.DateTime(),
-  thermalStatus: Types.StringEnum({ values: [...thermalStatusEnum] }),
 };
 const alertSchema = new mongoose.Schema<IAlert>(
   {
@@ -135,11 +132,6 @@ const alertSchema = new mongoose.Schema<IAlert>(
     },
     updatedAt: {
       type: Date,
-    },
-    thermalStatus: {
-      default: "null",
-      enum: thermalStatusEnum,
-      type: String,
     },
   },
   {

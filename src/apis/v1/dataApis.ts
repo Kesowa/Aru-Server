@@ -3,23 +3,29 @@ import { body, query } from "express-validator";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
 import { isAuthenticated } from "../../utils/authUtils";
 import {
-  createThermalPoint,
-  deleteAllThermalPointsForImage,
-  deleteThermalPoint,
-  fetchAllThermalPointsForImage,
-  fetchThermalPoint,
-  genThermal,
+  createThermalTable,
+  getThermal,
 } from "../../controllers/v1/dataController";
 
 const dataRouter = Router();
 
-dataRouter.post(
+dataRouter.get(
   "/thermal",
-  body("id").isString().notEmpty(),
-  body("doc").isString().notEmpty().isIn(["alerts", "documents"]),
+  query("id").isString().notEmpty(),
+  query("doc").isString().notEmpty().isIn(["alert", "document"]),
   validator,
   isAuthenticated,
-  RobustRunner(genThermal)
+  RobustRunner(getThermal)
+);
+
+dataRouter.post(
+  "/thermal/table",
+  body("id").isString().notEmpty(),
+  body("doc").isString().notEmpty().isIn(["alert", "document"]),
+  body("table").isArray().notEmpty(),
+  validator,
+  isAuthenticated,
+  RobustRunner(createThermalTable)
 );
 
 dataRouter.post(
