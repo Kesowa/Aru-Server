@@ -52,7 +52,6 @@ import {
   SEQ_SERVER_URL,
 } from "./constants";
 import cors from "cors";
-import { randomUUID } from "crypto";
 import cookie from "cookie";
 import routerV2 from "./apis/v2/routerV2";
 
@@ -119,7 +118,11 @@ app.use(
 
     genReqId: function (req, _) {
       const cookies = cookie.parse(req.headers.cookie || "");
-      return cookies["email"] || req.headers["authorization"] || randomUUID();
+      return (
+        cookies["email"] ||
+        req.headers["x-forwarded-for"] ||
+        req.socket.remoteAddress
+      );
     },
     customLogLevel: function (_, res, err) {
       if (res.statusCode >= 400 && res.statusCode < 500) {
