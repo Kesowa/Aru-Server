@@ -92,7 +92,7 @@ const documentSchema = new mongoose.Schema<IDocument>(
     },
     updatedAt: {
       type: Date,
-    }
+    },
   },
   {
     timestamps: true,

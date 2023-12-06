@@ -14,28 +14,32 @@ export const getThermal = async (
   req: Request<{}, {}, { id: string; doc: "alert" | "document" }>,
   res: AuthResponse
 ) => {
-  const thermalDoc = await aimlModel.findOneAndUpdate({
-    doc: req.query.id,
-    docModel: req.query.doc,
-    infer: "thermal",
-  }, {
-    $setOnInsert: {
+  const thermalDoc = await aimlModel.findOneAndUpdate(
+    {
       doc: req.query.id,
       docModel: req.query.doc,
       infer: "thermal",
-      status: "started",
-      createdBy: res.locals.user._id,
-      updatedBy: res.locals.user._id,
-      tenant: res.locals.user.tenantId._id,
-      data: {
-        file: "",
-        table: [],
+    },
+    {
+      $setOnInsert: {
+        doc: req.query.id,
+        docModel: req.query.doc,
+        infer: "thermal",
+        status: "started",
+        createdBy: res.locals.user._id,
+        updatedBy: res.locals.user._id,
+        tenant: res.locals.user.tenantId._id,
+        data: {
+          file: "",
+          table: [],
+        },
       },
+    },
+    {
+      upsert: true,
+      new: true,
     }
-  }, {
-    upsert: true,
-    new: true,
-  });
+  );
   if (thermalDoc) {
     if (thermalDoc.status == "failed") {
       res.status(404).json({
@@ -51,8 +55,7 @@ export const getThermal = async (
       });
       return;
     }
-  }
-  else {
+  } else {
     res.status(500).json({
       status: false,
       message: "unable to create thermal doc",
@@ -103,7 +106,10 @@ export const getThermal = async (
   }
   thermalDoc.status = converted ? "completed" : "failed";
   thermalDoc.data.file = converted ? rawFilePath : "";
-  await thermalDoc.updateOne({ status: thermalDoc.status, "data.file": thermalDoc.data.file });
+  await thermalDoc.updateOne({
+    status: thermalDoc.status,
+    "data.file": thermalDoc.data.file,
+  });
   res.status(converted ? 200 : 404).json({
     status: converted,
     message: converted ? "conversion successful" : "conversion failed",
@@ -179,7 +185,7 @@ export const createThermalTable = async (
   }
   // always true
   if (thermalDoc.infer == "thermal") {
-    await thermalDoc.updateOne({ "data.table": realTable })
+    await thermalDoc.updateOne({ "data.table": realTable });
     thermalDoc.data.table = realTable;
   }
   res.json({
