@@ -20,7 +20,7 @@ enum InvalidAuth {
 
 const hasher = crypto.createHash("MD5");
 hasher.update("somerandomkey", "utf8");
-const iv = hasher.digest();
+export const iv = hasher.digest();
 
 type Payload = {
   session: string;

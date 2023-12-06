@@ -10,6 +10,7 @@ import {
   clientCsv,
   devApiClientArr,
   getClientByEmail,
+  reactivateClient,
 } from "../../controllers/v1/clientController";
 import { fetchMissionById } from "../../controllers/v1/missionController";
 import {
@@ -102,6 +103,12 @@ router.delete(
   validator,
   canDeleteClient,
   RobustRunner(deleteCientforTenant)
+);
+router.get(
+  "/reactivate-client/:token",
+  param("token").notEmpty().isString().trim(),
+  validator,
+  RobustRunner(reactivateClient)
 );
 router.patch(
   "/insert-client-for-mission",
