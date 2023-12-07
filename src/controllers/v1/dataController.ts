@@ -194,4 +194,3 @@ export const createThermalTable = async (
     data: thermalDoc,
   });
 };
-
