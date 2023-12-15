@@ -17,7 +17,9 @@ export const uploadFile = async (req: Request, res: AuthResponse) => {
         req.file?.mimetype === "image/jpeg" ||
         req.file?.mimetype === "image/png"
       ) {
-        await saveThumbnails(pathUtils.docPath(pathUtils.Directory.ALERT_IMAGES, req.file.filename));
+        await saveThumbnails(
+          pathUtils.docPath(pathUtils.Directory.ALERT_IMAGES, req.file.filename)
+        );
       }
       if (req.file) {
         res.status(201).json({
@@ -100,7 +102,12 @@ export const uploadFileforUSer = async (req: Request, res: AuthResponse) => {
     ) {
       if (await checkFileExists(img_path)) {
         try {
-          await saveThumbnails(pathUtils.docPath(pathUtils.Directory.TEMP_IMAGES, req.file.filename));
+          await saveThumbnails(
+            pathUtils.docPath(
+              pathUtils.Directory.TEMP_IMAGES,
+              req.file.filename
+            )
+          );
         } catch (err) {
           req.log.error(err);
         }

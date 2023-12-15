@@ -291,7 +291,7 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       const doc = await generateDocument(data, req.log);
       const buffer = Packer.toStream(doc);
       const filename = `${new Date()}-block_report.docx`;
-      const {size} = await saveFile(Directory.DOCUMENTS, filename, buffer);
+      const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
       const docDB = new Document({
         name: filename,

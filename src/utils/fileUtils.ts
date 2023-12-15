@@ -26,7 +26,7 @@ export const createDirIfNotExists = async (
 export const createDirFileUsingNameAndData = async (
   directory: Directory,
   fileName: string,
-  data: string,
+  data: string
 ) => {
   try {
     await fs.promises.writeFile(DirPath(directory, fileName), data);
@@ -38,7 +38,7 @@ export const createDirFileUsingNameAndData = async (
 
 export const createDirFileWriteStreamUsingName = (
   directory: Directory,
-  fileName: string,
+  fileName: string
 ) => {
   return fs.createWriteStream(DirPath(directory, fileName));
 };

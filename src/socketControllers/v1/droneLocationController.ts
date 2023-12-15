@@ -105,11 +105,13 @@ class TelemetryLogger {
     log_file.end();
     const { flightLog, flightPath } = await this.convert(streamKey);
     await saveFile(
-      Directory.FLIGHT_LOGS, `${streamKey}.geojson`,
+      Directory.FLIGHT_LOGS,
+      `${streamKey}.geojson`,
       JSON.stringify(flightLog)
     );
     await saveFile(
-      Directory.FLIGHT_LOGS, `Path_${streamKey}.geojson`,
+      Directory.FLIGHT_LOGS,
+      `Path_${streamKey}.geojson`,
       JSON.stringify(flightPath)
     );
     // await fs.promises.copyFile(

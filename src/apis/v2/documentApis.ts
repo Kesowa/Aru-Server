@@ -60,10 +60,10 @@ documentApi.get(
 
     if (zip) {
       missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-      const zipFile = await createArchive(data.map(d=> d.filePath));
+      const zipFile = await createArchive(data.map((d) => d.filePath));
       missionSpecificSocket
-          .to(missionId)
-          .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
+        .to(missionId)
+        .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
     }
 
     res.json({

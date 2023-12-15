@@ -1,11 +1,6 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import {
-  AIML_SERVER,
-  API_SERVER,
-  CDN_URL,
-  Directory,
-} from "../../constants";
+import { AIML_SERVER, API_SERVER, CDN_URL, Directory } from "../../constants";
 import VOD from "../../models/vod";
 import aimlModel from "../../models/aimlTask";
 import { IVOD } from "../../schemas/VOD";

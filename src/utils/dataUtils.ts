@@ -66,7 +66,10 @@ export const saveVectorLayer = async (
     layerPath = layer;
   } else {
     geojsonData = layer;
-    layerPath = pathUtils.docPath(pathUtils.Directory.VECTOR, randomUUID() + ".geojson");
+    layerPath = pathUtils.docPath(
+      pathUtils.Directory.VECTOR,
+      randomUUID() + ".geojson"
+    );
   }
   const ext = path.extname(layerPath).toLowerCase();
   const absLayerPath = pathUtils.absPath(pathUtils.Directory.ROOT, layerPath);
@@ -96,10 +99,10 @@ export const saveVectorLayer = async (
       if (options) {
         geojsonData.features.forEach(
           (feature) =>
-          (feature.properties = {
-            ...feature.properties,
-            ...options,
-          })
+            (feature.properties = {
+              ...feature.properties,
+              ...options,
+            })
         );
         flagColor = options.color;
       } else {
@@ -180,7 +183,7 @@ export const saveGeojson = async (
   options?: {
     color?: string;
     name?: string;
-    type?: string,
+    type?: string;
     filter?: string[];
     inplace?: boolean;
   }
@@ -264,10 +267,7 @@ export const saveMultiGeojson = async (
   return { path: clonedGeojsonPath, size, featureCount };
 };
 
-export const saveAsKML = async (
-  geojson: GeoJson,
-  layerpath: string,
-) => {
+export const saveAsKML = async (geojson: GeoJson, layerpath: string) => {
   try {
     const kmlData = String(tokml(JSON.parse(JSON.stringify(geojson))));
     const kmlPath = layerpath.replace(".geojson", ".kml");
@@ -278,10 +278,7 @@ export const saveAsKML = async (
   }
 };
 
-export const saveAIMLFile = async (
-  filename: string,
-  data: string,
-) => {
+export const saveAIMLFile = async (filename: string, data: string) => {
   try {
     await fs.writeFile(DirPath(Directory.AI_ML, filename), data);
     return true;
@@ -295,21 +292,36 @@ export const createArchive = async (files: pathUtils.DocPath[]) => {
     pathUtils.Directory.TEMP,
     randomUUID() + ".zip"
   );
-  const absArchivePath = pathUtils.absPath(pathUtils.Directory.ROOT, archivePath);
+  const absArchivePath = pathUtils.absPath(
+    pathUtils.Directory.ROOT,
+    archivePath
+  );
   const output = createWriteStream(absArchivePath);
   const archive = archiver("zip", {
     zlib: { level: 9 }, // Sets the compression level.
   });
-  files.forEach(file => {
-    archive.file(pathUtils.absPath(pathUtils.Directory.ROOT, file), { name: file })
-  })
+  files.forEach((file) => {
+    archive.file(pathUtils.absPath(pathUtils.Directory.ROOT, file), {
+      name: file,
+    });
+  });
   archive.pipe(output);
   await archive.finalize();
   return archivePath;
-}
+};
 
-export const saveFile = async (directory: pathUtils.Directory, filename: string, data: string | NodeJS.ArrayBufferView | Iterable<string | NodeJS.ArrayBufferView> | AsyncIterable<string | NodeJS.ArrayBufferView> | Stream, encoding?: BufferEncoding) => {
+export const saveFile = async (
+  directory: pathUtils.Directory,
+  filename: string,
+  data:
+    | string
+    | NodeJS.ArrayBufferView
+    | Iterable<string | NodeJS.ArrayBufferView>
+    | AsyncIterable<string | NodeJS.ArrayBufferView>
+    | Stream,
+  encoding?: BufferEncoding
+) => {
   const abspath = pathUtils.absPath(directory, filename);
-  await fs.writeFile(abspath, data, {encoding});
+  await fs.writeFile(abspath, data, { encoding });
   return await fs.stat(abspath);
-}
+};

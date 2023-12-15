@@ -44,10 +44,10 @@ const router = express.Router();
 
 const uploadVector = multer({
   storage: multerStorage(Directory.VECTOR),
-})
+});
 const uploadRaster = multer({
   storage: multerStorage(Directory.RASTER),
-})
+});
 
 router.patch(
   "/get-meta-data",

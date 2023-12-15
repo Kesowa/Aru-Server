@@ -17,7 +17,6 @@ import { WiproInterface } from "../../utils/wipro";
 import { readCoords, saveThumbnails } from "../../utils/imageUtils";
 import * as pathUtils from "../../utils/pathUtils";
 
-
 // Create Alert Controlller
 type CreateAlert = {
   missionId: Types.ObjectId;
@@ -51,9 +50,9 @@ export const createAlert = async (
       location: req.body.location
         ? req.body.location
         : {
-          lat: 0,
-          long: 0,
-        },
+            lat: 0,
+            long: 0,
+          },
       missionId,
       locationId,
       createdBy: res.locals.user._id,
@@ -728,7 +727,9 @@ export const convertImageToThumbnail = async (
   });
   if (result.length) {
     for (let i = 0; i < result.length; i++) {
-      await saveThumbnails(pathUtils.docPath(pathUtils.Directory.ROOT, result[i].image));
+      await saveThumbnails(
+        pathUtils.docPath(pathUtils.Directory.ROOT, result[i].image)
+      );
     }
     res.status(200).json({
       status: true,
@@ -802,14 +803,17 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
 
 export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
-    const img_path = pathUtils.docPath(pathUtils.Directory.ALERT_IMAGES, req.file.filename);
+    const img_path = pathUtils.docPath(
+      pathUtils.Directory.ALERT_IMAGES,
+      req.file.filename
+    );
     const thumbs = await saveThumbnails(img_path);
     const ff = await readCoords(img_path);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
     req.body.location = {
-      lat: ff ? ff.lat: 0,
+      lat: ff ? ff.lat : 0,
       long: ff ? ff.lng : 0,
     };
     const newAlert = new Alert({
@@ -825,7 +829,7 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       onSite: req.body.onSite,
       type,
       fileSize: thumbs.size,
-      image: img_path
+      image: img_path,
     });
 
     const data = await newAlert.save();

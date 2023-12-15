@@ -9,7 +9,7 @@ const asyncExec = promisify(exec);
 
 /**
  * Input image buffer and filename|desired format, output two buffers with different resolutions
-*/
+ */
 export const createThumbnails = async (img: Buffer, filename: string) => {
   let format: "jpg" | "png" = "jpg";
   if (path.extname(filename).toLowerCase() === ".png") format = "png";
@@ -31,7 +31,7 @@ export const createThumbnails = async (img: Buffer, filename: string) => {
 
 /**
  * Input non-absolute path to image, generate 1x and 2x variants in the same directory
-*/
+ */
 export const saveThumbnails = async (img: DirPath | DocPath) => {
   const imgPath = absPath(Directory.ROOT, img);
   const imgData = await fs.readFile(imgPath);
@@ -45,7 +45,12 @@ export const saveThumbnails = async (img: DirPath | DocPath) => {
     fs.writeFile(absPath(Directory.ROOT, paths.small), small),
     fs.writeFile(absPath(Directory.ROOT, paths.medium), medium),
   ]);
-  return { ...paths, size: (imgData.byteLength + small.byteLength + medium.byteLength) / (1024 * 1024) };
+  return {
+    ...paths,
+    size:
+      (imgData.byteLength + small.byteLength + medium.byteLength) /
+      (1024 * 1024),
+  };
 };
 
 /**
@@ -54,15 +59,21 @@ export const saveThumbnails = async (img: DirPath | DocPath) => {
 export const saveThermal = async (img: DirPath | DocPath) => {
   const thermalPath = docPath(Directory.AI_ML, path.parse(img).name + ".raw");
   const absThermalPath = absPath(Directory.ROOT, img);
-  const command = "dji_irp -s " + absThermalPath + " -a measure --measurefmt float32 -o " + absPath(Directory.ROOT, thermalPath);
+  const command =
+    "dji_irp -s " +
+    absThermalPath +
+    " -a measure --measurefmt float32 -o " +
+    absPath(Directory.ROOT, thermalPath);
   try {
     await asyncExec(command);
-    return { thermalPath, size: (await fs.stat(absThermalPath)).size / (1024 * 1024) }
+    return {
+      thermalPath,
+      size: (await fs.stat(absThermalPath)).size / (1024 * 1024),
+    };
+  } catch (error) {
+    return undefined;
   }
-  catch (error) {
-    return undefined
-  }
-}
+};
 
 /**
  * Takes image path or buffer, returns coordinates. Default {lat: 0, lng: 0}
@@ -73,12 +84,11 @@ export const readCoords = async (img: DirPath | DocPath | Buffer) => {
   if (typeof img == "string") {
     const absImgPath = absPath(Directory.ROOT, img);
     metadata = await exifr.parse(absImgPath);
-  }
-  else {
+  } else {
     metadata = await exifr.parse(img);
   }
   return {
     lat: metadata.latitude ?? 0,
     lng: metadata.longitude ?? 0,
   };
-}
+};

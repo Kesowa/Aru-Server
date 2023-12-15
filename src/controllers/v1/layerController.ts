@@ -68,17 +68,22 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let featureCount = 0;
       let flagColor = "";
       try {
-        const vectorLayer = await saveVectorLayer(pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename), req.body.inHeritOriginalColorFromFile ? {
-          icon: req.body.icon,
-          color: req.body.color
-        } : undefined);
+        const vectorLayer = await saveVectorLayer(
+          pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
+          req.body.inHeritOriginalColorFromFile
+            ? {
+                icon: req.body.icon,
+                color: req.body.color,
+              }
+            : undefined
+        );
 
         if (vectorLayer == undefined) {
           res.status(400).json({
             status: false,
-            message: "vector format not supported"
+            message: "vector format not supported",
           });
-          return
+          return;
         }
 
         geojsonPath = vectorLayer.geojsonPath;
@@ -93,31 +98,23 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         });
         return;
       }
-      const {
+      const { name, type, vector, captureDate, missionId, layerGroupId } =
+        req.body;
+      layer = new Layer({
         name,
         type,
         vector,
+        color: flagColor,
+        layerpath: geojsonPath,
+        fileSize: size,
+        featureCount: featureCount,
+        layerGroupId,
         captureDate,
         missionId,
-        layerGroupId,
-      } = req.body;
-      layer =
-        new Layer({
-          name,
-          type,
-          vector,
-          color: flagColor,
-          layerpath: geojsonPath,
-          fileSize: size,
-          featureCount: featureCount,
-          layerGroupId,
-          captureDate,
-          missionId,
-          tenantId: res.locals.user.tenantId,
-          createdBy: res.locals.user._id,
-          updatedBy: res.locals.user._id,
-        });
-
+        tenantId: res.locals.user.tenantId,
+        createdBy: res.locals.user._id,
+        updatedBy: res.locals.user._id,
+      });
     } else if (req.params.type == "Raster") {
       const tif_loc = `/raster/${req.file?.filename}`;
 
@@ -600,7 +597,9 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
     if (!(req.body.type == "image/jpeg" || req.body.type == "image/png")) {
       throw new Error("invalid file format");
     }
-    const thumbs = await saveThumbnails(pathUtils.docPath(pathUtils.Directory.GEOJSON_IMAGES, req.file.filename));
+    const thumbs = await saveThumbnails(
+      pathUtils.docPath(pathUtils.Directory.GEOJSON_IMAGES, req.file.filename)
+    );
     const featureFile = new layerFiles({
       name: req.file.originalname,
       layerId: layerId,
@@ -1302,8 +1301,9 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${ar.length - 1
-              } and data index should start from 0`,
+            message: `Your data must be less than equal to ${
+              ar.length - 1
+            } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -2163,7 +2163,9 @@ export const picktoMapUseForLayerCreate = async (
       }
       if (features.length) {
         geojson.features = features;
-        geojson.type = req.body.type ? String(req.body.type) : "FeatureCollection";
+        geojson.type = req.body.type
+          ? String(req.body.type)
+          : "FeatureCollection";
         geojson.name = req.body.name ? String(req.body.name) : "";
         const filepath = await saveGeojson(geojson, { inplace: false });
         const file = DirPath(Directory.ROOT, filepath);
@@ -2391,7 +2393,8 @@ export const sys_id_Inject_to_layerfiles = async (
             await layerFiles.updateMany(
               {
                 layerId: docs._id,
-                featureLabel: modifiedGjson.features[j].properties[docs.layerLabel],
+                featureLabel:
+                  modifiedGjson.features[j].properties[docs.layerLabel],
               },
               { sys_Id: modifiedGjson.features[j].properties.sys_id }
             );
@@ -2467,8 +2470,9 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${req.body.flag ? "flagged" : "unflagged"
-        } successfully`,
+      message: `feature ${
+        req.body.flag ? "flagged" : "unflagged"
+      } successfully`,
     });
   } else {
     res.status(501).json({

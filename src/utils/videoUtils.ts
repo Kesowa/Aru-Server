@@ -80,7 +80,7 @@ export const extractTelemetry = async (
       geojsonPath,
       srtPath,
       metadata,
-      geojsonSize: geojsonData.length / (1024 * 1024)
+      geojsonSize: geojsonData.length / (1024 * 1024),
     };
   } catch (error) {
     return undefined;
@@ -108,14 +108,20 @@ const getHlsSize = async (indexPath: string) => {
 /**
  * Takes non-abs path to video file (hls, flv, mp4, etc), returns approx size of all video files in MegaBytes
  */
-export const getVodSize = async (vodFile: pathUtils.DirPath | pathUtils.DocPath) => {
-  const absVodPath = pathUtils.absPath(pathUtils.Directory.ROOT, vodFile).replace(matchExt, "");
+export const getVodSize = async (
+  vodFile: pathUtils.DirPath | pathUtils.DocPath
+) => {
+  const absVodPath = pathUtils
+    .absPath(pathUtils.Directory.ROOT, vodFile)
+    .replace(matchExt, "");
   const absFlvPath = absVodPath + ".flv";
   const absMp4Path = absVodPath + ".mp4";
   const absHlsPath = absVodPath + ".m3u8";
   const absThumbPath = absVodPath + ".jpg";
 
-  const getSize = async (filePath: string) => { return (await fs.promises.stat(filePath)).size };
+  const getSize = async (filePath: string) => {
+    return (await fs.promises.stat(filePath)).size;
+  };
 
   const getAllSizes = [
     getSize(absFlvPath),
@@ -125,9 +131,11 @@ export const getVodSize = async (vodFile: pathUtils.DirPath | pathUtils.DocPath)
   ];
 
   const allSizes = await Promise.allSettled(getAllSizes);
-  const totalSize = allSizes.map(val => val.status === "fulfilled" ? val.value : 0).reduce((prevVal, currVal) => prevVal + currVal);
+  const totalSize = allSizes
+    .map((val) => (val.status === "fulfilled" ? val.value : 0))
+    .reduce((prevVal, currVal) => prevVal + currVal);
   return totalSize / (1024 * 1024);
-}
+};
 
 /**
  * Takes absolute path to HLS index.m3u8 file, and completely erases entire HLS stream
@@ -139,14 +147,22 @@ const deleteHls = async (indexPath: string) => {
     .split("\n")
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   vodFiles.push(path.basename(indexPath));
-  await Promise.allSettled(vodFiles.map(filename => path.join(dir, filename)).map(filepath => fs.promises.rm(filepath)));
-}
+  await Promise.allSettled(
+    vodFiles
+      .map((filename) => path.join(dir, filename))
+      .map((filepath) => fs.promises.rm(filepath))
+  );
+};
 
 /**
  * Takes non-abs path to video file (hls, flv, mp4, etc), and completely erases it
  */
-export const deleteVideo = async (vodFile: pathUtils.DirPath | pathUtils.DocPath) => {
-  const absVodPath = pathUtils.absPath(pathUtils.Directory.ROOT, vodFile).replace(matchExt, "");
+export const deleteVideo = async (
+  vodFile: pathUtils.DirPath | pathUtils.DocPath
+) => {
+  const absVodPath = pathUtils
+    .absPath(pathUtils.Directory.ROOT, vodFile)
+    .replace(matchExt, "");
   const absFlvPath = absVodPath + ".flv";
   const absMp4Path = absVodPath + ".mp4";
   const absHlsPath = absVodPath + ".m3u8";
@@ -159,4 +175,4 @@ export const deleteVideo = async (vodFile: pathUtils.DirPath | pathUtils.DocPath
     fs.promises.rm(absGeojsonPath),
     deleteHls(absHlsPath),
   ]);
-}
+};

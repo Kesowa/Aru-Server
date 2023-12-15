@@ -4,7 +4,12 @@ import format from "date-fns/format";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { generateToken } from "./streamTokenController";
-import { deleteVideo, extractTelemetry, getVodSize, transcodeVideo } from "../../utils/videoUtils";
+import {
+  deleteVideo,
+  extractTelemetry,
+  getVodSize,
+  transcodeVideo,
+} from "../../utils/videoUtils";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
@@ -42,7 +47,9 @@ export const saveVOD = async (
           .catch(console.error);
       }, 10_000);
     }
-    const vodSize = await getVodSize(pathUtils.docPath(pathUtils.Directory.VOD, req.body.filename));
+    const vodSize = await getVodSize(
+      pathUtils.docPath(pathUtils.Directory.VOD, req.body.filename)
+    );
     const VODdoc = new VOD({
       flightID: flightID,
       missionID: missionID,
@@ -319,7 +326,8 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
         thumbnail: transcodeData.thumbnailPath,
         tenantId: res.locals.user.tenantId._id,
         isSRT: telemetryData ? true : false,
-        fileSize: transcodeData.size + (telemetryData ? telemetryData.geojsonSize : 0),
+        fileSize:
+          transcodeData.size + (telemetryData ? telemetryData.geojsonSize : 0),
       });
       missionSpecificSocket
         .to(String(missionID))

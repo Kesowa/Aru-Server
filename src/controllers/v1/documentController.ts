@@ -30,7 +30,10 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       const { missionId } = req.body;
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
       req.log.info("POINTCLOUD_EXTRACTION_STARTED");
-      const webviewPath = await savePointcloud(path.relative(PUBLIC_DIR, req.file.path), req.log);
+      const webviewPath = await savePointcloud(
+        path.relative(PUBLIC_DIR, req.file.path),
+        req.log
+      );
       if (webviewPath) {
         const doc = new Document({
           name: req.file.originalname,
@@ -54,8 +57,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
           data: savedDoc,
         });
         return;
-      }
-      else {
+      } else {
         missionSpecificSocket
           .to(missionId)
           .emit("POINTCLOUD_EXTRACTION_FAILED");
@@ -344,8 +346,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-      const zipFile = await createArchive(d.map(d=> d.filePath));
-      missionSpecificSocket
+        const zipFile = await createArchive(d.map((d) => d.filePath));
+        missionSpecificSocket
           .to(missionId)
           .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
       } else {
