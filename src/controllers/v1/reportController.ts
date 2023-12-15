@@ -230,7 +230,7 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       }
 
       for (const layer of vectorLayers) {
-        const gjson = readGeoJson(DirPath(Directory.DEFAULT, layer.layerpath));
+        const gjson = readGeoJson(DirPath(Directory.ROOT, layer.layerpath));
         const currLayerArea = findArea(gjson);
         const currLayerLength = findLength(gjson);
         data.area.total += currLayerArea;

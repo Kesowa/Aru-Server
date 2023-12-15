@@ -433,7 +433,7 @@ export const addFeature = async (req: Request, res: AuthResponse) => {
     if (data.type == "Vector") {
       if (data) {
         if (req.body.feature) {
-          const docpath = DirPath(Directory.DEFAULT, data.layerpath);
+          const docpath = DirPath(Directory.ROOT, data.layerpath);
           const geojson = await readGeoJson(docpath);
           if (geojson == null) {
             return res.json({
@@ -487,7 +487,7 @@ export const editGeoJson = async (
     });
     if (data) {
       if (req.body.feature && String(req.body.featureIndex)) {
-        const docpath = DirPath(Directory.DEFAULT, data.layerpath);
+        const docpath = DirPath(Directory.ROOT, data.layerpath);
         const geojson = await readGeoJson(docpath);
         if (geojson == null) {
           return res.json({
@@ -569,7 +569,7 @@ export const deleteGeoJson = async (
         .map((index) => (index > req.body.featureIndex ? index - 1 : index));
       data.flaggedFeatures = flaggedFeatures;
       await data.save();
-      const docpath = DirPath(Directory.DEFAULT, data.layerpath);
+      const docpath = DirPath(Directory.ROOT, data.layerpath);
       const geojson = await readGeoJson(docpath);
       if (geojson == null) {
         return res.json({
@@ -703,7 +703,7 @@ export const getrasterdetailsbyID = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (doc.type == "Raster") {
-      const docpath = DirPath(Directory.DEFAULT, doc.layerpath);
+      const docpath = DirPath(Directory.ROOT, doc.layerpath);
       const fname = doc.layerpath.split(/[\\\/]/)[2];
       const size: number = await getFileSize(docpath);
       if (size) {
@@ -753,7 +753,7 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     });
-    const docpath = DirPath(Directory.DEFAULT, doc.layerpath);
+    const docpath = DirPath(Directory.ROOT, doc.layerpath);
     const geojson = await readGeoJson(docpath);
     if (geojson == null) {
       return res.json({
@@ -793,7 +793,7 @@ export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     });
-    const dir = DirPath(Directory.DEFAULT, doc.layerpath);
+    const dir = DirPath(Directory.ROOT, doc.layerpath);
     if (await checkFileExists(dir)) {
       const downloadlink = dir
         .split(/[\\\/]/)
@@ -1231,7 +1231,7 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (result) {
-      const docpath = DirPath(Directory.DEFAULT, result.layerpath);
+      const docpath = DirPath(Directory.ROOT, result.layerpath);
       const geojson = await readGeoJson(docpath);
       if (geojson == null) {
         return res.json({
@@ -1345,7 +1345,7 @@ export const getFeatureCsvByLayerIdx = async (
       tenantId: res.locals.user.tenantId._id,
     });
     if (result) {
-      const docpath = DirPath(Directory.DEFAULT, result.layerpath);
+      const docpath = DirPath(Directory.ROOT, result.layerpath);
       const geojson = await readGeoJson(docpath);
       if (geojson == null) {
         return res.json({
@@ -1618,7 +1618,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
 
     const missionId = layerDoc.missionId;
     if (layerDoc) {
-      const docpath = DirPath(Directory.DEFAULT, layerDoc.layerpath);
+      const docpath = DirPath(Directory.ROOT, layerDoc.layerpath);
       const geojson = await readGeoJson(docpath);
       let snapRadius: number = 120; // meters
       if (req.body.radius) {
@@ -1813,7 +1813,7 @@ export const imageReviewforLayerFileId = async (
       tenantId: res.locals.user.tenantId,
     });
     if (layerDoc) {
-      const docpath: any = DirPath(Directory.DEFAULT, layerDoc.layerpath);
+      const docpath: any = DirPath(Directory.ROOT, layerDoc.layerpath);
       const geojson: any = await readGeoJson(docpath);
       for (let i = 0; i < req.body.check.length; i++) {
         const doc: any = await layerFiles.findOne({
@@ -1924,7 +1924,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       archive.pipe(output);
 
       for (let i = 0; i < d.length; i++) {
-        archive.file(DirPath(Directory.DEFAULT, d[i].layerpath), {
+        archive.file(DirPath(Directory.ROOT, d[i].layerpath), {
           //#typeError
           name: d[i].layerpath.split("/")[2],
         });
@@ -1964,7 +1964,7 @@ export const downloadassetbyIDtoKml = async (
       _id: id,
       tenantId: res.locals.user.tenantId._id,
     });
-    const geojson = await readGeoJson(DirPath(Directory.DEFAULT, doc.layerpath));
+    const geojson = await readGeoJson(DirPath(Directory.ROOT, doc.layerpath));
     const downloadlink = await saveAsKML(geojson, doc.layerpath);
     res.json({
       status: true,
@@ -2167,7 +2167,7 @@ export const picktoMapUseForLayerCreate = async (
         geojson.type = req.body.type ? String(req.body.type) : "FeatureCollection";
         geojson.name = req.body.name ? String(req.body.name) : "";
         const filepath = await saveGeojson(geojson, { inplace: false });
-        const file = DirPath(Directory.DEFAULT, filepath);
+        const file = DirPath(Directory.ROOT, filepath);
         const size1: number = await getFileSize(file);
         const docCount = await Tenant.findOne({
           _id: res.locals.user.tenantId,
@@ -2322,7 +2322,7 @@ export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
     );
     if (docs.length) {
       for (let i = 0; i < docs.length; i++) {
-        const docpath = DirPath(Directory.DEFAULT, docs[i].layerpath);
+        const docpath = DirPath(Directory.ROOT, docs[i].layerpath);
         const geoJSON = await readGeoJson(docpath);
         if (geoJSON) {
           const modCheck = await modGeoJson(null, null, geoJSON, docpath);
@@ -2373,7 +2373,7 @@ export const sys_id_Inject_to_layerfiles = async (
     );
     if (docs) {
       if (docs.missionId) {
-        const p = DirPath(Directory.DEFAULT, docs.layerpath);
+        const p = DirPath(Directory.ROOT, docs.layerpath);
         const gjson = await readGeoJson(p);
 
         if (gjson == null) {

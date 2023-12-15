@@ -45,7 +45,7 @@ export const createAlert = async (
         long: req.body.location.long ? req.body.location.long : 0,
       };
     }
-    const docPath: string = DirPath(Directory.DEFAULT, req.body.image);
+    const docPath: string = DirPath(Directory.ROOT, req.body.image);
     const size1: number = await getFileSize(docPath);
     const newAlert = new Alert({
       locationName,

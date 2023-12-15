@@ -101,7 +101,7 @@ export const getMetadataForBaseLayer = async (
       const layerGeojson = await Promise.all(
         data.map(async (layer) => {
           const properties = Object.keys(
-            (await readGeoJson(DirPath(Directory.DEFAULT, layer.layerpath)))
+            (await readGeoJson(DirPath(Directory.ROOT, layer.layerpath)))
               .features[0]?.properties,
           );
           properties.forEach((key) => {
@@ -596,7 +596,7 @@ export const getMetadataForUpdatingBaseLayer = async (
       const attrMap: Map<string, attrMapVal> = new Map();
 
       const bgjson = await readGeoJson(
-        DirPath(Directory.DEFAULT, baseLayerData.layerpath),
+        DirPath(Directory.ROOT, baseLayerData.layerpath),
       );
       const bfeaure = bgjson.features[0];
       const pattr: any = [];
@@ -608,7 +608,7 @@ export const getMetadataForUpdatingBaseLayer = async (
 
       for (const layer of layerData) {
         const gjson = await readGeoJson(
-          DirPath(Directory.DEFAULT, layer.layerpath),
+          DirPath(Directory.ROOT, layer.layerpath),
         );
         const feature = gjson.features[0];
 
@@ -843,7 +843,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     );
     if (!baseLayer) throw new Error("BaseLayer not found");
 
-    const baseLayerPath = DirPath(Directory.DEFAULT, baseLayer.layerpath);
+    const baseLayerPath = DirPath(Directory.ROOT, baseLayer.layerpath);
 
     const bgjson = await readGeoJson(baseLayerPath);
 
@@ -903,7 +903,7 @@ export const updateBaseLayerByUploadedFile = async (
   {
     // TODO: Is below replacement correct? (does /../../ refer to public folder ?)
     // const dir = path.join(__dirname, "/../../", `${req.body.filePath}`);
-    const dir = DirPath(Directory.DEFAULT, req.body.filePath);
+    const dir = DirPath(Directory.ROOT, req.body.filePath);
 
     const geojson = await readGeoJson(dir);
 
@@ -926,7 +926,7 @@ export const updateBaseLayerByUploadedFile = async (
 
     if (!baseLayer) throw new Error("baseLayer is null");
 
-    const baseLayerPath = DirPath(Directory.DEFAULT, baseLayer.layerpath);
+    const baseLayerPath = DirPath(Directory.ROOT, baseLayer.layerpath);
 
     const bgjson = await readGeoJson(baseLayerPath);
 
@@ -1019,7 +1019,7 @@ export const updateBaseLayerByUploadedFile = async (
       { $inc: { actualSize: newSize } },
     );
 
-    await deleteDirFileUsingName(Directory.DEFAULT, req.body.filePath);
+    await deleteDirFileUsingName(Directory.ROOT, req.body.filePath);
 
     const layer = await Layer.findOne({ _id: baseLayer._id })
       .populate<{ vector: IVector }>("vector")
@@ -1834,7 +1834,7 @@ export const publicbaselayerSearch = async (
       if (docs.length) {
         for (let i = 0; i < docs.length; i++) {
           const gjson = await readGeoJson(
-            DirPath(Directory.DEFAULT, docs[i].layerpath),
+            DirPath(Directory.ROOT, docs[i].layerpath),
           );
           for (let j = 0; j < gjson.features.length; j++) {
             if (gjson.features[j].properties[key]) {

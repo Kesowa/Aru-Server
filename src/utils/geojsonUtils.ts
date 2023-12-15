@@ -134,7 +134,7 @@ export async function featureUpdate(
   geojson: GeoJson
 ) {
   geojson.features = [...geojson.features, ...updatedFeatures];
-  await fs.writeFile(DirPath(Directory.DEFAULT, layerpath), JSON.stringify(geojson));
+  await fs.writeFile(DirPath(Directory.ROOT, layerpath), JSON.stringify(geojson));
 }
 
 export async function editGeoJsonForAll(

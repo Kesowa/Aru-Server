@@ -380,7 +380,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         // });
         archive.pipe(output);
         for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.DEFAULT, d[i].filePath), {
+          archive.file(DirPath(Directory.ROOT, d[i].filePath), {
             name: d[i].filePath.split("/")[2],
           });
         }
@@ -445,7 +445,7 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
     );
     if (docs.length) {
       for (let i = 0; i < docs.length; i++) {
-        const newFilename = DirPath(Directory.DEFAULT, docs[i].filePath);
+        const newFilename = DirPath(Directory.ROOT, docs[i].filePath);
         if (await checkFileExists(newFilename)) {
           const size: number = await getFileSize(newFilename);
           if (size != docs[i].fileSize) {

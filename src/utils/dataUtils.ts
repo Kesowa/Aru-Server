@@ -271,7 +271,7 @@ export const saveAsKML = async (
   try {
     const kmlData = String(tokml(JSON.parse(JSON.stringify(geojson))));
     const kmlPath = layerpath.replace(".geojson", ".kml");
-    await fs.writeFile(DirPath(Directory.DEFAULT, kmlPath), kmlData);
+    await fs.writeFile(DirPath(Directory.ROOT, kmlPath), kmlData);
     return kmlPath;
   } catch (error) {
     return "";

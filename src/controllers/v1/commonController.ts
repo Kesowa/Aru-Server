@@ -33,7 +33,7 @@ export const uploadFile = async (req: Request, res: AuthResponse) => {
       }
     } else {
       const img_path = path.relative(
-        DirPath(Directory.DEFAULT),
+        DirPath(Directory.ROOT),
         String(req?.file?.path)
       );
       if (req.file) {
