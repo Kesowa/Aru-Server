@@ -1,8 +1,9 @@
 import { Namespace, Socket } from "socket.io";
 import { SocketUserObject, addUser, droneStat } from "../../utils/socketUtils";
 import fs from "fs";
-import { Directory, DirPath } from "../../constants";
+import { Directory } from "../../constants";
 import { ExtendedError } from "socket.io/dist/namespace";
+import { saveFile } from "../../utils/dataUtils";
 
 const streamers: Array<SocketUserObject> = [];
 const receivers: Array<SocketUserObject> = [];
@@ -103,18 +104,18 @@ class TelemetryLogger {
     if (!log_file) return;
     log_file.end();
     const { flightLog, flightPath } = await this.convert(streamKey);
-    await fs.promises.writeFile(
-      DirPath(Directory.FLIGHT_LOGS, `${streamKey}.geojson`),
+    await saveFile(
+      Directory.FLIGHT_LOGS, `${streamKey}.geojson`,
       JSON.stringify(flightLog)
     );
-    await fs.promises.writeFile(
-      DirPath(Directory.FLIGHT_LOGS, `Path_${streamKey}.geojson`),
+    await saveFile(
+      Directory.FLIGHT_LOGS, `Path_${streamKey}.geojson`,
       JSON.stringify(flightPath)
     );
-    await fs.promises.copyFile(
-      `/tmp/${streamKey}.csv`,
-      DirPath(Directory.FLIGHT_LOGS, `${streamKey}.csv`)
-    );
+    // await fs.promises.copyFile(
+    //   `/tmp/${streamKey}.csv`,
+    //   DirPath(Directory.FLIGHT_LOGS, `${streamKey}.csv`)
+    // );
     await fs.promises.rm(`/tmp/${streamKey}.csv`);
     this.logFiles.delete(streamKey);
   }

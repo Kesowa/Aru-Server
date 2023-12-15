@@ -33,7 +33,8 @@ export enum Directory {
   ICON = "icons",
   IMAGE = "images",
   AI_ML = "aiml",
-  ROOT = "",
+  DEFAULT = "",
+  ROOT = "/",
 }
 
 /**

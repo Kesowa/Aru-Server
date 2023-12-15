@@ -308,8 +308,8 @@ export const createArchive = async (files: pathUtils.DocPath[]) => {
   return archivePath;
 }
 
-export const saveFile = async (directory: pathUtils.Directory, filename: string, data: string | NodeJS.ArrayBufferView | Iterable<string | NodeJS.ArrayBufferView> | AsyncIterable<string | NodeJS.ArrayBufferView> | Stream) => {
+export const saveFile = async (directory: pathUtils.Directory, filename: string, data: string | NodeJS.ArrayBufferView | Iterable<string | NodeJS.ArrayBufferView> | AsyncIterable<string | NodeJS.ArrayBufferView> | Stream, encoding?: BufferEncoding) => {
   const abspath = pathUtils.absPath(directory, filename);
-  await fs.writeFile(abspath, data);
+  await fs.writeFile(abspath, data, {encoding});
   return await fs.stat(abspath);
 }

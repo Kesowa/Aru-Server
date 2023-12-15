@@ -1,6 +1,5 @@
 import { Namespace, Socket } from "socket.io";
 import { stat } from "../v1/droneLocationController";
-import fs from "fs";
 import axios from "axios";
 import Tenant from "../../models/tenant";
 import Alert from "../../models/alert";
@@ -19,6 +18,7 @@ import {
 import { getFileSize } from "../../utils/fileUtils";
 import { logger } from "../../app";
 import { saveThumbnails } from "../../utils/imageUtils";
+import { saveFile } from "../../utils/dataUtils";
 const geoMapApi = "https://maps.googleapis.com/maps/api/geocode/json";
 
 /*
@@ -77,10 +77,9 @@ const alertSocketController = (alertSocket: Namespace) => {
       )}`;
       const filename = DirPath(Directory.ALERT_IMAGES, `${file}.png`);
       const filePath = `/${Directory.ALERT_IMAGES}/${file}.png`;
-      const newFilename = `1x_${file}.png`;
 
       try {
-        await fs.promises.writeFile(filename, converted, "base64");
+        await saveFile(Directory.ALERT_IMAGES, filename, converted, "base64");
 
         const size: number = await getFileSize(filename);
         const docCount = await Tenant.findOne({ _id: data.tenantId })
