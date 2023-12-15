@@ -7,7 +7,6 @@ import { Types } from "mongoose";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
 import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 
-import exifr from "exifr";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IFlight } from "../../schemas/flight";

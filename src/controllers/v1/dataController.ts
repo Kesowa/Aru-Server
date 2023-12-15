@@ -1,6 +1,5 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import path from "path";
 import Alert from "../../models/alert";
 import Document from "../../models/document";
 import { saveThermal } from "../../utils/imageUtils";
