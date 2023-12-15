@@ -8,6 +8,7 @@ import { page4 } from "./reportPg4";
 import { IData } from "./types";
 import { ScreenshotGenerator } from "./screenshot";
 import { pino } from "pino";
+import { TITILER_SERVER } from "../../constants";
 
 export const generateDocument = async (data: IData, logger: pino.Logger) => {
   const {
@@ -69,7 +70,7 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
   logger.info("Browser Launched for screenshots...");
 
   const missionMapImg = await ssGenerator.getMapSS(
-    "https://cog-nk.kesowa.com",
+    TITILER_SERVER,
     data.deliverables["OVERVIEW"]
   );
 
@@ -127,7 +128,7 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
   for (const d in deliverables) {
     logger.info(`Capturing image for: ${d}...`);
     deliverableBuffers[d] = await ssGenerator.getMapSS(
-      "https://cog-nk.kesowa.com",
+      TITILER_SERVER,
       deliverables[d]
     );
   }
