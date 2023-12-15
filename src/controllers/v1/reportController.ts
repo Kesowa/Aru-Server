@@ -1,4 +1,3 @@
-import { promises as fs } from "fs";
 import * as turf from "@turf/turf";
 import { Request } from "express";
 import Mission from "../../models/mission";
@@ -28,8 +27,10 @@ import {
 } from "../../utils/reportUtils/reportUtils";
 import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
+import { readGeoJson } from "../../utils/geojsonUtils";
+import { saveFile } from "../../utils/dataUtils";
 
-export async function findArea(gjson: any) {
+export function findArea(gjson: any) {
   try {
     let totalArea = 0;
     const allIndependantPositions: any[] = [];
@@ -66,7 +67,7 @@ export async function findArea(gjson: any) {
   }
 }
 
-export async function findLength(gjson: any) {
+export function findLength(gjson: any) {
   try {
     let totalLength = 0;
     for (const feature of gjson.features) {
@@ -229,13 +230,9 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       }
 
       for (const layer of vectorLayers) {
-        const layerData = await fs.readFile(
-          DirPath(Directory.DEFAULT, layer.layerpath),
-          "utf-8"
-        );
-        const gjson = JSON.parse(layerData);
-        const currLayerArea = await findArea(gjson);
-        const currLayerLength = await findLength(gjson);
+        const gjson = readGeoJson(DirPath(Directory.ROOT, layer.layerpath));
+        const currLayerArea = findArea(gjson);
+        const currLayerLength = findLength(gjson);
         data.area.total += currLayerArea;
         // check the layer type and accordingly add area to respective type
         if (privateCommercialLayerTypes.includes(layer.vector.name)) {
@@ -292,19 +289,14 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
 
       // saving the document
       const doc = await generateDocument(data, req.log);
-      const buffer = await Packer.toBuffer(doc);
-      const filename = `${missionId}-report.docx`;
-      const filepath = DirPath(Directory.DOCUMENTS, filename);
-      await fs.writeFile(filepath, buffer);
-
-      const fileStats = await fs.stat(filepath);
-
-      await Document.findOneAndDelete({ name: filename });
+      const buffer = Packer.toStream(doc);
+      const filename = `${new Date()}-block_report.docx`;
+      const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
       const docDB = new Document({
         name: filename,
         modDate: new Date(),
-        fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
+        fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
         fileType: "docx",
         folderName: "root1234",
         filePath: `/documents/${filename}`,

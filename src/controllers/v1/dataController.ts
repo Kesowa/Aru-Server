@@ -1,10 +1,8 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Directory, DirPath } from "../../constants";
-import path from "path";
-import { exec } from "child_process";
 import Alert from "../../models/alert";
 import Document from "../../models/document";
+import { saveThermal } from "../../utils/imageUtils";
 import aimlModel from "../../models/aimlTask";
 import { HydratedDocument } from "mongoose";
 import { IAlert } from "../../schemas/alert";
@@ -80,32 +78,10 @@ export const getThermal = async (
     });
     return;
   }
-  const fullPath = DirPath(Directory.DEFAULT, filePath);
-  const fileName = path.parse(filePath).name + ".raw";
-  const rawFilePath = `/${Directory.AI_ML}/${fileName}`;
-  const outPath = DirPath(Directory.AI_ML, fileName);
-
-  let converted = false;
-  try {
-    await new Promise((res, rej) => {
-      exec(
-        `dji_irp -s ${fullPath} -a measure --measurefmt float32 -o ${outPath}`,
-        (err, sto, ste) => {
-          if (err) {
-            rej(err);
-            req.log.error(ste);
-          }
-          res(sto);
-        }
-      );
-    });
-    converted = true;
-    req.log.info("thermal conversion successful");
-  } catch (err) {
-    req.log.error(err, "thermal conversion failed");
-  }
+  const thermalImg = await saveThermal(filePath);
+  const converted = thermalImg ? true : false;
   thermalDoc.status = converted ? "completed" : "failed";
-  thermalDoc.data.file = converted ? rawFilePath : "";
+  thermalDoc.data.file = converted ? thermalImg.thermalPath : "";
   await thermalDoc.updateOne({
     status: thermalDoc.status,
     "data.file": thermalDoc.data.file,

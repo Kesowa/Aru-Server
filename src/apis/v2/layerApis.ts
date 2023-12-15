@@ -108,7 +108,7 @@ layerApi.get(
     }
 
     if (layerId) {
-      const docpath = DirPath(Directory.DEFAULT, data[0].layerpath);
+      const docpath = DirPath(Directory.ROOT, data[0].layerpath);
       resp.size = await getFileSize(docpath);
       if (await checkFileExists(docpath)) {
         const downloadlink = docpath

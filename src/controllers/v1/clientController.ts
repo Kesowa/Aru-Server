@@ -162,7 +162,7 @@ export const createClientformissionGroup = async (
             country,
           });
           const createDoc = await newClient.save();
-          const docPath = DirPath(Directory.DEFAULT, req.body.avatar);
+          const docPath = DirPath(Directory.ROOT, req.body.avatar);
           const size: number = await getFileSize(docPath);
           if (req.body.avatar && createDoc) {
             copyFiled(
@@ -452,7 +452,7 @@ export const deleteCientforTenant = async (
         }
       );
       try {
-        const docPath = DirPath(Directory.DEFAULT, doc.avatar);
+        const docPath = DirPath(Directory.ROOT, doc.avatar);
         await getFileSize(docPath);
         await deletePublicFileUsingPath(doc.avatar);
       } catch (error) {
