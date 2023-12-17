@@ -1,7 +1,7 @@
 import express from "express";
 
 import { isAuthenticated } from "../../utils/authUtils";
-import { generateReport } from "../../controllers/v1/reportController";
+import { generatePlotReport, generateReport } from "../../controllers/v1/reportController";
 import { body } from "express-validator";
 import { validator } from "../../utils/requestHelpers";
 
@@ -13,6 +13,24 @@ router.post(
   body("missionId").notEmpty().isMongoId(),
   validator,
   generateReport
+);
+
+router.post(
+  "/plot-report",
+  isAuthenticated,
+  // for images
+  body("coverPageLayers").optional().notEmpty().isArray(),
+  body("blockImageLayers").optional().notEmpty().isArray(),
+  body("plotImageLayers").optional().notEmpty().isArray(),
+  // for other data
+  body("plotLayerId").notEmpty().isString(),
+  body("buildingLayerId").notEmpty().isString(),
+  body("blockLayerId").notEmpty().isString(),
+  body("greeneryLayerId").notEmpty().isString(),
+  body("canopyLayerId").notEmpty().isString(),
+  body("waterbodyLayerId").notEmpty().isString(),
+  validator,
+  generatePlotReport
 );
 
 export default router;

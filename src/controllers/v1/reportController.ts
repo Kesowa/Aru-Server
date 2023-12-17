@@ -28,6 +28,8 @@ import {
 } from "../../utils/reportUtils/reportUtils";
 import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
+import { ScreenshotGenerator } from "../../utils/reportUtils/screenshot";
+import { pino } from "pino";
 
 export async function findArea(gjson: any) {
   try {
@@ -332,3 +334,227 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
     }
   }
 };
+
+export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
+  const vectorFilePaths: string[] = [];
+  const rasterFilePaths: string[] = [];
+
+  for(const id of layerIds) {
+    const layer = await Layer.findById(id);
+    if(layer.type === "Vector") vectorFilePaths.push(PUBLIC_SERVER + layer.layerpath);
+    else rasterFilePaths.push(PUBLIC_SERVER + layer.layerpath);
+  }
+
+  const ssGenerator = new ScreenshotGenerator(logger);
+  await ssGenerator.init();
+
+  logger.info("Browser Launched for screenshots...");
+
+  const ssBuffer = await ssGenerator.getMapSS(
+    "https://cog-nk.kesowa.com",
+    vectorFilePaths,
+    rasterFilePaths
+  );
+
+  logger.info("Image Captured...");
+
+  return ssBuffer;
+}
+
+export interface IPlotReportData {
+  // generated
+  coverImage?: Buffer,
+  blockImage?: Buffer,
+  plotImage?: Buffer,
+  
+  // generated => generated from geojson by code
+  // provided => needs to be provided as a geojson feature
+  
+  // plot details
+  plotArea: number, // generated
+  plotNo: string, // provided
+  premiseNo: string, // provided
+  pincode: number, // provided
+  category: string, // provided
+  infraction: string, // provided
+  isIncentiveEligible: boolean, // provided
+  hasTradeLicense: boolean, // provided
+  tax: number, // provided
+  
+  // building details
+  buildingArea: number, // generated
+  buildingFootprint: number, // generated, (building area / plot area) * 100% ??
+  buildingAvailable: boolean, // provided
+  floorCount: string, // provided
+  buildingNo: string, // provided
+  hasCompletionCertificate: boolean, // provided
+  buildingHeight: number, // provided
+
+  // block details
+  blockArea: number, // generated
+  greeneryArea: number, // generated
+  canopyArea: number, // generated
+  waterbodyArea: number, // generated
+  greeneryPercent: number, // generated
+  canopyPercent: number, // generated
+  waterbodyPercent: number, // generated
+  garbageCollectionInfo: string, // provided
+  averageBuildingHeight: number, // provided
+  averageBlockHeight: number, // provided
+  averageIncentives: number, // provided
+
+}
+
+export const generatePlotReport = async (req: Request<{},{},{ 
+  coverPageLayers: string[],
+  blockImageLayers: string[],
+  plotImageLayers: string[],
+  plotLayerId: string,
+  buildingLayerId: string,
+  blockLayerId: string,
+  greeneryLayerId: string,
+  canopyLayerId: string,
+  waterbodyLayerId: string,
+}>, res: AuthResponse) => {
+  {
+
+    try {
+      const { 
+        coverPageLayers, 
+        blockImageLayers, 
+        plotImageLayers, 
+        plotLayerId, 
+        buildingLayerId, 
+        blockLayerId, 
+        greeneryLayerId,
+        canopyLayerId,
+        waterbodyLayerId
+      } = req.body;
+
+      // ===== Images =====
+      // const coverImgBuff = await saveScreenshot(coverPageLayers, req.log);
+      // const blockImgBuff = await saveScreenshot(blockImageLayers, req.log);
+      // const plotImgBuff = await saveScreenshot(plotImageLayers, req.log);
+
+      // ===== Plot Details =====
+      const plotLayer = await Layer.findById(plotLayerId);
+      const plotGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, plotLayer.layerpath),
+        "utf-8"
+      ));
+      // provided details
+      let allPlotFeatureData: any;
+      for(const feature of plotGeojson.features) {
+        allPlotFeatureData = { ...allPlotFeatureData, ...feature.properties };
+      }
+      // calculated details
+      const plotArea = await findArea(plotGeojson);
+
+      // ===== Building Details =====
+      const buildingLayer = await Layer.findById(buildingLayerId);
+      const buildingGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, buildingLayer.layerpath),
+        "utf-8"
+      ));
+      // provided details
+      let allBuildingFeatureData: any;
+      for(const feature of buildingGeojson.features) {
+        allBuildingFeatureData = { ...allBuildingFeatureData, ...feature.properties };
+      }
+      // calculated details
+      const buildingArea = await findArea(buildingGeojson);
+
+      // ===== Block Details =====
+      const blockLayer = await Layer.findById(blockLayerId);
+      const blockGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, blockLayer.layerpath),
+        "utf-8"
+      ));
+      // calculated details
+      const blockArea = await findArea(blockGeojson);
+      // provided details
+      let allBlockFeatureData: any;
+      for(const feature of blockGeojson.features) {
+        allBlockFeatureData = { ...allBlockFeatureData, ...feature.properties };
+      }
+
+      const greeneryLayer = await Layer.findById(greeneryLayerId);
+      const greeneryGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, greeneryLayer.layerpath),
+        "utf-8"
+      ));
+      const greeneryArea = await findArea(greeneryGeojson);
+
+      const canopyLayer = await Layer.findById(canopyLayerId);
+      const canopyGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, canopyLayer.layerpath),
+        "utf-8"
+      ));
+      const canopyArea = await findArea(canopyGeojson);
+
+      const waterbodyLayer = await Layer.findById(waterbodyLayerId);
+      const waterbodyGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, waterbodyLayer.layerpath),
+        "utf-8"
+      ));
+      const waterbodyArea = await findArea(waterbodyGeojson);
+
+      // ===== Putting the data together =====
+      const data: IPlotReportData = {
+        // images
+        // coverImage: coverImgBuff,
+        // blockImage: blockImgBuff,
+        // plotImage: plotImgBuff,
+        
+        // need to be provided in geojson features
+
+        // plot details
+        plotArea,
+        plotNo: String(allPlotFeatureData.plotNo),
+        premiseNo: String(allPlotFeatureData.premiseNo),
+        pincode: Number(allPlotFeatureData.pincode),
+        category: String(allPlotFeatureData.category),
+        infraction: String(allPlotFeatureData.infraction),
+        isIncentiveEligible: (allPlotFeatureData.isIncentiveEligible === "Yes") ? true : false,
+        hasTradeLicense: (allPlotFeatureData.hasTradeLicense === "Yes") ? true : false,
+        tax: Number(allPlotFeatureData.tax),
+
+        // building details
+        buildingArea,
+        buildingFootprint: (buildingArea / plotArea) * 100,
+        buildingAvailable: (allBuildingFeatureData.buildingAvailable === "Yes") ? true : false,
+        floorCount: String(allBuildingFeatureData.floorCount),
+        buildingNo: String(allBuildingFeatureData.buildingNo),
+        hasCompletionCertificate: (allBuildingFeatureData.hasCompletionCertificate === "Yes") ? true : false,
+        buildingHeight: Number(allBuildingFeatureData.buildingHeight),
+
+        // block details
+        blockArea,
+        greeneryArea,
+        canopyArea,
+        waterbodyArea,
+        greeneryPercent: (greeneryArea/blockArea)*100,
+        canopyPercent: (canopyArea/blockArea)*100,
+        waterbodyPercent: (waterbodyArea/blockArea)*100,
+        garbageCollectionInfo: String(allBlockFeatureData.garbageCollectionInfo),
+        averageBuildingHeight: Number(allBlockFeatureData.averageBuildingHeight),
+        averageBlockHeight: Number(allBlockFeatureData.averageBlockHeight),
+        averageIncentives: Number(allBlockFeatureData.averageIncentives),
+      };
+
+      req.log.info(data);
+
+      res.status(200).json({
+        status: true,
+        message: "Successfully generated data",
+      });
+
+    } catch (error) {
+      req.log.error(error);
+      res.status(500).json({
+        status: false,
+        message: "Server Error",
+      });
+    }
+  }
+}

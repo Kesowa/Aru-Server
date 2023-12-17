@@ -70,7 +70,7 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
 
   const missionMapImg = await ssGenerator.getMapSS(
     "https://cog-nk.kesowa.com",
-    data.deliverables["OVERVIEW"]
+    data.deliverables["OVERVIEW"], []
   );
 
   logger.info("Mission Map Image Captured...");
@@ -128,7 +128,7 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
     logger.info(`Capturing image for: ${d}...`);
     deliverableBuffers[d] = await ssGenerator.getMapSS(
       "https://cog-nk.kesowa.com",
-      deliverables[d]
+      deliverables[d], []
     );
   }
 

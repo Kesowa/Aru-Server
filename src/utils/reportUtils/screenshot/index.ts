@@ -109,25 +109,43 @@ export class ScreenshotGenerator {
     }
   }
 
-  async getMapSS(cogServerUrl: string, vectorFilePaths: string[]) {
+  async getMapSS(cogServerUrl: string, vectorFilePaths: string[], rasterFilePaths: string[]) {
     try {
       await this.loadHtmlToPage(this.mapboxPage, this.mapboxHtml); // refreshing the page kindof
       await this.mapboxPage.evaluate(
         (cogServerUrl, vectorFilePaths) => {
           document.getElementById("map").innerHTML = "";
-          window.isMapLoaded = false;
+          window.isRasterLoaded = false;
+          window.isVectorLoaded = false;
+
           window
             .setupMap("map", cogServerUrl)
             .then(() => {
+
+              // Render all given rasters
+              if(rasterFilePaths > 0) {
+                window
+                  .renderRaster(rasterFilePaths)
+                  .then(() => {
+                    window.setTimeout(() => {
+                      window.isRasterLoaded = true; // map loaded and stabilized (all transition animations over)
+                    }, 7000);
+                  })
+                  .catch(this.logger.error);
+              }
+
               // Render all given geojsons
-              window
-                .renderVector(vectorFilePaths)
-                .then(() => {
-                  window.setTimeout(() => {
-                    window.isMapLoaded = true; // map loaded and stabilized (all transition animations over)
-                  }, 7000);
-                })
-                .catch(this.logger.error);
+              if(vectorFilePaths.length > 0) {
+                window
+                  .renderVector(vectorFilePaths)
+                  .then(() => {
+                    window.setTimeout(() => {
+                      window.isVectorLoaded = true; // map loaded and stabilized (all transition animations over)
+                    }, 7000);
+                  })
+                  .catch(this.logger.error);
+              }
+
             })
             .catch((error: any) =>
               this.logger.error("Error loading map", error)
@@ -136,7 +154,11 @@ export class ScreenshotGenerator {
         cogServerUrl,
         vectorFilePaths
       );
-      await this.mapboxPage.waitForFunction("window.isMapLoaded === true"); // wait for mapbox to load up and stablizie the map
+      await this.mapboxPage.waitForFunction(
+        () => {
+          return (window.isRasterLoaded && window.isVectorLoaded) ? true : false;
+        }
+      ); // wait for mapbox to load up and stablizie the map
       const pngBuff = await this.mapboxPage.screenshot({ type: "png" });
       return pngBuff;
     } catch (error) {
