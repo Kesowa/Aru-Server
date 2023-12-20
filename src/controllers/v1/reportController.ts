@@ -5,7 +5,7 @@ import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { IVector } from "../../schemas/vectorprops";
-import { DirPath, Directory, PUBLIC_SERVER } from "../../constants";
+import { DirPath, Directory, PUBLIC_SERVER, TITILER_SERVER, TITILER_STATIC } from "../../constants";
 import { generateDocument } from "../../utils/reportUtils/report";
 import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/types";
@@ -276,9 +276,9 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         for (const d in deliverableTypes) {
           if (deliverableTypes[d].includes(layer.vector.name)) {
             if (!data.deliverables[d]) {
-              data.deliverables[d] = [PUBLIC_SERVER + layer.layerpath];
+              data.deliverables[d] = [TITILER_STATIC + layer.layerpath];
             } else {
-              data.deliverables[d].push(PUBLIC_SERVER + layer.layerpath);
+              data.deliverables[d].push(TITILER_STATIC + layer.layerpath);
             }
           }
         }
@@ -341,8 +341,8 @@ export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
 
   for(const id of layerIds) {
     const layer = await Layer.findById(id);
-    if(layer.type === "Vector") vectorFilePaths.push(PUBLIC_SERVER + layer.layerpath);
-    else rasterFilePaths.push(PUBLIC_SERVER + layer.layerpath);
+    if(layer.type === "Vector") vectorFilePaths.push(TITILER_STATIC+ layer.layerpath);
+    else rasterFilePaths.push(TITILER_STATIC+ layer.layerpath);
   }
 
   const ssGenerator = new ScreenshotGenerator(logger);
@@ -351,7 +351,7 @@ export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
   logger.info("Browser Launched for screenshots...");
 
   const ssBuffer = await ssGenerator.getMapSS(
-    "https://cog-nk.kesowa.com",
+    TITILER_SERVER,
     vectorFilePaths,
     rasterFilePaths
   );
