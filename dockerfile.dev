@@ -14,7 +14,7 @@ ADD ./ffmpeg.tar.gz /bin
 ADD  ./potree.tar.gz /bin
 ADD ./dji_bin.tar.gz /bin
 ADD ./dji_lib.tar.gz /lib
-# RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
+RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
 COPY package*.json ./
 RUN npm ci
 RUN npm i puppeteer
