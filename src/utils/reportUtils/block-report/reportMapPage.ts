@@ -10,7 +10,7 @@ import {
 } from "docx";
 import * as fs from "fs";
 import path from "path";
-import { commonPageProperties, commonPageFooter } from "./reportUtils";
+import { commonPageProperties, commonPageFooter } from "../reportUtils";
 import { IReportMapPageProperties } from "./types";
 
 export const reportMapPage = (properties: IReportMapPageProperties) => {
@@ -86,7 +86,7 @@ export const reportMapPage = (properties: IReportMapPageProperties) => {
         },
       }),
       new ImageRun({
-        data: fs.readFileSync(path.join(__dirname, "images", "NKDA_Logo.png")),
+        data: fs.readFileSync(path.join(__dirname, "..", "assets", "NKDA_Logo.png")),
         transformation: {
           width: 50,
           height: 50,
@@ -105,7 +105,7 @@ export const reportMapPage = (properties: IReportMapPageProperties) => {
       }),
       new ImageRun({
         data: fs.readFileSync(
-          path.join(__dirname, "images", "Kesowa_Logo.png")
+          path.join(__dirname, "..", "assets", "Kesowa_Logo.png")
         ),
         transformation: {
           width: 80,

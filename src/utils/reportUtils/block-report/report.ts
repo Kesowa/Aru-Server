@@ -2,13 +2,13 @@ import { Document } from "docx";
 import { page1 } from "./reportPg1";
 import { page2 } from "./reportPg2";
 import { page3 } from "./reportPg3";
-import { numberings } from "./reportUtils";
+import { numberings } from "../reportUtils";
 import { reportMapPage } from "./reportMapPage";
 import { page4 } from "./reportPg4";
 import { IData } from "./types";
-import { ScreenshotGenerator } from "./screenshot";
+import { ScreenshotGenerator } from "./../screenshot";
 import { pino } from "pino";
-import { TITILER_SERVER } from "../../constants";
+import { TITILER_SERVER } from "../../../constants";
 
 export const generateDocument = async (data: IData, logger: pino.Logger) => {
   const {

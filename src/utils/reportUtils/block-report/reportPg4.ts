@@ -14,7 +14,7 @@ import {
   VerticalAlign,
 } from "docx";
 import * as fs from "fs";
-import { commonPageProperties, commonPageFooter } from "./reportUtils";
+import { commonPageProperties, commonPageFooter } from "../reportUtils";
 import { IPage7Properties } from "./types";
 import path from "path";
 
@@ -686,7 +686,7 @@ export const page4 = (properties: IPage7Properties) => {
         },
       }),
       new ImageRun({
-        data: fs.readFileSync(path.join(__dirname, "images", "NKDA_Logo.png")),
+        data: fs.readFileSync(path.join(__dirname, "..", "assets", "NKDA_Logo.png")),
         transformation: {
           width: 50,
           height: 50,
@@ -705,7 +705,7 @@ export const page4 = (properties: IPage7Properties) => {
       }),
       new ImageRun({
         data: fs.readFileSync(
-          path.join(__dirname, "images", "Kesowa_Logo.png")
+          path.join(__dirname, "..", "assets", "Kesowa_Logo.png")
         ),
         transformation: {
           width: 80,

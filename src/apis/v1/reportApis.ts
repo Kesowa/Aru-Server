@@ -17,11 +17,11 @@ router.post(
 
 router.post(
   "/plot-report",
-  isAuthenticated,
+  // isAuthenticated,
   // for images
-  body("coverPageLayers").optional().notEmpty().isArray(),
-  body("blockImageLayers").optional().notEmpty().isArray(),
-  body("plotImageLayers").optional().notEmpty().isArray(),
+  // body("coverPageLayers").optional().notEmpty().isArray(),
+  // body("blockImageLayers").optional().notEmpty().isArray(),
+  // body("plotImageLayers").optional().notEmpty().isArray(),
   // for other data
   body("plotLayerId").notEmpty().isString(),
   body("buildingLayerId").notEmpty().isString(),

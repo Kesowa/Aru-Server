@@ -11,7 +11,7 @@ import {
   VerticalAlign,
   FrameAnchorType,
 } from "docx";
-import { commonPageFooter, commonPageProperties } from "./reportUtils";
+import { commonPageFooter, commonPageProperties } from "../reportUtils";
 
 const pg3Heading = new Paragraph({
   frame: {
