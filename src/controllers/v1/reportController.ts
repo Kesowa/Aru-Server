@@ -406,7 +406,7 @@ export const generatePlotReport = async (req: Request<{},{},{
       // images
       const coverImageBuffer = await saveScreenshot(coverPageLayers, req.log);
       req.log.info("COVER IMAGE =====> ");
-      req.log.info(coverImageBuffer);
+      // req.log.info(coverImageBuffer);
       await fs.writeFile(coverImageBuffer, DirPath(Directory.DOCUMENTS, "coverImage.png")); 
       // Tried saving the Buffer to a file, got error that the Buffer was undefined
 
