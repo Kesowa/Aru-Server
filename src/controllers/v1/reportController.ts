@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import { Dir, promises as fs } from "fs";
 import * as turf from "@turf/turf";
 import { Request } from "express";
 import Mission from "../../models/mission";
@@ -404,7 +404,11 @@ export const generatePlotReport = async (req: Request<{},{},{
       const userList: Set<string> = new Set<string>(); // will push while processing layers
       
       // images
-      // const coverImageBuffer = await saveScreenshot(coverPageLayers, req.log);
+      const coverImageBuffer = await saveScreenshot(coverPageLayers, req.log);
+      req.log.info("COVER IMAGE =====> ");
+      req.log.info(coverImageBuffer);
+      await fs.writeFile(coverImageBuffer, DirPath(Directory.DOCUMENTS, "coverImage.png")); 
+      // Tried saving the Buffer to a file, got error that the Buffer was undefined
 
       // ========================== PLOT DETAILS ==============================
 
