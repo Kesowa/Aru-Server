@@ -1,1 +1,3 @@
-{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"description":"Test Plot","color":"#f5e201","plotNo":"AA/8","premiseNo":"18-0072PI","pincode":"700163","category":"Residential","infraction":"No","isIncentiveEligible":"Yes","hasTradeLicense":"Yes","tax":"10000","icon":"MarkerIcon","sys_id":"657ec970b7e5f1af532b9ec4"},"geometry":{"type":"Polygon","coordinates":[[[88.47360186631532,22.573003928926322],[88.47354229836535,22.57292331883076],[88.47367273163506,22.572849347171985],[88.47372716441681,22.57292521553924],[88.47360186631532,22.573003928926322]]]}}]}
+version https://git-lfs.github.com/spec/v1
+oid sha256:81af635146da75f298870a888630622f593f7f8bdc71b98de58e1bf8200106f1
+size 584
