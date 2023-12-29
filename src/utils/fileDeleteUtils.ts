@@ -63,8 +63,7 @@ export const deleteHlsVodUsingIndex = async (indexFile: string) => {
       vodFiles.map((file) => deleteDirFileUsingName(Directory.VOD, file))
     );
     return result.every((res) => res);
-  }
-  catch {
+  } catch {
     return false;
   }
 };
