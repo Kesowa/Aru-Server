@@ -1893,6 +1893,33 @@ db.layers.insertMany([
   }
 ]);
 
+db.layerfiles.insertMany([
+  {
+    _id: ObjectId("659258833d1238b3adb10f27"),
+    name: "PlotReportDemo_FrontView.png",
+    layerId: ObjectId("657ec970b7e5f1af532b9ec7"),
+    layers: [],
+    sys_Id: "657ec970b7e5f1af532b9ec4",
+    featureLabel: "AA/8",
+    fileSize: 1.11439,
+    centerPoints: {
+      lat: 22.572921902329387,
+      lng: 88.47365253647386
+    },
+    filePath: "/images/geojson/PlotReportDemo_FrontView.png",
+    fileType: "image/png",
+    tenantId: ObjectId("5f204f03b9445726102781a8"),
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    isReview: true,
+    isThreadExist: false,
+    commentCount: 0,
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0
+  }
+]);
+
 const permissions = [
   ["60c4492da41c37d7856ed478", "mission_create", "Create mission"],
   ["60c449ffa41c37d7856ed47a", "mission_delete"],

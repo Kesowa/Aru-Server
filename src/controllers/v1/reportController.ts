@@ -5,7 +5,7 @@ import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { IVector } from "../../schemas/vectorprops";
-import { DirPath, Directory, TITILER_SERVER, TITILER_STATIC } from "../../constants";
+import { DirPath, Directory, PUBLIC_SERVER, TITILER_SERVER, TITILER_STATIC } from "../../constants";
 import { generateDocument } from "../../utils/reportUtils/block-report/report";
 import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/block-report/types";
@@ -32,6 +32,7 @@ import { ScreenshotGenerator } from "../../utils/reportUtils/screenshot";
 import { pino } from "pino";
 import { IPlotReportData } from "../../utils/reportUtils/plot-report/types";
 import { generatePlotReportDocument } from "../../utils/reportUtils/plot-report/report";
+import layerFiles from "../../models/layerFiles";
 
 export async function findArea(gjson: any) {
   try {
@@ -343,8 +344,8 @@ export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
 
   for(const id of layerIds) {
     const layer = await Layer.findById(id);
-    if(layer.type === "Vector") vectorFilePaths.push(TITILER_STATIC+ layer.layerpath);
-    else rasterFilePaths.push(TITILER_STATIC+ layer.layerpath);
+    if(layer.type === "Vector") vectorFilePaths.push(TITILER_STATIC + layer.layerpath);
+    else rasterFilePaths.push(TITILER_STATIC + layer.layerpath);
   }
 
   const ssGenerator = new ScreenshotGenerator(logger);
@@ -358,15 +359,15 @@ export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
     rasterFilePaths
   );
 
+  await ssGenerator.destroy();
+
   logger.info("Image Captured...");
 
   return ssBuffer;
 }
 
 export const generatePlotReport = async (req: Request<{},{},{ 
-  coverPageLayers: string[],
-  blockImageLayers: string[],
-  plotImageLayers: string[],
+  rasterLayerId: string,
   plotLayerId: string,
   buildingLayerId: string,
   blockLayerId: string,
@@ -377,10 +378,8 @@ export const generatePlotReport = async (req: Request<{},{},{
   {
 
     try {
-      const { 
-        coverPageLayers, 
-        blockImageLayers, 
-        plotImageLayers, 
+      const {
+        rasterLayerId,
         plotLayerId, 
         buildingLayerId, 
         blockLayerId, 
@@ -388,6 +387,16 @@ export const generatePlotReport = async (req: Request<{},{},{
         canopyLayerId,
         waterbodyLayerId
       } = req.body;
+
+      // res.status(200).json({
+      //   status: true,
+      //   message: "Plot Report Generation started...",
+      // });
+
+      // ========================== MAP IMAGES ================================
+      const plotImageBuffer = await saveScreenshot([rasterLayerId, plotLayerId], req.log);
+      const blockImageBuffer = await saveScreenshot([rasterLayerId, blockLayerId], req.log);
+      const coverImageBuffer = blockImageBuffer;
 
       // ========================== COVER PAGE DETAILS ==============================
 
@@ -402,13 +411,6 @@ export const generatePlotReport = async (req: Request<{},{},{
       
       // users
       const userList: Set<string> = new Set<string>(); // will push while processing layers
-      
-      // images
-      const coverImageBuffer = await saveScreenshot(coverPageLayers, req.log);
-      req.log.info("COVER IMAGE =====> ");
-      // req.log.info(coverImageBuffer);
-      await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); 
-      // Tried saving the Buffer to a file, got error that the Buffer was undefined
 
       // ========================== PLOT DETAILS ==============================
 
@@ -429,9 +431,9 @@ export const generatePlotReport = async (req: Request<{},{},{
       // calculated details
       const plotArea = await findArea(plotGeojson);
 
-      // images
-      // const plotImageBuffer = await saveScreenshot(plotImageLayers, req.log);
-      // const frontViewImageBuffer; // from layerFiles
+      // front view image
+      const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
+      const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
 
       // ========================== BUILDING DETAILS ==============================
 
@@ -492,9 +494,6 @@ export const generatePlotReport = async (req: Request<{},{},{
       ));
       const waterbodyArea = await findArea(waterbodyGeojson);
 
-      // images
-      // const blockImgBuff = await saveScreenshot(blockImageLayers, req.log);
-
       req.log.info("USERS =====> ", userList);
       const users = Array.from(userList);
 
@@ -505,12 +504,12 @@ export const generatePlotReport = async (req: Request<{},{},{
 
         date,
         users,
-        // coverImageBuffer,
+        coverImageBuffer,
 
         // plot details
 
-        // frontViewImageBuffer,
-        // plotImageBuffer,
+        frontViewImageBuffer,
+        plotImageBuffer,
         plotArea,
         plotNo: String(allPlotFeatureData.plotNo),
         premiseNo: String(allPlotFeatureData.premiseNo),
@@ -534,7 +533,7 @@ export const generatePlotReport = async (req: Request<{},{},{
 
         // block details
 
-        // blockImageBuffer,
+        blockImageBuffer,
         blockArea,
         greeneryArea,
         canopyArea,
@@ -549,7 +548,7 @@ export const generatePlotReport = async (req: Request<{},{},{
         averageIncentives: Number(allBlockFeatureData.averageIncentives),
       };
 
-      req.log.info(data);
+      // req.log.info(data);
 
       // saving the document
       const doc = generatePlotReportDocument(data);
@@ -577,6 +576,10 @@ export const generatePlotReport = async (req: Request<{},{},{
       // const savedDoc = await docDB.save();
 
       req.log.info("Report Generation Complete");
+
+      // missionSpecificSocket
+      //   .to(plotLayer.missionId.toString())
+      //   .emit("REPORT_GENERATION_COMPLETE", savedDoc);
 
       res.status(200).json({
         status: true,

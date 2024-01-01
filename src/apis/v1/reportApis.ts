@@ -18,11 +18,7 @@ router.post(
 router.post(
   "/plot-report",
   // isAuthenticated,
-  // for images
-  // body("coverPageLayers").optional().notEmpty().isArray(),
-  // body("blockImageLayers").optional().notEmpty().isArray(),
-  // body("plotImageLayers").optional().notEmpty().isArray(),
-  // for other data
+  body("rasterLayerId").notEmpty().isString(),
   body("plotLayerId").notEmpty().isString(),
   body("buildingLayerId").notEmpty().isString(),
   body("blockLayerId").notEmpty().isString(),
