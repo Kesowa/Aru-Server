@@ -399,7 +399,7 @@ export const generatePlotReport = async (req: Request<{}, {}, {
     const plotGeojson = await readGeoJson(DirPath(Directory.DEFAULT, plotLayer.layerpath));
 
     // multiple plot reports will be generated, one for each flagged plot
-    // use Plot_no to join building_footprint with each plot
+    // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
     const flaggedPlotGeojson = plotGeojson.features.filter((_, index) => plotLayer.flaggedFeatures.includes(index));
 
     // plot images (one per plot, fail safe if absent)
