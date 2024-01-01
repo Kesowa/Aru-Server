@@ -8,7 +8,7 @@ import { validator } from "../../utils/requestHelpers";
 const router = express.Router();
 
 router.post(
-  "/",
+  "/block",
   isAuthenticated,
   body("missionId").notEmpty().isMongoId(),
   validator,
@@ -16,19 +16,9 @@ router.post(
 );
 
 router.post(
-  "/plot-report",
-  // isAuthenticated,
-  // for images
-  // body("coverPageLayers").optional().notEmpty().isArray(),
-  // body("blockImageLayers").optional().notEmpty().isArray(),
-  // body("plotImageLayers").optional().notEmpty().isArray(),
-  // for other data
-  body("plotLayerId").notEmpty().isString(),
-  body("buildingLayerId").notEmpty().isString(),
-  body("blockLayerId").notEmpty().isString(),
-  body("greeneryLayerId").notEmpty().isString(),
-  body("canopyLayerId").notEmpty().isString(),
-  body("waterbodyLayerId").notEmpty().isString(),
+  "/plot",
+  isAuthenticated,
+  body("missionId").notEmpty().isMongoId(),
   validator,
   generatePlotReport
 );

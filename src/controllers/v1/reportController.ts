@@ -1,4 +1,4 @@
-import { Dir, promises as fs } from "fs";
+import { promises as fs } from "fs";
 import * as turf from "@turf/turf";
 import { Request } from "express";
 import Mission from "../../models/mission";
@@ -32,6 +32,10 @@ import { ScreenshotGenerator } from "../../utils/reportUtils/screenshot";
 import { pino } from "pino";
 import { IPlotReportData } from "../../utils/reportUtils/plot-report/types";
 import { generatePlotReportDocument } from "../../utils/reportUtils/plot-report/report";
+import vector from "../../models/vectorprops";
+import raster from "../../models/rasterprops";
+import { readGeoJson } from "../../utils/geojsonUtils";
+import layerFiles from "../../models/layerFiles";
 
 export async function findArea(gjson: any) {
   try {
@@ -341,10 +345,10 @@ export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
   const vectorFilePaths: string[] = [];
   const rasterFilePaths: string[] = [];
 
-  for(const id of layerIds) {
+  for (const id of layerIds) {
     const layer = await Layer.findById(id);
-    if(layer.type === "Vector") vectorFilePaths.push(TITILER_STATIC+ layer.layerpath);
-    else rasterFilePaths.push(TITILER_STATIC+ layer.layerpath);
+    if (layer.type === "Vector") vectorFilePaths.push(TITILER_STATIC + layer.layerpath);
+    else rasterFilePaths.push(TITILER_STATIC + layer.layerpath);
   }
 
   const ssGenerator = new ScreenshotGenerator(logger);
@@ -363,233 +367,236 @@ export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
   return ssBuffer;
 }
 
-export const generatePlotReport = async (req: Request<{},{},{ 
-  coverPageLayers: string[],
-  blockImageLayers: string[],
-  plotImageLayers: string[],
-  plotLayerId: string,
-  buildingLayerId: string,
-  blockLayerId: string,
-  greeneryLayerId: string,
-  canopyLayerId: string,
-  waterbodyLayerId: string,
+export const generatePlotReport = async (req: Request<{}, {}, {
+  missionId: string,
 }>, res: AuthResponse) => {
   {
+    const [blockBoundaryType, plotType, buildingFootprintType, orthoType] = await Promise.all([
+      vector.findOne({ name: "Block Boundary" }),
+      vector.findOne({ name: "Plot" }),
+      vector.findOne({ name: "Building Footprint" }), // there's a type with name "Building footprint" as well, be warned
+      raster.findOne({ name: "ORTHO" }),
+    ]);
+    const [blockBoundaryLayer, plotLayer, buildingFootprintLayer, rasterLayer] = await Promise.all([
+      Layer.findOne({
+        tenantId: res.locals.user.tenantId._id,
+        missionId: req.body.missionId,
+        vector: blockBoundaryType._id,
+      }), Layer.findOne({
+        tenantId: res.locals.user.tenantId._id,
+        missionId: req.body.missionId,
+        vector: plotType._id,
+      }), Layer.findOne({
+        tenantId: res.locals.user.tenantId._id,
+        missionId: req.body.missionId,
+        vector: buildingFootprintType._id,
+      }),Layer.findOne({
+        tenantId: res.locals.user.tenantId._id,
+        missionId: req.body.missionId,
+        raster: orthoType._id,
+      })
+    ]);
+    const plotGeojson = await readGeoJson(DirPath(Directory.DEFAULT, plotLayer.layerpath));
 
-    try {
-      const { 
-        coverPageLayers, 
-        blockImageLayers, 
-        plotImageLayers, 
-        plotLayerId, 
-        buildingLayerId, 
-        blockLayerId, 
-        greeneryLayerId,
-        canopyLayerId,
-        waterbodyLayerId
-      } = req.body;
+    // multiple plot reports will be generated, one for each flagged plot
+    // use Plot_no to join building_footprint with each plot
+    const flaggedPlotGeojson = plotGeojson.features.filter((_, index) => plotLayer.flaggedFeatures.includes(index));
 
-      // ========================== COVER PAGE DETAILS ==============================
+    // plot images (one per plot, fail safe if absent)
+    const flaggedPlotFile = await layerFiles.find({
+      tenantId: res.locals.user.tenantId._id,
+      layerId: plotLayer._id,
+      sys_Id: { $in: flaggedPlotGeojson.map(plot => plot.properties.sys_id) }
+    });
+    // ========================== COVER PAGE DETAILS ==============================
 
-      // date
-      const now = new Date();
-      const yyyy = now.getFullYear().toString();
-      let mm = (now.getMonth() + 1).toString();
-      let dd = now.getDate().toString();
-      if (parseInt(dd) < 10) dd = "0" + dd;
-      if (parseInt(mm) < 10) mm = "0" + mm;
-      const date = dd + "/" + mm + "/" + yyyy;
-      
-      // users
-      const userList: Set<string> = new Set<string>(); // will push while processing layers
-      
-      // images
-      const coverImageBuffer = await saveScreenshot(coverPageLayers, req.log);
-      req.log.info("COVER IMAGE =====> ");
-      // req.log.info(coverImageBuffer);
-      await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); 
-      // Tried saving the Buffer to a file, got error that the Buffer was undefined
+    // date
+    const now = new Date();
+    const date = now.toLocaleDateString("in");
 
-      // ========================== PLOT DETAILS ==============================
+    // users
+    const userList: Set<string> = new Set<string>(); // will push while processing layers
 
-      const plotLayer = await Layer.findById(plotLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-      userList.add(plotLayer.createdBy.name);
-      userList.add(plotLayer.updatedBy.name);
-      const plotGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, plotLayer.layerpath),
-        "utf-8"
-      ));
+    // images
+    const coverImageBuffer = await saveScreenshot(coverPageLayers, req.log);
+    req.log.info("COVER IMAGE =====> ");
+    // req.log.info(coverImageBuffer);
+    await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer);
+    // Tried saving the Buffer to a file, got error that the Buffer was undefined
 
-      // provided details
-      let allPlotFeatureData: any;
-      for(const feature of plotGeojson.features) {
-        allPlotFeatureData = { ...allPlotFeatureData, ...feature.properties };
-      }
+    // ========================== PLOT DETAILS ==============================
 
-      // calculated details
-      const plotArea = await findArea(plotGeojson);
+    const plotLayer = await Layer.findById(plotLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
+    userList.add(plotLayer.createdBy.name);
+    userList.add(plotLayer.updatedBy.name);
+    const plotGeojson = await JSON.parse(await fs.readFile(
+      DirPath(Directory.DEFAULT, plotLayer.layerpath),
+      "utf-8"
+    ));
 
-      // images
-      // const plotImageBuffer = await saveScreenshot(plotImageLayers, req.log);
-      // const frontViewImageBuffer; // from layerFiles
-
-      // ========================== BUILDING DETAILS ==============================
-
-      const buildingLayer = await Layer.findById(buildingLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-      userList.add(buildingLayer.createdBy.name);
-      userList.add(buildingLayer.updatedBy.name);
-      const buildingGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, buildingLayer.layerpath),
-        "utf-8"
-      ));
-
-      // provided details
-      let allBuildingFeatureData: any;
-      for(const feature of buildingGeojson.features) {
-        allBuildingFeatureData = { ...allBuildingFeatureData, ...feature.properties };
-      }
-
-      // calculated details
-      const buildingArea = await findArea(buildingGeojson);
-
-      // ========================== BLOCK DETAILS ==============================
-
-      const blockLayer = await Layer.findById(blockLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-      userList.add(blockLayer.createdBy.name);
-      userList.add(blockLayer.updatedBy.name);
-      const blockGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, blockLayer.layerpath),
-        "utf-8"
-      ));
-
-      // calculated details
-      const blockArea = await findArea(blockGeojson);
-
-      // provided details
-      let allBlockFeatureData: any;
-      for(const feature of blockGeojson.features) {
-        allBlockFeatureData = { ...allBlockFeatureData, ...feature.properties };
-      }
-
-      const greeneryLayer = await Layer.findById(greeneryLayerId);
-      const greeneryGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, greeneryLayer.layerpath),
-        "utf-8"
-      ));
-      const greeneryArea = await findArea(greeneryGeojson);
-
-      const canopyLayer = await Layer.findById(canopyLayerId);
-      const canopyGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, canopyLayer.layerpath),
-        "utf-8"
-      ));
-      const canopyArea = await findArea(canopyGeojson);
-
-      const waterbodyLayer = await Layer.findById(waterbodyLayerId);
-      const waterbodyGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, waterbodyLayer.layerpath),
-        "utf-8"
-      ));
-      const waterbodyArea = await findArea(waterbodyGeojson);
-
-      // images
-      // const blockImgBuff = await saveScreenshot(blockImageLayers, req.log);
-
-      req.log.info("USERS =====> ", userList);
-      const users = Array.from(userList);
-
-      // ================= PUTTING TOGETHER THE DATA =======================
-
-      const data: IPlotReportData = {
-        // cover page details
-
-        date,
-        users,
-        // coverImageBuffer,
-
-        // plot details
-
-        // frontViewImageBuffer,
-        // plotImageBuffer,
-        plotArea,
-        plotNo: String(allPlotFeatureData.plotNo),
-        premiseNo: String(allPlotFeatureData.premiseNo),
-        pincode: Number(allPlotFeatureData.pincode),
-        category: String(allPlotFeatureData.category),
-        infraction: String(allPlotFeatureData.infraction),
-        isGreenTopEligible: (allPlotFeatureData.isGreenTopEligible === "Yes") ? true : false,
-        isSolarPlantEligible: (allPlotFeatureData.isSolarPlantEligible === "Yes") ? true : false,
-        hasTradeLicense: (allPlotFeatureData.hasTradeLicense === "Yes") ? true : false,
-        tax: Number(allPlotFeatureData.tax),
-
-        // building details
-
-        buildingArea,
-        buildingFootprint: (buildingArea / plotArea) * 100,
-        buildingAvailable: (allBuildingFeatureData.buildingAvailable === "Yes") ? true : false,
-        floorCount: String(allBuildingFeatureData.floorCount),
-        buildingNo: String(allBuildingFeatureData.buildingNo),
-        hasCompletionCertificate: (allBuildingFeatureData.hasCompletionCertificate === "Yes") ? true : false,
-        buildingHeight: Number(allBuildingFeatureData.buildingHeight),
-
-        // block details
-
-        // blockImageBuffer,
-        blockArea,
-        greeneryArea,
-        canopyArea,
-        waterbodyArea,
-        greeneryPercent: (greeneryArea/blockArea)*100,
-        canopyPercent: (canopyArea/blockArea)*100,
-        waterbodyPercent: (waterbodyArea/blockArea)*100,
-        blockName: String(allBlockFeatureData.blockName),
-        garbageCollectionInfo: String(allBlockFeatureData.garbageCollectionInfo),
-        averageBuildingHeight: Number(allBlockFeatureData.averageBuildingHeight),
-        averageBlockHeight: Number(allBlockFeatureData.averageBlockHeight),
-        averageIncentives: Number(allBlockFeatureData.averageIncentives),
-      };
-
-      req.log.info(data);
-
-      // saving the document
-      const doc = generatePlotReportDocument(data);
-      const buffer = await Packer.toBuffer(doc);
-      const filename = `${plotLayer.missionId.toString()}-plot-report.docx`;
-      const filepath = DirPath(Directory.DOCUMENTS, filename);
-      await fs.writeFile(filepath, buffer);
-
-      // const fileStats = await fs.stat(filepath);
-
-      // await Document.findOneAndDelete({ name: filename });
-
-      // const docDB = new Document({
-      //   name: filename,
-      //   modDate: new Date(),
-      //   fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
-      //   fileType: "docx",
-      //   folderName: "root1234",
-      //   filePath: `/documents/${filename}`,
-      //   missionId: plotLayer.missionId,
-      //   tenantId: res.locals.user.tenantId,
-      //   createdBy: res.locals.user._id,
-      //   updatedBy: res.locals.user._id,
-      // });
-      // const savedDoc = await docDB.save();
-
-      req.log.info("Report Generation Complete");
-
-      res.status(200).json({
-        status: true,
-        message: "Successfully Generated Plot Report",
-        // data: savedDoc
-      });
-
-    } catch (error) {
-      req.log.error(error);
-      res.status(500).json({
-        status: false,
-        message: "Server Error",
-      });
+    // provided details
+    let allPlotFeatureData: any;
+    for (const feature of plotGeojson.features) {
+      allPlotFeatureData = { ...allPlotFeatureData, ...feature.properties };
     }
+
+    // calculated details
+    const plotArea = await findArea(plotGeojson);
+
+    // images
+    // const plotImageBuffer = await saveScreenshot(plotImageLayers, req.log);
+    // const frontViewImageBuffer; // from layerFiles
+
+    // ========================== BUILDING DETAILS ==============================
+
+    const buildingLayer = await Layer.findById(buildingLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
+    userList.add(buildingLayer.createdBy.name);
+    userList.add(buildingLayer.updatedBy.name);
+    const buildingGeojson = await JSON.parse(await fs.readFile(
+      DirPath(Directory.DEFAULT, buildingLayer.layerpath),
+      "utf-8"
+    ));
+
+    // provided details
+    let allBuildingFeatureData: any;
+    for (const feature of buildingGeojson.features) {
+      allBuildingFeatureData = { ...allBuildingFeatureData, ...feature.properties };
+    }
+
+    // calculated details
+    const buildingArea = await findArea(buildingGeojson);
+
+    // ========================== BLOCK DETAILS ==============================
+
+    const blockLayer = await Layer.findById(blockLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
+    userList.add(blockLayer.createdBy.name);
+    userList.add(blockLayer.updatedBy.name);
+    const blockGeojson = await JSON.parse(await fs.readFile(
+      DirPath(Directory.DEFAULT, blockLayer.layerpath),
+      "utf-8"
+    ));
+
+    // calculated details
+    const blockArea = await findArea(blockGeojson);
+
+    // provided details
+    let allBlockFeatureData: any;
+    for (const feature of blockGeojson.features) {
+      allBlockFeatureData = { ...allBlockFeatureData, ...feature.properties };
+    }
+
+    const greeneryLayer = await Layer.findById(greeneryLayerId);
+    const greeneryGeojson = await JSON.parse(await fs.readFile(
+      DirPath(Directory.DEFAULT, greeneryLayer.layerpath),
+      "utf-8"
+    ));
+    const greeneryArea = await findArea(greeneryGeojson);
+
+    const canopyLayer = await Layer.findById(canopyLayerId);
+    const canopyGeojson = await JSON.parse(await fs.readFile(
+      DirPath(Directory.DEFAULT, canopyLayer.layerpath),
+      "utf-8"
+    ));
+    const canopyArea = await findArea(canopyGeojson);
+
+    const waterbodyLayer = await Layer.findById(waterbodyLayerId);
+    const waterbodyGeojson = await JSON.parse(await fs.readFile(
+      DirPath(Directory.DEFAULT, waterbodyLayer.layerpath),
+      "utf-8"
+    ));
+    const waterbodyArea = await findArea(waterbodyGeojson);
+
+    // images
+    // const blockImgBuff = await saveScreenshot(blockImageLayers, req.log);
+
+    req.log.info("USERS =====> ", userList);
+    const users = Array.from(userList);
+
+    // ================= PUTTING TOGETHER THE DATA =======================
+
+    const data: IPlotReportData = {
+      // cover page details
+
+      date,
+      users,
+      // coverImageBuffer,
+
+      // plot details
+
+      // frontViewImageBuffer,
+      // plotImageBuffer,
+      plotArea,
+      plotNo: String(allPlotFeatureData.plotNo),
+      premiseNo: String(allPlotFeatureData.premiseNo),
+      pincode: Number(allPlotFeatureData.pincode),
+      category: String(allPlotFeatureData.category),
+      infraction: String(allPlotFeatureData.infraction),
+      isGreenTopEligible: (allPlotFeatureData.isGreenTopEligible === "Yes") ? true : false,
+      isSolarPlantEligible: (allPlotFeatureData.isSolarPlantEligible === "Yes") ? true : false,
+      hasTradeLicense: (allPlotFeatureData.hasTradeLicense === "Yes") ? true : false,
+      tax: Number(allPlotFeatureData.tax),
+
+      // building details
+
+      buildingArea,
+      buildingFootprint: (buildingArea / plotArea) * 100,
+      buildingAvailable: (allBuildingFeatureData.buildingAvailable === "Yes") ? true : false,
+      floorCount: String(allBuildingFeatureData.floorCount),
+      buildingNo: String(allBuildingFeatureData.buildingNo),
+      hasCompletionCertificate: (allBuildingFeatureData.hasCompletionCertificate === "Yes") ? true : false,
+      buildingHeight: Number(allBuildingFeatureData.buildingHeight),
+
+      // block details
+
+      // blockImageBuffer,
+      blockArea,
+      greeneryArea,
+      canopyArea,
+      waterbodyArea,
+      greeneryPercent: (greeneryArea / blockArea) * 100,
+      canopyPercent: (canopyArea / blockArea) * 100,
+      waterbodyPercent: (waterbodyArea / blockArea) * 100,
+      blockName: String(allBlockFeatureData.blockName),
+      garbageCollectionInfo: String(allBlockFeatureData.garbageCollectionInfo),
+      averageBuildingHeight: Number(allBlockFeatureData.averageBuildingHeight),
+      averageBlockHeight: Number(allBlockFeatureData.averageBlockHeight),
+      averageIncentives: Number(allBlockFeatureData.averageIncentives),
+    };
+
+    req.log.info(data);
+
+    // saving the document
+    const doc = generatePlotReportDocument(data);
+    const buffer = await Packer.toBuffer(doc);
+    const filename = `${plotLayer.missionId.toString()}-plot-report.docx`;
+    const filepath = DirPath(Directory.DOCUMENTS, filename);
+    await fs.writeFile(filepath, buffer);
+
+    // const fileStats = await fs.stat(filepath);
+
+    // await Document.findOneAndDelete({ name: filename });
+
+    // const docDB = new Document({
+    //   name: filename,
+    //   modDate: new Date(),
+    //   fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
+    //   fileType: "docx",
+    //   folderName: "root1234",
+    //   filePath: `/documents/${filename}`,
+    //   missionId: plotLayer.missionId,
+    //   tenantId: res.locals.user.tenantId,
+    //   createdBy: res.locals.user._id,
+    //   updatedBy: res.locals.user._id,
+    // });
+    // const savedDoc = await docDB.save();
+
+    req.log.info("Report Generation Complete");
+
+    res.status(200).json({
+      status: true,
+      message: "Successfully Generated Plot Report",
+      // data: savedDoc
+    });
+
   }
 }

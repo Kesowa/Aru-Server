@@ -119,7 +119,7 @@ export const isAuthenticated = (
           status: false,
           message: "Invalid user id",
         });
-      } else if (data == InvalidAuth.INVALID_LOCATION) {
+      } else if (data == InvalidAuth.INVALID_LOCATION && MODE != Mode.Dev) {
         res.status(401).json({
           status: false,
           message: "Location not authorized",
