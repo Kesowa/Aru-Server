@@ -5,7 +5,7 @@ import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { IVector } from "../../schemas/vectorprops";
-import { DirPath, Directory, TITILER_SERVER, TITILER_STATIC } from "../../constants";
+import { DirPath, Directory, PUBLIC_SERVER, TITILER_SERVER, TITILER_STATIC } from "../../constants";
 import { generateDocument } from "../../utils/reportUtils/block-report/report";
 import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/block-report/types";
@@ -362,6 +362,8 @@ export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
     rasterFilePaths
   );
 
+  await ssGenerator.destroy();
+
   logger.info("Image Captured...");
 
   return ssBuffer;
@@ -413,7 +415,6 @@ export const generatePlotReport = async (req: Request<{}, {}, {
     // date
     const now = new Date();
     const date = now.toLocaleDateString("in");
-
     // users
     const userList: Set<string> = new Set<string>(); // will push while processing layers
 
@@ -422,7 +423,6 @@ export const generatePlotReport = async (req: Request<{}, {}, {
     req.log.info("COVER IMAGE =====> ");
     // req.log.info(coverImageBuffer);
     await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer);
-    // Tried saving the Buffer to a file, got error that the Buffer was undefined
 
     // ========================== PLOT DETAILS ==============================
 
@@ -438,6 +438,166 @@ export const generatePlotReport = async (req: Request<{}, {}, {
     let allPlotFeatureData: any;
     for (const feature of plotGeojson.features) {
       allPlotFeatureData = { ...allPlotFeatureData, ...feature.properties };
+      // front view image
+      const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
+      const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
+
+      // ========================== BUILDING DETAILS ==============================
+
+      const buildingLayer = await Layer.findById(buildingLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
+      userList.push(buildingLayer.createdBy.name);
+      userList.push(buildingLayer.updatedBy.name);
+      const buildingGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, buildingLayer.layerpath),
+        "utf-8"
+      ));
+
+      // provided details
+      let allBuildingFeatureData: any;
+      for(const feature of buildingGeojson.features) {
+        allBuildingFeatureData = { ...allBuildingFeatureData, ...feature.properties };
+      }
+
+      // calculated details
+      const buildingArea = await findArea(buildingGeojson);
+
+      // ========================== BLOCK DETAILS ==============================
+
+      const blockLayer = await Layer.findById(blockLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
+      userList.push(blockLayer.createdBy.name);
+      userList.push(blockLayer.updatedBy.name);
+      const blockGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, blockLayer.layerpath),
+        "utf-8"
+      ));
+
+      // calculated details
+      const blockArea = await findArea(blockGeojson);
+
+      // provided details
+      let allBlockFeatureData: any;
+      for(const feature of blockGeojson.features) {
+        allBlockFeatureData = { ...allBlockFeatureData, ...feature.properties };
+      }
+
+      const greeneryLayer = await Layer.findById(greeneryLayerId);
+      const greeneryGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, greeneryLayer.layerpath),
+        "utf-8"
+      ));
+      const greeneryArea = await findArea(greeneryGeojson);
+
+      const canopyLayer = await Layer.findById(canopyLayerId);
+      const canopyGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, canopyLayer.layerpath),
+        "utf-8"
+      ));
+      const canopyArea = await findArea(canopyGeojson);
+
+      const waterbodyLayer = await Layer.findById(waterbodyLayerId);
+      const waterbodyGeojson = await JSON.parse(await fs.readFile(
+        DirPath(Directory.DEFAULT, waterbodyLayer.layerpath),
+        "utf-8"
+      ));
+      const waterbodyArea = await findArea(waterbodyGeojson);
+
+      req.log.info("USERS =====> ");
+      const users = Array.from(new Set<string>(userList));
+      req.log.info(users);
+
+      // ================= PUTTING TOGETHER THE DATA =======================
+
+      const data: IPlotReportData = {
+        // cover page details
+
+        date,
+        users,
+        coverImageBuffer,
+
+        // plot details
+
+        frontViewImageBuffer,
+        plotImageBuffer,
+        plotArea,
+        plotNo: String(allPlotFeatureData.plotNo),
+        premiseNo: String(allPlotFeatureData.premiseNo),
+        pincode: Number(allPlotFeatureData.pincode),
+        category: String(allPlotFeatureData.category),
+        infraction: String(allPlotFeatureData.infraction),
+        isGreenTopEligible: (allPlotFeatureData.isGreenTopEligible === "Yes") ? true : false,
+        isSolarPlantEligible: (allPlotFeatureData.isSolarPlantEligible === "Yes") ? true : false,
+        hasTradeLicense: (allPlotFeatureData.hasTradeLicense === "Yes") ? true : false,
+        tax: Number(allPlotFeatureData.tax),
+
+        // building details
+
+        buildingArea,
+        buildingFootprint: (buildingArea / plotArea) * 100,
+        buildingAvailable: (allBuildingFeatureData.buildingAvailable === "Yes") ? true : false,
+        floorCount: String(allBuildingFeatureData.floorCount),
+        buildingNo: String(allBuildingFeatureData.buildingNo),
+        hasCompletionCertificate: (allBuildingFeatureData.hasCompletionCertificate === "Yes") ? true : false,
+        buildingHeight: Number(allBuildingFeatureData.buildingHeight),
+
+        // block details
+
+        blockImageBuffer,
+        blockArea,
+        greeneryArea,
+        canopyArea,
+        waterbodyArea,
+        greeneryPercent: (greeneryArea/blockArea)*100,
+        canopyPercent: (canopyArea/blockArea)*100,
+        waterbodyPercent: (waterbodyArea/blockArea)*100,
+        blockName: String(allBlockFeatureData.blockName),
+        garbageCollectionInfo: String(allBlockFeatureData.garbageCollectionInfo),
+        averageBuildingHeight: Number(allBlockFeatureData.averageBuildingHeight),
+        averageBlockHeight: Number(allBlockFeatureData.averageBlockHeight),
+        averageIncentives: Number(allBlockFeatureData.averageIncentives),
+      };
+
+      // req.log.info(data);
+
+      // saving the document
+      const doc = generatePlotReportDocument(data);
+      const buffer = await Packer.toBuffer(doc);
+      const filename = `${missionId.toString()}-plot-report.docx`;
+      const filepath = DirPath(Directory.DOCUMENTS, filename);
+      await fs.writeFile(filepath, buffer);
+
+      const fileStats = await fs.stat(filepath);
+
+      await Document.findOneAndDelete({ name: filename });
+
+      const docDB = new Document({
+        name: filename,
+        modDate: new Date(),
+        fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
+        fileType: "docx",
+        folderName: "root1234",
+        filePath: `/documents/${filename}`,
+        missionId: missionId,
+        tenantId: res.locals.user.tenantId,
+        createdBy: res.locals.user._id,
+        updatedBy: res.locals.user._id,
+      });
+      const savedDoc = await docDB.save();
+
+      req.log.info("Report Generation Complete");
+
+      missionSpecificSocket
+        .to(missionId.toString())
+        .emit("REPORT_GENERATION_COMPLETE", savedDoc);
+
+    } catch (error) {
+      req.log.error(error);
+      res.status(500).json({
+        status: false,
+        message: "Server Error",
+      });
+      missionSpecificSocket
+        .to(missionId.toString())
+        .emit("REPORT_GENERATION_FAILED", error);
     }
 
     // calculated details

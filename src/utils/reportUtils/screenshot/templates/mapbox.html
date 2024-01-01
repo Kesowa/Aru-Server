@@ -38,9 +38,15 @@
     }
     async function takeScreenshot(serverUrl, rasterFilePaths, vectorFilePaths) {
       const map = await setupMap(serverUrl);
+      removeExternalLayers(map);
+      console.log("EXTERNAL LAYERS BEFORE => ", map.getStyle().layers.filter(
+        layer => (layer.id.startsWith("vector-layer-") || layer.id.startsWith("raster-layer-"))
+      ));
       const rasterBounds = await renderRaster(rasterFilePaths, serverUrl, map);
-      const vectorBounds = await renderVector([], map);
-      const allBounds = turf.multiPoint(rasterBounds.concat(vectorBounds));
+      const vectorBounds = await renderVector(vectorFilePaths, map);
+      // const allBounds = turf.multiPoint(rasterBounds.concat(vectorBounds));
+      const allBounds = (vectorFilePaths.length > 0) ? turf.multiPoint(vectorBounds) : turf.multiPoint(rasterBounds);
+      // if both raster and vector given, vector bounds prioritized, else if only rasters given, raster bounds considered
       const points = turf.bbox(allBounds);
       console.log("POINTS", JSON.stringify({rasterFilePaths, vectorFilePaths, rasterBounds, vectorBounds, points}));
       if (points.every(v => v != null)) {
@@ -51,6 +57,9 @@
       console.log("WAITING FOR LOAD");
       await map.once("idle");
       console.log("LOAD FIRED");
+      console.log("EXTERNAL LAYERS AFTER => ", map.getStyle().layers.filter(
+        layer => (layer.id.startsWith("vector-layer-") || layer.id.startsWith("raster-layer-"))
+      ));
     }
     async function setupMap() {
       mapboxgl.accessToken =
@@ -121,7 +130,7 @@
         const parsedGeojson = await (await fetch(geojsonFilePath)).json();
         // Center the map on the points using Turf.js
         const pointFeatures = parsedGeojson.features.filter(
-          (feature) => feature.geometry.type === "MultiPolygon"
+          (feature) => ["MultiPolygon", "Polygon"].includes(feature.geometry.type)
         );
         const bound = turf.bbox(turf.featureCollection(pointFeatures));
         bounds.push([bound[0], bound[1]]);
@@ -168,6 +177,20 @@
         });
       }
       return bounds;
+    }
+
+    function removeExternalLayers(map) {
+      const externalLayers = map.getStyle().layers.filter(
+        layer => (layer.id.startsWith("vector-layer-") || layer.id.startsWith("raster-layer-"))
+      );
+      const externalSources = new Set(); 
+      externalLayers.forEach((layer) => {
+        externalSources.add(layer.source);
+        map.removeLayer(layer.id);
+      });
+      externalSources.forEach((source) => {
+        map.removeSource(source);
+      });
     }
 
   </script>

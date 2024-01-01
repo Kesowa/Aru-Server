@@ -123,10 +123,11 @@ export class ScreenshotGenerator {
       this.logger.info({cogServerUrl, rasterFilePaths, vectorFilePaths}, "GENERATING SCREENSHOT, TAKE COVER!!!");
       await this.mapboxPage.evaluate(
         async ({ cogServerUrl, vectorFilePaths, rasterFilePaths }) => {
-          await takeScreenshot(cogServerUrl, [...rasterFilePaths, "http://server:5011/raster/Ortho_25cm.tif"], vectorFilePaths);
+          // await takeScreenshot(cogServerUrl, [...rasterFilePaths, "http://server:5011/raster/Ortho_25cm.tif"], vectorFilePaths);
+          await takeScreenshot(cogServerUrl, rasterFilePaths, vectorFilePaths);
         }, { cogServerUrl, vectorFilePaths, rasterFilePaths });
       const pngBuffer = await this.mapboxPage.screenshot({type: "png"});
-      await fs.writeFile(DirPath(Directory.IMAGE, vectorFilePaths.length + '-' + rasterFilePaths.length + Math.random() + '.png'), pngBuffer);
+      // await fs.writeFile(DirPath(Directory.IMAGE, vectorFilePaths.length + '-' + rasterFilePaths.length + Math.random() + '.png'), pngBuffer);
       return pngBuffer;
     } catch (error) {
       this.logger.error("Error while generating map screenshot: ");
