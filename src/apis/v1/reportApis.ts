@@ -17,7 +17,7 @@ router.post(
 
 router.post(
   "/plot-report",
-  // isAuthenticated,
+  isAuthenticated,
   body("rasterLayerId").notEmpty().isString(),
   body("plotLayerId").notEmpty().isString(),
   body("buildingLayerId").notEmpty().isString(),

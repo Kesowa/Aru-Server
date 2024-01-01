@@ -376,7 +376,7 @@ export const generatePlotReport = async (req: Request<{},{},{
   waterbodyLayerId: string,
 }>, res: AuthResponse) => {
   {
-
+    let missionId: string;
     try {
       const {
         rasterLayerId,
@@ -388,10 +388,12 @@ export const generatePlotReport = async (req: Request<{},{},{
         waterbodyLayerId
       } = req.body;
 
-      // res.status(200).json({
-      //   status: true,
-      //   message: "Plot Report Generation started...",
-      // });
+      res.status(200).json({
+        status: true,
+        message: "Plot Report Generation started...",
+      });
+
+      req.log.info("Generating plot report...");
 
       // ========================== MAP IMAGES ================================
       const plotImageBuffer = await saveScreenshot([rasterLayerId, plotLayerId], req.log);
@@ -410,13 +412,14 @@ export const generatePlotReport = async (req: Request<{},{},{
       const date = dd + "/" + mm + "/" + yyyy;
       
       // users
-      const userList: Set<string> = new Set<string>(); // will push while processing layers
+      const userList: string[] = []; // will push while processing layers
 
       // ========================== PLOT DETAILS ==============================
 
       const plotLayer = await Layer.findById(plotLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-      userList.add(plotLayer.createdBy.name);
-      userList.add(plotLayer.updatedBy.name);
+      userList.push(plotLayer.createdBy.name);
+      userList.push(plotLayer.updatedBy.name);
+      missionId = plotLayer.missionId;
       const plotGeojson = await JSON.parse(await fs.readFile(
         DirPath(Directory.DEFAULT, plotLayer.layerpath),
         "utf-8"
@@ -438,8 +441,8 @@ export const generatePlotReport = async (req: Request<{},{},{
       // ========================== BUILDING DETAILS ==============================
 
       const buildingLayer = await Layer.findById(buildingLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-      userList.add(buildingLayer.createdBy.name);
-      userList.add(buildingLayer.updatedBy.name);
+      userList.push(buildingLayer.createdBy.name);
+      userList.push(buildingLayer.updatedBy.name);
       const buildingGeojson = await JSON.parse(await fs.readFile(
         DirPath(Directory.DEFAULT, buildingLayer.layerpath),
         "utf-8"
@@ -457,8 +460,8 @@ export const generatePlotReport = async (req: Request<{},{},{
       // ========================== BLOCK DETAILS ==============================
 
       const blockLayer = await Layer.findById(blockLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-      userList.add(blockLayer.createdBy.name);
-      userList.add(blockLayer.updatedBy.name);
+      userList.push(blockLayer.createdBy.name);
+      userList.push(blockLayer.updatedBy.name);
       const blockGeojson = await JSON.parse(await fs.readFile(
         DirPath(Directory.DEFAULT, blockLayer.layerpath),
         "utf-8"
@@ -494,8 +497,9 @@ export const generatePlotReport = async (req: Request<{},{},{
       ));
       const waterbodyArea = await findArea(waterbodyGeojson);
 
-      req.log.info("USERS =====> ", userList);
-      const users = Array.from(userList);
+      req.log.info("USERS =====> ");
+      const users = Array.from(new Set<string>(userList));
+      req.log.info(users);
 
       // ================= PUTTING TOGETHER THE DATA =======================
 
@@ -553,39 +557,33 @@ export const generatePlotReport = async (req: Request<{},{},{
       // saving the document
       const doc = generatePlotReportDocument(data);
       const buffer = await Packer.toBuffer(doc);
-      const filename = `${plotLayer.missionId.toString()}-plot-report.docx`;
+      const filename = `${missionId.toString()}-plot-report.docx`;
       const filepath = DirPath(Directory.DOCUMENTS, filename);
       await fs.writeFile(filepath, buffer);
 
-      // const fileStats = await fs.stat(filepath);
+      const fileStats = await fs.stat(filepath);
 
-      // await Document.findOneAndDelete({ name: filename });
+      await Document.findOneAndDelete({ name: filename });
 
-      // const docDB = new Document({
-      //   name: filename,
-      //   modDate: new Date(),
-      //   fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
-      //   fileType: "docx",
-      //   folderName: "root1234",
-      //   filePath: `/documents/${filename}`,
-      //   missionId: plotLayer.missionId,
-      //   tenantId: res.locals.user.tenantId,
-      //   createdBy: res.locals.user._id,
-      //   updatedBy: res.locals.user._id,
-      // });
-      // const savedDoc = await docDB.save();
+      const docDB = new Document({
+        name: filename,
+        modDate: new Date(),
+        fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
+        fileType: "docx",
+        folderName: "root1234",
+        filePath: `/documents/${filename}`,
+        missionId: missionId,
+        tenantId: res.locals.user.tenantId,
+        createdBy: res.locals.user._id,
+        updatedBy: res.locals.user._id,
+      });
+      const savedDoc = await docDB.save();
 
       req.log.info("Report Generation Complete");
 
-      // missionSpecificSocket
-      //   .to(plotLayer.missionId.toString())
-      //   .emit("REPORT_GENERATION_COMPLETE", savedDoc);
-
-      res.status(200).json({
-        status: true,
-        message: "Successfully Generated Plot Report",
-        // data: savedDoc
-      });
+      missionSpecificSocket
+        .to(missionId.toString())
+        .emit("REPORT_GENERATION_COMPLETE", savedDoc);
 
     } catch (error) {
       req.log.error(error);
@@ -593,6 +591,9 @@ export const generatePlotReport = async (req: Request<{},{},{
         status: false,
         message: "Server Error",
       });
+      missionSpecificSocket
+        .to(missionId.toString())
+        .emit("REPORT_GENERATION_FAILED", error);
     }
   }
 }
