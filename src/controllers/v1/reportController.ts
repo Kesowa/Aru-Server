@@ -341,16 +341,7 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
   }
 };
 
-export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
-  const vectorFilePaths: string[] = [];
-  const rasterFilePaths: string[] = [];
-
-  for (const id of layerIds) {
-    const layer = await Layer.findById(id);
-    if (layer.type === "Vector") vectorFilePaths.push(TITILER_STATIC + layer.layerpath);
-    else rasterFilePaths.push(TITILER_STATIC + layer.layerpath);
-  }
-
+export async function saveScreenshot(vectorFeatures: any[], rasterFilePaths: string[], logger: pino.Logger) {
   const ssGenerator = new ScreenshotGenerator(logger);
   await ssGenerator.init();
 
@@ -358,7 +349,7 @@ export async function saveScreenshot(layerIds: string[], logger: pino.Logger) {
 
   const ssBuffer = await ssGenerator.getMapSS(
     TITILER_SERVER,
-    vectorFilePaths,
+    vectorFeatures,
     rasterFilePaths
   );
 
@@ -373,105 +364,75 @@ export const generatePlotReport = async (req: Request<{}, {}, {
   missionId: string,
 }>, res: AuthResponse) => {
   {
-    const [blockBoundaryType, plotType, buildingFootprintType, orthoType] = await Promise.all([
-      vector.findOne({ name: "Block Boundary" }),
-      vector.findOne({ name: "Plot" }),
-      vector.findOne({ name: "Building Footprint" }), // there's a type with name "Building footprint" as well, be warned
-      raster.findOne({ name: "ORTHO" }),
-    ]);
-    const [blockBoundaryLayer, plotLayer, buildingFootprintLayer, rasterLayer] = await Promise.all([
-      Layer.findOne({
+    const { missionId } = req.body;
+    try {
+
+      const [blockBoundaryType, plotType, buildingFootprintType, waterbodyType, orthoType] = await Promise.all([
+        vector.findOne({ name: "Block Boundary" }),
+        vector.findOne({ name: "Plot" }),
+        vector.findOne({ name: "Building Footprint" }), // there's a type with name "Building footprint" as well, be warned
+        vector.findOne({ name: "Waterbody" }), // there's a type with name "Water Body" as well, be warned
+        raster.findOne({ name: "ORTHO" }),
+      ]);
+      const [blockBoundaryLayer, plotLayer, buildingFootprintLayer, waterbodyLayer, rasterLayer] = await Promise.all([
+        Layer.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          missionId: req.body.missionId,
+          vector: blockBoundaryType._id,
+        }), Layer.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          missionId: req.body.missionId,
+          vector: plotType._id,
+        }), Layer.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          missionId: req.body.missionId,
+          vector: buildingFootprintType._id,
+        }),Layer.findOne({
+        }), Layer.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          missionId: req.body.missionId,
+          vector: waterbodyType._id,
+        }),Layer.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          missionId: req.body.missionId,
+          raster: orthoType._id,
+        })
+      ]);
+
+      const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;
+      const plotGeojson = await readGeoJson(DirPath(Directory.DEFAULT, plotLayer.layerpath));
+      const blockGeojson = await readGeoJson(DirPath(Directory.DEFAULT, blockBoundaryLayer.layerpath));
+
+      // multiple plot reports will be generated, one for each flagged plot
+      // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
+      const flaggedPlotGeojson = plotGeojson.features.filter((_, index) => plotLayer.flaggedFeatures.includes(index));
+
+      // plot images (one per plot, fail safe if absent)
+      const flaggedPlotFile = await layerFiles.find({
         tenantId: res.locals.user.tenantId._id,
-        missionId: req.body.missionId,
-        vector: blockBoundaryType._id,
-      }), Layer.findOne({
-        tenantId: res.locals.user.tenantId._id,
-        missionId: req.body.missionId,
-        vector: plotType._id,
-      }), Layer.findOne({
-        tenantId: res.locals.user.tenantId._id,
-        missionId: req.body.missionId,
-        vector: buildingFootprintType._id,
-      }),Layer.findOne({
-        tenantId: res.locals.user.tenantId._id,
-        missionId: req.body.missionId,
-        raster: orthoType._id,
-      })
-    ]);
-    const plotGeojson = await readGeoJson(DirPath(Directory.DEFAULT, plotLayer.layerpath));
+        layerId: plotLayer._id,
+        sys_Id: { $in: flaggedPlotGeojson.map(plot => plot.properties.sys_id) }
+      });
+      
+      // date
+      const now = new Date();
+      const date = now.toLocaleDateString("in");
 
-    // multiple plot reports will be generated, one for each flagged plot
-    // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
-    const flaggedPlotGeojson = plotGeojson.features.filter((_, index) => plotLayer.flaggedFeatures.includes(index));
+      // TODO => Which users to include in the plot reports ? Will it be users who participated in overall mission or different
+      //         users who worked on different plot layers seperately ?
+      const userList = []; // TODO
 
-    // plot images (one per plot, fail safe if absent)
-    const flaggedPlotFile = await layerFiles.find({
-      tenantId: res.locals.user.tenantId._id,
-      layerId: plotLayer._id,
-      sys_Id: { $in: flaggedPlotGeojson.map(plot => plot.properties.sys_id) }
-    });
-    // ========================== COVER PAGE DETAILS ==============================
+      // =================================== DETAILS THAT WON'T VARY ACROSS REPORTS OF DIFFERENT PLOTS ==================================
 
-    // date
-    const now = new Date();
-    const date = now.toLocaleDateString("in");
-    // users
-    const userList: Set<string> = new Set<string>(); // will push while processing layers
+      // ************* COVER PAGE DETAILS ****************
+      // Cover page in sample report shows block boundary and all the plots in the block, so it will be same for all plot reports
+      const coverPageVectorFeatures = [...blockGeojson.features, ...flaggedPlotGeojson];
+      const coverImageBuffer = await saveScreenshot(coverPageVectorFeatures, [rasterFilePath], req.log);
+      // await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); // For Debugging
 
-    // images
-    const coverImageBuffer = await saveScreenshot(coverPageLayers, req.log);
-    req.log.info("COVER IMAGE =====> ");
-    // req.log.info(coverImageBuffer);
-    await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer);
-
-    // ========================== PLOT DETAILS ==============================
-
-    const plotLayer = await Layer.findById(plotLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-    userList.add(plotLayer.createdBy.name);
-    userList.add(plotLayer.updatedBy.name);
-    const plotGeojson = await JSON.parse(await fs.readFile(
-      DirPath(Directory.DEFAULT, plotLayer.layerpath),
-      "utf-8"
-    ));
-
-    // provided details
-    let allPlotFeatureData: any;
-    for (const feature of plotGeojson.features) {
-      allPlotFeatureData = { ...allPlotFeatureData, ...feature.properties };
-      // front view image
-      const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
-      const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
-
-      // ========================== BUILDING DETAILS ==============================
-
-      const buildingLayer = await Layer.findById(buildingLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-      userList.push(buildingLayer.createdBy.name);
-      userList.push(buildingLayer.updatedBy.name);
-      const buildingGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, buildingLayer.layerpath),
-        "utf-8"
-      ));
-
-      // provided details
-      let allBuildingFeatureData: any;
-      for(const feature of buildingGeojson.features) {
-        allBuildingFeatureData = { ...allBuildingFeatureData, ...feature.properties };
-      }
-
-      // calculated details
-      const buildingArea = await findArea(buildingGeojson);
-
-      // ========================== BLOCK DETAILS ==============================
-
-      const blockLayer = await Layer.findById(blockLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-      userList.push(blockLayer.createdBy.name);
-      userList.push(blockLayer.updatedBy.name);
-      const blockGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, blockLayer.layerpath),
-        "utf-8"
-      ));
-
-      // calculated details
+      // ************* BLOCK DETAILS ******************
+      // All plots belong to same block, so block properties need not be calculated repeatedly
+      
       const blockArea = await findArea(blockGeojson);
 
       // provided details
@@ -480,114 +441,153 @@ export const generatePlotReport = async (req: Request<{}, {}, {
         allBlockFeatureData = { ...allBlockFeatureData, ...feature.properties };
       }
 
-      const greeneryLayer = await Layer.findById(greeneryLayerId);
-      const greeneryGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, greeneryLayer.layerpath),
-        "utf-8"
-      ));
-      const greeneryArea = await findArea(greeneryGeojson);
-
-      const canopyLayer = await Layer.findById(canopyLayerId);
-      const canopyGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, canopyLayer.layerpath),
-        "utf-8"
-      ));
-      const canopyArea = await findArea(canopyGeojson);
-
-      const waterbodyLayer = await Layer.findById(waterbodyLayerId);
-      const waterbodyGeojson = await JSON.parse(await fs.readFile(
-        DirPath(Directory.DEFAULT, waterbodyLayer.layerpath),
-        "utf-8"
-      ));
+      const waterbodyGeojson = await readGeoJson(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
       const waterbodyArea = await findArea(waterbodyGeojson);
 
-      req.log.info("USERS =====> ");
-      const users = Array.from(new Set<string>(userList));
-      req.log.info(users);
+      // TODO => Which layers to consider for greenery ?
+      // const greeneryGeojson = await readGeoJson(DirPath(Directory.DEFAULT, greeneryLayer.layerpath));
+      // const greeneryArea = await findArea(greeneryGeojson);
 
-      // ================= PUTTING TOGETHER THE DATA =======================
+      // TODO => Which layers to consider for canopy ?
+      // const canopyGeojson = await readGeoJson(DirPath(Directory.DEFAULT, canopyLayer.layerpath));
+      // const canopyArea = await findArea(canopyGeojson);
 
-      const data: IPlotReportData = {
-        // cover page details
+      // ==================================================================================================================================
 
-        date,
-        users,
-        coverImageBuffer,
+      // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
-        // plot details
+      for(const plotFeature of flaggedPlotGeojson) {
 
-        frontViewImageBuffer,
-        plotImageBuffer,
-        plotArea,
-        plotNo: String(allPlotFeatureData.plotNo),
-        premiseNo: String(allPlotFeatureData.premiseNo),
-        pincode: Number(allPlotFeatureData.pincode),
-        category: String(allPlotFeatureData.category),
-        infraction: String(allPlotFeatureData.infraction),
-        isGreenTopEligible: (allPlotFeatureData.isGreenTopEligible === "Yes") ? true : false,
-        isSolarPlantEligible: (allPlotFeatureData.isSolarPlantEligible === "Yes") ? true : false,
-        hasTradeLicense: (allPlotFeatureData.hasTradeLicense === "Yes") ? true : false,
-        tax: Number(allPlotFeatureData.tax),
+        const plotAttributes = plotFeature.properties;
+        
+        // ******************** PLOT DETAILS ***********************
+    
+        // const plotLayer = await Layer.findById(plotLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
+        // userList.add(plotLayer.createdBy.name);
+        // userList.add(plotLayer.updatedBy.name);
+        // const plotGeojson = await JSON.parse(await fs.readFile(
+        //   DirPath(Directory.DEFAULT, plotLayer.layerpath),
+        //   "utf-8"
+        // ));
+    
+        // // provided details
+        // let allPlotFeatureData: any;
+        // for (const feature of plotGeojson.features) {
+        //   allPlotFeatureData = { ...allPlotFeatureData, ...feature.properties };
+        // }
 
-        // building details
+        // // front view image
+        // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
+        // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
+    
+        // ******************** BUILDING DETAILS ************************
+    
+        // const buildingLayer = await Layer.findById(buildingLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
+        // userList.push(buildingLayer.createdBy.name);
+        // userList.push(buildingLayer.updatedBy.name);
+        // const buildingGeojson = await JSON.parse(await fs.readFile(
+        //   DirPath(Directory.DEFAULT, buildingLayer.layerpath),
+        //   "utf-8"
+        // ));
+    
+        // // provided details
+        // let allBuildingFeatureData: any;
+        // for(const feature of buildingGeojson.features) {
+        //   allBuildingFeatureData = { ...allBuildingFeatureData, ...feature.properties };
+        // }
+    
+        // // calculated details
+        // const buildingArea = await findArea(buildingGeojson);
+    
+        // ================= PUTTING TOGETHER THE DATA =======================
+    
+        const data: IPlotReportData = {
+            // cover page details
+    
+            date,
+            users,
+            coverImageBuffer,
+    
+            // plot details
+    
+            frontViewImageBuffer,
+            plotImageBuffer,
+            plotArea,
+            plotNo: String(allPlotFeatureData.plotNo),
+            premiseNo: String(allPlotFeatureData.premiseNo),
+            pincode: Number(allPlotFeatureData.pincode),
+            category: String(allPlotFeatureData.category),
+            infraction: String(allPlotFeatureData.infraction),
+            isGreenTopEligible: (allPlotFeatureData.isGreenTopEligible === "Yes") ? true : false,
+            isSolarPlantEligible: (allPlotFeatureData.isSolarPlantEligible === "Yes") ? true : false,
+            hasTradeLicense: (allPlotFeatureData.hasTradeLicense === "Yes") ? true : false,
+            tax: Number(allPlotFeatureData.tax),
+    
+            // building details
+    
+            buildingArea,
+            buildingFootprint: (buildingArea / plotArea) * 100,
+            buildingAvailable: (allBuildingFeatureData.buildingAvailable === "Yes") ? true : false,
+            floorCount: String(allBuildingFeatureData.floorCount),
+            buildingNo: String(allBuildingFeatureData.buildingNo),
+            hasCompletionCertificate: (allBuildingFeatureData.hasCompletionCertificate === "Yes") ? true : false,
+            buildingHeight: Number(allBuildingFeatureData.buildingHeight),
+    
+            // block details
+    
+            blockImageBuffer,
+            blockArea,
+            greeneryArea,
+            canopyArea,
+            waterbodyArea,
+            greeneryPercent: (greeneryArea/blockArea)*100,
+            canopyPercent: (canopyArea/blockArea)*100,
+            waterbodyPercent: (waterbodyArea/blockArea)*100,
+            blockName: String(allBlockFeatureData.blockName),
+            garbageCollectionInfo: String(allBlockFeatureData.garbageCollectionInfo),
+            averageBuildingHeight: Number(allBlockFeatureData.averageBuildingHeight),
+            averageBlockHeight: Number(allBlockFeatureData.averageBlockHeight),
+            averageIncentives: Number(allBlockFeatureData.averageIncentives),
+        };
+    
+        // req.log.info(data);
+    
+        // saving the document
+        const doc = generatePlotReportDocument(data);
+        const buffer = await Packer.toBuffer(doc);
+        const filename = `${missionId.toString()}-plot-report.docx`;
+        const filepath = DirPath(Directory.DOCUMENTS, filename);
+        await fs.writeFile(filepath, buffer);
+    
+        const fileStats = await fs.stat(filepath);
+    
+        await Document.findOneAndDelete({ name: filename });
+    
+        const docDB = new Document({
+          name: filename,
+          modDate: new Date(),
+          fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
+          fileType: "docx",
+          folderName: "root1234",
+          filePath: `/documents/${filename}`,
+          missionId: missionId,
+          tenantId: res.locals.user.tenantId,
+          createdBy: res.locals.user._id,
+          updatedBy: res.locals.user._id,
+        });
+        const savedDoc = await docDB.save();
+    
+        req.log.info("Report Generation Complete");
+    
+        missionSpecificSocket
+          .to(missionId.toString())
+          .emit("REPORT_GENERATION_COMPLETE", savedDoc);
+      }
 
-        buildingArea,
-        buildingFootprint: (buildingArea / plotArea) * 100,
-        buildingAvailable: (allBuildingFeatureData.buildingAvailable === "Yes") ? true : false,
-        floorCount: String(allBuildingFeatureData.floorCount),
-        buildingNo: String(allBuildingFeatureData.buildingNo),
-        hasCompletionCertificate: (allBuildingFeatureData.hasCompletionCertificate === "Yes") ? true : false,
-        buildingHeight: Number(allBuildingFeatureData.buildingHeight),
-
-        // block details
-
-        blockImageBuffer,
-        blockArea,
-        greeneryArea,
-        canopyArea,
-        waterbodyArea,
-        greeneryPercent: (greeneryArea/blockArea)*100,
-        canopyPercent: (canopyArea/blockArea)*100,
-        waterbodyPercent: (waterbodyArea/blockArea)*100,
-        blockName: String(allBlockFeatureData.blockName),
-        garbageCollectionInfo: String(allBlockFeatureData.garbageCollectionInfo),
-        averageBuildingHeight: Number(allBlockFeatureData.averageBuildingHeight),
-        averageBlockHeight: Number(allBlockFeatureData.averageBlockHeight),
-        averageIncentives: Number(allBlockFeatureData.averageIncentives),
-      };
-
-      // req.log.info(data);
-
-      // saving the document
-      const doc = generatePlotReportDocument(data);
-      const buffer = await Packer.toBuffer(doc);
-      const filename = `${missionId.toString()}-plot-report.docx`;
-      const filepath = DirPath(Directory.DOCUMENTS, filename);
-      await fs.writeFile(filepath, buffer);
-
-      const fileStats = await fs.stat(filepath);
-
-      await Document.findOneAndDelete({ name: filename });
-
-      const docDB = new Document({
-        name: filename,
-        modDate: new Date(),
-        fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
-        fileType: "docx",
-        folderName: "root1234",
-        filePath: `/documents/${filename}`,
-        missionId: missionId,
-        tenantId: res.locals.user.tenantId,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
+      res.status(200).json({
+        status: true,
+        message: "Successfully Generated ALL Plot Reports"
       });
-      const savedDoc = await docDB.save();
-
-      req.log.info("Report Generation Complete");
-
-      missionSpecificSocket
-        .to(missionId.toString())
-        .emit("REPORT_GENERATION_COMPLETE", savedDoc);
 
     } catch (error) {
       req.log.error(error);
@@ -599,164 +599,6 @@ export const generatePlotReport = async (req: Request<{}, {}, {
         .to(missionId.toString())
         .emit("REPORT_GENERATION_FAILED", error);
     }
-
-    // calculated details
-    const plotArea = await findArea(plotGeojson);
-
-    // images
-    // const plotImageBuffer = await saveScreenshot(plotImageLayers, req.log);
-    // const frontViewImageBuffer; // from layerFiles
-
-    // ========================== BUILDING DETAILS ==============================
-
-    const buildingLayer = await Layer.findById(buildingLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-    userList.add(buildingLayer.createdBy.name);
-    userList.add(buildingLayer.updatedBy.name);
-    const buildingGeojson = await JSON.parse(await fs.readFile(
-      DirPath(Directory.DEFAULT, buildingLayer.layerpath),
-      "utf-8"
-    ));
-
-    // provided details
-    let allBuildingFeatureData: any;
-    for (const feature of buildingGeojson.features) {
-      allBuildingFeatureData = { ...allBuildingFeatureData, ...feature.properties };
-    }
-
-    // calculated details
-    const buildingArea = await findArea(buildingGeojson);
-
-    // ========================== BLOCK DETAILS ==============================
-
-    const blockLayer = await Layer.findById(blockLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-    userList.add(blockLayer.createdBy.name);
-    userList.add(blockLayer.updatedBy.name);
-    const blockGeojson = await JSON.parse(await fs.readFile(
-      DirPath(Directory.DEFAULT, blockLayer.layerpath),
-      "utf-8"
-    ));
-
-    // calculated details
-    const blockArea = await findArea(blockGeojson);
-
-    // provided details
-    let allBlockFeatureData: any;
-    for (const feature of blockGeojson.features) {
-      allBlockFeatureData = { ...allBlockFeatureData, ...feature.properties };
-    }
-
-    const greeneryLayer = await Layer.findById(greeneryLayerId);
-    const greeneryGeojson = await JSON.parse(await fs.readFile(
-      DirPath(Directory.DEFAULT, greeneryLayer.layerpath),
-      "utf-8"
-    ));
-    const greeneryArea = await findArea(greeneryGeojson);
-
-    const canopyLayer = await Layer.findById(canopyLayerId);
-    const canopyGeojson = await JSON.parse(await fs.readFile(
-      DirPath(Directory.DEFAULT, canopyLayer.layerpath),
-      "utf-8"
-    ));
-    const canopyArea = await findArea(canopyGeojson);
-
-    const waterbodyLayer = await Layer.findById(waterbodyLayerId);
-    const waterbodyGeojson = await JSON.parse(await fs.readFile(
-      DirPath(Directory.DEFAULT, waterbodyLayer.layerpath),
-      "utf-8"
-    ));
-    const waterbodyArea = await findArea(waterbodyGeojson);
-
-    // images
-    // const blockImgBuff = await saveScreenshot(blockImageLayers, req.log);
-
-    req.log.info("USERS =====> ", userList);
-    const users = Array.from(userList);
-
-    // ================= PUTTING TOGETHER THE DATA =======================
-
-    const data: IPlotReportData = {
-      // cover page details
-
-      date,
-      users,
-      // coverImageBuffer,
-
-      // plot details
-
-      // frontViewImageBuffer,
-      // plotImageBuffer,
-      plotArea,
-      plotNo: String(allPlotFeatureData.plotNo),
-      premiseNo: String(allPlotFeatureData.premiseNo),
-      pincode: Number(allPlotFeatureData.pincode),
-      category: String(allPlotFeatureData.category),
-      infraction: String(allPlotFeatureData.infraction),
-      isGreenTopEligible: (allPlotFeatureData.isGreenTopEligible === "Yes") ? true : false,
-      isSolarPlantEligible: (allPlotFeatureData.isSolarPlantEligible === "Yes") ? true : false,
-      hasTradeLicense: (allPlotFeatureData.hasTradeLicense === "Yes") ? true : false,
-      tax: Number(allPlotFeatureData.tax),
-
-      // building details
-
-      buildingArea,
-      buildingFootprint: (buildingArea / plotArea) * 100,
-      buildingAvailable: (allBuildingFeatureData.buildingAvailable === "Yes") ? true : false,
-      floorCount: String(allBuildingFeatureData.floorCount),
-      buildingNo: String(allBuildingFeatureData.buildingNo),
-      hasCompletionCertificate: (allBuildingFeatureData.hasCompletionCertificate === "Yes") ? true : false,
-      buildingHeight: Number(allBuildingFeatureData.buildingHeight),
-
-      // block details
-
-      // blockImageBuffer,
-      blockArea,
-      greeneryArea,
-      canopyArea,
-      waterbodyArea,
-      greeneryPercent: (greeneryArea / blockArea) * 100,
-      canopyPercent: (canopyArea / blockArea) * 100,
-      waterbodyPercent: (waterbodyArea / blockArea) * 100,
-      blockName: String(allBlockFeatureData.blockName),
-      garbageCollectionInfo: String(allBlockFeatureData.garbageCollectionInfo),
-      averageBuildingHeight: Number(allBlockFeatureData.averageBuildingHeight),
-      averageBlockHeight: Number(allBlockFeatureData.averageBlockHeight),
-      averageIncentives: Number(allBlockFeatureData.averageIncentives),
-    };
-
-    req.log.info(data);
-
-    // saving the document
-    const doc = generatePlotReportDocument(data);
-    const buffer = await Packer.toBuffer(doc);
-    const filename = `${plotLayer.missionId.toString()}-plot-report.docx`;
-    const filepath = DirPath(Directory.DOCUMENTS, filename);
-    await fs.writeFile(filepath, buffer);
-
-    // const fileStats = await fs.stat(filepath);
-
-    // await Document.findOneAndDelete({ name: filename });
-
-    // const docDB = new Document({
-    //   name: filename,
-    //   modDate: new Date(),
-    //   fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
-    //   fileType: "docx",
-    //   folderName: "root1234",
-    //   filePath: `/documents/${filename}`,
-    //   missionId: plotLayer.missionId,
-    //   tenantId: res.locals.user.tenantId,
-    //   createdBy: res.locals.user._id,
-    //   updatedBy: res.locals.user._id,
-    // });
-    // const savedDoc = await docDB.save();
-
-    req.log.info("Report Generation Complete");
-
-    res.status(200).json({
-      status: true,
-      message: "Successfully Generated Plot Report",
-      // data: savedDoc
-    });
 
   }
 }

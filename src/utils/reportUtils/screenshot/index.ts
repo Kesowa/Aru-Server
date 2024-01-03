@@ -117,17 +117,15 @@ export class ScreenshotGenerator {
     }
   }
 
-  async getMapSS(cogServerUrl: string, vectorFilePaths: string[], rasterFilePaths: string[]) {
+  async getMapSS(cogServerUrl: string, vectorFeatures: any[], rasterFilePaths: string[]) {
     try {
       await this.loadHtmlToPage(this.mapboxPage, this.mapboxHtml); // refreshing the page kindof
-      this.logger.info({cogServerUrl, rasterFilePaths, vectorFilePaths}, "GENERATING SCREENSHOT, TAKE COVER!!!");
+      this.logger.info({cogServerUrl, rasterFilePaths, vectorFeatures}, "GENERATING SCREENSHOT, TAKE COVER!!!");
       await this.mapboxPage.evaluate(
-        async ({ cogServerUrl, vectorFilePaths, rasterFilePaths }) => {
-          // await takeScreenshot(cogServerUrl, [...rasterFilePaths, "http://server:5011/raster/Ortho_25cm.tif"], vectorFilePaths);
-          await takeScreenshot(cogServerUrl, rasterFilePaths, vectorFilePaths);
-        }, { cogServerUrl, vectorFilePaths, rasterFilePaths });
+        async ({ cogServerUrl, vectorFeatures, rasterFilePaths }) => {
+          await takeScreenshot(cogServerUrl, rasterFilePaths, vectorFeatures);
+        }, { cogServerUrl, vectorFeatures, rasterFilePaths });
       const pngBuffer = await this.mapboxPage.screenshot({type: "png"});
-      // await fs.writeFile(DirPath(Directory.IMAGE, vectorFilePaths.length + '-' + rasterFilePaths.length + Math.random() + '.png'), pngBuffer);
       return pngBuffer;
     } catch (error) {
       this.logger.error("Error while generating map screenshot: ");

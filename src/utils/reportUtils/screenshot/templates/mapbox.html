@@ -36,19 +36,20 @@
         }
       })
     }
-    async function takeScreenshot(serverUrl, rasterFilePaths, vectorFilePaths) {
+    async function takeScreenshot(serverUrl, rasterFilePaths, vectorFeatures) {
       const map = await setupMap(serverUrl);
       removeExternalLayers(map);
       console.log("EXTERNAL LAYERS BEFORE => ", map.getStyle().layers.filter(
         layer => (layer.id.startsWith("vector-layer-") || layer.id.startsWith("raster-layer-"))
       ));
       const rasterBounds = await renderRaster(rasterFilePaths, serverUrl, map);
-      const vectorBounds = await renderVector(vectorFilePaths, map);
+      const vectorBounds = await renderVector(vectorFeatures, map);
       // const allBounds = turf.multiPoint(rasterBounds.concat(vectorBounds));
-      const allBounds = (vectorFilePaths.length > 0) ? turf.multiPoint(vectorBounds) : turf.multiPoint(rasterBounds);
+      const allBounds = (vectorFeatures.length > 0) ? turf.multiPoint(vectorBounds) : turf.multiPoint(rasterBounds);
       // if both raster and vector given, vector bounds prioritized, else if only rasters given, raster bounds considered
       const points = turf.bbox(allBounds);
-      console.log("POINTS", JSON.stringify({rasterFilePaths, vectorFilePaths, rasterBounds, vectorBounds, points}));
+      // console.log("POINTS", JSON.stringify({rasterFilePaths, vectorFeatures, rasterBounds, vectorBounds, points}));
+      console.log("BOUNDS and POINTS", JSON.stringify({rasterBounds, vectorBounds, points}));
       if (points.every(v => v != null)) {
         map.fitBounds(points, {duration: 0});
       } else {
@@ -124,58 +125,52 @@
     }
 
     // Add vector layer from GeoJSON
-    async function renderVector(geojsonFilePaths, map) {
+    async function renderVector(features, map) {
       const bounds = [];
-      for (const geojsonFilePath of geojsonFilePaths) {
-        const parsedGeojson = await (await fetch(geojsonFilePath)).json();
-        // Center the map on the points using Turf.js
-        const pointFeatures = parsedGeojson.features.filter(
-          (feature) => ["MultiPolygon", "Polygon"].includes(feature.geometry.type)
-        );
-        const bound = turf.bbox(turf.featureCollection(pointFeatures));
-        bounds.push([bound[0], bound[1]]);
-        bounds.push([bound[2], bound[3]]);
+      const bound = turf.bbox(turf.featureCollection(features));
+      bounds.push([bound[0], bound[1]]);
+      bounds.push([bound[2], bound[3]]);
 
-        map.addSource(geojsonFilePath, {
-          type: "geojson",
-          data: parsedGeojson,
-        });
+      map.addSource(geojsonFilePath, {
+        type: "geojson",
+        data: parsedGeojson,
+      });
 
-        map.addLayer({
-          id: `vector-layer-${geojsonFilePath}`,
-          type: "fill",
-          source: geojsonFilePath,
-          paint: {
-            "fill-color": ["coalesce", ["get", "fill"]],
-            "fill-opacity": ["coalesce", ["get", "fill-opacity"], 0.3],
-          },
-          filter: ["==", ["geometry-type"], "Polygon"],
-        });
+      map.addLayer({
+        id: `vector-layer-${geojsonFilePath}`,
+        type: "fill",
+        source: geojsonFilePath,
+        paint: {
+          "fill-color": ["coalesce", ["get", "fill"]],
+          "fill-opacity": ["coalesce", ["get", "fill-opacity"], 0.3],
+        },
+        filter: ["==", ["geometry-type"], "Polygon"],
+      });
 
-        map.addLayer({
-          id: `vector-layer-outline-${geojsonFilePath}`,
-          type: "line",
-          source: geojsonFilePath,
-          paint: {
-            "line-color": ["coalesce", ["get", "stroke"]],
-            "line-width": ["coalesce", ["get", "stroke-width"], 2],
-            "line-opacity": ["coalesce", ["get", "stroke-opacity"], 1],
-          },
-          filter: ["==", ["geometry-type"], "Polygon"],
-        });
+      map.addLayer({
+        id: `vector-layer-outline-${geojsonFilePath}`,
+        type: "line",
+        source: geojsonFilePath,
+        paint: {
+          "line-color": ["coalesce", ["get", "stroke"]],
+          "line-width": ["coalesce", ["get", "stroke-width"], 2],
+          "line-opacity": ["coalesce", ["get", "stroke-opacity"], 1],
+        },
+        filter: ["==", ["geometry-type"], "Polygon"],
+      });
 
-        map.addLayer({
-          id: `vector-layer-line-${geojsonFilePath}`,
-          type: "line",
-          source: geojsonFilePath,
-          paint: {
-            "line-color": ["coalesce", ["get", "stroke"]],
-            "line-width": ["coalesce", ["get", "stroke-width"], 2],
-            "line-opacity": ["coalesce", ["get", "stroke-opacity"], 1],
-          },
-          filter: ["==", ["geometry-type"], "LineString"],
-        });
-      }
+      map.addLayer({
+        id: `vector-layer-line-${geojsonFilePath}`,
+        type: "line",
+        source: geojsonFilePath,
+        paint: {
+          "line-color": ["coalesce", ["get", "stroke"]],
+          "line-width": ["coalesce", ["get", "stroke-width"], 2],
+          "line-opacity": ["coalesce", ["get", "stroke-opacity"], 1],
+        },
+        filter: ["==", ["geometry-type"], "LineString"],
+      });
+
       return bounds;
     }
 
