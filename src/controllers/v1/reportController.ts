@@ -4,7 +4,7 @@ import { Request } from "express";
 import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
-import { IVector } from "../../schemas/vectorprops";
+import { IVector, VectorName } from "../../schemas/vectorprops";
 import { DirPath, Directory, PUBLIC_SERVER, TITILER_SERVER, TITILER_STATIC } from "../../constants";
 import { generateDocument } from "../../utils/reportUtils/block-report/report";
 import { Packer } from "docx";
@@ -367,14 +367,16 @@ export const generatePlotReport = async (req: Request<{}, {}, {
     const { missionId } = req.body;
     try {
 
-      const [blockBoundaryType, plotType, buildingFootprintType, waterbodyType, orthoType] = await Promise.all([
-        vector.findOne({ name: "Block Boundary" }),
-        vector.findOne({ name: "Plot" }),
-        vector.findOne({ name: "Building Footprint" }), // there's a type with name "Building footprint" as well, be warned
-        vector.findOne({ name: "Waterbody" }), // there's a type with name "Water Body" as well, be warned
+      const [blockBoundaryType, plotType, buildingFootprintType, waterbodyType, orthoType, treeCoverType, greeneryType] = await Promise.all([
+        vector.findOne({ name: VectorName.Block_Boundary }),
+        vector.findOne({ name: VectorName.Plot }),
+        vector.findOne({ name: VectorName.Building_Footprint }), // there's a type with name "Building footprint" as well, be warned
+        vector.findOne({ name: VectorName.Water_Body }), // there's a type with name "Water Body" as well, be warned
         raster.findOne({ name: "ORTHO" }),
+        vector.findOne({ name: VectorName.Jungle }),
+        vector.findOne({ name: VectorName.Green_Verge }),
       ]);
-      const [blockBoundaryLayer, plotLayer, buildingFootprintLayer, waterbodyLayer, rasterLayer] = await Promise.all([
+      const [blockBoundaryLayer, plotLayer, buildingFootprintLayer, waterbodyLayer, rasterLayer, treeCoverLayer, greeneryLayer] = await Promise.all([
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
@@ -387,18 +389,25 @@ export const generatePlotReport = async (req: Request<{}, {}, {
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: buildingFootprintType._id,
-        }),Layer.findOne({
+        }), Layer.findOne({
         }), Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: waterbodyType._id,
-        }),Layer.findOne({
+        }), Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           raster: orthoType._id,
+        }),Layer.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          missionId: req.body.missionId,
+          raster: treeCoverType._id,
+        }),Layer.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          missionId: req.body.missionId,
+          raster: greeneryType._id,
         })
       ]);
-
       const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;
       const plotGeojson = await readGeoJson(DirPath(Directory.DEFAULT, plotLayer.layerpath));
       const blockGeojson = await readGeoJson(DirPath(Directory.DEFAULT, blockBoundaryLayer.layerpath));
