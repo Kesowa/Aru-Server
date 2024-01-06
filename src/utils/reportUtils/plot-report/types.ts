@@ -90,3 +90,34 @@ export interface IPage3Properties {
   averageBlockHeight: number, // provided
   averageIncentives: number, // provided
 }
+
+export interface IPlotProperties {
+  plotNo: string,
+  premiseNo: string, // connects plot to buildings
+  pincode: string,
+  category: string,
+  infraction: string,
+  isIncentiveEligible: string,
+  isGreenTopEligible: string,
+  isSolarPlantEligible: string,
+  hasTradeLicense: string,
+  tax: string,
+  sys_id: string,
+}
+
+export interface IBuildingProperties {
+  premiseNo: string, // connects building to plot
+  buildingAvailable: string,
+  floorCount: string,
+  buildingNo: string,
+  hasCompletionCertificate: string,
+  buildingHeight: string
+}
+
+export interface IBlockProperties {
+  blockName: string,
+  garbageCollectionInfo: string,
+  averageBuildingHeight: string,
+  averageBlockHeight: string,
+  averageIncentives: string
+}

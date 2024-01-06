@@ -10,7 +10,7 @@ import { generateDocument } from "../../utils/reportUtils/block-report/report";
 import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/block-report/types";
 import Flight from "../../models/flight";
-import { IUser } from "../../schemas/user";
+import userSchema, { IUser } from "../../schemas/user";
 import {
   privateCommercialLayerTypes,
   residentialLayerTypes,
@@ -30,41 +30,47 @@ import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
 import { ScreenshotGenerator } from "../../utils/reportUtils/screenshot";
 import { pino } from "pino";
-import { IPlotReportData } from "../../utils/reportUtils/plot-report/types";
+import { IBlockProperties, IBuildingProperties, IPlotProperties, IPlotReportData } from "../../utils/reportUtils/plot-report/types";
 import { generatePlotReportDocument } from "../../utils/reportUtils/plot-report/report";
 import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
-import { readGeoJson } from "../../utils/geojsonUtils";
+import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
+import User from "../../models/user";
 
-export async function findArea(gjson: any) {
+export function findArea(features: Feature<turf.Geometry,turf.Properties>[]) {
   try {
     let totalArea = 0;
-    const allIndependantPositions: any[] = [];
-    for (const feature of gjson.features) {
+    const allIndependantLines: turf.Position[][] = [];
+    for (const feature of features) {
+      // Point or Position => number[] of length 2 => one coordinate
+      // LineString => Position[]
+      // MultiLineString and Polygon => Position[][]
+      // MultiPolygon => Position[][][]
+      // There are no other shapes defined under geometry specifications that can have an area
       if (
         ["MultiPolygon", "Polygon", "MultiLineString"].includes(
           feature.geometry.type
         )
       ) {
         if (feature.geometry.type === "MultiLineString") {
-          for (const linestring of feature.geometry.coordinates) {
-            allIndependantPositions.concat(linestring);
+          for (const linestring of feature.geometry.coordinates as turf.Position[][]) {
+            allIndependantLines.concat(linestring);
           }
           continue;
         }
         let polygons = feature.geometry.coordinates;
         if (feature.geometry.type === "Polygon") {
-          polygons = [polygons];
+          polygons = [polygons as turf.Position[][]];
         }
-        for (const polygon of polygons) {
+        for (const polygon of polygons as turf.Position[][][]) {
           const area = turf.area(turf.polygon(polygon));
           totalArea += area;
         }
       }
     }
-    if (allIndependantPositions.length >= 3) {
-      const area = turf.area(turf.polygon([allIndependantPositions]));
+    if (allIndependantLines.length >= 3) {
+      const area = turf.area(turf.polygon(allIndependantLines));
       totalArea += area;
     }
     return totalArea;
@@ -74,19 +80,20 @@ export async function findArea(gjson: any) {
   }
 }
 
-export async function findLength(gjson: any) {
+export function findLength(features: Feature<turf.Geometry,turf.Properties>[]) {
   try {
     let totalLength = 0;
-    for (const feature of gjson.features) {
+    for (const feature of features) {
+      // LineString => Position[]
+      // MultiLineString and Polygon => Position[][]
+      // There are no other shapes defined under geometry specifications that can have a length
       if (
         ["MultiLineString", "LineString", "Polygon"].includes(
           feature.geometry.type
         )
       ) {
-        let lines = feature.geometry.coordinates;
-        if (feature.geometry.type === "LineString") {
-          lines = [lines];
-        }
+        const lines = (feature.geometry.type === "LineString") ? 
+          [feature.geometry.coordinates as turf.Position[]] : feature.geometry.coordinates as turf.Position[][];
         // Polygon and MultiLineString both have similar structure, array of line strings
         totalLength += turf.length(turf.multiLineString(lines));
       }
@@ -98,10 +105,10 @@ export async function findLength(gjson: any) {
   }
 }
 
-export async function countPolygons(gjson: any) {
+export function countPolygons(features: Feature<turf.Geometry,turf.Properties>[]) {
   try {
     let count = 0;
-    for (const feature of gjson.features) {
+    for (const feature of features) {
       if (feature.geometry.type === "Polygon") {
         count++;
       } else if (feature.geometry.type === "MultiPolygon") {
@@ -237,13 +244,9 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
       }
 
       for (const layer of vectorLayers) {
-        const layerData = await fs.readFile(
-          DirPath(Directory.DEFAULT, layer.layerpath),
-          "utf-8"
-        );
-        const gjson = JSON.parse(layerData);
-        const currLayerArea = await findArea(gjson);
-        const currLayerLength = await findLength(gjson);
+        const gjson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, layer.layerpath));
+        const currLayerArea = findArea(gjson.features);
+        const currLayerLength = findLength(gjson.features);
         data.area.total += currLayerArea;
         // check the layer type and accordingly add area to respective type
         if (privateCommercialLayerTypes.includes(layer.vector.name)) {
@@ -390,7 +393,6 @@ export const generatePlotReport = async (req: Request<{}, {}, {
           missionId: req.body.missionId,
           vector: buildingFootprintType._id,
         }), Layer.findOne({
-        }), Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: waterbodyType._id,
@@ -409,8 +411,9 @@ export const generatePlotReport = async (req: Request<{}, {}, {
         })
       ]);
       const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;
-      const plotGeojson = await readGeoJson(DirPath(Directory.DEFAULT, plotLayer.layerpath));
-      const blockGeojson = await readGeoJson(DirPath(Directory.DEFAULT, blockBoundaryLayer.layerpath));
+      const plotGeojson = await readGeoJson<Feature<turf.MultiPolygon,IPlotProperties>>(DirPath(Directory.DEFAULT, plotLayer.layerpath));
+      const buildingsGeojson = await readGeoJson<Feature<turf.MultiPolygon,IBuildingProperties>>(DirPath(Directory.DEFAULT, buildingFootprintLayer.layerpath));
+      const blockGeojson = await readGeoJson<Feature<turf.MultiPolygon,IBlockProperties>>(DirPath(Directory.DEFAULT, blockBoundaryLayer.layerpath));
 
       // multiple plot reports will be generated, one for each flagged plot
       // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
@@ -427,9 +430,26 @@ export const generatePlotReport = async (req: Request<{}, {}, {
       const now = new Date();
       const date = now.toLocaleDateString("in");
 
-      // TODO => Which users to include in the plot reports ? Will it be users who participated in overall mission or different
-      //         users who worked on different plot layers seperately ?
-      const userList = []; // TODO
+      // currently considering all users who worked on the layers, to be mentioned on report cover page
+      const userIds = Array.from(new Set<string>([
+        String(plotLayer.createdBy), 
+        String(plotLayer.updatedBy),
+        String(blockBoundaryLayer.createdBy),
+        String(blockBoundaryLayer.updatedBy),
+        String(buildingFootprintLayer.createdBy),
+        String(buildingFootprintLayer.updatedBy),
+        String(waterbodyLayer.createdBy),
+        String(waterbodyLayer.updatedBy),
+        String(rasterLayer.createdBy),
+        String(rasterLayer.updatedBy),
+        String(treeCoverLayer.createdBy),
+        String(treeCoverLayer.updatedBy),
+        String(greeneryLayer.createdBy),
+        String(greeneryLayer.updatedBy),
+      ])); // all unique userIds
+
+      const userDocs = await Promise.all(userIds.map((id) => (User.findById(id, { name: 1 }))));
+      const users = userDocs.map((user) => user.name);
 
       // =================================== DETAILS THAT WON'T VARY ACROSS REPORTS OF DIFFERENT PLOTS ==================================
 
@@ -442,24 +462,17 @@ export const generatePlotReport = async (req: Request<{}, {}, {
       // ************* BLOCK DETAILS ******************
       // All plots belong to same block, so block properties need not be calculated repeatedly
       
-      const blockArea = await findArea(blockGeojson);
+      const blockArea = findArea(blockGeojson.features);
+      const blockProperties = blockGeojson.features[0].properties; // block layer will have only one MultiPolygon features
 
-      // provided details
-      let allBlockFeatureData: any;
-      for(const feature of blockGeojson.features) {
-        allBlockFeatureData = { ...allBlockFeatureData, ...feature.properties };
-      }
+      const waterbodyGeojson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
+      const waterbodyArea = findArea(waterbodyGeojson.features);
 
-      const waterbodyGeojson = await readGeoJson(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
-      const waterbodyArea = await findArea(waterbodyGeojson);
+      const greeneryGeojson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, greeneryLayer.layerpath));
+      const greeneryArea = findArea(greeneryGeojson.features);
 
-      // TODO => Which layers to consider for greenery ?
-      // const greeneryGeojson = await readGeoJson(DirPath(Directory.DEFAULT, greeneryLayer.layerpath));
-      // const greeneryArea = await findArea(greeneryGeojson);
-
-      // TODO => Which layers to consider for canopy ?
-      // const canopyGeojson = await readGeoJson(DirPath(Directory.DEFAULT, canopyLayer.layerpath));
-      // const canopyArea = await findArea(canopyGeojson);
+      const canopyGeojson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, treeCoverLayer.layerpath));
+      const canopyArea = findArea(canopyGeojson.features);
 
       // ==================================================================================================================================
 
@@ -467,46 +480,26 @@ export const generatePlotReport = async (req: Request<{}, {}, {
 
       for(const plotFeature of flaggedPlotGeojson) {
 
-        const plotAttributes = plotFeature.properties;
+        const plotProperties = plotFeature.properties;
         
         // ******************** PLOT DETAILS ***********************
-    
-        // const plotLayer = await Layer.findById(plotLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-        // userList.add(plotLayer.createdBy.name);
-        // userList.add(plotLayer.updatedBy.name);
-        // const plotGeojson = await JSON.parse(await fs.readFile(
-        //   DirPath(Directory.DEFAULT, plotLayer.layerpath),
-        //   "utf-8"
-        // ));
-    
-        // // provided details
-        // let allPlotFeatureData: any;
-        // for (const feature of plotGeojson.features) {
-        //   allPlotFeatureData = { ...allPlotFeatureData, ...feature.properties };
-        // }
 
         // // front view image
         // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
         // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
+        const plotArea = findArea([plotFeature]);
     
         // ******************** BUILDING DETAILS ************************
+
+        // for multiple buildings:
+        // const plotBuildingFeatures = buildingsGeojson.features.filter((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
+
+        // for single building:
+        const plotBuildingFeature = buildingsGeojson.features.find((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
     
-        // const buildingLayer = await Layer.findById(buildingLayerId).populate<{ createdBy: IUser }>("createdBy").populate<{ updatedBy: IUser }>("updatedBy");
-        // userList.push(buildingLayer.createdBy.name);
-        // userList.push(buildingLayer.updatedBy.name);
-        // const buildingGeojson = await JSON.parse(await fs.readFile(
-        //   DirPath(Directory.DEFAULT, buildingLayer.layerpath),
-        //   "utf-8"
-        // ));
-    
-        // // provided details
-        // let allBuildingFeatureData: any;
-        // for(const feature of buildingGeojson.features) {
-        //   allBuildingFeatureData = { ...allBuildingFeatureData, ...feature.properties };
-        // }
-    
-        // // calculated details
-        // const buildingArea = await findArea(buildingGeojson);
+        const buildingProperties = plotBuildingFeature.properties;
+
+        const buildingArea = findArea([plotBuildingFeature]);
     
         // ================= PUTTING TOGETHER THE DATA =======================
     
@@ -522,25 +515,25 @@ export const generatePlotReport = async (req: Request<{}, {}, {
             frontViewImageBuffer,
             plotImageBuffer,
             plotArea,
-            plotNo: String(allPlotFeatureData.plotNo),
-            premiseNo: String(allPlotFeatureData.premiseNo),
-            pincode: Number(allPlotFeatureData.pincode),
-            category: String(allPlotFeatureData.category),
-            infraction: String(allPlotFeatureData.infraction),
-            isGreenTopEligible: (allPlotFeatureData.isGreenTopEligible === "Yes") ? true : false,
-            isSolarPlantEligible: (allPlotFeatureData.isSolarPlantEligible === "Yes") ? true : false,
-            hasTradeLicense: (allPlotFeatureData.hasTradeLicense === "Yes") ? true : false,
-            tax: Number(allPlotFeatureData.tax),
+            plotNo: plotProperties.plotNo,
+            premiseNo: plotProperties.premiseNo,
+            pincode: Number(plotProperties.pincode),
+            category: plotProperties.category,
+            infraction: plotProperties.infraction,
+            isGreenTopEligible: (plotProperties.isGreenTopEligible === "Yes") ? true : false,
+            isSolarPlantEligible: (plotProperties.isSolarPlantEligible === "Yes") ? true : false,
+            hasTradeLicense: (plotProperties.hasTradeLicense === "Yes") ? true : false,
+            tax: Number(plotProperties.tax),
     
             // building details
     
             buildingArea,
             buildingFootprint: (buildingArea / plotArea) * 100,
-            buildingAvailable: (allBuildingFeatureData.buildingAvailable === "Yes") ? true : false,
-            floorCount: String(allBuildingFeatureData.floorCount),
-            buildingNo: String(allBuildingFeatureData.buildingNo),
-            hasCompletionCertificate: (allBuildingFeatureData.hasCompletionCertificate === "Yes") ? true : false,
-            buildingHeight: Number(allBuildingFeatureData.buildingHeight),
+            buildingAvailable: (buildingProperties.buildingAvailable === "Yes") ? true : false,
+            floorCount: buildingProperties.floorCount,
+            buildingNo: buildingProperties.buildingNo,
+            hasCompletionCertificate: (buildingProperties.hasCompletionCertificate === "Yes") ? true : false,
+            buildingHeight: Number(buildingProperties.buildingHeight),
     
             // block details
     
@@ -552,11 +545,11 @@ export const generatePlotReport = async (req: Request<{}, {}, {
             greeneryPercent: (greeneryArea/blockArea)*100,
             canopyPercent: (canopyArea/blockArea)*100,
             waterbodyPercent: (waterbodyArea/blockArea)*100,
-            blockName: String(allBlockFeatureData.blockName),
-            garbageCollectionInfo: String(allBlockFeatureData.garbageCollectionInfo),
-            averageBuildingHeight: Number(allBlockFeatureData.averageBuildingHeight),
-            averageBlockHeight: Number(allBlockFeatureData.averageBlockHeight),
-            averageIncentives: Number(allBlockFeatureData.averageIncentives),
+            blockName: blockProperties.blockName,
+            garbageCollectionInfo: blockProperties.garbageCollectionInfo,
+            averageBuildingHeight: Number(blockProperties.averageBuildingHeight),
+            averageBlockHeight: Number(blockProperties.averageBlockHeight),
+            averageIncentives: Number(blockProperties.averageIncentives),
         };
     
         // req.log.info(data);
