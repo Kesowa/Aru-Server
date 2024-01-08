@@ -5,12 +5,12 @@ import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { IVector, VectorName } from "../../schemas/vectorprops";
-import { DirPath, Directory, PUBLIC_SERVER, TITILER_SERVER, TITILER_STATIC } from "../../constants";
+import { DirPath, Directory, TITILER_SERVER, TITILER_STATIC } from "../../constants";
 import { generateDocument } from "../../utils/reportUtils/block-report/report";
 import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/block-report/types";
 import Flight from "../../models/flight";
-import userSchema, { IUser } from "../../schemas/user";
+import { IUser } from "../../schemas/user";
 import {
   privateCommercialLayerTypes,
   residentialLayerTypes,
@@ -122,7 +122,19 @@ export function countPolygons(features: Feature<turf.Geometry,turf.Properties>[]
   }
 }
 
-export const generateReport = async (req: Request, res: AuthResponse) => {
+function assignOccupancy(layerType: string, idx: number, data: IData) {
+  if (vacantTypes.includes(layerType)) {
+    data.occupancy[idx].vacant++;
+  } else if (underConstructionTypes.includes(layerType)) {
+    data.occupancy[idx].underConstruction++;
+  } else {
+    data.occupancy[idx].occupied++;
+  }
+}
+
+export const generateReport = async (req: Request<{}, {}, {
+  missionId: string,
+}>, res: AuthResponse) => {
   {
     const { missionId } = req.body;
     try {
@@ -233,16 +245,6 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         type: "Vector",
       }).populate<{ vector: IVector }>("vector");
 
-      function assignOccupancy(layerType: string, idx: number) {
-        if (vacantTypes.includes(layerType)) {
-          data.occupancy[idx].vacant++;
-        } else if (underConstructionTypes.includes(layerType)) {
-          data.occupancy[idx].underConstruction++;
-        } else {
-          data.occupancy[idx].occupied++;
-        }
-      }
-
       for (const layer of vectorLayers) {
         const gjson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, layer.layerpath));
         const currLayerArea = findArea(gjson.features);
@@ -251,19 +253,19 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
         // check the layer type and accordingly add area to respective type
         if (privateCommercialLayerTypes.includes(layer.vector.name)) {
           data.area.privateSpaces[0].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 0);
+          assignOccupancy(layer.vector.name, 0, data);
         } else if (residentialLayerTypes.includes(layer.vector.name)) {
           data.area.privateSpaces[1].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 1);
+          assignOccupancy(layer.vector.name, 1, data);
         } else if (govtCommercialLayerTypes.includes(layer.vector.name)) {
           data.area.privateSpaces[2].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 2);
+          assignOccupancy(layer.vector.name, 2, data);
         } else if (housingComplexLayerTypes.includes(layer.vector.name)) {
           data.area.privateSpaces[3].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 3);
+          assignOccupancy(layer.vector.name, 3, data);
         } else if (govtLayerTypes.includes(layer.vector.name)) {
           data.area.publicSpaces[0].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 4);
+          assignOccupancy(layer.vector.name, 4, data);
         } else if (motorableRoadsLayerTypes.includes(layer.vector.name)) {
           data.area.publicSpaces[1].value += currLayerArea;
           data.roadCount++;
@@ -344,23 +346,29 @@ export const generateReport = async (req: Request, res: AuthResponse) => {
   }
 };
 
-export async function saveScreenshot(vectorFeatures: any[], rasterFilePaths: string[], logger: pino.Logger) {
-  const ssGenerator = new ScreenshotGenerator(logger);
-  await ssGenerator.init();
+export async function saveScreenshot(vectorFeatures: Feature<turf.Geometry,turf.Properties>[], rasterFilePaths: string[], logger: pino.Logger) {
+  try {
+    const ssGenerator = new ScreenshotGenerator(logger);
+    await ssGenerator.init();
+  
+    logger.info("Browser Launched for screenshots...");
+  
+    const ssBuffer = await ssGenerator.getMapSS(
+      TITILER_SERVER,
+      vectorFeatures,
+      rasterFilePaths
+    );
+  
+    await ssGenerator.destroy();
+  
+    logger.info("Image Captured...");
+  
+    return ssBuffer;
 
-  logger.info("Browser Launched for screenshots...");
-
-  const ssBuffer = await ssGenerator.getMapSS(
-    TITILER_SERVER,
-    vectorFeatures,
-    rasterFilePaths
-  );
-
-  await ssGenerator.destroy();
-
-  logger.info("Image Captured...");
-
-  return ssBuffer;
+  } catch(error) {
+    logger.error("Error while taking screenshot: ", error);
+    return null;
+  }
 }
 
 export const generatePlotReport = async (req: Request<{}, {}, {
@@ -463,6 +471,7 @@ export const generatePlotReport = async (req: Request<{}, {}, {
       // All plots belong to same block, so block properties need not be calculated repeatedly
       
       const blockArea = findArea(blockGeojson.features);
+      const blockImageBuffer = await saveScreenshot(blockGeojson.features, [rasterFilePath], req.log);
       const blockProperties = blockGeojson.features[0].properties; // block layer will have only one MultiPolygon features
 
       const waterbodyGeojson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
@@ -488,6 +497,11 @@ export const generatePlotReport = async (req: Request<{}, {}, {
         // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
         // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
         const plotArea = findArea([plotFeature]);
+        const plotImageBuffer = await saveScreenshot([plotFeature], [rasterFilePath], req.log);
+
+        const plotLayerFile = flaggedPlotFile.find((layerFile) => layerFile.sys_Id === plotProperties.sys_id);
+        const frontViewImageBuffer = plotLayerFile ? await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath)) : null;
+
     
         // ******************** BUILDING DETAILS ************************
 
