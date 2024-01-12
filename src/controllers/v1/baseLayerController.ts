@@ -1286,11 +1286,11 @@ export const createBaseRasterfromUpload = async (
     let minP = 0;
     let maxP = 1;
     const { name, raster, captureDate } = req.body;
-    const rasterType = await Raster.findOne({_id: raster});
+    const rasterType = await Raster.findOne({ _id: raster });
     if (!rasterType) {
       res.status(404).json({
         status: false,
-        message: "raster type not found"
+        message: "raster type not found",
       });
       return;
     }

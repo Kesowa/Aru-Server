@@ -124,14 +124,13 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       // instead there is statistics api and info api
       // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      const { name, raster, captureDate, missionId, layerGroupId } =
-        req.body;
-      const rasterType = await Raster.findOne({_id: raster});
+      const { name, raster, captureDate, missionId, layerGroupId } = req.body;
+      const rasterType = await Raster.findOne({ _id: raster });
       if (!rasterType) {
         res.status(404).json({
           status: false,
-          message: "raster type not found"
-        })
+          message: "raster type not found",
+        });
         return;
       }
       let minP = 0;
