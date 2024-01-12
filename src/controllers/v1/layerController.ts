@@ -3,6 +3,7 @@ import type { Request } from "express";
 import type { AuthResponse } from "../../utils/interfaceUtils";
 import fetch from "node-fetch";
 import Layer from "../../models/layer";
+import Raster from "../../models/rasterprops";
 import layerFiles from "../../models/layerFiles";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
@@ -123,12 +124,20 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       // instead there is statistics api and info api
       // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      const { name, type, raster, captureDate, missionId, layerGroupId } =
+      const { name, raster, captureDate, missionId, layerGroupId } =
         req.body;
+      const rasterType = await Raster.findOne({_id: raster});
+      if (!rasterType) {
+        res.status(404).json({
+          status: false,
+          message: "raster type not found"
+        })
+        return;
+      }
       let minP = 0;
       let maxP = 1;
       let center = { lat: 0, lng: 0 };
-      if (type == "DEM") {
+      if (rasterType.name == "DEM") {
         let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
         //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
         req.log.info("fetching metadata from titiler");
@@ -156,7 +165,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       );
       layer = new Layer({
         name,
-        type,
+        type: "Raster",
         raster,
         layerpath: `/raster/${req?.file?.filename}`,
         fileSize: size,

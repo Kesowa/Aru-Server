@@ -1,6 +1,7 @@
 import { Request } from "express";
 import * as pathUtils from "../../utils/pathUtils";
 import Layer from "../../models/layer";
+import Raster from "../../models/rasterprops";
 import fetch from "node-fetch";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
@@ -1284,17 +1285,36 @@ export const createBaseRasterfromUpload = async (
     //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
     let minP = 0;
     let maxP = 1;
-    const { name, type, raster, captureDate } = req.body;
-    if (type == "DEM") {
-      const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+    const { name, raster, captureDate } = req.body;
+    const rasterType = await Raster.findOne({_id: raster});
+    if (!rasterType) {
+      res.status(404).json({
+        status: false,
+        message: "raster type not found"
+      });
+      return;
+    }
+    let center = { lat: 0, lng: 0 };
+    if (rasterType.name == "DEM") {
+      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
       //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      const response = await fetch(metaDataURL, {
+      let response = await fetch(metaDataURL, {
         method: "GET",
       });
-      const metadata = await response.json();
+      let metadata = await response.json();
       //-------handle for detail:not found----
       minP = metadata["1"]["min"];
       maxP = metadata["1"]["max"];
+
+      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
+      response = await fetch(metaDataURL, {
+        method: "GET",
+      });
+      metadata = await response.json();
+      center = {
+        lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
+        lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+      };
     }
     // let center = {
     //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
@@ -1316,10 +1336,13 @@ export const createBaseRasterfromUpload = async (
     }
     layer = new Layer({
       name: `base - ${name}`,
-      type,
+      type: "Raster",
       raster,
       layerdataArr: dataArr,
       captureDate,
+      center,
+      minp: minP,
+      maxp: maxP,
       fileSize: size,
       tenantId: res.locals.user.tenantId,
       createdBy: res.locals.user._id,
