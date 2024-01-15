@@ -16,7 +16,7 @@ export interface ILayer {
   color: string;
   layerpath: string;
   name: string;
-  layerdataArr: [{}];
+  layerdataArr: [{}]; // stored minp/maxp for baselayers and being used on frontend
   //here why arent we creating an array
   center: [{}];
   minp: number;
