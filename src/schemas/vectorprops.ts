@@ -20,7 +20,7 @@ export enum VectorName {
   Landfill = "Landfill",
   Metro_Route = "Metro Route",
   Canal = "Canal",
-  Water_Body = "Water Body",
+  Water_Body = "Waterbody",
   Bus_shelters = "Bus shelters",
   Restricted_Area = "Restricted Area",
   Cycle_Stand = "Cycle Stand",

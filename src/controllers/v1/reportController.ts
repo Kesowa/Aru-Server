@@ -411,11 +411,11 @@ export const generatePlotReport = async (req: Request<{}, {}, {
         }),Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          raster: treeCoverType._id,
+          vector: treeCoverType._id,
         }),Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          raster: greeneryType._id,
+          vector: greeneryType._id,
         })
       ]);
       const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;

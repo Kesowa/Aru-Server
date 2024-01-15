@@ -131,15 +131,20 @@
       bounds.push([bound[0], bound[1]]);
       bounds.push([bound[2], bound[3]]);
 
-      map.addSource(geojsonFilePath, {
+      const id = Math.floor(Math.random()*1000000); // doesn't need to be very unique, as before every render previous layers are removed
+
+      map.addSource(id, {
         type: "geojson",
-        data: parsedGeojson,
+        data: {
+          type: "FeatureCollection",
+          features
+        },
       });
 
       map.addLayer({
-        id: `vector-layer-${geojsonFilePath}`,
+        id: `vector-layer-${id}`,
         type: "fill",
-        source: geojsonFilePath,
+        source: id,
         paint: {
           "fill-color": ["coalesce", ["get", "fill"]],
           "fill-opacity": ["coalesce", ["get", "fill-opacity"], 0.3],
@@ -148,9 +153,9 @@
       });
 
       map.addLayer({
-        id: `vector-layer-outline-${geojsonFilePath}`,
+        id: `vector-layer-outline-${id}`,
         type: "line",
-        source: geojsonFilePath,
+        source: id,
         paint: {
           "line-color": ["coalesce", ["get", "stroke"]],
           "line-width": ["coalesce", ["get", "stroke-width"], 2],
@@ -160,9 +165,9 @@
       });
 
       map.addLayer({
-        id: `vector-layer-line-${geojsonFilePath}`,
+        id: `vector-layer-line-${id}`,
         type: "line",
-        source: geojsonFilePath,
+        source: id,
         paint: {
           "line-color": ["coalesce", ["get", "stroke"]],
           "line-width": ["coalesce", ["get", "stroke-width"], 2],

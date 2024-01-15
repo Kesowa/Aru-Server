@@ -120,7 +120,8 @@ export class ScreenshotGenerator {
   async getMapSS(cogServerUrl: string, vectorFeatures: any[], rasterFilePaths: string[]) {
     try {
       await this.loadHtmlToPage(this.mapboxPage, this.mapboxHtml); // refreshing the page kindof
-      this.logger.info({cogServerUrl, rasterFilePaths, vectorFeatures}, "GENERATING SCREENSHOT, TAKE COVER!!!");
+      // this.logger.info({cogServerUrl, rasterFilePaths, vectorFeatures}, "GENERATING SCREENSHOT, TAKE COVER!!!");
+      this.logger.info("GENERATING SCREENSHOT, TAKE COVER!!!");
       await this.mapboxPage.evaluate(
         async ({ cogServerUrl, vectorFeatures, rasterFilePaths }) => {
           await takeScreenshot(cogServerUrl, rasterFilePaths, vectorFeatures);
