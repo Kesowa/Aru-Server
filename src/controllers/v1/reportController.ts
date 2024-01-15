@@ -428,11 +428,11 @@ export const generatePlotReport = async (req: Request<{}, {}, {
       const flaggedPlotGeojson = plotGeojson.features.filter((_, index) => plotLayer.flaggedFeatures.includes(index));
 
       // plot images (one per plot, fail safe if absent)
-      const flaggedPlotFile = await layerFiles.find({
-        tenantId: res.locals.user.tenantId._id,
-        layerId: plotLayer._id,
-        sys_Id: { $in: flaggedPlotGeojson.map(plot => plot.properties.sys_id) }
-      });
+      // const flaggedPlotFile = await layerFiles.find({
+      //   tenantId: res.locals.user.tenantId._id,
+      //   layerId: plotLayer._id,
+      //   sys_Id: { $in: flaggedPlotGeojson.map(plot => plot.properties.sys_id) }
+      // });
       
       // date
       const now = new Date();
@@ -463,7 +463,7 @@ export const generatePlotReport = async (req: Request<{}, {}, {
 
       // ************* COVER PAGE DETAILS ****************
       // Cover page in sample report shows block boundary and all the plots in the block, so it will be same for all plot reports
-      const coverPageVectorFeatures = [...blockGeojson.features, ...flaggedPlotGeojson];
+      const coverPageVectorFeatures = [...blockGeojson.features, ...plotGeojson.features];
       const coverImageBuffer = await saveScreenshot(coverPageVectorFeatures, [rasterFilePath], req.log);
       // await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); // For Debugging
 
@@ -498,18 +498,21 @@ export const generatePlotReport = async (req: Request<{}, {}, {
         // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
         const plotArea = findArea([plotFeature]);
         const plotImageBuffer = await saveScreenshot([plotFeature], [rasterFilePath], req.log);
-
-        const plotLayerFile = flaggedPlotFile.find((layerFile) => layerFile.sys_Id === plotProperties.sys_id);
-        const frontViewImageBuffer = plotLayerFile ? await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath)) : null;
-
-    
+        
         // ******************** BUILDING DETAILS ************************
-
+        
         // for multiple buildings:
         // const plotBuildingFeatures = buildingsGeojson.features.filter((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
-
+        
         // for single building:
         const plotBuildingFeature = buildingsGeojson.features.find((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
+
+        const plotLayerFile = await layerFiles.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          layerId: plotLayer._id,
+          sys_Id: plotBuildingFeature.properties.sys_id
+        });
+        const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
     
         const buildingProperties = plotBuildingFeature.properties;
 
@@ -529,25 +532,25 @@ export const generatePlotReport = async (req: Request<{}, {}, {
             frontViewImageBuffer,
             plotImageBuffer,
             plotArea,
-            plotNo: plotProperties.plotNo,
-            premiseNo: plotProperties.premiseNo,
-            pincode: Number(plotProperties.pincode),
+            plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
+            premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
+            pincode: Number.isNaN(Number(plotProperties.pincode)) ? null : plotProperties.pincode, // must be numeric
             category: plotProperties.category,
-            infraction: plotProperties.infraction,
-            isGreenTopEligible: (plotProperties.isGreenTopEligible === "Yes") ? true : false,
-            isSolarPlantEligible: (plotProperties.isSolarPlantEligible === "Yes") ? true : false,
-            hasTradeLicense: (plotProperties.hasTradeLicense === "Yes") ? true : false,
-            tax: Number(plotProperties.tax),
+            infraction: plotProperties.infraction, // "Yes" or "No"
+            isGreenTopEligible: plotProperties.isGreenTopEligible, // "Yes" or "No"
+            isSolarPlantEligible: plotProperties.isSolarPlantEligible, // "Yes" or "No"
+            hasTradeLicense: plotProperties.hasTradeLicense, // "Yes" or "No"
+            tax: Number.isNaN(Number(plotProperties.tax)) ? null : plotProperties.tax, // must be numeric
     
             // building details
     
             buildingArea,
             buildingFootprint: (buildingArea / plotArea) * 100,
-            buildingAvailable: (buildingProperties.buildingAvailable === "Yes") ? true : false,
-            floorCount: buildingProperties.floorCount,
-            buildingNo: buildingProperties.buildingNo,
-            hasCompletionCertificate: (buildingProperties.hasCompletionCertificate === "Yes") ? true : false,
-            buildingHeight: Number(buildingProperties.buildingHeight),
+            buildingAvailable: plotProperties.buildingAvailable, // "Yes" or "No"
+            floorCount: plotProperties.shopFloor, // although seems like a number, can contain string like "G+(some number)"
+            buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
+            hasCompletionCertificate: (plotProperties.buildingStatus === "Constructed") ? "Yes" : "No",
+            buildingHeight: Number.isNaN(Number(buildingProperties.buildingHeight)) ? null : buildingProperties.buildingHeight, // must be numeric
     
             // block details
     
@@ -559,11 +562,11 @@ export const generatePlotReport = async (req: Request<{}, {}, {
             greeneryPercent: (greeneryArea/blockArea)*100,
             canopyPercent: (canopyArea/blockArea)*100,
             waterbodyPercent: (waterbodyArea/blockArea)*100,
-            blockName: blockProperties.blockName,
+            blockName: plotProperties.blockName,
             garbageCollectionInfo: blockProperties.garbageCollectionInfo,
-            averageBuildingHeight: Number(blockProperties.averageBuildingHeight),
-            averageBlockHeight: Number(blockProperties.averageBlockHeight),
-            averageIncentives: Number(blockProperties.averageIncentives),
+            averageBuildingHeight: Number.isNaN(Number(blockProperties.averageBuildingHeight)) ? null : blockProperties.averageBuildingHeight, // must be numeric
+            averageBlockHeight: Number.isNaN(Number(blockProperties.averageBlockHeight)) ? null : blockProperties.averageBlockHeight, // must be numeric
+            averageIncentives: Number.isNaN(Number(blockProperties.averageIncentives)) ? null : blockProperties.averageIncentives, // must be numeric
         };
     
         // req.log.info(data);

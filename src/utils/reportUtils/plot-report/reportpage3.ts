@@ -32,6 +32,7 @@ export const page3 = (properties: IPage3Properties) => {
     hasCompletionCertificate,
     buildingHeight,
 
+    blockName,
     greeneryPercent,
     canopyPercent,
     waterbodyPercent,
@@ -118,7 +119,7 @@ export const page3 = (properties: IPage3Properties) => {
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: `Block: ${plotNo}`,
+                    text: `Block: ${blockName}`,
                     bold: true,
                     // color: "FFFFFF",
                     size: "15pt",
