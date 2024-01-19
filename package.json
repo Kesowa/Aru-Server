@@ -96,7 +96,7 @@
     "pino": "^8.11.0",
     "pino-http": "^8.3.3",
     "pino-pretty": "^9.4.0",
-    "puppeteer": "^20.8.1",
+    "puppeteer": "^21.6.1",
     "razorpay": "^2.8.4",
     "redis": "^4.3.1",
     "rimraf": "^3.0.2",

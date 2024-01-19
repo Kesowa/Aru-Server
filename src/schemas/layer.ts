@@ -150,9 +150,11 @@ const layerSchema = new mongoose.Schema<ILayer>(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
     },
     flaggedFeatures: {
       type: [Number],

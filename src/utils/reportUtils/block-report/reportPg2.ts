@@ -16,7 +16,7 @@ import {
   ShadingType,
   VerticalPositionAlign,
 } from "docx";
-import { commonPageFooter, commonPageProperties } from "./reportUtils";
+import { commonPageFooter, commonPageProperties } from "../reportUtils";
 import {
   IAreaData,
   IAreaDesc,

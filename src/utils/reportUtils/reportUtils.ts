@@ -8,6 +8,7 @@ import {
   Paragraph,
   TextRun,
 } from "docx";
+import { IDeliverables } from "./block-report/types";
 
 // =============================== DOCX GENERATION UTILS ===============================================================================
 
@@ -187,7 +188,7 @@ export const vacantTypes = ["Vacant Plot"];
 
 // ===================================================================================================================================
 
-export const deliverableTypes = {
+export const deliverableTypes: IDeliverables = {
   OVERVIEW: ["Plot"],
   BOUNDARY: [],
   "BUILT-UP AREA": ["Building Footprint"],

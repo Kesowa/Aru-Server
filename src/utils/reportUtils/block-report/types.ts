@@ -50,6 +50,10 @@ export interface IPage7Properties {
   occupancy: IOccupancyDesc[];
 }
 
+export interface IDeliverables {
+  [key: string]: string[];
+}
+
 export interface IData {
   missionHeading: string;
   missionSubHeading: string;
@@ -67,20 +71,22 @@ export interface IData {
   roadLength: number;
   cycleTrackLength: number;
   // map pages
-  deliverables: {
-    OVERVIEW: string[];
-    BOUNDARY?: string[];
-    "BUILT-UP AREA"?: string[];
-    "AMENITIES AND POI"?: string[];
-    "OTHER FEATURES"?: string[];
-    "ACTIONABLE POINTS"?: string[];
-    "OCCUPIED UNTAXED AREA (ENCROACHMENT)"?: string[];
-    "ROAD DETAILS"?: string[];
-    "FOOTPATH DETAILS"?: string[];
-    "CYCLE TRACK DETAILS"?: string[];
-    "WATERBODIES DETAILS"?: string[];
-    "GREENERY DETAILS"?: string[];
-    "WATER TANK"?: string[];
-    "STREET-LIGHT DETAILS"?: string[];
-  };
+  deliverables: IDeliverables;
+  // Expected properties:
+  // deliverables: {
+  //   OVERVIEW: string[];
+  //   BOUNDARY?: string[];
+  //   "BUILT-UP AREA"?: string[];
+  //   "AMENITIES AND POI"?: string[];
+  //   "OTHER FEATURES"?: string[];
+  //   "ACTIONABLE POINTS"?: string[];
+  //   "OCCUPIED UNTAXED AREA (ENCROACHMENT)"?: string[];
+  //   "ROAD DETAILS"?: string[];
+  //   "FOOTPATH DETAILS"?: string[];
+  //   "CYCLE TRACK DETAILS"?: string[];
+  //   "WATERBODIES DETAILS"?: string[];
+  //   "GREENERY DETAILS"?: string[];
+  //   "WATER TANK"?: string[];
+  //   "STREET-LIGHT DETAILS"?: string[];
+  // };
 }

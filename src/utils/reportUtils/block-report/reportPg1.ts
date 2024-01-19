@@ -13,14 +13,16 @@ import {
   TableCell,
   VerticalAlign,
 } from "docx";
-import { commonPageFooter, commonPageProperties } from "./reportUtils";
+import { commonPageFooter, commonPageProperties } from "../reportUtils";
 import { IPage1Properties } from "./types";
 import path from "path";
 
 const NKDALogo = new Paragraph({
   children: [
     new ImageRun({
-      data: fs.readFileSync(path.join(__dirname, "images", "NKDA_Logo.png")),
+      data: fs.readFileSync(
+        path.join(__dirname, "..", "assets", "NKDA_Logo.png")
+      ),
       transformation: {
         width: 100,
         height: 100,
@@ -42,7 +44,9 @@ const NKDALogo = new Paragraph({
 const FSIPLLogo = new Paragraph({
   children: [
     new ImageRun({
-      data: fs.readFileSync(path.join(__dirname, "images", "FSIPL_Logo.png")),
+      data: fs.readFileSync(
+        path.join(__dirname, "..", "assets", "FSIPL_Logo.png")
+      ),
       transformation: {
         width: 110,
         height: 100,
