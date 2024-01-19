@@ -70,7 +70,7 @@ export enum VectorName {
   Garbage_Collection_Area = "Garbage Collection Area",
   Mobile_Drone_Port = "Mobile Drone Port",
   Potholes = "Potholes",
-};
+}
 
 export interface IVector {
   _id: mongoose.Types.ObjectId;

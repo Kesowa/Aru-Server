@@ -2,7 +2,6 @@ import puppeteer, { Browser, Page } from "puppeteer-core";
 import fs from "fs/promises";
 import path from "path";
 import { pino } from "pino";
-import { DirPath, Directory } from "../../../constants";
 
 export interface IPieChartData {
   name: string;
