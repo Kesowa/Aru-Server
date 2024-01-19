@@ -3,21 +3,20 @@ import Alert from "../../models/alert";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { notificationSocket } from "../../socket";
 import Tenant from "../../models/tenant";
-import sharp from "sharp";
-import resizer from "node-image-resizer";
-// sharp.cache({ files : 0 });
 import { Types } from "mongoose";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
 import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 
-import exifr from "exifr";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IFlight } from "../../schemas/flight";
 import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
-import { checkFileExists, getFileSize } from "../../utils/fileUtils";
+import { getFileSize } from "../../utils/fileUtils";
 import path from "path";
 import { WiproInterface } from "../../utils/wipro";
+import { readCoords, saveThumbnails } from "../../utils/imageUtils";
+import * as pathUtils from "../../utils/pathUtils";
+
 // Create Alert Controlller
 type CreateAlert = {
   missionId: Types.ObjectId;
@@ -44,7 +43,7 @@ export const createAlert = async (
         long: req.body.location.long ? req.body.location.long : 0,
       };
     }
-    const docPath: string = DirPath(Directory.DEFAULT, req.body.image);
+    const docPath: string = DirPath(Directory.ROOT, req.body.image);
     const size1: number = await getFileSize(docPath);
     const newAlert = new Alert({
       locationName,
@@ -728,23 +727,9 @@ export const convertImageToThumbnail = async (
   });
   if (result.length) {
     for (let i = 0; i < result.length; i++) {
-      const newFilename = DirPath(Directory.DEFAULT, result[i].image);
-      if (await checkFileExists(newFilename)) {
-        await resizer(newFilename, {
-          all: {
-            path: DirPath(Directory.ALERT_IMAGES),
-            quality: 80,
-          },
-          versions: [
-            {
-              quality: 100,
-              prefix: "1x_",
-              width: 120,
-              height: 120,
-            },
-          ],
-        });
-      }
+      await saveThumbnails(
+        pathUtils.docPath(pathUtils.Directory.ROOT, result[i].image)
+      );
     }
     res.status(200).json({
       status: true,
@@ -818,28 +803,19 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
 
 export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
-    const img_path = DirPath(Directory.ALERT_IMAGES, req.file?.filename);
-    if (await checkFileExists(img_path)) {
-      try {
-        await sharp(req.file?.path)
-          .resize(120, 120, { withoutEnlargement: true })
-          .toFile(DirPath(Directory.ALERT_IMAGES, `1x_${req.file?.filename}`));
-        req.log.info("Image Resized Sucessfully");
-      } catch (err) {
-        req.log.warn("Image Resizing Failed");
-        req.log.error(err);
-      }
-    }
-    const ff: any = await exifr.parse(img_path);
+    const img_path = pathUtils.docPath(
+      pathUtils.Directory.ALERT_IMAGES,
+      req.file.filename
+    );
+    const thumbs = await saveThumbnails(img_path);
+    const ff = await readCoords(img_path);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
     req.body.location = {
-      lat: ff ? ff.latitude : 0,
-      long: ff ? ff.longitude : 0,
+      lat: ff ? ff.lat : 0,
+      long: ff ? ff.lng : 0,
     };
-    const docPath: string = DirPath(Directory.ALERT_IMAGES, req.file?.filename);
-    const size1: number = await getFileSize(docPath);
     const newAlert = new Alert({
       locationName,
       location: req.body.location ? req.body.location : null,
@@ -852,14 +828,11 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: size1,
-      image: req.file ? `/images/alertImages/${req.file?.filename}` : undefined,
+      fileSize: thumbs.size,
+      image: img_path,
     });
 
     const data = await newAlert.save();
-    // deleteFileAvatar(`/images/alertImages/${req.file?.filename}`)
-    // let dataa = await Alert.findById(data._id).populate('createdBy')
-    // notificationSocket.to(res.locals.user.tenantId._id).emit('ALERT_CREATED', dataa);
     const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
     if (data && tenant.actualAlertCount >= 0) {
       await Tenant.updateOne(

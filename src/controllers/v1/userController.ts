@@ -22,7 +22,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
       }),
     ]);
     const docPath = DirPath(
-      Directory.DEFAULT,
+      Directory.ROOT,
       req.body.avatar ? req.body.avatar : ""
     );
     const size: any = await getFileSize(docPath);
@@ -306,7 +306,7 @@ export const UserDelete = async (req: Request, res: AuthResponse) => {
     if (doc) {
       let size = 0;
       try {
-        const docPath = DirPath(Directory.DEFAULT, doc.avatar);
+        const docPath = DirPath(Directory.ROOT, doc.avatar);
         size = await getFileSize(docPath);
         await deletePublicFileUsingPath(doc.avatar);
       } catch (error) {

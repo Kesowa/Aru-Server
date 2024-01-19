@@ -5,11 +5,8 @@ import { Types } from "ts-openapi";
 import Document from "../../models/document";
 import { DocumentType } from "../../schemas/document";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import archiver from "archiver";
-import { Directory, DirPath } from "../../constants";
 import { missionSpecificSocket } from "../../socket";
-import { createDirIfNotExists } from "../../utils/fileUtils";
-import fs from "fs";
+import { createArchive } from "../../utils/dataUtils";
 
 const documentApi = Router();
 
@@ -63,29 +60,10 @@ documentApi.get(
 
     if (zip) {
       missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-      const dir = DirPath(Directory.ZIP);
-      await createDirIfNotExists(dir, req.log);
-      const fname = `${data[0].folderName}_${Date.now()}.zip`;
-      const output = fs.createWriteStream(`${dir}${fname}`);
-      const archive = archiver("zip", {
-        zlib: { level: 9 },
-      });
-      archive.pipe(output);
-      for (let i = 0; i < data.length; i++) {
-        archive.file(DirPath(Directory.DEFAULT, data[i].filePath), {
-          name: data[i].filePath.split("/")[2],
-        });
-      }
-      try {
-        const _archiveFinalized = await archive.finalize();
-        const link = `/zip/${fname}`;
-        missionSpecificSocket
-          .to(missionId)
-          .emit("DOCUMENT_ZIP_COMPLETED", link);
-      } catch (error) {
-        req.log.error(error);
-        missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_FAILED");
-      }
+      const zipFile = await createArchive(data.map((d) => d.filePath));
+      missionSpecificSocket
+        .to(missionId)
+        .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
     }
 
     res.json({

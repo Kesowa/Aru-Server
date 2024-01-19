@@ -1,4 +1,3 @@
-import { promises as fs } from "fs";
 import * as turf from "@turf/turf";
 import { Request } from "express";
 import Mission from "../../models/mission";
@@ -305,19 +304,14 @@ export const generateReport = async (req: Request<{}, {}, {
 
       // saving the document
       const doc = await generateDocument(data, req.log);
-      const buffer = await Packer.toBuffer(doc);
-      const filename = `${missionId}-report.docx`;
-      const filepath = DirPath(Directory.DOCUMENTS, filename);
-      await fs.writeFile(filepath, buffer);
-
-      const fileStats = await fs.stat(filepath);
-
-      await Document.findOneAndDelete({ name: filename });
+      const buffer = Packer.toStream(doc);
+      const filename = `${new Date()}-block_report.docx`;
+      const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
       const docDB = new Document({
         name: filename,
         modDate: new Date(),
-        fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
+        fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
         fileType: "docx",
         folderName: "root1234",
         filePath: `/documents/${filename}`,

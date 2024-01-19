@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import Layer from "../models/layer";
 
 import { ObjectId } from "bson";
+import { DirPath, Directory } from "../constants";
 
 type Properties = {
   SL_NO: number;
@@ -128,6 +129,18 @@ export async function featureAddition(
     console.error(error);
     return 0;
   }
+}
+
+export async function featureUpdate(
+  layerpath: string,
+  updatedFeatures: Feature[],
+  geojson: GeoJson
+) {
+  geojson.features = [...geojson.features, ...updatedFeatures];
+  await fs.writeFile(
+    DirPath(Directory.ROOT, layerpath),
+    JSON.stringify(geojson)
+  );
 }
 
 export async function editGeoJsonForAll(
