@@ -36,7 +36,7 @@ export class ScreenshotGenerator {
   async loadHtmlToPage(page: Page, html: string) {
     await page.goto(`data: text/html, ${html}`);
     await page.setContent(html);
-    await page.setViewport({width: 1920, height: 1080});
+    await page.setViewport({ width: 1920, height: 1080 });
     await page.emulateMediaType("screen");
   }
 
@@ -66,13 +66,18 @@ export class ScreenshotGenerator {
       );
       this.mapboxPage = await this.browser.newPage();
       this.mapboxPage
-        .on('console', message =>
-          this.logger.info(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`))
-        .on('pageerror', ({ message }) => this.logger.error(message))
-        .on('response', response =>
-          this.logger.debug(`${response.status()} ${response.url()}`))
-        .on('requestfailed', request =>
-          this.logger.warn(`${request.failure().errorText} ${request.url()}`));
+        .on("console", (message) =>
+          this.logger.info(
+            `${message.type().substr(0, 3).toUpperCase()} ${message.text()}`
+          )
+        )
+        .on("pageerror", ({ message }) => this.logger.error(message))
+        .on("response", (response) =>
+          this.logger.debug(`${response.status()} ${response.url()}`)
+        )
+        .on("requestfailed", (request) =>
+          this.logger.warn(`${request.failure().errorText} ${request.url()}`)
+        );
       await this.loadHtmlToPage(this.mapboxPage, this.mapboxHtml);
 
       this.chartHtml = await fs.readFile(
@@ -116,7 +121,11 @@ export class ScreenshotGenerator {
     }
   }
 
-  async getMapSS(cogServerUrl: string, vectorFeatures: any[], rasterFilePaths: string[]) {
+  async getMapSS(
+    cogServerUrl: string,
+    vectorFeatures: any[],
+    rasterFilePaths: string[]
+  ) {
     try {
       await this.loadHtmlToPage(this.mapboxPage, this.mapboxHtml); // refreshing the page kindof
       // this.logger.info({cogServerUrl, rasterFilePaths, vectorFeatures}, "GENERATING SCREENSHOT, TAKE COVER!!!");
@@ -124,8 +133,10 @@ export class ScreenshotGenerator {
       await this.mapboxPage.evaluate(
         async ({ cogServerUrl, vectorFeatures, rasterFilePaths }) => {
           await takeScreenshot(cogServerUrl, rasterFilePaths, vectorFeatures);
-        }, { cogServerUrl, vectorFeatures, rasterFilePaths });
-      const pngBuffer = await this.mapboxPage.screenshot({type: "png"});
+        },
+        { cogServerUrl, vectorFeatures, rasterFilePaths }
+      );
+      const pngBuffer = await this.mapboxPage.screenshot({ type: "png" });
       return pngBuffer;
     } catch (error) {
       this.logger.error("Error while generating map screenshot: ");

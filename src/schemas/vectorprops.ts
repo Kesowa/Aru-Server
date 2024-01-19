@@ -84,7 +84,7 @@ export interface IVector {
 export const VectorType = {
   _id: Types.String(),
   name: Types.StringEnum({
-    values: Object.values(VectorName)
+    values: Object.values(VectorName),
   }),
   type: Types.StringEnum({
     values: ["Point", "MultiLineString", "MultiPolygon"],

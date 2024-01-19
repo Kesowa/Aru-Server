@@ -1,7 +1,10 @@
 import express from "express";
 
 import { isAuthenticated } from "../../utils/authUtils";
-import { generatePlotReport, generateReport } from "../../controllers/v1/reportController";
+import {
+  generatePlotReport,
+  generateReport,
+} from "../../controllers/v1/reportController";
 import { body } from "express-validator";
 import { validator } from "../../utils/requestHelpers";
 

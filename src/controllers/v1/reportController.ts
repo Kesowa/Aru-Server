@@ -4,7 +4,12 @@ import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { IVector, VectorName } from "../../schemas/vectorprops";
-import { DirPath, Directory, TITILER_SERVER, TITILER_STATIC } from "../../constants";
+import {
+  DirPath,
+  Directory,
+  TITILER_SERVER,
+  TITILER_STATIC,
+} from "../../constants";
 import { generateDocument } from "../../utils/reportUtils/block-report/report";
 import { Packer } from "docx";
 import { IData } from "../../utils/reportUtils/block-report/types";
@@ -29,7 +34,12 @@ import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
 import { ScreenshotGenerator } from "../../utils/reportUtils/screenshot";
 import { pino } from "pino";
-import { IBlockProperties, IBuildingProperties, IPlotProperties, IPlotReportData } from "../../utils/reportUtils/plot-report/types";
+import {
+  IBlockProperties,
+  IBuildingProperties,
+  IPlotProperties,
+  IPlotReportData,
+} from "../../utils/reportUtils/plot-report/types";
 import { generatePlotReportDocument } from "../../utils/reportUtils/plot-report/report";
 import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
@@ -37,7 +47,7 @@ import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
 
-export function findArea(features: Feature<turf.Geometry,turf.Properties>[]) {
+export function findArea(features: Feature<turf.Geometry, turf.Properties>[]) {
   try {
     let totalArea = 0;
     const allIndependantLines: turf.Position[][] = [];
@@ -53,7 +63,8 @@ export function findArea(features: Feature<turf.Geometry,turf.Properties>[]) {
         )
       ) {
         if (feature.geometry.type === "MultiLineString") {
-          for (const linestring of feature.geometry.coordinates as turf.Position[][]) {
+          for (const linestring of feature.geometry
+            .coordinates as turf.Position[][]) {
             allIndependantLines.concat(linestring);
           }
           continue;
@@ -79,7 +90,9 @@ export function findArea(features: Feature<turf.Geometry,turf.Properties>[]) {
   }
 }
 
-export function findLength(features: Feature<turf.Geometry,turf.Properties>[]) {
+export function findLength(
+  features: Feature<turf.Geometry, turf.Properties>[]
+) {
   try {
     let totalLength = 0;
     for (const feature of features) {
@@ -91,8 +104,10 @@ export function findLength(features: Feature<turf.Geometry,turf.Properties>[]) {
           feature.geometry.type
         )
       ) {
-        const lines = (feature.geometry.type === "LineString") ? 
-          [feature.geometry.coordinates as turf.Position[]] : feature.geometry.coordinates as turf.Position[][];
+        const lines =
+          feature.geometry.type === "LineString"
+            ? [feature.geometry.coordinates as turf.Position[]]
+            : (feature.geometry.coordinates as turf.Position[][]);
         // Polygon and MultiLineString both have similar structure, array of line strings
         totalLength += turf.length(turf.multiLineString(lines));
       }
@@ -104,7 +119,9 @@ export function findLength(features: Feature<turf.Geometry,turf.Properties>[]) {
   }
 }
 
-export function countPolygons(features: Feature<turf.Geometry,turf.Properties>[]) {
+export function countPolygons(
+  features: Feature<turf.Geometry, turf.Properties>[]
+) {
   try {
     let count = 0;
     for (const feature of features) {
@@ -131,9 +148,16 @@ function assignOccupancy(layerType: string, idx: number, data: IData) {
   }
 }
 
-export const generateReport = async (req: Request<{}, {}, {
-  missionId: string,
-}>, res: AuthResponse) => {
+export const generateReport = async (
+  req: Request<
+    {},
+    {},
+    {
+      missionId: string;
+    }
+  >,
+  res: AuthResponse
+) => {
   {
     const { missionId } = req.body;
     try {
@@ -245,7 +269,9 @@ export const generateReport = async (req: Request<{}, {}, {
       }).populate<{ vector: IVector }>("vector");
 
       for (const layer of vectorLayers) {
-        const gjson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, layer.layerpath));
+        const gjson = await readGeoJson<
+          Feature<turf.Geometry, turf.Properties>
+        >(DirPath(Directory.DEFAULT, layer.layerpath));
         const currLayerArea = findArea(gjson.features);
         const currLayerLength = findLength(gjson.features);
         data.area.total += currLayerArea;
@@ -340,39 +366,56 @@ export const generateReport = async (req: Request<{}, {}, {
   }
 };
 
-export async function saveScreenshot(vectorFeatures: Feature<turf.Geometry,turf.Properties>[], rasterFilePaths: string[], logger: pino.Logger) {
+export async function saveScreenshot(
+  vectorFeatures: Feature<turf.Geometry, turf.Properties>[],
+  rasterFilePaths: string[],
+  logger: pino.Logger
+) {
   try {
     const ssGenerator = new ScreenshotGenerator(logger);
     await ssGenerator.init();
-  
+
     logger.info("Browser Launched for screenshots...");
-  
+
     const ssBuffer = await ssGenerator.getMapSS(
       TITILER_SERVER,
       vectorFeatures,
       rasterFilePaths
     );
-  
-    await ssGenerator.destroy();
-  
-    logger.info("Image Captured...");
-  
-    return ssBuffer;
 
-  } catch(error) {
+    await ssGenerator.destroy();
+
+    logger.info("Image Captured...");
+
+    return ssBuffer;
+  } catch (error) {
     logger.error("Error while taking screenshot: ", error);
     return null;
   }
 }
 
-export const generatePlotReport = async (req: Request<{}, {}, {
-  missionId: string,
-}>, res: AuthResponse) => {
+export const generatePlotReport = async (
+  req: Request<
+    {},
+    {},
+    {
+      missionId: string;
+    }
+  >,
+  res: AuthResponse
+) => {
   {
     const { missionId } = req.body;
     try {
-
-      const [blockBoundaryType, plotType, buildingFootprintType, waterbodyType, orthoType, treeCoverType, greeneryType] = await Promise.all([
+      const [
+        blockBoundaryType,
+        plotType,
+        buildingFootprintType,
+        waterbodyType,
+        orthoType,
+        treeCoverType,
+        greeneryType,
+      ] = await Promise.all([
         vector.findOne({ name: VectorName.Block_Boundary }),
         vector.findOne({ name: VectorName.Plot }),
         vector.findOne({ name: VectorName.Building_Footprint }), // there's a type with name "Building footprint" as well, be warned
@@ -381,45 +424,67 @@ export const generatePlotReport = async (req: Request<{}, {}, {
         vector.findOne({ name: VectorName.Jungle }),
         vector.findOne({ name: VectorName.Green_Verge }),
       ]);
-      const [blockBoundaryLayer, plotLayer, buildingFootprintLayer, waterbodyLayer, rasterLayer, treeCoverLayer, greeneryLayer] = await Promise.all([
+      const [
+        blockBoundaryLayer,
+        plotLayer,
+        buildingFootprintLayer,
+        waterbodyLayer,
+        rasterLayer,
+        treeCoverLayer,
+        greeneryLayer,
+      ] = await Promise.all([
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: blockBoundaryType._id,
-        }), Layer.findOne({
+        }),
+        Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: plotType._id,
-        }), Layer.findOne({
+        }),
+        Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: buildingFootprintType._id,
-        }), Layer.findOne({
+        }),
+        Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: waterbodyType._id,
-        }), Layer.findOne({
+        }),
+        Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           raster: orthoType._id,
-        }),Layer.findOne({
+        }),
+        Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: treeCoverType._id,
-        }),Layer.findOne({
+        }),
+        Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: greeneryType._id,
-        })
+        }),
       ]);
       const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;
-      const plotGeojson = await readGeoJson<Feature<turf.MultiPolygon,IPlotProperties>>(DirPath(Directory.DEFAULT, plotLayer.layerpath));
-      const buildingsGeojson = await readGeoJson<Feature<turf.MultiPolygon,IBuildingProperties>>(DirPath(Directory.DEFAULT, buildingFootprintLayer.layerpath));
-      const blockGeojson = await readGeoJson<Feature<turf.MultiPolygon,IBlockProperties>>(DirPath(Directory.DEFAULT, blockBoundaryLayer.layerpath));
+      const plotGeojson = await readGeoJson<
+        Feature<turf.MultiPolygon, IPlotProperties>
+      >(DirPath(Directory.DEFAULT, plotLayer.layerpath));
+      const buildingsGeojson = await readGeoJson<
+        Feature<turf.MultiPolygon, IBuildingProperties>
+      >(DirPath(Directory.DEFAULT, buildingFootprintLayer.layerpath));
+      const blockGeojson = await readGeoJson<
+        Feature<turf.MultiPolygon, IBlockProperties>
+      >(DirPath(Directory.DEFAULT, blockBoundaryLayer.layerpath));
 
       // multiple plot reports will be generated, one for each flagged plot
       // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
-      const flaggedPlotGeojson = plotGeojson.features.filter((_, index) => plotLayer.flaggedFeatures.includes(index));
+      const flaggedPlotGeojson = plotGeojson.features.filter((_, index) =>
+        plotLayer.flaggedFeatures.includes(index)
+      );
 
       // plot images (one per plot, fail safe if absent)
       // const flaggedPlotFile = await layerFiles.find({
@@ -427,155 +492,204 @@ export const generatePlotReport = async (req: Request<{}, {}, {
       //   layerId: plotLayer._id,
       //   sys_Id: { $in: flaggedPlotGeojson.map(plot => plot.properties.sys_id) }
       // });
-      
+
       // date
       const now = new Date();
       const date = now.toLocaleDateString("in");
 
       // currently considering all users who worked on the layers, to be mentioned on report cover page
-      const userIds = Array.from(new Set<string>([
-        String(plotLayer.createdBy), 
-        String(plotLayer.updatedBy),
-        String(blockBoundaryLayer.createdBy),
-        String(blockBoundaryLayer.updatedBy),
-        String(buildingFootprintLayer.createdBy),
-        String(buildingFootprintLayer.updatedBy),
-        String(waterbodyLayer.createdBy),
-        String(waterbodyLayer.updatedBy),
-        String(rasterLayer.createdBy),
-        String(rasterLayer.updatedBy),
-        String(treeCoverLayer.createdBy),
-        String(treeCoverLayer.updatedBy),
-        String(greeneryLayer.createdBy),
-        String(greeneryLayer.updatedBy),
-      ])); // all unique userIds
+      const userIds = Array.from(
+        new Set<string>([
+          String(plotLayer.createdBy),
+          String(plotLayer.updatedBy),
+          String(blockBoundaryLayer.createdBy),
+          String(blockBoundaryLayer.updatedBy),
+          String(buildingFootprintLayer.createdBy),
+          String(buildingFootprintLayer.updatedBy),
+          String(waterbodyLayer.createdBy),
+          String(waterbodyLayer.updatedBy),
+          String(rasterLayer.createdBy),
+          String(rasterLayer.updatedBy),
+          String(treeCoverLayer.createdBy),
+          String(treeCoverLayer.updatedBy),
+          String(greeneryLayer.createdBy),
+          String(greeneryLayer.updatedBy),
+        ])
+      ); // all unique userIds
 
-      const userDocs = await Promise.all(userIds.map((id) => (User.findById(id, { name: 1 }))));
+      const userDocs = await Promise.all(
+        userIds.map((id) => User.findById(id, { name: 1 }))
+      );
       const users = userDocs.map((user) => user.name);
 
       // =================================== DETAILS THAT WON'T VARY ACROSS REPORTS OF DIFFERENT PLOTS ==================================
 
       // ************* COVER PAGE DETAILS ****************
       // Cover page in sample report shows block boundary and all the plots in the block, so it will be same for all plot reports
-      const coverPageVectorFeatures = [...blockGeojson.features, ...plotGeojson.features];
-      const coverImageBuffer = await saveScreenshot(coverPageVectorFeatures, [rasterFilePath], req.log);
+      const coverPageVectorFeatures = [
+        ...blockGeojson.features,
+        ...plotGeojson.features,
+      ];
+      const coverImageBuffer = await saveScreenshot(
+        coverPageVectorFeatures,
+        [rasterFilePath],
+        req.log
+      );
       // await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); // For Debugging
 
       // ************* BLOCK DETAILS ******************
       // All plots belong to same block, so block properties need not be calculated repeatedly
-      
+
       const blockArea = findArea(blockGeojson.features);
-      const blockImageBuffer = await saveScreenshot(blockGeojson.features, [rasterFilePath], req.log);
+      const blockImageBuffer = await saveScreenshot(
+        blockGeojson.features,
+        [rasterFilePath],
+        req.log
+      );
       const blockProperties = blockGeojson.features[0].properties; // block layer will have only one MultiPolygon features
 
-      const waterbodyGeojson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
+      const waterbodyGeojson = await readGeoJson<
+        Feature<turf.Geometry, turf.Properties>
+      >(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
       const waterbodyArea = findArea(waterbodyGeojson.features);
 
-      const greeneryGeojson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, greeneryLayer.layerpath));
+      const greeneryGeojson = await readGeoJson<
+        Feature<turf.Geometry, turf.Properties>
+      >(DirPath(Directory.DEFAULT, greeneryLayer.layerpath));
       const greeneryArea = findArea(greeneryGeojson.features);
 
-      const canopyGeojson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, treeCoverLayer.layerpath));
+      const canopyGeojson = await readGeoJson<
+        Feature<turf.Geometry, turf.Properties>
+      >(DirPath(Directory.DEFAULT, treeCoverLayer.layerpath));
       const canopyArea = findArea(canopyGeojson.features);
 
       // ==================================================================================================================================
 
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
-      for(const plotFeature of flaggedPlotGeojson) {
-
+      for (const plotFeature of flaggedPlotGeojson) {
         const plotProperties = plotFeature.properties;
-        
+
         // ******************** PLOT DETAILS ***********************
 
         // // front view image
         // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
         // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
         const plotArea = findArea([plotFeature]);
-        const plotImageBuffer = await saveScreenshot([plotFeature], [rasterFilePath], req.log);
-        
+        const plotImageBuffer = await saveScreenshot(
+          [plotFeature],
+          [rasterFilePath],
+          req.log
+        );
+
         // ******************** BUILDING DETAILS ************************
-        
+
         // for multiple buildings:
         // const plotBuildingFeatures = buildingsGeojson.features.filter((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
-        
+
         // for single building:
-        const plotBuildingFeature = buildingsGeojson.features.find((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
+        const plotBuildingFeature = buildingsGeojson.features.find(
+          (feature) => feature.properties.premiseNo === plotProperties.premiseNo
+        );
 
         const plotLayerFile = await layerFiles.findOne({
           tenantId: res.locals.user.tenantId._id,
           layerId: plotLayer._id,
-          sys_Id: plotBuildingFeature.properties.sys_id
+          sys_Id: plotBuildingFeature.properties.sys_id,
         });
-        const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
-    
+        const frontViewImageBuffer = await fs.readFile(
+          DirPath(Directory.DEFAULT, plotLayerFile.filePath)
+        );
+
         const buildingProperties = plotBuildingFeature.properties;
 
         const buildingArea = findArea([plotBuildingFeature]);
-    
+
         // ================= PUTTING TOGETHER THE DATA =======================
-    
+
         const data: IPlotReportData = {
-            // cover page details
-    
-            date,
-            users,
-            coverImageBuffer,
-    
-            // plot details
-    
-            frontViewImageBuffer,
-            plotImageBuffer,
-            plotArea,
-            plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
-            premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
-            pincode: Number.isNaN(Number(plotProperties.pincode)) ? null : plotProperties.pincode, // must be numeric
-            category: plotProperties.category,
-            infraction: plotProperties.infraction, // "Yes" or "No"
-            isGreenTopEligible: plotProperties.isGreenTopEligible, // "Yes" or "No"
-            isSolarPlantEligible: plotProperties.isSolarPlantEligible, // "Yes" or "No"
-            hasTradeLicense: plotProperties.hasTradeLicense, // "Yes" or "No"
-            tax: Number.isNaN(Number(plotProperties.tax)) ? null : plotProperties.tax, // must be numeric
-    
-            // building details
-    
-            buildingArea,
-            buildingFootprint: (buildingArea / plotArea) * 100,
-            buildingAvailable: plotProperties.buildingAvailable, // "Yes" or "No"
-            floorCount: plotProperties.shopFloor, // although seems like a number, can contain string like "G+(some number)"
-            buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
-            hasCompletionCertificate: (plotProperties.buildingStatus === "Constructed") ? "Yes" : "No",
-            buildingHeight: Number.isNaN(Number(buildingProperties.buildingHeight)) ? null : buildingProperties.buildingHeight, // must be numeric
-    
-            // block details
-    
-            blockImageBuffer,
-            blockArea,
-            greeneryArea,
-            canopyArea,
-            waterbodyArea,
-            greeneryPercent: (greeneryArea/blockArea)*100,
-            canopyPercent: (canopyArea/blockArea)*100,
-            waterbodyPercent: (waterbodyArea/blockArea)*100,
-            blockName: plotProperties.blockName,
-            garbageCollectionInfo: blockProperties.garbageCollectionInfo,
-            averageBuildingHeight: Number.isNaN(Number(blockProperties.averageBuildingHeight)) ? null : blockProperties.averageBuildingHeight, // must be numeric
-            averageBlockHeight: Number.isNaN(Number(blockProperties.averageBlockHeight)) ? null : blockProperties.averageBlockHeight, // must be numeric
-            averageIncentives: Number.isNaN(Number(blockProperties.averageIncentives)) ? null : blockProperties.averageIncentives, // must be numeric
+          // cover page details
+
+          date,
+          users,
+          coverImageBuffer,
+
+          // plot details
+
+          frontViewImageBuffer,
+          plotImageBuffer,
+          plotArea,
+          plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
+          premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
+          pincode: Number.isNaN(Number(plotProperties.pincode))
+            ? null
+            : plotProperties.pincode, // must be numeric
+          category: plotProperties.category,
+          infraction: plotProperties.infraction, // "Yes" or "No"
+          isGreenTopEligible: plotProperties.isGreenTopEligible, // "Yes" or "No"
+          isSolarPlantEligible: plotProperties.isSolarPlantEligible, // "Yes" or "No"
+          hasTradeLicense: plotProperties.hasTradeLicense, // "Yes" or "No"
+          tax: Number.isNaN(Number(plotProperties.tax))
+            ? null
+            : plotProperties.tax, // must be numeric
+
+          // building details
+
+          buildingArea,
+          buildingFootprint: (buildingArea / plotArea) * 100,
+          buildingAvailable: plotProperties.buildingAvailable, // "Yes" or "No"
+          floorCount: plotProperties.shopFloor, // although seems like a number, can contain string like "G+(some number)"
+          buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
+          hasCompletionCertificate:
+            plotProperties.buildingStatus === "Constructed" ? "Yes" : "No",
+          buildingHeight: Number.isNaN(
+            Number(buildingProperties.buildingHeight)
+          )
+            ? null
+            : buildingProperties.buildingHeight, // must be numeric
+
+          // block details
+
+          blockImageBuffer,
+          blockArea,
+          greeneryArea,
+          canopyArea,
+          waterbodyArea,
+          greeneryPercent: (greeneryArea / blockArea) * 100,
+          canopyPercent: (canopyArea / blockArea) * 100,
+          waterbodyPercent: (waterbodyArea / blockArea) * 100,
+          blockName: plotProperties.blockName,
+          garbageCollectionInfo: blockProperties.garbageCollectionInfo,
+          averageBuildingHeight: Number.isNaN(
+            Number(blockProperties.averageBuildingHeight)
+          )
+            ? null
+            : blockProperties.averageBuildingHeight, // must be numeric
+          averageBlockHeight: Number.isNaN(
+            Number(blockProperties.averageBlockHeight)
+          )
+            ? null
+            : blockProperties.averageBlockHeight, // must be numeric
+          averageIncentives: Number.isNaN(
+            Number(blockProperties.averageIncentives)
+          )
+            ? null
+            : blockProperties.averageIncentives, // must be numeric
         };
-    
+
         // req.log.info(data);
-    
+
         // saving the document
         const doc = generatePlotReportDocument(data);
         const buffer = await Packer.toBuffer(doc);
         const filename = `${missionId.toString()}-plot-report.docx`;
         const filepath = DirPath(Directory.DOCUMENTS, filename);
         await fs.writeFile(filepath, buffer);
-    
+
         const fileStats = await fs.stat(filepath);
-    
+
         await Document.findOneAndDelete({ name: filename });
-    
+
         const docDB = new Document({
           name: filename,
           modDate: new Date(),
@@ -589,9 +703,9 @@ export const generatePlotReport = async (req: Request<{}, {}, {
           updatedBy: res.locals.user._id,
         });
         const savedDoc = await docDB.save();
-    
+
         req.log.info("Report Generation Complete");
-    
+
         missionSpecificSocket
           .to(missionId.toString())
           .emit("REPORT_GENERATION_COMPLETE", savedDoc);
@@ -599,9 +713,8 @@ export const generatePlotReport = async (req: Request<{}, {}, {
 
       res.status(200).json({
         status: true,
-        message: "Successfully Generated ALL Plot Reports"
+        message: "Successfully Generated ALL Plot Reports",
       });
-
     } catch (error) {
       req.log.error(error);
       res.status(500).json({
@@ -612,6 +725,5 @@ export const generatePlotReport = async (req: Request<{}, {}, {
         .to(missionId.toString())
         .emit("REPORT_GENERATION_FAILED", error);
     }
-
   }
-}
+};

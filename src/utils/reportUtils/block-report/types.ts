@@ -51,7 +51,7 @@ export interface IPage7Properties {
 }
 
 export interface IDeliverables {
-  [key: string]: string[]
+  [key: string]: string[];
 }
 
 export interface IData {

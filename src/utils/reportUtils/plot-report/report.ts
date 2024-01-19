@@ -7,12 +7,14 @@ import { IPlotReportData } from "./types";
 import fs from "fs";
 import path from "path";
 
-const fallBackImageBuffer = fs.readFileSync(path.join(__dirname, "..", "assets", "fallback.png"));
+const fallBackImageBuffer = fs.readFileSync(
+  path.join(__dirname, "..", "assets", "fallback.png")
+);
 const fallbackText = "No Available Record";
 
 function handleDataAbsence(data: string) {
   return data ? data : fallbackText;
-} 
+}
 
 export const generatePlotReportDocument = (data: IPlotReportData) => {
   const {
@@ -77,7 +79,9 @@ export const generatePlotReportDocument = (data: IPlotReportData) => {
         date, // calculated
         users, // calculated
         blockName: handleDataAbsence(blockName), // provided
-        coverImageBuffer: coverImageBuffer ? coverImageBuffer : fallBackImageBuffer,
+        coverImageBuffer: coverImageBuffer
+          ? coverImageBuffer
+          : fallBackImageBuffer,
       }),
 
       page2({
@@ -90,7 +94,9 @@ export const generatePlotReportDocument = (data: IPlotReportData) => {
       }),
       page2({
         imageHeading: "Front View Image",
-        imageBuffer: frontViewImageBuffer ? frontViewImageBuffer : fallBackImageBuffer,
+        imageBuffer: frontViewImageBuffer
+          ? frontViewImageBuffer
+          : fallBackImageBuffer,
       }),
 
       page3({

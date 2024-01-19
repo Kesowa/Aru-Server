@@ -86,7 +86,9 @@ export const reportMapPage = (properties: IReportMapPageProperties) => {
         },
       }),
       new ImageRun({
-        data: fs.readFileSync(path.join(__dirname, "..", "assets", "NKDA_Logo.png")),
+        data: fs.readFileSync(
+          path.join(__dirname, "..", "assets", "NKDA_Logo.png")
+        ),
         transformation: {
           width: 50,
           height: 50,

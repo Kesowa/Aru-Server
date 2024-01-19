@@ -13,8 +13,8 @@ import {
 } from "docx";
 import { commonPageFooter, commonPageProperties } from "./../reportUtils";
 
-const imageTopHeading = (imageHeading : string) => {
-  return  new  Paragraph({
+const imageTopHeading = (imageHeading: string) => {
+  return new Paragraph({
     frame: {
       position: {
         x: 10000,
@@ -27,29 +27,28 @@ const imageTopHeading = (imageHeading : string) => {
         vertical: FrameAnchorType.MARGIN,
       },
       alignment: {
-          x: HorizontalPositionAlign.CENTER,
-          y: VerticalPositionAlign.CENTER,
-        },
+        x: HorizontalPositionAlign.CENTER,
+        y: VerticalPositionAlign.CENTER,
+      },
     },
     shading: {
       type: ShadingType.SOLID,
       color: "69C7E9",
     },
     alignment: AlignmentType.CENTER,
-    children:[
+    children: [
       new TextRun({
         text: imageHeading,
         color: "ffffff",
         font: {
           name: "Arial",
         },
-      size: "35pt",
-      bold: true,
-      
-      })
-    ]
+        size: "35pt",
+        bold: true,
+      }),
+    ],
   });
-}
+};
 
 const imageBox = (imageBuffer: Buffer) => {
   return new Paragraph({
@@ -76,17 +75,11 @@ const imageBox = (imageBuffer: Buffer) => {
 };
 
 export const page2 = (properties: IDeliverable) => {
-  const {
-    imageHeading,
-    imageBuffer,
-  } = properties;
+  const { imageHeading, imageBuffer } = properties;
 
   return {
     properties: commonPageProperties,
     footers: commonPageFooter,
-    children: [
-        imageTopHeading(imageHeading),
-        imageBox(imageBuffer),
-    ],
+    children: [imageTopHeading(imageHeading), imageBox(imageBuffer)],
   };
 };

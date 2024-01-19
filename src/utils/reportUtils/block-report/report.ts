@@ -71,7 +71,8 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
 
   const missionMapImg = await ssGenerator.getMapSS(
     TITILER_SERVER,
-    data.deliverables["OVERVIEW"], []
+    data.deliverables["OVERVIEW"],
+    []
   );
 
   logger.info("Mission Map Image Captured...");
@@ -129,7 +130,8 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
     logger.info(`Capturing image for: ${d}...`);
     deliverableBuffers[d] = await ssGenerator.getMapSS(
       TITILER_SERVER,
-      deliverables[d], []
+      deliverables[d],
+      []
     );
   }
 

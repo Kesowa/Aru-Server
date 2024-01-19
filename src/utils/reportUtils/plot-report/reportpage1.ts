@@ -15,7 +15,9 @@ import { commonPageFooter, commonPageProperties } from "./../reportUtils";
 const NKDALogo = new Paragraph({
   children: [
     new ImageRun({
-      data: fs.readFileSync(path.join(__dirname, "..", "assets", "NKDA_Logo.png")),
+      data: fs.readFileSync(
+        path.join(__dirname, "..", "assets", "NKDA_Logo.png")
+      ),
       transformation: {
         width: 70,
         height: 70,
@@ -47,16 +49,17 @@ const missionDetail = new Paragraph({
       vertical: FrameAnchorType.MARGIN,
     },
   },
-  children:[
+  children: [
     new TextRun({
-      text: "This report is a part of an ongoing contract with Newtown Kolkata Development Authority and is issued for parties under contract only. " + 
-            " Terms and Conditions of contract preside over all parties and their actors.",
+      text:
+        "This report is a part of an ongoing contract with Newtown Kolkata Development Authority and is issued for parties under contract only. " +
+        " Terms and Conditions of contract preside over all parties and their actors.",
       color: "4A442A",
       font: {
         name: "Arial",
       },
-    })
-  ]
+    }),
+  ],
 });
 
 const headings = (blockName: string) => {
@@ -116,7 +119,7 @@ const frontImg = (coverImageBuffer: Buffer) => {
 };
 
 const missionEmail = (users: string[], date: string) => {
-  return  new  Paragraph({
+  return new Paragraph({
     frame: {
       position: {
         x: 5000,
@@ -130,7 +133,7 @@ const missionEmail = (users: string[], date: string) => {
       },
     },
     alignment: AlignmentType.END,
-    children:[
+    children: [
       new TextRun({
         text: `${users.join(" & ")}`,
         color: "4A442A",
@@ -150,23 +153,20 @@ const missionEmail = (users: string[], date: string) => {
         break: 2,
       }),
       new ImageRun({
-        data: fs.readFileSync(path.join(__dirname, "..", "assets", "FSIPL_Logo.png")),
+        data: fs.readFileSync(
+          path.join(__dirname, "..", "assets", "FSIPL_Logo.png")
+        ),
         transformation: {
           width: 50,
           height: 50,
         },
       }),
-    ]
+    ],
   });
-}
+};
 
 export const page1 = (properties: IPage1Properties) => {
-  const {
-    blockName,
-    coverImageBuffer,
-    date,
-    users,
-  } = properties;
+  const { blockName, coverImageBuffer, date, users } = properties;
 
   return {
     properties: commonPageProperties,

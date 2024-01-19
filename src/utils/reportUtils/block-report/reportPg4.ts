@@ -686,7 +686,9 @@ export const page4 = (properties: IPage7Properties) => {
         },
       }),
       new ImageRun({
-        data: fs.readFileSync(path.join(__dirname, "..", "assets", "NKDA_Logo.png")),
+        data: fs.readFileSync(
+          path.join(__dirname, "..", "assets", "NKDA_Logo.png")
+        ),
         transformation: {
           width: 50,
           height: 50,

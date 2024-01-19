@@ -1391,7 +1391,7 @@ db.missions.insertMany([
     _id: ObjectId("657ed3d3b7e5f1af532b9f6e"),
     name: "PlotReportDemo",
     description: "Plot Analysis",
-    deliverables: [ "Live Feed", "Thermal", "Orthomosaic" ],
+    deliverables: ["Live Feed", "Thermal", "Orthomosaic"],
     user: ObjectId("608e7b3ae11f711a34fb0476"),
     assetID: ObjectId("609249c6c287ba31a4d23ef9"),
     clientId: [],
@@ -1404,7 +1404,7 @@ db.missions.insertMany([
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
     __v: 0,
-  }
+  },
 ]);
 
 db.flights.insertMany([
@@ -1508,12 +1508,13 @@ db.flights.insertMany([
     _id: ObjectId("657ed3d3b7e5f1af532b9f72"),
     date: "2023-12-17",
     name: "PlotDemoFlight",
-    geoLocation: "HFFC+G3V, Major Arterial Road (South East Extension), DC Block(Newtown), Action Area I, Newtown, New Town, Koch Pukur, West Bengal 700156, India",
+    geoLocation:
+      "HFFC+G3V, Major Arterial Road (South East Extension), DC Block(Newtown), Action Area I, Newtown, New Town, Koch Pukur, West Bengal 700156, India",
     mission: ObjectId("657ed3d3b7e5f1af532b9f6e"),
     centerPoints: {
       lat: 22.573772651224107,
       lng: 88.47035320408446,
-      _id: ObjectId("657ed3d3b7e5f1af532b9f73")
+      _id: ObjectId("657ed3d3b7e5f1af532b9f73"),
     },
     locationID: ObjectId("5f202f03b9225726102721b8"),
     assetID: ObjectId("609249c6c287ba31a4d23ef9"),
@@ -1521,24 +1522,24 @@ db.flights.insertMany([
     duration: "2hr",
     geoFence: {
       polygon: {
-        points: []
+        points: [],
       },
       circle: {
         radius: 854.8149453079126,
         area: 9180622.733828312,
         center: {
           lat: 22.573772651224107,
-          lng: 88.47035320408446
-        }
-      }
+          lng: 88.47035320408446,
+        },
+      },
     },
     client: ObjectId("608e7b3ae11f711a34fb0476"),
     tenant: ObjectId("5f204f03b9445726102781a8"),
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
     pilotID: ObjectId("614ec3dcd44bea14a721326a"),
-    __v: 0
-  }
+    __v: 0,
+  },
 ]);
 
 // needs /vector/solar.geojson to exist
@@ -1735,7 +1736,7 @@ db.layers.insertMany([
     commentCount: 0,
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
-    __v: 0
+    __v: 0,
   },
   {
     _id: ObjectId("657eca85b7e5f1af532b9ee6"),
@@ -1761,7 +1762,7 @@ db.layers.insertMany([
     commentCount: 0,
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
-    __v: 0
+    __v: 0,
   },
   {
     _id: ObjectId("657ed057b7e5f1af532b9ef9"),
@@ -1787,7 +1788,7 @@ db.layers.insertMany([
     commentCount: 0,
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
-    __v: 0
+    __v: 0,
   },
   {
     _id: ObjectId("657ed742ec705f444b069712"),
@@ -1837,7 +1838,7 @@ db.layers.insertMany([
     commentCount: 0,
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
-    __v: 0
+    __v: 0,
   },
   {
     _id: ObjectId("657ed9dd1db9a1121fafe7b1"),
@@ -1863,7 +1864,7 @@ db.layers.insertMany([
     commentCount: 0,
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
-    __v: 0
+    __v: 0,
   },
   {
     _id: ObjectId("657eda6a1db9a1121fafe7ee"),
@@ -1889,8 +1890,8 @@ db.layers.insertMany([
     commentCount: 0,
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
-    __v: 0
-  }
+    __v: 0,
+  },
 ]);
 
 db.layerfiles.insertMany([
@@ -1904,7 +1905,7 @@ db.layerfiles.insertMany([
     fileSize: 1.11439,
     centerPoints: {
       lat: 22.572921902329387,
-      lng: 88.47365253647386
+      lng: 88.47365253647386,
     },
     filePath: "/images/geojson/PlotReportDemo_FrontView.png",
     fileType: "image/png",
@@ -1916,8 +1917,8 @@ db.layerfiles.insertMany([
     commentCount: 0,
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
-    __v: 0
-  }
+    __v: 0,
+  },
 ]);
 
 const permissions = [

@@ -28,7 +28,7 @@ export interface Feature<Geometry, Property> {
 type Point = {
   type: "Point";
   coordinates: [number, number];
-}
+};
 
 // Default is a point feature with a load of properties
 export interface GeoJson<FeatureType = Feature<Point, Properties>> {
