@@ -92,7 +92,7 @@ export const saveVectorLayer = async (
       const kmlData = new DOMParser().parseFromString(fileData, "text/xml");
       geojsonData = togeojson.kml(kmlData, { styles: true });
     }
-    if (ext == ".shp" || ext == ".zip") {
+    if (ext == ".zip") {
       const fileData = await fs.readFile(absLayerPath);
       geojsonData = await shp2json(fileData);
     }
