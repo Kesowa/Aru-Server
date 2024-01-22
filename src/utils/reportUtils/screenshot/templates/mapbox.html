@@ -164,7 +164,7 @@
         bounds.push([bound[0], bound[1]]);
         bounds.push([bound[2], bound[3]]);
 
-        const id = Math.floor(Math.random() * 1000000); // doesn't need to be very unique, as before every render previous layers are removed
+        const id = Math.floor(Math.random() * 1000000).toString(); // doesn't need to be very unique, as before every render previous layers are removed
 
         map.addSource(id, {
           type: "geojson",

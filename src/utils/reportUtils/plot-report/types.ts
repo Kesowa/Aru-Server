@@ -101,6 +101,7 @@ export interface IPlotProperties {
   shopFloor?: string; // no. of floor
   buildingStatus?: string; // completion certificate
   blockName?: string;
+  sys_id: string;
 
   // not present on test geojson
   sanctionedBuildingNo?: string;

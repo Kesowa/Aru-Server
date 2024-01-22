@@ -34,6 +34,7 @@ export enum Directory {
   IMAGE = "images",
   AI_ML = "aiml",
   ROOT = "/",
+  DEFAULT = "",
 }
 
 /**

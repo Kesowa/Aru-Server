@@ -325,3 +325,9 @@ export const saveFile = async (
   await fs.writeFile(abspath, data, { encoding });
   return await fs.stat(abspath);
 };
+
+export const readFile = async (
+  fullpath: string
+) => {
+  return await fs.readFile(fullpath);
+};

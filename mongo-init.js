@@ -1730,7 +1730,7 @@ db.layers.insertMany([
     tenantId: ObjectId("5f204f03b9445726102781a8"),
     createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
     updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
-    flaggedFeatures: [3],
+    flaggedFeatures: [4977],
     isFlagged: false,
     isThreadExist: false,
     commentCount: 0,
@@ -1900,7 +1900,7 @@ db.layerfiles.insertMany([
     name: "PlotReportDemo_FrontView.png",
     layerId: ObjectId("657ec970b7e5f1af532b9ec7"),
     layers: [],
-    sys_Id: "6321770669676e75f1ef494e", // sys_id of the building, where, building.premiseNo === plot.features[3].premiseNo
+    sys_Id: "65a963a850f52c6c594ea7e5", // sys_id of the plot.features[4977]
     featureLabel: "AA/8",
     fileSize: 1.11439,
     centerPoints: {
