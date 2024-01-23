@@ -8,13 +8,18 @@ import { page4 } from "./reportPg4";
 import { IData } from "./types";
 import { ScreenshotGenerator } from "./../screenshot";
 import { pino } from "pino";
-import { TITILER_SERVER } from "../../../constants";
+import fs from "fs";
+import path from "path";
+
+const fallBackImageBuffer = fs.readFileSync(
+  path.join(__dirname, "..", "assets", "fallback.png")
+);
 
 export const generateDocument = async (data: IData, logger: pino.Logger) => {
   const {
     missionHeading,
     missionSubHeading,
-    missionMapImgPath,
+    missionMapImg,
     missionCode,
     date,
     users,
@@ -69,14 +74,6 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
 
   logger.info("Browser Launched for screenshots...");
 
-  const missionMapImg = await ssGenerator.getMapSS(
-    TITILER_SERVER,
-    data.deliverables["OVERVIEW"],
-    []
-  );
-
-  logger.info("Mission Map Image Captured...");
-
   const categoryPieChart = await ssGenerator.getChartSS(
     "Area Distribution By Plot Category",
     [
@@ -125,23 +122,12 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
 
   logger.info("Bar Chart Image Captured...");
 
-  const deliverableBuffers: any = {};
-  for (const d in deliverables) {
-    logger.info(`Capturing image for: ${d}...`);
-    deliverableBuffers[d] = await ssGenerator.getMapSS(
-      TITILER_SERVER,
-      deliverables[d],
-      []
-    );
-  }
-
   logger.info("All Images Captured... Generating document...");
 
   await ssGenerator.destroy();
 
   logger.info("Browser Closed...");
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
   return new Document({
     numbering: numberings,
     background: {
@@ -151,7 +137,7 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
       page1({
         missionHeading,
         missionSubHeading,
-        missionMapImg,
+        missionMapImg: missionMapImg ? missionMapImg : fallBackImageBuffer,
         missionCode,
         date,
         users,
@@ -161,7 +147,7 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
       page2({
         missionHeading,
         missionSubHeading,
-        missionMapImg,
+        missionMapImg: missionMapImg ? missionMapImg : fallBackImageBuffer,
         missionCode,
         area,
         occupancy,
@@ -236,11 +222,11 @@ export const generateDocument = async (data: IData, logger: pino.Logger) => {
         area,
         occupancy,
       }),
-      ...Object.keys(deliverableBuffers).map((key) => {
+      ...deliverables.map(({ name, imgBuffer }) => {
         return reportMapPage({
           heading: missionHeading,
-          subheading: key,
-          imgBuffer: deliverableBuffers[key],
+          subheading: name,
+          imgBuffer: imgBuffer ? imgBuffer : fallBackImageBuffer,
         });
       }),
     ],
