@@ -375,7 +375,7 @@ export const generateReport = async (
       // saving the document
       const doc = await generateDocument(data, req.log);
       const buffer = await Packer.toBuffer(doc);
-      const filename = `${new Date().toString()}-block_report.docx`;
+      const filename = `${mission.name}${mission._id}-block_report.docx`;
       const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
       const docDB = new Document({
@@ -698,7 +698,7 @@ export const generatePlotReport = async (
         // saving the document
         const doc = generatePlotReportDocument(data);
         const buffer = await Packer.toBuffer(doc);
-        const filename = `${new Date().toString()}-plot-report.docx`;
+        const filename = `${plotFeature.properties.plotNo || "plotNo"}-${plotFeature.properties.premiseNo || "premiseNo"}-${plotFeature.properties.sys_id}-plot-report.docx`;
         const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
         await Document.findOneAndDelete({ name: filename });
