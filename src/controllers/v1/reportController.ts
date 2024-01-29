@@ -698,7 +698,9 @@ export const generatePlotReport = async (
         // saving the document
         const doc = generatePlotReportDocument(data);
         const buffer = await Packer.toBuffer(doc);
-        const filename = `${plotFeature.properties.plotNo || "plotNo"}-${plotFeature.properties.premiseNo || "premiseNo"}-${plotFeature.properties.sys_id}-plot-report.docx`;
+        const filename = `${plotFeature.properties.plotNo || "plotNo"}-${
+          plotFeature.properties.premiseNo || "premiseNo"
+        }-${plotFeature.properties.sys_id}-plot-report.docx`;
         const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
         await Document.findOneAndDelete({ name: filename });
