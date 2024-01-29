@@ -634,8 +634,8 @@ export const page4 = (properties: IPage7Properties) => {
       new ImageRun({
         data: barChart,
         transformation: {
-          width: 450,
-          height: 300,
+          width: 448,
+          height: 252,
         },
         floating: {
           zIndex: 9,
@@ -653,7 +653,7 @@ export const page4 = (properties: IPage7Properties) => {
         data: categoryPieChart,
         transformation: {
           width: 400,
-          height: 300,
+          height: 225,
         },
         floating: {
           zIndex: 9,
@@ -663,25 +663,25 @@ export const page4 = (properties: IPage7Properties) => {
           },
           verticalPosition: {
             relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-            offset: 1704400,
+            offset: 1804400,
           },
         },
       }),
       new ImageRun({
         data: statusPieChart,
         transformation: {
-          width: 300,
-          height: 200,
+          width: 400,
+          height: 225,
         },
         floating: {
           zIndex: 9,
           horizontalPosition: {
             relative: HorizontalPositionRelativeFrom.LEFT_MARGIN,
-            offset: 5414400,
+            offset: 5014400,
           },
           verticalPosition: {
             relative: VerticalPositionRelativeFrom.TOP_MARGIN,
-            offset: 4800000,
+            offset: 4600000,
           },
         },
       }),

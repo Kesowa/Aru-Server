@@ -46,6 +46,7 @@ import raster from "../../models/rasterprops";
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
+import { readFile, saveFile } from "../../utils/dataUtils";
 
 export function findArea(features: Feature<turf.Geometry, turf.Properties>[]) {
   try {
@@ -148,6 +149,34 @@ function assignOccupancy(layerType: string, idx: number, data: IData) {
   }
 }
 
+export async function saveScreenshot(
+  vectorFeatures: Feature<turf.Geometry, turf.Properties>[],
+  rasterFilePaths: string[],
+  logger: pino.Logger
+) {
+  try {
+    const ssGenerator = new ScreenshotGenerator(logger);
+    await ssGenerator.init();
+
+    logger.info("Browser Launched for screenshots...");
+
+    const ssBuffer = await ssGenerator.getMapSS(
+      TITILER_SERVER,
+      vectorFeatures,
+      rasterFilePaths
+    );
+
+    await ssGenerator.destroy();
+
+    logger.info("Image Captured...");
+
+    return ssBuffer;
+  } catch (error) {
+    logger.error("Error while taking screenshot: ", error);
+    return null;
+  }
+}
+
 export const generateReport = async (
   req: Request<
     {},
@@ -165,7 +194,7 @@ export const generateReport = async (
       const data: IData = {
         missionHeading: "",
         missionSubHeading: "",
-        missionMapImgPath: "",
+        missionMapImg: null,
         missionCode: "",
         date: "",
         users: [],
@@ -214,9 +243,7 @@ export const generateReport = async (
         roadCount: 0,
         roadLength: 0,
         cycleTrackLength: 0,
-        deliverables: {
-          OVERVIEW: [],
-        },
+        deliverables: [],
       };
 
       // mission details filling
@@ -307,16 +334,33 @@ export const generateReport = async (
         } else {
           data.area.other += currLayerArea;
         }
+      }
 
-        // categorizing the geojson for map
-        for (const d in deliverableTypes) {
-          if (deliverableTypes[d].includes(layer.vector.name)) {
-            if (!data.deliverables[d]) {
-              data.deliverables[d] = [TITILER_STATIC + layer.layerpath];
-            } else {
-              data.deliverables[d].push(TITILER_STATIC + layer.layerpath);
-            }
-          }
+      // categorizing the geojson for map and capturing images
+      for (const d in deliverableTypes) {
+        const deliverableLayers = vectorLayers.filter((layer) =>
+          deliverableTypes[d].includes(layer.vector.name)
+        );
+        const deliverableFeatures: Feature<turf.Geometry, turf.Properties>[] =
+          [];
+        for (const layer of deliverableLayers) {
+          const layerGeojson = await readGeoJson<
+            Feature<turf.Geometry, turf.Properties>
+          >(DirPath(Directory.DEFAULT, layer.layerpath));
+          deliverableFeatures.push(...layerGeojson.features);
+        }
+        if (deliverableFeatures.length > 0) {
+          const deliverableImgBuffer = await saveScreenshot(
+            deliverableFeatures,
+            [],
+            req.log
+          );
+          data.deliverables.push({
+            name: d,
+            imgBuffer: deliverableImgBuffer,
+          });
+
+          if (d === "OVERVIEW") data.missionMapImg = deliverableImgBuffer;
         }
       }
 
@@ -330,8 +374,8 @@ export const generateReport = async (
 
       // saving the document
       const doc = await generateDocument(data, req.log);
-      const buffer = Packer.toStream(doc);
-      const filename = `${new Date()}-block_report.docx`;
+      const buffer = await Packer.toBuffer(doc);
+      const filename = `${new Date().toString()}-block_report.docx`;
       const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
       const docDB = new Document({
@@ -365,34 +409,6 @@ export const generateReport = async (
     }
   }
 };
-
-export async function saveScreenshot(
-  vectorFeatures: Feature<turf.Geometry, turf.Properties>[],
-  rasterFilePaths: string[],
-  logger: pino.Logger
-) {
-  try {
-    const ssGenerator = new ScreenshotGenerator(logger);
-    await ssGenerator.init();
-
-    logger.info("Browser Launched for screenshots...");
-
-    const ssBuffer = await ssGenerator.getMapSS(
-      TITILER_SERVER,
-      vectorFeatures,
-      rasterFilePaths
-    );
-
-    await ssGenerator.destroy();
-
-    logger.info("Image Captured...");
-
-    return ssBuffer;
-  } catch (error) {
-    logger.error("Error while taking screenshot: ", error);
-    return null;
-  }
-}
 
 export const generatePlotReport = async (
   req: Request<
@@ -595,9 +611,9 @@ export const generatePlotReport = async (
         const plotLayerFile = await layerFiles.findOne({
           tenantId: res.locals.user.tenantId._id,
           layerId: plotLayer._id,
-          sys_Id: plotBuildingFeature.properties.sys_id,
+          sys_Id: plotFeature.properties.sys_id,
         });
-        const frontViewImageBuffer = await fs.readFile(
+        const frontViewImageBuffer = await readFile(
           DirPath(Directory.DEFAULT, plotLayerFile.filePath)
         );
 
@@ -682,18 +698,15 @@ export const generatePlotReport = async (
         // saving the document
         const doc = generatePlotReportDocument(data);
         const buffer = await Packer.toBuffer(doc);
-        const filename = `${missionId.toString()}-plot-report.docx`;
-        const filepath = DirPath(Directory.DOCUMENTS, filename);
-        await fs.writeFile(filepath, buffer);
-
-        const fileStats = await fs.stat(filepath);
+        const filename = `${new Date().toString()}-plot-report.docx`;
+        const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
         await Document.findOneAndDelete({ name: filename });
 
         const docDB = new Document({
           name: filename,
           modDate: new Date(),
-          fileSize: (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
+          fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
           fileType: "docx",
           folderName: "root1234",
           filePath: `/documents/${filename}`,

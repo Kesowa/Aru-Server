@@ -63,7 +63,7 @@
           serverUrl,
           map
         );
-        const vectorBounds = await renderVector(vectorFeatures, map);
+        const vectorBounds = renderVector(vectorFeatures, map);
         // const allBounds = turf.multiPoint(rasterBounds.concat(vectorBounds));
         const allBounds =
           vectorFeatures.length > 0
@@ -158,13 +158,13 @@
       }
 
       // Add vector layer from GeoJSON
-      async function renderVector(features, map) {
+      function renderVector(features, map) {
         const bounds = [];
         const bound = turf.bbox(turf.featureCollection(features));
         bounds.push([bound[0], bound[1]]);
         bounds.push([bound[2], bound[3]]);
 
-        const id = Math.floor(Math.random() * 1000000); // doesn't need to be very unique, as before every render previous layers are removed
+        const id = Math.floor(Math.random() * 1000000).toString(); // doesn't need to be very unique, as before every render previous layers are removed
 
         map.addSource(id, {
           type: "geojson",
@@ -175,38 +175,26 @@
         });
 
         map.addLayer({
-          id: `vector-layer-${id}`,
-          type: "fill",
-          source: id,
-          paint: {
-            "fill-color": ["coalesce", ["get", "fill"]],
-            "fill-opacity": ["coalesce", ["get", "fill-opacity"], 0.3],
-          },
-          filter: ["==", ["geometry-type"], "Polygon"],
-        });
-
-        map.addLayer({
           id: `vector-layer-outline-${id}`,
           type: "line",
           source: id,
           paint: {
-            "line-color": ["coalesce", ["get", "stroke"]],
-            "line-width": ["coalesce", ["get", "stroke-width"], 2],
-            "line-opacity": ["coalesce", ["get", "stroke-opacity"], 1],
+            "line-color": ["to-color", ["get", "color"]],
+            "line-width": 2,
+            "line-opacity": 1,
           },
-          filter: ["==", ["geometry-type"], "Polygon"],
+          // filter: ["==", ["geometry-type"], "Polygon"],
         });
 
         map.addLayer({
-          id: `vector-layer-line-${id}`,
-          type: "line",
+          id: `vector-layer-${id}`,
+          type: "fill",
           source: id,
           paint: {
-            "line-color": ["coalesce", ["get", "stroke"]],
-            "line-width": ["coalesce", ["get", "stroke-width"], 2],
-            "line-opacity": ["coalesce", ["get", "stroke-opacity"], 1],
+            "fill-color": ["to-color", ["get", "color"]],
+            "fill-opacity": 0.3,
           },
-          filter: ["==", ["geometry-type"], "LineString"],
+          // filter: ["==", ["geometry-type"], "Polygon"],
         });
 
         return bounds;

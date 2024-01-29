@@ -50,14 +50,15 @@ export interface IPage7Properties {
   occupancy: IOccupancyDesc[];
 }
 
-export interface IDeliverables {
-  [key: string]: string[];
+export interface IDeliverable {
+  name: string;
+  imgBuffer?: Buffer;
 }
 
 export interface IData {
   missionHeading: string;
   missionSubHeading: string;
-  missionMapImgPath: string;
+  missionMapImg: Buffer | null;
   missionCode: string;
   date: string;
   users: string[];
@@ -71,7 +72,7 @@ export interface IData {
   roadLength: number;
   cycleTrackLength: number;
   // map pages
-  deliverables: IDeliverables;
+  deliverables: IDeliverable[];
   // Expected properties:
   // deliverables: {
   //   OVERVIEW: string[];
