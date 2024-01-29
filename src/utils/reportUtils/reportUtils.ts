@@ -8,6 +8,7 @@ import {
   Paragraph,
   TextRun,
 } from "docx";
+import { IDeliverables } from "./block-report/types";
 
 // =============================== DOCX GENERATION UTILS ===============================================================================
 
