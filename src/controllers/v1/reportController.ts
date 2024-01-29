@@ -243,7 +243,7 @@ export const generateReport = async (
         roadCount: 0,
         roadLength: 0,
         cycleTrackLength: 0,
-        deliverables: []
+        deliverables: [],
       };
 
       // mission details filling
@@ -338,20 +338,29 @@ export const generateReport = async (
 
       // categorizing the geojson for map and capturing images
       for (const d in deliverableTypes) {
-        const deliverableLayers = vectorLayers.filter((layer) => (deliverableTypes[d].includes(layer.vector.name)));
-        const deliverableFeatures: Feature<turf.Geometry,turf.Properties>[] = [];
-        for(const layer of deliverableLayers) {
-          const layerGeojson = await readGeoJson<Feature<turf.Geometry,turf.Properties>>(DirPath(Directory.DEFAULT, layer.layerpath)); 
+        const deliverableLayers = vectorLayers.filter((layer) =>
+          deliverableTypes[d].includes(layer.vector.name)
+        );
+        const deliverableFeatures: Feature<turf.Geometry, turf.Properties>[] =
+          [];
+        for (const layer of deliverableLayers) {
+          const layerGeojson = await readGeoJson<
+            Feature<turf.Geometry, turf.Properties>
+          >(DirPath(Directory.DEFAULT, layer.layerpath));
           deliverableFeatures.push(...layerGeojson.features);
         }
-        if(deliverableFeatures.length > 0) {
-          const deliverableImgBuffer = await saveScreenshot(deliverableFeatures, [], req.log);
+        if (deliverableFeatures.length > 0) {
+          const deliverableImgBuffer = await saveScreenshot(
+            deliverableFeatures,
+            [],
+            req.log
+          );
           data.deliverables.push({
             name: d,
-            imgBuffer: deliverableImgBuffer
+            imgBuffer: deliverableImgBuffer,
           });
 
-          if(d === "OVERVIEW") data.missionMapImg = deliverableImgBuffer;
+          if (d === "OVERVIEW") data.missionMapImg = deliverableImgBuffer;
         }
       }
 
@@ -366,7 +375,7 @@ export const generateReport = async (
       // saving the document
       const doc = await generateDocument(data, req.log);
       const buffer = await Packer.toBuffer(doc);
-      const filename = `${(new Date()).toString()}-block_report.docx`;
+      const filename = `${new Date().toString()}-block_report.docx`;
       const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
       const docDB = new Document({
@@ -689,7 +698,7 @@ export const generatePlotReport = async (
         // saving the document
         const doc = generatePlotReportDocument(data);
         const buffer = await Packer.toBuffer(doc);
-        const filename = `${(new Date()).toString()}-plot-report.docx`;
+        const filename = `${new Date().toString()}-plot-report.docx`;
         const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
         await Document.findOneAndDelete({ name: filename });

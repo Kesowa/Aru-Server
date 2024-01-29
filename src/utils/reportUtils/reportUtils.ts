@@ -188,8 +188,8 @@ export const vacantTypes = ["Vacant Plot"];
 // ===================================================================================================================================
 
 export const deliverableTypes: { [key: string]: string[] } = {
-  "OVERVIEW": ["Plot"],
-  "BOUNDARY": [],
+  OVERVIEW: ["Plot"],
+  BOUNDARY: [],
   "BUILT-UP AREA": ["Building Footprint"],
   "AMENITIES AND POI": [],
   "OTHER FEATURES": [],

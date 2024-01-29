@@ -51,8 +51,8 @@ export interface IPage7Properties {
 }
 
 export interface IDeliverable {
-  name: string,
-  imgBuffer?: Buffer,
+  name: string;
+  imgBuffer?: Buffer;
 }
 
 export interface IData {

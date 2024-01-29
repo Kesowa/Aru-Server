@@ -326,8 +326,6 @@ export const saveFile = async (
   return await fs.stat(abspath);
 };
 
-export const readFile = async (
-  fullpath: string
-) => {
+export const readFile = async (fullpath: string) => {
   return await fs.readFile(fullpath);
 };
