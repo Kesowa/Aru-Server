@@ -22,7 +22,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
       }),
     ]);
     const docPath = DirPath(
-      Directory.DEFAULT,
+      Directory.ROOT,
       req.body.avatar ? req.body.avatar : ""
     );
     const size: any = await getFileSize(docPath);
@@ -188,7 +188,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
 export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
   {
     const doc = await User.find({
-      tenantId: res.locals.user.tenantId,
+      tenantId: res.locals.user.tenantId._id,
       userType: { $ne: "tenant-client" },
     }).populate<{
       createdBy: IUser;
@@ -213,7 +213,7 @@ export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
 export const userCsv = async (req: Request, res: AuthResponse) => {
   {
     const data = await User.find(
-      { tenantId: res.locals.user.tenantId },
+      { tenantId: res.locals.user.tenantId._id },
       { _id: 0, name: 1, email: 1, phoneNo: 1, userType: 1 }
     ).lean();
     if (data.length) {
@@ -306,7 +306,7 @@ export const UserDelete = async (req: Request, res: AuthResponse) => {
     if (doc) {
       let size = 0;
       try {
-        const docPath = DirPath(Directory.DEFAULT, doc.avatar);
+        const docPath = DirPath(Directory.ROOT, doc.avatar);
         size = await getFileSize(docPath);
         await deletePublicFileUsingPath(doc.avatar);
       } catch (error) {

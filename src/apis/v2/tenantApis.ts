@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -13,19 +14,16 @@ tenantApi.get(
   "/admin",
   onlySuperAdminAccess,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         tenantId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { tenantId, limit, offset, orderBy, asc, populate } = req.query;
@@ -68,14 +66,11 @@ tenantApi.get(
 tenantApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { populate } = req.query;
@@ -93,7 +88,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get tenant data for admin",
-      description: "This operation retrives all tenants' information",
+      description: "This operation retrieves all tenants' information",
       operationId: "GetTenantAdmin",
       requestSchema: {
         query: {
@@ -138,7 +133,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get tenant data for user",
-      description: "This operation retrives current tenant's information",
+      description: "This operation retrieves current tenant's information",
       operationId: "GetTenant",
       requestSchema: {
         query: {

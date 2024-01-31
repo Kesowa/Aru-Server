@@ -58,8 +58,10 @@ router.patch(
   "/update",
   isAuthenticated,
   body("id").notEmpty().isMongoId(),
-  body("type").notEmpty().trim(),
   body("properties").notEmpty().isObject(),
+  body("geometry").notEmpty().isObject(),
+  body("geometry.coordinates").notEmpty().isArray(),
+  body("geometry.type").notEmpty().isString(),
   validator,
   canUpdateLocation,
   RobustRunner(updateLocation)

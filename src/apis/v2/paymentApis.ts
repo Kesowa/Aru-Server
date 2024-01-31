@@ -13,18 +13,15 @@ paymentApi.get(
   "/",
   environmentGuard(Mode.Dev),
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { limit, offset, orderBy, asc, populate } = req.query;
@@ -60,7 +57,7 @@ openApi.addPath(
     get: {
       summary: "Get payment data",
       description:
-        "This operation retrives information about all payments of current tenant (tenant under whom current user is)",
+        "This operation retrieves information about all payments of current tenant (tenant under whom current user is)",
       operationId: "GetPayment",
       requestSchema: {
         query: {

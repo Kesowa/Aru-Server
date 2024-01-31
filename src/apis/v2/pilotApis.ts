@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -11,18 +12,15 @@ const pilotApi = Router();
 pilotApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { limit, offset, orderBy, asc, populate } = req.query;
@@ -67,7 +65,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get pilot data",
-      description: "This operation retrives pilot information",
+      description: "This operation retrieves pilot information",
       operationId: "GetPilot",
       requestSchema: {
         query: {

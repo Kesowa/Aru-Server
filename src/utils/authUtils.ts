@@ -20,7 +20,7 @@ enum InvalidAuth {
 
 const hasher = crypto.createHash("MD5");
 hasher.update("somerandomkey", "utf8");
-const iv = hasher.digest();
+export const iv = hasher.digest();
 
 type Payload = {
   session: string;
@@ -62,9 +62,7 @@ const Authenticator = async (token: string, ip: string, agent: string) => {
     if (payload.agent != agent) return InvalidAuth.INVALID_AGENT;
   }
   const session = await sessionModel.findById(new ObjectId(payload.session));
-  const user = await User.findById(session?.owner)
-    .populate("tenantId", "_id")
-    .lean();
+  const user = await User.findById(session?.owner).populate("tenantId").lean();
 
   if (user && session) {
     if (user.userGroupId) {
@@ -121,7 +119,7 @@ export const isAuthenticated = (
           status: false,
           message: "Invalid user id",
         });
-      } else if (data == InvalidAuth.INVALID_LOCATION) {
+      } else if (data == InvalidAuth.INVALID_LOCATION && MODE != Mode.Dev) {
         res.status(401).json({
           status: false,
           message: "Location not authorized",

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -9,7 +10,7 @@ import { MissionType } from "../../schemas/mission";
 import Tenant from "../../models/tenant";
 import ObjectsToCsv from "objects-to-csv";
 import path from "path";
-import { DirPath, Directory } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 import { createDirIfNotExists } from "../../utils/fileUtils";
 
 const clientApi = Router();
@@ -17,11 +18,8 @@ const clientApi = Router();
 clientApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         clientId?: string;
         email?: string;
         generateCSV?: boolean;
@@ -31,8 +29,8 @@ clientApi.get(
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const {
@@ -120,7 +118,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get client data",
-      description: "This operation retrives client information",
+      description: "This operation retrieves client information",
       operationId: "GetClient",
       requestSchema: {
         query: {

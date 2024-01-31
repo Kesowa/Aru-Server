@@ -12,19 +12,16 @@ userGroupApi.get(
   "/",
   canListUserGroup,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         userGroupId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { userGroupId, limit, offset, orderBy, asc, populate } = req.query;
@@ -60,7 +57,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get usergroup data",
-      description: "This operation retrives usergroup information",
+      description: "This operation retrieves usergroup information",
       operationId: "GetUserGroup",
       requestSchema: {
         query: {

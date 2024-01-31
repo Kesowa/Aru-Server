@@ -2,8 +2,36 @@ import { promises as fs } from "fs";
 import Layer from "../models/layer";
 
 import { ObjectId } from "bson";
+import { DirPath, Directory } from "../constants";
 
-export interface GeoJson {
+type Properties = {
+  SL_NO: number;
+  AA: string;
+  Solar_ID: string;
+  Placed_IN: string;
+  Latitude: number;
+  Longitude: number;
+  DoC: string;
+  Phase: string;
+  color: string;
+  icon: string;
+  sys_id: string;
+  Nth: Record<string, string | number>;
+};
+
+export interface Feature<Geometry, Property> {
+  type: "Feature";
+  properties: Property;
+  geometry: Geometry;
+}
+
+type Point = {
+  type: "Point";
+  coordinates: [number, number];
+};
+
+// Default is a point feature with a load of properties
+export interface GeoJson<FeatureType = Feature<Point, Properties>> {
   type: string;
   name: string;
   crs: {
@@ -12,38 +40,14 @@ export interface GeoJson {
       name: string;
     };
   };
-  features: Feature[];
+  features: FeatureType[];
   errno: number;
 }
 
-export interface Feature {
-  type: "Feature";
-  properties: {
-    SL_NO: number;
-    AA: string;
-    Solar_ID: string;
-    Placed_IN: string;
-    Latitude: number;
-    Longitude: number;
-    DoC: string;
-    Phase: string;
-    color: string;
-    icon: string;
-    sys_id: string;
-    Nth: Record<string, string | number>;
-  };
-  geometry: Point;
-}
-
-interface Point {
-  type: "Point";
-  coordinates: [number, number];
-}
-
-export async function readGeoJson(fullpath: string) {
+export async function readGeoJson<Feature>(fullpath: string) {
   try {
     const data = await fs.readFile(fullpath, "utf-8");
-    const geojson = JSON.parse(data) as GeoJson;
+    const geojson = JSON.parse(data) as GeoJson<Feature>;
     return geojson;
   } catch (error) {
     console.error(error);
@@ -125,6 +129,18 @@ export async function featureAddition(
     console.error(error);
     return 0;
   }
+}
+
+export async function featureUpdate(
+  layerpath: string,
+  updatedFeatures: Feature[],
+  geojson: GeoJson
+) {
+  geojson.features = [...geojson.features, ...updatedFeatures];
+  await fs.writeFile(
+    DirPath(Directory.ROOT, layerpath),
+    JSON.stringify(geojson)
+  );
 }
 
 export async function editGeoJsonForAll(

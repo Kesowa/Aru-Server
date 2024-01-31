@@ -1,11 +1,12 @@
 import { Request } from "express";
+import * as pathUtils from "../../utils/pathUtils";
 import Layer from "../../models/layer";
+import Raster from "../../models/rasterprops";
 import fetch from "node-fetch";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Feature, modGeoJson, readGeoJson } from "../../utils/geojsonUtils";
+import { Feature, featureUpdate, readGeoJson } from "../../utils/geojsonUtils";
 import Tenant from "../../models/tenant";
-import fs from "fs";
 import { isSizeVector } from "../../utils/sizePermission";
 
 import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
@@ -28,9 +29,11 @@ import { getFileSize } from "../../utils/fileUtils";
 import Alert from "../../models/alert";
 import VOD from "../../models/vod";
 import { ILayer } from "../../schemas/layer";
-import kmlToGjson from "@mapbox/togeojson";
-import shp2json from "shpjs";
-import { DOMParser } from "xmldom";
+import {
+  saveGeojson,
+  saveMultiGeojson,
+  saveVectorLayer,
+} from "../../utils/dataUtils";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -95,104 +98,65 @@ export const getMetadataForBaseLayer = async (
         });
       }
 
-      const layerData = data.map((layer) => {
-        return {
+      const allAttributes = new Map<string, number>();
+      const layerGeojson = await Promise.all(
+        data.map(async (layer) => {
+          const properties = Object.keys(
+            (await readGeoJson(DirPath(Directory.ROOT, layer.layerpath)))
+              .features[0]?.properties
+          );
+          properties.forEach((key) => {
+            allAttributes.set(
+              key,
+              allAttributes.get(key) ? allAttributes.get(key) + 1 : 1
+            );
+          });
+          return {
+            _id: layer._id.toString(),
+            name: layer.name,
+            mission: layer.missionId.name,
+            missionId: layer.missionId._id.toString(),
+            properties,
+          };
+        })
+      );
+
+      const response: {
+        missionId: string;
+        missionName: string;
+        layers: {
+          _id: string;
+          name: string;
+          fields: {
+            key: string;
+            layerMatches: string;
+          }[];
+        }[];
+      }[] = [];
+
+      layerGeojson.forEach((layer) => {
+        const mission = response.find(
+          (res) => res.missionId == layer.missionId
+        );
+        const minLayer = {
           _id: layer._id,
           name: layer.name,
-          layerpath: layer.layerpath,
-          mission: layer.missionId.name,
-          missionId: layer.missionId._id,
+          fields: layer.properties.map((key) => ({
+            key,
+            layerMatches:
+              allAttributes.get(key) === layerGeojson.length
+                ? "Matches With All"
+                : "No Other Matches",
+          })),
         };
-      });
-
-      const missionMap: Map<string, missionMapVal> = new Map();
-      const attrMap: Map<string, attrMapVal> = new Map();
-
-      for (const layer of layerData) {
-        const gjson = await readGeoJson(
-          DirPath(Directory.DEFAULT, layer.layerpath)
-        );
-        const feature = gjson.features[0];
-
-        if (missionMap.get(layer.missionId.toString())) {
-          missionMap.get(layer.missionId.toString()).layers.push({
-            _id: layer._id,
-            name: layer.name,
-            fields: [],
-          });
-        } else {
-          missionMap.set(layer.missionId.toString(), {
+        if (mission) mission.layers.push(minLayer);
+        else
+          response.push({
             missionId: layer.missionId,
             missionName: layer.mission,
-            layers: [
-              {
-                _id: layer._id,
-                name: layer.name,
-                fields: [],
-              },
-            ],
+            layers: [minLayer],
           });
-        }
-
-        for (const p of Object.entries(feature.properties)) {
-          missionMap
-            .get(layer.missionId.toString())
-            .layers[
-              missionMap.get(layer.missionId.toString()).layers.length - 1
-            ].fields.push(p[0]);
-
-          if (attrMap.get(p[0])) {
-            attrMap.get(p[0]).layerMatches.push({
-              layerId: layer._id,
-              layerName: layer.name,
-              missionName: layer.mission,
-            });
-          } else {
-            attrMap.set(p[0], {
-              key: p[0],
-              value: p[1],
-              layerMatches: [
-                {
-                  layerId: layer._id,
-                  layerName: layer.name,
-                  missionName: layer.mission,
-                },
-              ],
-            });
-          }
-        }
-      }
-
-      const response: any = [];
-
-      for (const [missionId, missionData] of Object.entries<any>(missionMap)) {
-        response.push({
-          ...missionData,
-          layers: missionData.layers.map(
-            (layer: { fields: any[]; _id: { toString: () => string } }) => {
-              return {
-                ...layer,
-                fields: layer.fields.map((f: string) => {
-                  const lm = attrMap
-                    .get(f)
-                    .layerMatches.filter(
-                      (l) => l.layerId.toString() !== layer._id.toString()
-                    );
-                  return {
-                    ...attrMap.get(f),
-                    layerMatches:
-                      lm.length === 0
-                        ? "No Other Mathces"
-                        : lm.length === layerData.length - 1
-                        ? "Matches With All"
-                        : lm,
-                  };
-                }),
-              };
-            }
-          ),
-        });
-      }
+      });
 
       res.json({
         status: true,
@@ -208,197 +172,111 @@ export const createVectorBaseLayer = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    let layer: HydratedDocument<ILayer>;
-    const fileExt = path.extname(req.file.filename);
-    const filename = path.parse(req.file.filename).name + ".geojson";
-    const dir = DirPath(Directory.VECTOR, filename);
-    try {
-      if (fileExt == ".kml") {
-        const fileData = await fs.promises.readFile(req.file.path, "utf8");
-        const kml1 = new DOMParser().parseFromString(fileData, "text/xml");
-        const converted = kmlToGjson.kml(kml1, { styles: true });
-        await fs.promises.writeFile(dir, JSON.stringify(converted));
-        await fs.promises.rm(req.file.path);
-      } else if (fileExt == ".shp" || fileExt == ".zip") {
-        const fileData = await fs.promises.readFile(req.file.path);
-        const geojson = await shp2json(fileData);
-        await fs.promises.writeFile(dir, JSON.stringify(geojson));
-        await fs.promises.rm(req.file.path);
-      } else if (fileExt == ".geojson") {
-        await fs.promises.rename(req.file.path, dir);
-      } else {
-        await fs.promises.rm(req.file.path);
-        res.status(400).json({
-          status: false,
-          message: "vector format not supported!",
-        });
-        return;
-      }
-    } catch (err) {
-      await fs.promises.rm(req.file.path);
-      req.log.error(err, "file conversion failed");
-      res.status(500).json({
+  let geojsonPath: string;
+  let size: number;
+  let featureCount: number;
+  let flagColor: string;
+  let properties: Record<string, any>;
+  try {
+    const vectorLayer = await saveVectorLayer(
+      pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
+      req.body.inHeritOriginalColorFromFile
+        ? {
+            icon: req.body.icon,
+            color: req.body.color,
+          }
+        : undefined
+    );
+
+    if (vectorLayer == undefined) {
+      res.status(400).json({
         status: false,
-        message: "file conversion failed",
+        message: "vector format not supported",
       });
       return;
     }
-    req.log.info("File successfully converted!");
-    const { name, vector, captureDate, color } = req.body;
 
-    const geojson = await readGeoJson(dir);
+    geojsonPath = vectorLayer.geojsonPath;
+    size = vectorLayer.size;
+    featureCount = vectorLayer.featureCount;
+    flagColor = vectorLayer.flagColor;
+    properties = vectorLayer.properties;
+  } catch (error) {
+    req.log.error(error, "vector layer conversion failed");
 
-    const fc = geojson.features.length;
-    if (geojson == null) {
-      return res.json({
-        status: false,
-        message: "file path not exist! ",
-      });
-    }
-    if (req.body.inHeritOriginalColorFromFile == "false") {
-      const modCheck = await modGeoJson(
-        req.body.icon,
-        req.body.color,
-        geojson,
-        dir
-      );
-      if (modCheck == 0) {
-        return res.json({
-          status: false,
-          message: "Color selection error",
-        });
+    res.status(500).json({
+      status: false,
+      message: "file conversion failed",
+    });
+    return;
+  }
+
+  req.log.info("File successfully converted!");
+  const { name, vector, captureDate } = req.body;
+
+  const layer = await Layer.create({
+    name: name,
+    type: "Vector",
+    vector,
+    color: flagColor,
+    layerpath: geojsonPath,
+    fileSize: size,
+    featureCount,
+    captureDate,
+    tenantId: res.locals.user.tenantId,
+    createdBy: res.locals.user._id,
+    updatedBy: res.locals.user._id,
+  });
+
+  if (layer) {
+    await Tenant.findOneAndUpdate(
+      {
+        _id: res.locals.user.tenantId,
+        actualLayerCount: {
+          $gte: 0,
+        },
+      },
+      {
+        $inc: {
+          actualLayerCount: 1,
+        },
       }
-      const size: number = Number(
-        (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-      );
-      layer = new Layer({
-        name: name,
-        type: "Vector",
-        vector,
-        color,
-        layerpath: `/vector/${filename}`,
-        fileSize: size,
-        featureCount: fc,
-        captureDate,
-        tenantId: res.locals.user.tenantId,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
-      });
-    } else {
-      if (geojson.features[0].properties.color) {
-        let flagColor = geojson.features[0].properties.color;
-        for (let i = 0; i < geojson.features.length; i++) {
-          if (flagColor != geojson.features[i].properties.color) {
-            flagColor = "multiColor";
-            break;
-          }
-        }
-        const size: number = Number(
-          (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-        );
-        layer = new Layer({
-          name: name,
-          type: "Vector",
-          vector,
-          color: flagColor,
-          layerpath: `/vector/${filename}`,
-          fileSize: size,
-          featureCount: fc,
-          captureDate,
-          tenantId: res.locals.user.tenantId,
-          createdBy: res.locals.user._id,
-          updatedBy: res.locals.user._id,
-        });
-      } else {
-        res.json({
-          status: false,
-          message: "Failed! GEOJSON does not have color",
-        });
-      }
-    }
+    );
 
-    if (layer) {
-      const savedDoc = await layer.save();
-
-      if (savedDoc) {
-        await Tenant.findOneAndUpdate(
-          {
-            _id: res.locals.user.tenantId,
-            actualLayerCount: {
-              $gte: 0,
-            },
-          },
-          {
-            $inc: {
-              actualLayerCount: 1,
-            },
-          }
-        );
-
-        res.status(201).json({
-          status: true,
-          message: "New Layer Created",
-          data: {
-            layer: savedDoc,
-            properties: {
-              ...geojson.features[0].properties,
-            },
-          },
-        });
-      } else {
-        res.json({
-          status: false,
-          message: "Layer not created",
-        });
-      }
-    }
+    res.status(201).json({
+      status: true,
+      message: "New Layer Created",
+      data: {
+        layer,
+        properties,
+      },
+    });
+  } else {
+    res.json({
+      status: false,
+      message: "Layer not created",
+    });
   }
 };
 
-type PropertyVals = Feature["properties"][keyof Feature["properties"]];
 export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
   {
-    const filepath: string = req.body.path;
-    const pattr = new Set(req.body.pattr as string[]);
-
-    const dir = DirPath(Directory.DEFAULT, filepath);
-    const id = req.body.id;
-    const geojson = await readGeoJson(dir);
-    if (geojson == null) {
-      return res.json({
-        status: false,
-        message: "file path not exist! ",
-      });
-    }
-
-    pattr.add("color");
-    pattr.add("icon");
-    pattr.add("sys_id");
-
-    const nfeatures = geojson.features.map((feature) => {
-      const pattributes = new Map<string, PropertyVals>();
-      const nattributes = new Map<string, PropertyVals>();
-      Object.keys(feature.properties).forEach((key) => {
-        if (pattr.has(key)) pattributes.set(key, feature.properties[key]);
-        else nattributes.set(key, feature.properties[key]);
-      });
-      const properties = Object.fromEntries(
-        pattributes.entries()
-      ) as Feature["properties"];
-      properties["Nth"] = Object(nattributes.entries());
-      feature.properties = properties;
-      return feature;
-    });
-
-    const mutantObject = Object.assign(geojson, { features: nfeatures });
-    const gjson = JSON.stringify(mutantObject);
-
-    await fs.promises.writeFile(dir, gjson);
-
-    const doc = await Layer.findOne({ _id: id }).populate<{
+    const doc = await Layer.findOne({
+      _id: req.body.id,
+      tenantId: res.locals.user.tenantId._id,
+    }).populate<{
       vector: IVector;
     }>("vector");
+    if (!doc) {
+      res.status(404).json({
+        success: false,
+        message: "layer does not exist",
+      });
+    }
+    const clonedGeojson = await saveGeojson(req.body.path, {
+      filter: [...req.body.pattr, "color", "icon", "sys_id"],
+      inplace: true,
+    });
 
     res.json({
       success: true,
@@ -409,140 +287,60 @@ export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
 };
 
 export const createBaseLayerByAttr = async (
-  req: Request,
+  req: Request<
+    unknown,
+    unknown,
+    {
+      layers: {
+        attrMapping: Record<string, string>;
+        layerId: string;
+      }[];
+      color: string;
+      name: string;
+      pattr: {
+        attribute: string;
+        key: number;
+        occurs: "Present in all layers";
+      }[];
+      vectorTypeId: string;
+    }
+  >,
   res: AuthResponse
 ) => {
-  {
-    // const { name, vectorTypeId } = req.body;
+  if (req.body.layers) {
+    const ids = req.body.layers.map((l) => l.layerId);
 
-    const filepath =
-      "/vector/" +
-      String(Date.now()) +
-      "_" +
-      String(req.body.name) +
-      ".geojson";
-    const file = DirPath(Directory.DEFAULT, filepath);
-
-    const geojson: any = {
-      type: "FeatureCollection",
-      name: req.body.name,
-      features: [],
-    };
-
-    const pattr = req.body.pattr;
-    pattr.push("color");
-    pattr.push("sys_id");
-    pattr.push("icon");
-
-    let ids: any;
-    if (req.body.layers) {
-      ids = req.body.layers.map((l: { layerId: any }) => l.layerId);
-
-      const data = await Layer.find(
-        {
-          _id: { $in: ids },
-          tenantId: res.locals.user.tenantId._id
-            ? res.locals.user.tenantId._id
-            : res.locals.user.tenantId._id,
-        },
-        {
-          layerpath: 1,
-        }
-      ).populate<{ missionId: IMission }>("missionId");
-
-      for (const d of data) {
-        const gjson = await readGeoJson(
-          DirPath(Directory.DEFAULT, d.layerpath)
-        );
-
-        if (gjson == null) {
-          return res.json({
-            status: false,
-            message: "file path not exist! ",
-          });
-        }
-
-        const features = gjson.features;
-
-        const layer = req.body.layers.find(
-          (l: { layerId: { toString: () => string } }) =>
-            d._id.toString() === l.layerId.toString()
-        );
-        if (layer) {
-          for (const f of features) {
-            let feature: any = {
-              ...f,
-            };
-            const properties = {
-              ...f.properties,
-            };
-
-            const nattributes: any = {};
-            const pattributes: any = {};
-
-            for (const [attr, val] of Object.entries(flattenObj(properties))) {
-              if (pattr.includes(attr)) {
-                pattributes[attr] = val;
-              } else {
-                nattributes[attr] = val;
-              }
-            }
-
-            for (const [attr, _] of Object.entries<any>(layer.attrMapping)) {
-              pattributes[attr] = properties[layer.attrMapping[attr]]
-                ? properties[layer.attrMapping[attr]]
-                : "null";
-            }
-
-            feature = {
-              ...feature,
-              properties: {
-                ...pattributes,
-                Nth: {
-                  ...nattributes,
-                },
-              },
-            };
-
-            geojson.features.push(feature);
-            for (let j = 0; j < geojson.features.length; j++) {
-              geojson.features[j].properties.color = req.body.color
-                ? req.body.color
-                : "#000000";
-            }
-          }
-        } else {
-          throw Error("Something went wrong");
-        }
-      }
-    }
-
-    await fs.promises.writeFile(file, JSON.stringify(geojson));
-
-    const size: number = await getFileSize(file);
-
-    const color: any = req.body.color ? req.body.color : "#000000";
-
-    const docCount: any = await Tenant.findById(
-      res.locals.user.tenantId._id
-        ? res.locals.user.tenantId._id
-        : res.locals.user.tenantId,
+    const data = await Layer.find(
       {
-        activePackage: 1,
-        actualSize: 1,
+        _id: { $in: ids },
+        tenantId: res.locals.user.tenantId._id,
+      },
+      {
+        layerpath: 1,
       }
-    )
-      .populate<{ activePackage: IPackage }>("activePackage")
-      .lean();
+    ).populate<{ missionId: IMission }>("missionId");
 
-    const ress: any = await isSizeVector(size, docCount, file);
+    const color =
+      req.body.color && req.body.color.length > 0 ? req.body.color : "#000000";
 
-    if (ress !== true) {
-      return res.status(403).json({
-        status: false,
-        message: "Actual storage exceeded the Limit of Set storage!",
-      });
-    }
+    const clonedGeojson = await saveMultiGeojson(
+      data.map((d) => ({
+        path: d.layerpath,
+        map: req.body.layers.find((l) => l.layerId == d._id.toString())
+          .attrMapping,
+      })),
+      {
+        filter: [
+          ...req.body.pattr.map((attr) => attr.attribute),
+          "color",
+          "icon",
+          "sys_id",
+        ],
+        name: req.body.name,
+        color,
+      }
+    );
+
     const vectorLayer = new Layer({
       name: req.body.name,
       type: "Vector",
@@ -552,15 +350,15 @@ export const createBaseLayerByAttr = async (
       updatedBy: res.locals.user._id,
       layers: ids,
       color: color,
-      fileSize: size,
-      layerpath: filepath,
+      fileSize: clonedGeojson.size,
+      layerpath: clonedGeojson.path,
       captureDate: new Date(),
-      featureCount: geojson.features.length,
+      featureCount: clonedGeojson.featureCount,
     });
 
     if (vectorLayer) {
       await Layer.updateMany({ _id: { $in: ids } }, { $set: { isBase: true } });
-      const savedDoc: any = await vectorLayer.save();
+      const savedDoc = await vectorLayer.save();
       await layerFiles.updateMany(
         { layerId: { $in: ids } },
         { $push: { layers: savedDoc._id } }
@@ -579,6 +377,7 @@ export const createBaseLayerByAttr = async (
             },
           }
         );
+        await savedDoc.populate("vector");
       }
       return res.status(201).json({
         status: true,
@@ -812,7 +611,7 @@ export const getMetadataForUpdatingBaseLayer = async (
       const attrMap: Map<string, attrMapVal> = new Map();
 
       const bgjson = await readGeoJson(
-        DirPath(Directory.DEFAULT, baseLayerData.layerpath)
+        DirPath(Directory.ROOT, baseLayerData.layerpath)
       );
       const bfeaure = bgjson.features[0];
       const pattr: any = [];
@@ -824,7 +623,7 @@ export const getMetadataForUpdatingBaseLayer = async (
 
       for (const layer of layerData) {
         const gjson = await readGeoJson(
-          DirPath(Directory.DEFAULT, layer.layerpath)
+          DirPath(Directory.ROOT, layer.layerpath)
         );
         const feature = gjson.features[0];
 
@@ -921,164 +720,75 @@ export const updateBaseLayerByAttr = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const baseLayer = await Layer.findOne(
+  const baseLayer = await Layer.findOne(
+    {
+      _id: req.body.baseLayer,
+      vector: { $exists: true },
+      isBase: true,
+    },
+    {
+      layerpath: 1,
+      vector: 1,
+      fileSize: 1,
+    }
+  ).populate<{ vector: IVector }>("vector");
+
+  if (!baseLayer) throw new Error("baseLayer is null or undefined");
+
+  if (req.body.layers) {
+    const layerData = await Layer.find(
       {
-        _id: req.body.baseLayer,
+        _id: { $in: req.body.layers },
         vector: { $exists: true },
-        isBase: true,
       },
       {
         layerpath: 1,
         vector: 1,
-        fileSize: 1,
-      }
-    ).populate<{ vector: IVector }>("vector");
-
-    if (!baseLayer) throw new Error("baseLayer is null or undefined");
-
-    const bgjson = await readGeoJson(
-      DirPath(Directory.DEFAULT, baseLayer.layerpath)
-    );
-
-    const color = bgjson.features[0].properties.color;
-    const icon = bgjson.features[0].properties.icon;
-
-    const newFeatures: any = [];
-
-    let ids: any;
-    if (req.body.layers) {
-      ids = req.body.layers.map((l: { layerId: any }) => l.layerId);
-
-      const data = await Layer.find(
-        {
-          _id: { $in: req.body.layers },
-          vector: { $exists: true },
-        },
-        {
-          layerpath: 1,
-          vector: 1,
-        }
-      )
-        .populate<{ missionId: IMission }>("missionId")
-        .populate<{ vector: IVector }>("vector");
-
-      for (const d of data) {
-        if (d.vector.type !== baseLayer.vector.type) {
-          return res.json({
-            success: false,
-            message: "Layer type must be same as base layer",
-          });
-        }
-      }
-
-      for (const d of data) {
-        const gjson = await readGeoJson(
-          DirPath(Directory.DEFAULT, d.layerpath)
-        );
-
-        if (gjson == null) {
-          return res.json({
-            status: false,
-            message: "file path not exist! ",
-          });
-        }
-
-        const features = gjson.features;
-
-        const layer = req.body.layers.find(
-          (l: { layerId: { toString: () => string } }) =>
-            d._id.toString() === l.layerId.toString()
-        );
-
-        if (layer) {
-          for (const f of features) {
-            let feature: any = {
-              ...f,
-            };
-            const properties = {
-              ...f.properties,
-            };
-
-            const pattributes = {};
-
-            for (const [attr, m] of Object.entries<any>(layer.attrMapping)) {
-              pattributes[attr] = properties[m] ? properties[m] : "null";
-            }
-
-            feature = {
-              ...feature,
-              properties: {
-                ...pattributes,
-                color,
-                icon,
-                sys_id: properties.sys_id,
-                Nth: {
-                  ...properties,
-                  sys_id: undefined,
-                },
-              },
-            };
-
-            newFeatures.push(feature);
-          }
-        } else {
-          throw Error("Something went wrong");
-        }
-      }
-    }
-
-    const file = DirPath(Directory.DEFAULT, baseLayer.layerpath);
-
-    bgjson.features = [...bgjson.features, ...newFeatures];
-
-    await fs.promises.writeFile(file, JSON.stringify(bgjson));
-
-    const size: number = await getFileSize(file);
-
-    const docCount: any = await Tenant.findById(
-      res.locals.user.tenantId._id
-        ? res.locals.user.tenantId._id
-        : res.locals.user.tenantId,
-      {
-        activePackage: 1,
-        actualSize: 1,
       }
     )
-      .populate<{ activePackage: IPackage }>("activePackage")
-      .lean();
+      .populate<{ missionId: IMission }>("missionId")
+      .populate<{ vector: IVector }>("vector");
 
-    const ress: any = await isSizeVector(size, docCount, file);
-
-    const prevSize = Number(docCount.actualSize);
-    const newSize = prevSize - Number(baseLayer.fileSize) + size;
-
-    if (ress !== true) {
-      return res.status(403).json({
-        status: false,
-        message: "Actual storage exceeded the Limit of Set storage!",
-      });
+    for (const d of layerData) {
+      if (d.vector.type !== baseLayer.vector.type) {
+        return res.json({
+          success: false,
+          message: "Layer type must be same as base layer",
+        });
+      }
     }
-    await Layer.updateMany({ _id: { $in: ids } }, { $set: { isBase: true } });
+
+    const layers = layerData.map((layer) => ({
+      path: layer.layerpath,
+      map: req.body.layers.find(
+        (l) => l.layerId.toString() === layer._id.toString()
+      ).attrMapping,
+    }));
+    const clonedGeojson = await saveMultiGeojson(layers, {
+      color: baseLayer.color,
+    });
+
+    const layerIds = layerData.map((layer) => layer._id);
+    await Layer.updateMany(
+      { _id: { $in: layerIds } },
+      { $set: { isBase: true } }
+    );
     const data = await Layer.updateOne(
       { _id: baseLayer._id },
       {
-        featureCount: bgjson.features.length,
-        $push: { layers: { $each: ids } },
-        fileSize: size,
+        featureCount: clonedGeojson.featureCount,
+        $push: { layers: { $each: layerIds } },
+        fileSize: clonedGeojson.size,
       },
       { new: true }
     ).populate<{ vector: IVector }>("vector");
-    await Tenant.updateOne(
-      {
-        _id: res.locals.user.tenantId._id
-          ? res.locals.user.tenantId._id
-          : res.locals.user.tenantId,
-      },
-      { $inc: { actualSize: newSize } }
-    );
+    await Tenant.updateOne({
+      _id: res.locals.user.tenantId._id
+        ? res.locals.user.tenantId._id
+        : res.locals.user.tenantId,
+    });
 
-    await res.json({
+    res.json({
       success: true,
       message: "Layer updated successfully",
       data,
@@ -1088,41 +798,29 @@ export const updateBaseLayerByAttr = async (
 
 export const getBaseLayers = async (req: Request, res: AuthResponse) => {
   {
-    if (
-      (req.params.type !== "Vector" &&
-        req.params.type !== "Raster" &&
-        req.params.type !== "All") ||
-      !req.params.type
-    ) {
+    const { type } = req.params;
+    if ((type !== "Vector" && type !== "Raster" && type !== "All") || !type) {
       return res.json({
         success: false,
         message: "Please provide a valid size",
       });
     }
-    let data: (Omit<
-      Omit<
-        mongoose.Document<unknown, any, ILayer> &
-          ILayer &
-          Required<{ _id: mongoose.Types.ObjectId }>,
-        "raster"
-      > & { raster: IRaster },
-      "vector"
-    > & { vector: IVector })[];
-    if (req.params.type !== "All")
-      data = await Layer.find({
-        type: req.params.type,
-        $or: [{ missionId: { $exists: false } }, { missionId: null }],
-        tenantId: res.locals.user.tenantId._id,
-      })
-        .populate<{ raster: IRaster }>({ path: "raster" })
-        .populate<{ vector: IVector }>({ path: "vector" });
-    else
-      data = await Layer.find({
-        $or: [{ missionId: { $exists: false } }, { missionId: null }],
-        tenantId: res.locals.user.tenantId._id,
-      })
-        .populate<{ raster: IRaster }>({ path: "raster" })
-        .populate<{ vector: IVector }>({ path: "vector" });
+    const data = await Layer.find({
+      [type !== "All" && "type"]: type,
+      $and: [
+        {
+          $or: [{ missionId: { $exists: false } }, { missionId: null }],
+        },
+        {
+          $or: [
+            { tenantId: res.locals.user.tenantId._id },
+            { createdBy: res.locals.user._id },
+          ],
+        },
+      ],
+    })
+      .populate<{ raster: IRaster }>({ path: "raster" })
+      .populate<{ vector: IVector }>({ path: "vector" });
 
     res.status(200).json({
       success: true,
@@ -1160,7 +858,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     );
     if (!baseLayer) throw new Error("BaseLayer not found");
 
-    const baseLayerPath = DirPath(Directory.DEFAULT, baseLayer.layerpath);
+    const baseLayerPath = DirPath(Directory.ROOT, baseLayer.layerpath);
 
     const bgjson = await readGeoJson(baseLayerPath);
 
@@ -1174,7 +872,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     if (
       geojson.features[0].geometry.type !== bgjson.features[0].geometry.type
     ) {
-      await fs.promises.unlink(dir);
+      await deleteDirFileUsingName(Directory.VECTOR, req.file?.filename);
       return res.status(400).json({
         success: false,
         message: "The file must be of same type as base layer",
@@ -1220,9 +918,9 @@ export const updateBaseLayerByUploadedFile = async (
   {
     // TODO: Is below replacement correct? (does /../../ refer to public folder ?)
     // const dir = path.join(__dirname, "/../../", `${req.body.filePath}`);
-    const dir = DirPath(Directory.DEFAULT, req.body.filePath);
+    const dir = DirPath(Directory.ROOT, req.body.filePath);
 
-    const geojson: any = await readGeoJson(dir);
+    const geojson = await readGeoJson(dir);
 
     if (geojson == null) {
       return res.json({
@@ -1243,7 +941,7 @@ export const updateBaseLayerByUploadedFile = async (
 
     if (!baseLayer) throw new Error("baseLayer is null");
 
-    const baseLayerPath = DirPath(Directory.DEFAULT, baseLayer.layerpath);
+    const baseLayerPath = DirPath(Directory.ROOT, baseLayer.layerpath);
 
     const bgjson = await readGeoJson(baseLayerPath);
 
@@ -1259,10 +957,10 @@ export const updateBaseLayerByUploadedFile = async (
 
     const features = geojson.features;
 
-    const newFeatures: any = [];
+    const newFeatures: Feature[] = [];
 
     for (const f of features) {
-      let feature: any = {
+      let feature = {
         ...f,
       };
       const properties = {
@@ -1293,9 +991,9 @@ export const updateBaseLayerByUploadedFile = async (
       newFeatures.push(feature);
     }
 
-    bgjson.features = [...bgjson.features, ...newFeatures];
+    await featureUpdate(baseLayer.layerpath, newFeatures, bgjson);
 
-    await fs.promises.writeFile(baseLayerPath, JSON.stringify(bgjson));
+    bgjson.features = [...bgjson.features, ...newFeatures];
 
     const size: number = await getFileSize(baseLayerPath);
 
@@ -1336,7 +1034,7 @@ export const updateBaseLayerByUploadedFile = async (
       { $inc: { actualSize: newSize } }
     );
 
-    await fs.promises.unlink(dir);
+    await deleteDirFileUsingName(Directory.ROOT, req.body.filePath);
 
     const layer = await Layer.findOne({ _id: baseLayer._id })
       .populate<{ vector: IVector }>("vector")
@@ -1587,17 +1285,36 @@ export const createBaseRasterfromUpload = async (
     //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
     let minP = 0;
     let maxP = 1;
-    const { name, type, raster, captureDate } = req.body;
-    if (type == "DEM") {
-      const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+    const { name, raster, captureDate } = req.body;
+    const rasterType = await Raster.findOne({ _id: raster });
+    if (!rasterType) {
+      res.status(404).json({
+        status: false,
+        message: "raster type not found",
+      });
+      return;
+    }
+    let center = { lat: 0, lng: 0 };
+    if (rasterType.name == "DEM") {
+      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
       //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-      const response = await fetch(metaDataURL, {
+      let response = await fetch(metaDataURL, {
         method: "GET",
       });
-      const metadata = await response.json();
+      let metadata = await response.json();
       //-------handle for detail:not found----
       minP = metadata["1"]["min"];
       maxP = metadata["1"]["max"];
+
+      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
+      response = await fetch(metaDataURL, {
+        method: "GET",
+      });
+      metadata = await response.json();
+      center = {
+        lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
+        lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+      };
     }
     // let center = {
     //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
@@ -1619,10 +1336,13 @@ export const createBaseRasterfromUpload = async (
     }
     layer = new Layer({
       name: `base - ${name}`,
-      type,
+      type: "Raster",
       raster,
       layerdataArr: dataArr,
       captureDate,
+      center,
+      minp: minP,
+      maxp: maxP,
       fileSize: size,
       tenantId: res.locals.user.tenantId,
       createdBy: res.locals.user._id,
@@ -1926,49 +1646,8 @@ export const createBaseVectorLayer = async (
   res: AuthResponse
 ) => {
   {
-    //const filepath = `/vector/${req.body.name}-${new Date().toISOString()}.geojson`
-    const filepath =
-      "/vector/" +
-      String(Date.now()) +
-      "_" +
-      String(req.body.name) +
-      ".geojson";
-    const file = DirPath(Directory.DEFAULT, filepath);
-    await fs.promises.writeFile(file, JSON.stringify(req.body.geoJSON));
-
-    const geojson: any = await readGeoJson(file);
-    // let fc: any = geojson.features.length;
-    if (geojson == null) {
-      return res.json({
-        status: false,
-        message: "file path not exist! ",
-      });
-    }
-
-    const modCheck: any = await modGeoJson(null, null, geojson, file);
-    if (modCheck == 0) {
-      return res.json({
-        status: false,
-        message: "Color selection error",
-      });
-    }
-
-    const color: any = req.body.geoJSON.features[0].properties.color;
-    const size: number = await getFileSize(file);
-    const docCount: any = await Tenant.findOne({
-      _id: res.locals.user.tenantId,
-    })
-      .populate<{ activePackage: IPackage }>("activePackage")
-      .lean();
-
-    const ress: any = await isSizeVector(size, docCount, file);
-    if (ress !== true) {
-      return res.status(403).json({
-        status: false,
-        message: "Actual storage exceeded the Limit of Set storage!",
-      });
-    }
-    const vectorLayer = new Layer({
+    const vectorLayer = await saveVectorLayer(req.body.geoJSON);
+    const layer = await Layer.create({
       name: req.body.name,
       type: "Vector",
       vector: req.body.vectorId,
@@ -1976,15 +1655,15 @@ export const createBaseVectorLayer = async (
       tenantId: res.locals.user.tenantId._id,
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
-      color: color,
-      fileSize: size,
-      layerpath: filepath,
+      color: vectorLayer.flagColor,
+      fileSize: vectorLayer.size,
+      layerpath: vectorLayer.geojsonPath,
+      featureCount: vectorLayer.featureCount,
       captureDate: new Date(),
     });
 
-    if (vectorLayer) {
-      const savedDoc: any = await vectorLayer.save();
-      const tenant: any = await Tenant.findOne(
+    if (layer) {
+      const tenant = await Tenant.findOne(
         {
           _id: res.locals.user.tenantId,
         },
@@ -1992,18 +1671,17 @@ export const createBaseVectorLayer = async (
           actualLayerCount: 1,
         }
       );
-      if (savedDoc && tenant.actualLayerCount >= 0) {
+      await layer.populate("vector");
+      if (layer && tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },
           { $inc: { actualLayerCount: 1 } }
         );
-        // tenant.actualLayerCount = Number(tenant.actualLayerCount) + 1;
-        // await tenant.save();
       }
       res.status(201).json({
         status: true,
         message: "Sucessfully created base vector layer",
-        data: savedDoc,
+        data: layer,
       });
     } else {
       res.status(201).json({
@@ -2193,7 +1871,7 @@ export const publicbaselayerSearch = async (
       if (docs.length) {
         for (let i = 0; i < docs.length; i++) {
           const gjson = await readGeoJson(
-            DirPath(Directory.DEFAULT, docs[i].layerpath)
+            DirPath(Directory.ROOT, docs[i].layerpath)
           );
           for (let j = 0; j < gjson.features.length; j++) {
             if (gjson.features[j].properties[key]) {

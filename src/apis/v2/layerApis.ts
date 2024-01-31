@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -7,7 +8,7 @@ import { LayerType } from "../../schemas/layer";
 import { LayerFileType } from "../../schemas/layerFiles";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Flight from "../../models/flight";
-import { DirPath, Directory } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 
 const layerApi = Router();
@@ -15,11 +16,8 @@ const layerApi = Router();
 layerApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         layerId?: string;
         missionId?: string;
         orderBy: string;
@@ -34,8 +32,8 @@ layerApi.get(
         limit: number;
         offset: number;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const {
@@ -110,7 +108,7 @@ layerApi.get(
     }
 
     if (layerId) {
-      const docpath = DirPath(Directory.DEFAULT, data[0].layerpath);
+      const docpath = DirPath(Directory.ROOT, data[0].layerpath);
       resp.size = await getFileSize(docpath);
       if (await checkFileExists(docpath)) {
         const downloadlink = docpath
@@ -130,7 +128,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get layer data",
-      description: "This operation retrives layer information",
+      description: "This operation retrieves layer information",
       operationId: "GetLayer",
       requestSchema: {
         query: {
@@ -254,7 +252,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get layer file data",
-      description: "This operation retrives layer file information",
+      description: "This operation retrieves layer file information",
       operationId: "GetLayerFile",
       requestSchema: {
         query: {

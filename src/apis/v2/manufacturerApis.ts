@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,19 +11,16 @@ const manufacturerApi = Router();
 manufacturerApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         manufacturerId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { manufacturerId, limit, offset, orderBy, asc, populate } = req.query;
@@ -58,7 +56,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get manufacturer information",
-      description: "This operation retrives manufacturer information",
+      description: "This operation retrieves manufacturer information",
       operationId: "GetManufacturer",
       requestSchema: {
         query: {

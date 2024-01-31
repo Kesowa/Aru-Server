@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,11 +11,8 @@ const streamKeyApi = Router();
 streamKeyApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         isActive?: boolean;
         flightId?: string;
         limit: number;
@@ -22,8 +20,8 @@ streamKeyApi.get(
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { isActive, flightId, limit, offset, orderBy, asc, populate } =
@@ -69,7 +67,7 @@ openApi.addPath(
     get: {
       summary: "Get stream information",
       description:
-        "This operation retrives stream token and stream information",
+        "This operation retrieves stream token and stream information",
       operationId: "GetStreamToken",
       requestSchema: {
         query: {

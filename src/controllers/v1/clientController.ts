@@ -17,9 +17,17 @@ import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
 import { IMission } from "../../schemas/mission";
 import { ILocation } from "../../schemas/location";
-import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
+import {
+  API_SERVER,
+  Directory,
+  DirPath,
+  DUMMY_TENANT,
+  SECRET_KEY,
+} from "../../constants";
 import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
+import ejs from "ejs";
+import { iv } from "../../utils/authUtils";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -154,7 +162,7 @@ export const createClientformissionGroup = async (
             country,
           });
           const createDoc = await newClient.save();
-          const docPath = DirPath(Directory.DEFAULT, req.body.avatar);
+          const docPath = DirPath(Directory.ROOT, req.body.avatar);
           const size: number = await getFileSize(docPath);
           if (req.body.avatar && createDoc) {
             copyFiled(
@@ -246,7 +254,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
       resultt = await Mission.find({
         clientId: req.query.clientId,
         status: match.status,
-        tenantId: res.locals.user.tenantId,
+        tenantId: res.locals.user.tenantId._id,
       })
         .populate<{ clientId: IUser }>("clientId")
         .populate<{ missionType: IMission }>("missionType")
@@ -267,7 +275,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
     } else if (req.query.status == "All") {
       resultt = await Mission.find({
         clientId: req.query.clientId,
-        tenantId: res.locals.user.tenantId,
+        tenantId: res.locals.user.tenantId._id,
       })
         .populate<{ clientId: IUser }>("clientId")
         .populate<{ missionType: IMission }>("missionType")
@@ -385,14 +393,54 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
   }
 };
 
-export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
+export const clientReactivationMail = async (
+  user: { email: string; name: string },
+  client: { email: string; name: string }
+) => {
+  const cipher = crypto.createCipheriv(
+    "aes192",
+    Buffer.from(SECRET_KEY, "base64"),
+    iv
+  );
+  let token = cipher.update(client.email, "utf8", "base64");
+  token += cipher.final("base64");
+  token = encodeURIComponent(token);
+  const reactivateClientUrl = `${API_SERVER}/apis/v1/client/reactivate-client/${token}`;
+  const html = await ejs.renderFile(
+    path.join(
+      __dirname,
+      "..",
+      "..",
+      "views",
+      "mails",
+      "clientDeletionNotification.ejs"
+    ),
+    {
+      name: user.name,
+      reactivateClientUrl,
+    },
+    { async: true }
+  );
+  await sendMail(
+    user.email,
+    "Client Deletion Notification || Kesowa Infinite Ventures Pvt. Ltd",
+    "",
+    html,
+    ""
+  );
+};
+
+export const deleteCientforTenant = async (
+  req: Request<{}, {}, { id: string }>,
+  res: AuthResponse
+) => {
   {
     const doc = await User.findOne({
       _id: req.body.id,
       tenantId: res.locals.user.tenantId,
     });
     if (doc) {
-      const _updatedMissions = await Mission.updateMany(
+      await Mission.updateMany(
         {
           clientId: req.body.id,
           tenantId: res.locals.user.tenantId,
@@ -403,10 +451,9 @@ export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
           },
         }
       );
-      let size = 0;
       try {
-        const docPath = DirPath(Directory.DEFAULT, doc.avatar);
-        size = await getFileSize(docPath);
+        const docPath = DirPath(Directory.ROOT, doc.avatar);
+        await getFileSize(docPath);
         await deletePublicFileUsingPath(doc.avatar);
       } catch (error) {
         req.log.warn("failed to delete client avatar");
@@ -416,7 +463,7 @@ export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
 
       doc.tenantId = DUMMY_TENANT; //dummy tenant id
       const d = await doc.save();
-      const tenant: any = await Tenant.findOne(
+      const tenant = await Tenant.findOne(
         {
           _id: res.locals.user.tenantId,
         },
@@ -429,9 +476,16 @@ export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
           { _id: res.locals.user.tenantId },
           { $inc: { actualClientCount: -1 } }
         );
-        // tenant.actualClientCount = Number(tenant.actualClientCount) - 1;
-        // await tenant.save();
       }
+
+      try {
+        const creator = await User.findById(doc.createdBy);
+        await clientReactivationMail(creator, doc);
+      } catch (error) {
+        req.log.error("failed to send email to the creator");
+        req.log.error(error);
+      }
+
       return res.status(200).json({
         status: true,
         message: "client deleted successfully!",
@@ -442,6 +496,62 @@ export const deleteCientforTenant = async (req: Request, res: AuthResponse) => {
         status: false,
         message: "clientId does not match!",
       });
+  }
+};
+
+export const reactivateClient = async (req: Request, res: AuthResponse) => {
+  {
+    const decipher = crypto.createDecipheriv(
+      "aes192",
+      Buffer.from(SECRET_KEY, "base64"),
+      iv
+    );
+    let email = decipher.update(req.params.token, "base64", "utf8");
+    email += decipher.final("utf8");
+
+    const client = await User.findOne({
+      email: email,
+      userType: "standalone-user",
+      isActive: false,
+      tenantId: DUMMY_TENANT,
+    });
+    if (client) {
+      const creator = await User.findById(client.createdBy);
+
+      client.userType = "tenant-client";
+      client.isActive = true;
+      client.tenantId = creator.tenantId;
+      client.expiryDatee = new Date(
+        new Date().getTime() + 1000 * 60 * 60 * 24 * 365.25
+      );
+
+      const d = await client.save();
+
+      const tenant = await Tenant.findOne(
+        {
+          _id: creator.tenantId,
+        },
+        {
+          actualClientCount: 1,
+        }
+      );
+      if (d && tenant.actualClientCount) {
+        await Tenant.updateOne(
+          { _id: creator.tenantId },
+          { $inc: { actualClientCount: 1 } }
+        );
+      }
+
+      return res.render("pages/client_reactivate", {
+        isSuccess: true,
+        name: client.name,
+      });
+    } else {
+      req.log.error("Client either doesn't exist or is not deactivated!");
+      return res.render("pages/client_reactivate", {
+        isSuccess: false,
+      });
+    }
   }
 };
 
@@ -561,7 +671,7 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
   {
     const result: Array<any> = await User.find(
       {
-        tenantId: res.locals.user.tenantId,
+        tenantId: res.locals.user.tenantId._id,
         userType: "tenant-client",
       },
       {
@@ -649,7 +759,7 @@ export const getListClient = async (req: Request, res: AuthResponse) => {
     );
 
     const results = await User.find({
-      tenantId: res.locals.user.tenantId,
+      tenantId: res.locals.user.tenantId._id,
       userType: "tenant-client",
     })
       .populate<{ createdBy: IUser }>({ path: "createdBy", select: "name" })
@@ -716,7 +826,10 @@ export const getClientByEmail = async (req: Request, res: AuthResponse) => {
         message: "no email supplied",
       });
     }
-    const client = await User.findOne({ email: email }, { email: 1, name: 1 });
+    const client = await User.findOne(
+      { email: email, tenantId: res.locals.user.tenantId._id },
+      { email: 1, name: 1 }
+    );
     if (!client) {
       return res.status(404).json({
         status: false,

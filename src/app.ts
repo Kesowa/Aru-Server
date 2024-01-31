@@ -41,6 +41,7 @@ import settingApis from "./apis/v1/settingApis";
 import aimlApis from "./apis/v1/aimlApis";
 import threadApis from "./apis/v1/threadApis";
 import dataApis from "./apis/v1/dataApis";
+import reportApis from "./apis/v1/reportApis";
 
 import {
   ARU_INSTANCE,
@@ -51,7 +52,6 @@ import {
   SEQ_SERVER_URL,
 } from "./constants";
 import cors from "cors";
-import { randomUUID } from "crypto";
 import cookie from "cookie";
 import routerV2 from "./apis/v2/routerV2";
 
@@ -63,7 +63,11 @@ app.use(
     frameguard: false,
   })
 );
-app.use(cors());
+app.use(
+  cors({
+    maxAge: 60 * 60 * 24,
+  })
+);
 app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
 
 //static files
@@ -118,7 +122,11 @@ app.use(
 
     genReqId: function (req, _) {
       const cookies = cookie.parse(req.headers.cookie || "");
-      return cookies["email"] || req.headers["authorization"] || randomUUID();
+      return (
+        cookies["email"] ||
+        req.headers["x-forwarded-for"] ||
+        req.socket.remoteAddress
+      );
     },
     customLogLevel: function (_, res, err) {
       if (res.statusCode >= 400 && res.statusCode < 500) {
@@ -187,6 +195,7 @@ app.use("/apis/v1/setting", settingApis);
 app.use("/apis/v1/aiml", aimlApis);
 app.use("/apis/v1/thread", threadApis);
 app.use("/apis/v1/data", dataApis);
+app.use("/apis/v1/report", reportApis);
 
 // 404 route
 app.use(function (req, res, next) {

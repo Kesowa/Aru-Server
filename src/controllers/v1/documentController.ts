@@ -4,129 +4,75 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import fs from "fs";
-import archiver from "archiver";
 import path from "path";
-import sharp from "sharp";
-import rimraf from "rimraf";
 import { missionSpecificSocket } from "../../socket";
-import Tenant from "../../models/tenant";
-import { exec } from "child_process";
-import resizer from "node-image-resizer";
 import {
   deleteDirFileUsingName,
   deletePublicFileUsingPath,
   deletePublicFolderUsingPath,
 } from "../../utils/fileDeleteUtils";
-import { Directory, DirPath } from "../../constants";
+import { Directory, DirPath, PUBLIC_DIR } from "../../constants";
 import {
   checkFileExists,
+  createDirFileWriteStreamUsingName,
   createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
+import { saveThumbnails } from "../../utils/imageUtils";
+import { createArchive, savePointcloud } from "../../utils/dataUtils";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
     if (!req.file) {
       throw new Error("no file in request");
     }
-    if (req.body.type == "pointCloud") {
+    if (req.body.type === "pointCloud") {
       const { missionId } = req.body;
-      const folderNamee = Date.now();
-      const fileNamee = req.file?.originalname.split(/\.(?=[^\.]+$)/)[0];
-      const doc_loc = DirPath(Directory.DOCUMENTS, req.file?.filename);
-      req.log.info("Prining point cloud file location" + doc_loc);
-      const extract_loc = DirPath(Directory.DOCUMENTS, String(folderNamee));
-      await createDirIfNotExists(extract_loc, req.log);
-      req.log.info("Extract location ++++++++++++++++++" + extract_loc);
-      req.log.info("Starting conversion");
-      //In the below line the first command is the path to the potree execuatble file after compiliation
-      // For windows: `C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
-      const ps = exec(
-        `/bin/PotreeConverter ${doc_loc} -o ${extract_loc} --generate-page ${fileNamee}`
-      );
-      //const ps = exec(`C:\\Users\\Administrator\\Downloads\\PotreeConverter_2.1_x64_windows\\PotreeConverter_2.1_x64_windows\\PotreeConverter.exe "${doc_loc}" -o "${extract_loc}" --generate-page "${fileNamee}"`);
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
-      const onExit = async (exitCode: Number) => {
-        const flag: any = 1;
-        const size: number = Number(
-          (Number(req.file.size) / (1024 * 1024)).toFixed(5)
-        );
-        if (flag == 1) {
-          const doc: any = new Document({
-            name: req?.file?.originalname,
-            modDate: new Date(),
-            fileSize: size,
-            folderName: req.body.folderName,
-            fileType: req.body.type,
-            filePath: `/documents/${folderNamee}/${fileNamee}.html`,
-            missionId,
-            tenantId: res.locals.user.tenantId,
-            createdBy: res.locals.user._id,
-            updatedBy: res.locals.user._id,
-          });
-          const savedDoc = await doc.save();
-          const tenant: any = Tenant.findOne({ _id: res.locals.user.tenantId });
-          missionSpecificSocket
-            .to(missionId)
-            .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
-        } else {
-          rimraf(extract_loc, function (err) {
-            if (err) {
-              throw err;
-            } else {
-              req.log.info("Removed pointCloud data after extraction");
-            }
-          });
-          missionSpecificSocket
-            .to(missionId)
-            .emit("POINTCLOUD_EXTRACTION_FAILED");
-        }
-        await fs.promises.unlink(doc_loc);
-        req.log.info("Removed zip after extraction");
-      };
-
-      ps.once("exit", onExit);
-
-      // TODO: Attach proper loggers
-      // NOTE: Async task, will have to handle logging separately
-      ps?.stdout?.on("data", console.log);
-      ps?.stdout?.on("close", console.log);
-      ps?.stdout?.on("error", console.error);
-      ps?.on("message", console.log);
-      ps?.stderr?.on("data", console.error);
-      ps?.stderr?.on("end", console.error);
-
-      res.json({
-        status: true,
-        message: "Point Cloud creation Started",
-      });
+      req.log.info("POINTCLOUD_EXTRACTION_STARTED");
+      const webviewPath = await savePointcloud(
+        path.relative(PUBLIC_DIR, req.file.path),
+        req.log
+      );
+      if (webviewPath) {
+        const doc = new Document({
+          name: req.file.originalname,
+          modDate: new Date(),
+          fileSize: req.file.size / (1024 * 1024),
+          folderName: req.body.folderName,
+          fileType: req.body.type,
+          filePath: webviewPath,
+          missionId,
+          tenantId: res.locals.user.tenantId,
+          createdBy: res.locals.user._id,
+          updatedBy: res.locals.user._id,
+        });
+        const savedDoc = await doc.save();
+        missionSpecificSocket
+          .to(missionId)
+          .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
+        res.status(201).json({
+          status: true,
+          message: "New Document(s) Uploaded",
+          data: savedDoc,
+        });
+        return;
+      } else {
+        missionSpecificSocket
+          .to(missionId)
+          .emit("POINTCLOUD_EXTRACTION_FAILED");
+        res.status(500).json({
+          status: false,
+          message: "Failed to upload documents",
+        });
+        return;
+      }
     } else {
       const missionId = req.body.missionId;
       const filesize: number = Number(
         (Number(req.file.size) / (1024 * 1024)).toFixed(5)
       );
-      if (
-        (req.body.folderName == "rawPhotos" ||
-          req.body.folderName == "photos") &&
-        (req.file.mimetype == "image/jpeg" || req.file.mimetype == "image/png")
-      ) {
-        const x1FilePath = DirPath(
-          Directory.DOCUMENTS,
-          `1x_${req.file.filename}`
-        );
-        const x2FilePath = DirPath(
-          Directory.DOCUMENTS,
-          `2x_${req.file.filename}`
-        );
-        await sharp(req.file.path)
-          .resize(1280, 720, { fit: "inside" })
-          .toFile(x2FilePath);
 
-        await sharp(x2FilePath)
-          .resize(120, 120, { fit: "inside" })
-          .toFile(x1FilePath);
-      }
       const doc = new Document({
         name: req.file.originalname,
         modDate: new Date(),
@@ -139,8 +85,16 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
         createdBy: res.locals.user._id,
         updatedBy: res.locals.user._id,
       });
+      if (
+        (req.body.folderName == "rawPhotos" ||
+          req.body.folderName == "photos") &&
+        (req.file.mimetype == "image/jpeg" || req.file.mimetype == "image/png")
+      ) {
+        req.log.debug("Uploading Thumbnails");
+        const thumbs = await saveThumbnails(doc.filePath);
+        doc.fileSize = thumbs.size;
+      }
       const savedDoc = await doc.save();
-      const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
       missionSpecificSocket
         .to(savedDoc.missionId.toString())
         .emit("DOCUMENT_CREATED", savedDoc);
@@ -392,33 +346,10 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, req.log);
-        const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = fs.createWriteStream(`${dir}${fname}`);
-        const archive = archiver("zip", {
-          zlib: { level: 9 }, // Sets the compression level.
-        });
-        // output.on('close', function () {
-        //     req.log.info(archive.pointer() + ' total bytes');
-        //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
-        // });
-        archive.pipe(output);
-        for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.DEFAULT, d[i].filePath), {
-            name: d[i].filePath.split("/")[2],
-          });
-        }
-        try {
-          const _archiveFinalized = await archive.finalize();
-          const link = `/zip/${fname}`;
-          missionSpecificSocket
-            .to(missionId)
-            .emit("DOCUMENT_ZIP_COMPLETED", link);
-        } catch (error) {
-          req.log.error(error);
-          missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_FAILED");
-        }
+        const zipFile = await createArchive(d.map((d) => d.filePath));
+        missionSpecificSocket
+          .to(missionId)
+          .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
       } else {
         res.status(200).json({
           status: false,
@@ -441,7 +372,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         await createDirIfNotExists(dir, req.log);
 
         const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = fs.createWriteStream(`${dir}${fname}`);
+        const output = createDirFileWriteStreamUsingName(Directory.ZIP, fname);
         const archive = archiver("zip", {
           zlib: { level: 9 }, // Sets the compression level.
         });
@@ -451,7 +382,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         // });
         archive.pipe(output);
         for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.DEFAULT, d[i].filePath), {
+          archive.file(DirPath(Directory.ROOT, d[i].filePath), {
             name: d[i].filePath.split("/")[2],
           });
         }
@@ -483,25 +414,7 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
       });
       if (doc) {
-        const newFilename = DirPath(Directory.DEFAULT, doc.filePath);
-        if (await checkFileExists(newFilename)) {
-          await resizer(newFilename, {
-            versions: [
-              {
-                quality: 90,
-                prefix: "2x_",
-                width: 1280,
-                height: 720,
-              },
-              {
-                quality: 80,
-                prefix: "1x_",
-                width: 120,
-                height: 120,
-              },
-            ],
-          });
-        }
+        await saveThumbnails(doc.filePath);
         res.status(200).json({
           status: true,
           message: `Successfully generated 2x files`,
@@ -534,7 +447,7 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
     );
     if (docs.length) {
       for (let i = 0; i < docs.length; i++) {
-        const newFilename = DirPath(Directory.DEFAULT, docs[i].filePath);
+        const newFilename = DirPath(Directory.ROOT, docs[i].filePath);
         if (await checkFileExists(newFilename)) {
           const size: number = await getFileSize(newFilename);
           if (size != docs[i].fileSize) {

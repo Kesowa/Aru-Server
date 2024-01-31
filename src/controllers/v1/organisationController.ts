@@ -6,8 +6,8 @@ import { sendMail } from "../../utils/emailUtil";
 //check if email is available for registration
 export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {
   {
-    if (res.locals.user.tenantId) {
-      const tenantData = await Tenant.findById(res.locals.user.tenantId);
+    if (res.locals.user.tenantId._id) {
+      const tenantData = await Tenant.findById(res.locals.user.tenantId._id);
       res.json({
         status: true,
         message: "Tenant details fetched",

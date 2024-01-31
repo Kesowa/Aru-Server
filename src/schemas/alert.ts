@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { thermalStatus, thermalStatusType } from "./sharedSchemas";
 import { Types } from "ts-openapi";
 
 export interface IAlert {
@@ -27,7 +26,6 @@ export interface IAlert {
   locationId?: mongoose.Types.ObjectId; // index
   createdAt: Date;
   updatedAt: Date;
-  thermalStatus: thermalStatusType;
 }
 export const AlertType = {
   _id: Types.String(),
@@ -135,7 +133,6 @@ const alertSchema = new mongoose.Schema<IAlert>(
     updatedAt: {
       type: Date,
     },
-    thermalStatus,
   },
   {
     timestamps: true,
@@ -148,7 +145,7 @@ alertSchema.index({
   type: 1,
 });
 alertSchema.index({ locationId: 1 }, { sparse: true });
-alertSchema.pre("save", async function () {
+alertSchema.pre<IAlert>("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
     { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } }

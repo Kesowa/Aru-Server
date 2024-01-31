@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -137,11 +138,8 @@ const getVideoLocationGeojson = async (
 baseLayerApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         type?: string;
         isPublic?: boolean;
         mapRef?: string;
@@ -150,8 +148,8 @@ baseLayerApi.get(
         limit: number;
         offset: number;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const {
@@ -164,7 +162,7 @@ baseLayerApi.get(
       offset,
       populate,
     } = req.query;
-    let tenantId = "";
+    let tenantId: mongoose.Types.ObjectId;
     if (mapRef) {
       const tenant = await Tenant.findOne(
         {
@@ -187,15 +185,17 @@ baseLayerApi.get(
       .populate(populate)
       .lean();
 
-    const resp: any = {
+    const resp = {
       data,
       pagination: {
         limit,
         offset,
         count: data.length,
       },
+      alertGeojson: null,
+      vodGeojson: null,
     };
-
+    // !TODO only provide geojson data when requested
     if (startDate && endDate) {
       const alertData = await getAlertLocationGeojson(
         res.locals.user.tenantId._id,
@@ -220,7 +220,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get base layer data",
-      description: "This operation retrives base layer information",
+      description: "This operation retrieves base layer information",
       operationId: "GetBaseLayer",
       requestSchema: {
         query: {

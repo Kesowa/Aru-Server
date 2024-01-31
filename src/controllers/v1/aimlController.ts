@@ -1,20 +1,14 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import {
-  AIML_SERVER,
-  API_SERVER,
-  CDN_URL,
-  Directory,
-  DirPath,
-} from "../../constants";
+import { AIML_SERVER, API_SERVER, CDN_URL, Directory } from "../../constants";
 import VOD from "../../models/vod";
 import aimlModel from "../../models/aimlTask";
 import { IVOD } from "../../schemas/VOD";
 import { HydratedDocument } from "mongoose";
-import { writeFile } from "fs/promises";
 import fetch from "node-fetch";
 import moment from "moment";
 import { notificationSocket } from "../../socket";
+import { saveAIMLFile } from "../../utils/dataUtils";
 
 export const inferVodViolence = async (
   req: Request<{ vodId: string }>,
@@ -149,8 +143,7 @@ export const callbackVodViolence = async (
     return;
   }
   const filename = `${task.infer}_${task._id}.json`;
-  const dataLoc = DirPath(Directory.AI_ML, filename);
-  await writeFile(dataLoc, JSON.stringify(req.body));
+  await saveAIMLFile(filename, JSON.stringify(req.body));
   task.status = "completed";
   task.data = `${Directory.AI_ML}/${filename}`;
   await task.save();
@@ -177,11 +170,16 @@ export const fetchAimlTasks = async (
   const query = {
     docModel: req.params.docModel,
     doc: req.params.docId,
-    tenant: res.locals.user.tenantId._id,
+    $or: [
+      { tenant: res.locals.user.tenantId._id },
+      { createdBy: res.locals.user._id },
+      { updatedBy: res.locals.user._id },
+    ],
   };
   if (req.query.infer) query["infer"] = req.query.infer;
 
-  const tasks = await aimlModel.find();
+  const tasks = await aimlModel.find(query);
+
   if (tasks) {
     res.status(200).json({
       status: true,

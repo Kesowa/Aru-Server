@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -11,11 +12,8 @@ const vodApi = Router();
 vodApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         missionId?: string;
         flightId?: string;
         locationId?: string;
@@ -25,8 +23,8 @@ vodApi.get(
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const {
@@ -82,7 +80,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get vod data",
-      description: "This operation retrives vod information",
+      description: "This operation retrieves vod information",
       operationId: "GetVOD",
       requestSchema: {
         query: {

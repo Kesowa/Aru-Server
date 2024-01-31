@@ -12,19 +12,16 @@ modelApi.get(
   "/",
   canListModel,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         modelId?: string;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { modelId, limit, offset, orderBy, asc, populate } = req.query;
@@ -60,7 +57,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get model data",
-      description: "This operation retrives device(drone) model information",
+      description: "This operation retrieves device(drone) model information",
       operationId: "GetModel",
       requestSchema: {
         query: {

@@ -12,14 +12,11 @@ organisationApi.get(
   "/",
   onlyTenantRootAccess,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { populate } = req.query;
@@ -38,7 +35,7 @@ openApi.addPath(
     get: {
       summary: "Get organisation data",
       description:
-        "This operation retrives information about currently logged in user's organisation",
+        "This operation retrieves information about currently logged in user's organisation",
       operationId: "GetOrganisation",
       requestSchema: {
         query: {

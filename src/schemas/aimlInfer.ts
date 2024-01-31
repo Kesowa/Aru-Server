@@ -3,6 +3,7 @@ import { Schema, Types } from "mongoose";
 const inferenceModels = <const>[
   { name: "violence", target: "video" },
   { name: "deepforest", target: "tiff" },
+  { name: "thermal", target: "image" },
 ];
 export type inferenceTypes = typeof inferenceModels[number];
 

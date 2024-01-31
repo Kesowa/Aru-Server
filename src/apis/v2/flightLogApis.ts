@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
@@ -10,11 +11,8 @@ const flightLogApi = Router();
 flightLogApi.get(
   "/",
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         flightLogId?: string;
         missionId?: string;
         locationId?: string;
@@ -23,8 +21,8 @@ flightLogApi.get(
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const {
@@ -72,7 +70,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get flight log information",
-      description: "This operation retrives flight log information",
+      description: "This operation retrieves flight log information",
       operationId: "GetFlightLog",
       requestSchema: {
         query: {

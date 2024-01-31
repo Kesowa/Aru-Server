@@ -6,7 +6,7 @@ import { UserType } from "../../schemas/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUsers } from "../../utils/authUtils";
 import ObjectsToCsv from "objects-to-csv";
-import { DirPath, Directory } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 
 const userApi = Router();
 
@@ -14,19 +14,16 @@ userApi.get(
   "/",
   canListUsers,
   async (
-    req: Request<
-      null,
-      {},
-      null,
-      {
+    req: Request & {
+      query: {
         genCSV?: boolean;
         limit: number;
         offset: number;
         orderBy: string;
         asc: boolean;
         populate: string[];
-      }
-    >,
+      };
+    },
     res: AuthResponse
   ) => {
     const { genCSV, limit, offset, orderBy, asc, populate } = req.query;
@@ -80,7 +77,7 @@ openApi.addPath(
   {
     get: {
       summary: "Get user data",
-      description: "This operation retrives user information",
+      description: "This operation retrieves user information",
       operationId: "GetUser",
       requestSchema: {
         query: {
