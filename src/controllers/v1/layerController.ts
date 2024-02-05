@@ -1324,6 +1324,7 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         count: d.length,
         data: d,
         flaggedFeatures: flaggedFeatures,
+        total: result.featureCount,
       });
     } else
       return res.status(400).json({
