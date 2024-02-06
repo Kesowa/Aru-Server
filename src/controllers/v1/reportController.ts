@@ -595,7 +595,7 @@ export const generatePlotReport = async (
         })
         if (reportExists) {
           req.log.warn("plot report exists, skipping. filename: " + filename);
-        };
+        }
         const plotProperties = plotFeature.properties;
 
         // ******************** PLOT DETAILS ***********************
