@@ -584,15 +584,16 @@ export const generatePlotReport = async (
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
       for (const plotFeature of flaggedPlotGeojson) {
-
-        const filename = `plot_report | ${plotFeature.properties.plotNo || "plotNo"} | ${
-          plotFeature.properties.premiseNo || "premiseNo"
-        } | ${plotFeature.properties.sys_id}.docx`;
+        const filename = `plot_report | ${
+          plotFeature.properties.plotNo || "plotNo"
+        } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${
+          plotFeature.properties.sys_id
+        }.docx`;
         const reportExists = await Document.exists({
           tenantId: res.locals.user.tenantId._id,
           missionId,
           name: filename,
-        })
+        });
         if (reportExists) {
           req.log.warn("plot report exists, skipping. filename: " + filename);
         }
@@ -703,7 +704,7 @@ export const generatePlotReport = async (
           )
             ? null
             : blockProperties.averageIncentives, // must be numeric
-};
+        };
 
         // req.log.info(data);
 
@@ -712,7 +713,7 @@ export const generatePlotReport = async (
         const buffer = await Packer.toBuffer(doc);
         const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
-        await Document.findOneAndDelete({          
+        await Document.findOneAndDelete({
           tenantId: res.locals.user.tenantId._id,
           missionId,
           name: filename,
