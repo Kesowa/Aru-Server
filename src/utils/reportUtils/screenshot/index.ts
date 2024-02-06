@@ -67,16 +67,16 @@ export class ScreenshotGenerator {
       this.mapboxPage = await this.browser.newPage();
       this.mapboxPage
         .on("console", (message) =>
-          this.logger.info(
+          this.logger.trace(
             `${message.type().substr(0, 3).toUpperCase()} ${message.text()}`
           )
         )
-        .on("pageerror", ({ message }) => this.logger.error(message))
+        .on("pageerror", ({ message }) => this.logger.debug(message))
         .on("response", (response) =>
-          this.logger.debug(`${response.status()} ${response.url()}`)
+          this.logger.trace(`${response.status()} ${response.url()}`)
         )
         .on("requestfailed", (request) =>
-          this.logger.warn(`${request.failure().errorText} ${request.url()}`)
+          this.logger.debug(`${request.failure().errorText} ${request.url()}`)
         );
       await this.loadHtmlToPage(this.mapboxPage, this.mapboxHtml);
 

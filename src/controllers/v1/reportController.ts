@@ -584,6 +584,18 @@ export const generatePlotReport = async (
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
       for (const plotFeature of flaggedPlotGeojson) {
+
+        const filename = `plot_report | ${plotFeature.properties.plotNo || "plotNo"} | ${
+          plotFeature.properties.premiseNo || "premiseNo"
+        } | ${plotFeature.properties.sys_id}.docx`;
+        const reportExists = await Document.exists({
+          tenantId: res.locals.user.tenantId._id,
+          missionId,
+          name: filename,
+        })
+        if (reportExists) {
+          req.log.warn("plot report exists, skipping. filename: " + filename);
+        };
         const plotProperties = plotFeature.properties;
 
         // ******************** PLOT DETAILS ***********************
@@ -634,7 +646,7 @@ export const generatePlotReport = async (
 
           frontViewImageBuffer,
           plotImageBuffer,
-          plotArea,
+          plotArea: plotArea.toFixed(2),
           plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
           premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
           pincode: Number.isNaN(Number(plotProperties.pincode))
@@ -651,8 +663,8 @@ export const generatePlotReport = async (
 
           // building details
 
-          buildingArea,
-          buildingFootprint: (buildingArea / plotArea) * 100,
+          buildingArea: buildingArea.toFixed(2),
+          buildingFootprint: ((buildingArea / plotArea) * 100).toFixed(2),
           buildingAvailable: plotProperties.buildingAvailable, // "Yes" or "No"
           floorCount: plotProperties.shopFloor, // although seems like a number, can contain string like "G+(some number)"
           buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
@@ -667,13 +679,13 @@ export const generatePlotReport = async (
           // block details
 
           blockImageBuffer,
-          blockArea,
-          greeneryArea,
-          canopyArea,
-          waterbodyArea,
-          greeneryPercent: (greeneryArea / blockArea) * 100,
-          canopyPercent: (canopyArea / blockArea) * 100,
-          waterbodyPercent: (waterbodyArea / blockArea) * 100,
+          blockArea: blockArea.toFixed(2),
+          greeneryArea: greeneryArea.toFixed(2),
+          canopyArea: canopyArea.toFixed(2),
+          waterbodyArea: waterbodyArea.toFixed(2),
+          greeneryPercent: ((greeneryArea / blockArea) * 100).toFixed(2),
+          canopyPercent: ((canopyArea / blockArea) * 100).toFixed(2),
+          waterbodyPercent: ((waterbodyArea / blockArea) * 100).toFixed(2),
           blockName: plotProperties.blockName,
           garbageCollectionInfo: blockProperties.garbageCollectionInfo,
           averageBuildingHeight: Number.isNaN(
@@ -691,19 +703,20 @@ export const generatePlotReport = async (
           )
             ? null
             : blockProperties.averageIncentives, // must be numeric
-        };
+};
 
         // req.log.info(data);
 
         // saving the document
         const doc = generatePlotReportDocument(data);
         const buffer = await Packer.toBuffer(doc);
-        const filename = `${plotFeature.properties.plotNo || "plotNo"}-${
-          plotFeature.properties.premiseNo || "premiseNo"
-        }-${plotFeature.properties.sys_id}-plot-report.docx`;
         const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
 
-        await Document.findOneAndDelete({ name: filename });
+        await Document.findOneAndDelete({          
+          tenantId: res.locals.user.tenantId._id,
+          missionId,
+          name: filename,
+        });
 
         const docDB = new Document({
           name: filename,

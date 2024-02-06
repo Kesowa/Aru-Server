@@ -18,7 +18,7 @@ export interface IPlotReportData {
   // page 3
 
   // plot details
-  plotArea?: number; // generated
+  plotArea?: string; // generated
   plotNo?: string; // provided
   premiseNo?: string; // provided
   pincode?: string; // provided
@@ -30,8 +30,8 @@ export interface IPlotReportData {
   tax?: string; // provided
 
   // building details
-  buildingArea?: number; // generated
-  buildingFootprint?: number; // generated, (building area / plot area) * 100% ??
+  buildingArea?: string; // generated
+  buildingFootprint?: string; // generated, (building area / plot area) * 100% ??
   buildingAvailable?: string; // provided
   floorCount?: string; // provided
   buildingNo?: string; // provided
@@ -39,13 +39,13 @@ export interface IPlotReportData {
   buildingHeight?: string; // provided
 
   // block details
-  blockArea?: number; // generated
-  greeneryArea?: number; // generated
-  canopyArea?: number; // generated
-  waterbodyArea?: number; // generated
-  greeneryPercent?: number; // generated
-  canopyPercent?: number; // generated
-  waterbodyPercent?: number; // generated
+  blockArea?: string; // generated
+  greeneryArea?: string; // generated
+  canopyArea?: string; // generated
+  waterbodyArea?: string; // generated
+  greeneryPercent?: string; // generated
+  canopyPercent?: string; // generated
+  waterbodyPercent?: string; // generated
   garbageCollectionInfo?: string; // provided
   averageBuildingHeight?: string; // provided
   averageBlockHeight?: string; // provided
