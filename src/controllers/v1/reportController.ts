@@ -584,7 +584,7 @@ export const generatePlotReport = async (
 
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
-      for (const plotFeature of flaggedPlotGeojson) {
+      for (const plotFeature of flaggedPlotGeojson) {try {
         const filename = `plot_report | ${
           plotFeature.properties.plotNo || "plotNo"
         } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${
@@ -739,7 +739,12 @@ export const generatePlotReport = async (
         missionSpecificSocket
           .to(missionId.toString())
           .emit("REPORT_GENERATION_COMPLETE", savedDoc);
-      }
+      } catch (err) {
+          req.log.error({err, plot: plotFeature.properties}, "REPORT GENERATION FAILED for " + missionId);
+          missionSpecificSocket
+            .to(missionId.toString())
+            .emit("REPORT_GENERATION_FAILED", {...err, plotFeature});
+        }}
     } catch (error) {
       req.log.error(error);
       missionSpecificSocket
