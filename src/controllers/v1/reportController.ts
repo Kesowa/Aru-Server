@@ -740,7 +740,6 @@ export const generatePlotReport = async (
           .to(missionId.toString())
           .emit("REPORT_GENERATION_COMPLETE", savedDoc);
       }
-
     } catch (error) {
       req.log.error(error);
       missionSpecificSocket
