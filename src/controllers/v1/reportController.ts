@@ -1,4 +1,5 @@
 import * as turf from "@turf/turf";
+
 import { Request } from "express";
 import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
@@ -399,10 +400,6 @@ export const generateReport = async (
         .emit("REPORT_GENERATION_COMPLETE", savedDoc);
     } catch (error) {
       req.log.error(error);
-      res.status(500).json({
-        status: false,
-        message: "Server Error",
-      });
       missionSpecificSocket
         .to(missionId.toString())
         .emit("REPORT_GENERATION_FAILED", error);
@@ -537,6 +534,10 @@ export const generatePlotReport = async (
         userIds.map((id) => User.findById(id, { name: 1 }))
       );
       const users = userDocs.map((user) => user.name);
+      res.status(200).json({
+        status: true,
+        message: "Data collected, generating plot reports...",
+      });
 
       // =================================== DETAILS THAT WON'T VARY ACROSS REPORTS OF DIFFERENT PLOTS ==================================
 
@@ -740,16 +741,8 @@ export const generatePlotReport = async (
           .emit("REPORT_GENERATION_COMPLETE", savedDoc);
       }
 
-      res.status(200).json({
-        status: true,
-        message: "Successfully Generated ALL Plot Reports",
-      });
     } catch (error) {
       req.log.error(error);
-      res.status(500).json({
-        status: false,
-        message: "Server Error",
-      });
       missionSpecificSocket
         .to(missionId.toString())
         .emit("REPORT_GENERATION_FAILED", error);
