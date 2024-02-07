@@ -1736,6 +1736,7 @@ db.layers.insertMany([
     commentCount: 0,
     createdAt: ISODate("2022-01-15T00:00:00Z"),
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    featureCount: 5213,
     __v: 0,
   },
   {

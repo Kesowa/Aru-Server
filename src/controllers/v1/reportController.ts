@@ -1,4 +1,5 @@
 import * as turf from "@turf/turf";
+
 import { Request } from "express";
 import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
@@ -399,10 +400,6 @@ export const generateReport = async (
         .emit("REPORT_GENERATION_COMPLETE", savedDoc);
     } catch (error) {
       req.log.error(error);
-      res.status(500).json({
-        status: false,
-        message: "Server Error",
-      });
       missionSpecificSocket
         .to(missionId.toString())
         .emit("REPORT_GENERATION_FAILED", error);
@@ -537,6 +534,10 @@ export const generatePlotReport = async (
         userIds.map((id) => User.findById(id, { name: 1 }))
       );
       const users = userDocs.map((user) => user.name);
+      res.status(200).json({
+        status: true,
+        message: "Data collected, generating plot reports...",
+      });
 
       // =================================== DETAILS THAT WON'T VARY ACROSS REPORTS OF DIFFERENT PLOTS ==================================
 
@@ -584,158 +585,178 @@ export const generatePlotReport = async (
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
       for (const plotFeature of flaggedPlotGeojson) {
-        const plotProperties = plotFeature.properties;
+        try {
+          const filename = `plot_report | ${
+            plotFeature.properties.plotNo || "plotNo"
+          } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${
+            plotFeature.properties.sys_id
+          }.docx`;
+          const reportExists = await Document.exists({
+            tenantId: res.locals.user.tenantId._id,
+            missionId,
+            name: filename,
+          });
+          if (reportExists) {
+            req.log.warn("plot report exists, skipping. filename: " + filename);
+          }
+          const plotProperties = plotFeature.properties;
 
-        // ******************** PLOT DETAILS ***********************
+          // ******************** PLOT DETAILS ***********************
 
-        // // front view image
-        // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
-        // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
-        const plotArea = findArea([plotFeature]);
-        const plotImageBuffer = await saveScreenshot(
-          [plotFeature],
-          [rasterFilePath],
-          req.log
-        );
+          // // front view image
+          // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
+          // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
+          const plotArea = findArea([plotFeature]);
+          const plotImageBuffer = await saveScreenshot(
+            [plotFeature],
+            [rasterFilePath],
+            req.log
+          );
 
-        // ******************** BUILDING DETAILS ************************
+          // ******************** BUILDING DETAILS ************************
 
-        // for multiple buildings:
-        // const plotBuildingFeatures = buildingsGeojson.features.filter((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
+          // for multiple buildings:
+          // const plotBuildingFeatures = buildingsGeojson.features.filter((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
 
-        // for single building:
-        const plotBuildingFeature = buildingsGeojson.features.find(
-          (feature) => feature.properties.premiseNo === plotProperties.premiseNo
-        );
+          // for single building:
+          const plotBuildingFeature = buildingsGeojson.features.find(
+            (feature) =>
+              feature.properties.premiseNo === plotProperties.premiseNo
+          );
 
-        const plotLayerFile = await layerFiles.findOne({
-          tenantId: res.locals.user.tenantId._id,
-          layerId: plotLayer._id,
-          sys_Id: plotFeature.properties.sys_id,
-        });
-        const frontViewImageBuffer = await readFile(
-          DirPath(Directory.DEFAULT, plotLayerFile.filePath)
-        );
+          const plotLayerFile = await layerFiles.findOne({
+            tenantId: res.locals.user.tenantId._id,
+            layerId: plotLayer._id,
+            sys_Id: plotFeature.properties.sys_id,
+          });
+          const frontViewImageBuffer = await readFile(
+            DirPath(Directory.DEFAULT, plotLayerFile.filePath)
+          );
 
-        const buildingProperties = plotBuildingFeature.properties;
+          const buildingProperties = plotBuildingFeature.properties;
 
-        const buildingArea = findArea([plotBuildingFeature]);
+          const buildingArea = findArea([plotBuildingFeature]);
 
-        // ================= PUTTING TOGETHER THE DATA =======================
+          // ================= PUTTING TOGETHER THE DATA =======================
 
-        const data: IPlotReportData = {
-          // cover page details
+          const data: IPlotReportData = {
+            // cover page details
 
-          date,
-          users,
-          coverImageBuffer,
+            date,
+            users,
+            coverImageBuffer,
 
-          // plot details
+            // plot details
 
-          frontViewImageBuffer,
-          plotImageBuffer,
-          plotArea,
-          plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
-          premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
-          pincode: Number.isNaN(Number(plotProperties.pincode))
-            ? null
-            : plotProperties.pincode, // must be numeric
-          category: plotProperties.category,
-          infraction: plotProperties.infraction, // "Yes" or "No"
-          isGreenTopEligible: plotProperties.isGreenTopEligible, // "Yes" or "No"
-          isSolarPlantEligible: plotProperties.isSolarPlantEligible, // "Yes" or "No"
-          hasTradeLicense: plotProperties.hasTradeLicense, // "Yes" or "No"
-          tax: Number.isNaN(Number(plotProperties.tax))
-            ? null
-            : plotProperties.tax, // must be numeric
+            frontViewImageBuffer,
+            plotImageBuffer,
+            plotArea: plotArea.toFixed(2),
+            plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
+            premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
+            pincode: Number.isNaN(Number(plotProperties.pincode))
+              ? null
+              : plotProperties.pincode, // must be numeric
+            category: plotProperties.category,
+            infraction: plotProperties.infraction, // "Yes" or "No"
+            isGreenTopEligible: plotProperties.isGreenTopEligible, // "Yes" or "No"
+            isSolarPlantEligible: plotProperties.isSolarPlantEligible, // "Yes" or "No"
+            hasTradeLicense: plotProperties.hasTradeLicense, // "Yes" or "No"
+            tax: Number.isNaN(Number(plotProperties.tax))
+              ? null
+              : plotProperties.tax, // must be numeric
 
-          // building details
+            // building details
 
-          buildingArea,
-          buildingFootprint: (buildingArea / plotArea) * 100,
-          buildingAvailable: plotProperties.buildingAvailable, // "Yes" or "No"
-          floorCount: plotProperties.shopFloor, // although seems like a number, can contain string like "G+(some number)"
-          buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
-          hasCompletionCertificate:
-            plotProperties.buildingStatus === "Constructed" ? "Yes" : "No",
-          buildingHeight: Number.isNaN(
-            Number(buildingProperties.buildingHeight)
-          )
-            ? null
-            : buildingProperties.buildingHeight, // must be numeric
+            buildingArea: buildingArea.toFixed(2),
+            buildingFootprint: ((buildingArea / plotArea) * 100).toFixed(2),
+            buildingAvailable: plotProperties.buildingAvailable, // "Yes" or "No"
+            floorCount: plotProperties.shopFloor, // although seems like a number, can contain string like "G+(some number)"
+            buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
+            hasCompletionCertificate:
+              plotProperties.buildingStatus === "Constructed" ? "Yes" : "No",
+            buildingHeight: Number.isNaN(
+              Number(buildingProperties.buildingHeight)
+            )
+              ? null
+              : buildingProperties.buildingHeight, // must be numeric
 
-          // block details
+            // block details
 
-          blockImageBuffer,
-          blockArea,
-          greeneryArea,
-          canopyArea,
-          waterbodyArea,
-          greeneryPercent: (greeneryArea / blockArea) * 100,
-          canopyPercent: (canopyArea / blockArea) * 100,
-          waterbodyPercent: (waterbodyArea / blockArea) * 100,
-          blockName: plotProperties.blockName,
-          garbageCollectionInfo: blockProperties.garbageCollectionInfo,
-          averageBuildingHeight: Number.isNaN(
-            Number(blockProperties.averageBuildingHeight)
-          )
-            ? null
-            : blockProperties.averageBuildingHeight, // must be numeric
-          averageBlockHeight: Number.isNaN(
-            Number(blockProperties.averageBlockHeight)
-          )
-            ? null
-            : blockProperties.averageBlockHeight, // must be numeric
-          averageIncentives: Number.isNaN(
-            Number(blockProperties.averageIncentives)
-          )
-            ? null
-            : blockProperties.averageIncentives, // must be numeric
-        };
+            blockImageBuffer,
+            blockArea: blockArea.toFixed(2),
+            greeneryArea: greeneryArea.toFixed(2),
+            canopyArea: canopyArea.toFixed(2),
+            waterbodyArea: waterbodyArea.toFixed(2),
+            greeneryPercent: ((greeneryArea / blockArea) * 100).toFixed(2),
+            canopyPercent: ((canopyArea / blockArea) * 100).toFixed(2),
+            waterbodyPercent: ((waterbodyArea / blockArea) * 100).toFixed(2),
+            blockName: plotProperties.blockName,
+            garbageCollectionInfo: blockProperties.garbageCollectionInfo,
+            averageBuildingHeight: Number.isNaN(
+              Number(blockProperties.averageBuildingHeight)
+            )
+              ? null
+              : blockProperties.averageBuildingHeight, // must be numeric
+            averageBlockHeight: Number.isNaN(
+              Number(blockProperties.averageBlockHeight)
+            )
+              ? null
+              : blockProperties.averageBlockHeight, // must be numeric
+            averageIncentives: Number.isNaN(
+              Number(blockProperties.averageIncentives)
+            )
+              ? null
+              : blockProperties.averageIncentives, // must be numeric
+          };
 
-        // req.log.info(data);
+          // req.log.info(data);
 
-        // saving the document
-        const doc = generatePlotReportDocument(data);
-        const buffer = await Packer.toBuffer(doc);
-        const filename = `${plotFeature.properties.plotNo || "plotNo"}-${
-          plotFeature.properties.premiseNo || "premiseNo"
-        }-${plotFeature.properties.sys_id}-plot-report.docx`;
-        const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
+          // saving the document
+          const doc = generatePlotReportDocument(data);
+          const buffer = await Packer.toBuffer(doc);
+          const { size } = await saveFile(
+            Directory.DOCUMENTS,
+            filename,
+            buffer
+          );
 
-        await Document.findOneAndDelete({ name: filename });
+          await Document.findOneAndDelete({
+            tenantId: res.locals.user.tenantId._id,
+            missionId,
+            name: filename,
+          });
 
-        const docDB = new Document({
-          name: filename,
-          modDate: new Date(),
-          fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
-          fileType: "docx",
-          folderName: "root1234",
-          filePath: `/documents/${filename}`,
-          missionId: missionId,
-          tenantId: res.locals.user.tenantId,
-          createdBy: res.locals.user._id,
-          updatedBy: res.locals.user._id,
-        });
-        const savedDoc = await docDB.save();
+          const docDB = new Document({
+            name: filename,
+            modDate: new Date(),
+            fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
+            fileType: "docx",
+            folderName: "root1234",
+            filePath: `/documents/${filename}`,
+            missionId: missionId,
+            tenantId: res.locals.user.tenantId,
+            createdBy: res.locals.user._id,
+            updatedBy: res.locals.user._id,
+          });
+          const savedDoc = await docDB.save();
 
-        req.log.info("Report Generation Complete");
+          req.log.info("Report Generation Complete");
 
-        missionSpecificSocket
-          .to(missionId.toString())
-          .emit("REPORT_GENERATION_COMPLETE", savedDoc);
+          missionSpecificSocket
+            .to(missionId.toString())
+            .emit("REPORT_GENERATION_COMPLETE", savedDoc);
+        } catch (err) {
+          req.log.error(
+            { err, plot: plotFeature.properties },
+            "REPORT GENERATION FAILED for " + missionId
+          );
+          missionSpecificSocket
+            .to(missionId.toString())
+            .emit("REPORT_GENERATION_FAILED", { ...err, plotFeature });
+        }
       }
-
-      res.status(200).json({
-        status: true,
-        message: "Successfully Generated ALL Plot Reports",
-      });
     } catch (error) {
       req.log.error(error);
-      res.status(500).json({
-        status: false,
-        message: "Server Error",
-      });
       missionSpecificSocket
         .to(missionId.toString())
         .emit("REPORT_GENERATION_FAILED", error);
