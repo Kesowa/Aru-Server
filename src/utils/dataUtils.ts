@@ -92,23 +92,21 @@ export const saveVectorLayer = async (
       const dataset = (await gdal.open(absLayerPath)).datasets[0];
       const info = await gdal.ogrinfo(dataset);
 
-      const { authority, code } = info.layers[0].geometryFields[0].coordinateSystem.projjson.id;
+      const { authority, code } =
+        info.layers[0].geometryFields[0].coordinateSystem.projjson.id;
       const existingCRS = `${authority}:${code}`;
 
-      if(existingCRS !== "EPSG:4326") {
-        const options = [
-            '-f', 'GeoJSON',
-            '-t_srs', 'EPSG:4326'
-        ];
+      if (existingCRS !== "EPSG:4326") {
+        const options = ["-f", "GeoJSON", "-t_srs", "EPSG:4326"];
         const output = await gdal.ogr2ogr(dataset, options);
         const bytes = await gdal.getFileBytes(output); // it is an Uint8Array
         geojsonData = JSON.parse(Buffer.from(bytes).toString("utf-8"));
       } else {
         geojsonData = JSON.parse(await fs.readFile(absLayerPath, "utf8"));
       }
-      
-      if(geojsonData.crs) delete geojsonData.crs;
-      
+
+      if (geojsonData.crs) delete geojsonData.crs;
+
       // ===========================================================
     }
     if (ext == ".kml") {
