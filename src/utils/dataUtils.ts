@@ -4,16 +4,17 @@ import * as pathUtils from "./pathUtils";
 import path from "path";
 import { Logger } from "pino";
 import fs from "fs/promises";
-import kmlToGjson from "tokml";
+import tokml from "tokml";
 import shp2json from "shpjs";
 import { GeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
-import tokml from "tokml";
 import { DirPath, Directory } from "../constants";
 import archiver from "archiver";
 import { createWriteStream } from "fs";
 import { Stream } from "stream";
 import initGdalJs from "gdal3.js/node";
+import { DOMParser } from "xmldom";
+import togeojson from "@mapbox/togeojson";
 
 const asyncExec = promisify(exec);
 
@@ -113,9 +114,9 @@ export const saveVectorLayer = async (
     if (ext == ".kml") {
       const fileData = await fs.readFile(absLayerPath, "utf8");
       const kmlData = new DOMParser().parseFromString(fileData, "text/xml");
-      geojsonData = kmlToGjson.kml(kmlData, { styles: true });
+      geojsonData = togeojson.kml(kmlData, { styles: true });
     }
-    if (ext == ".shp" || ext == ".zip") {
+    if (ext == ".zip") {
       const fileData = await fs.readFile(absLayerPath);
       geojsonData = await shp2json(fileData);
     }
