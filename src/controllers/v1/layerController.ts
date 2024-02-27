@@ -38,6 +38,7 @@ import type { IRaster } from "../../schemas/rasterprops";
 import type { IPackage } from "../../schemas/package";
 import type { ILayerGroup } from "../../schemas/layerGroup";
 import {
+    CESIUM_TOKEN,
   Directory,
   DirPath,
   TITILER_SERVER,
@@ -57,6 +58,7 @@ import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import { uploadPointCloud } from "../../utils/cesium";
 
 // ********* create ***********
 
@@ -117,7 +119,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         updatedBy: res.locals.user._id,
       });
     } else if (req.params.type == "Raster") {
-      const tif_loc = `/raster/${req.file?.filename}`;
+      const file_loc = `/raster/${req.file?.filename}`;
 
       //----------TITILER API HAS CHANGED-------------------
       //  Metadata api has been removed
@@ -136,8 +138,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let minP = 0;
       let maxP = 1;
       let center = { lat: 0, lng: 0 };
+      let metadata = {};
       if (rasterType.name == "DEM") {
-        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${file_loc}`;
         //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
         req.log.info("fetching metadata from titiler");
         let response = await fetch(metaDataURL, {
@@ -149,7 +152,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         //-------handle for detail:not found----
         minP = metadata["1"]["min"];
         maxP = metadata["1"]["max"];
-        metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
+        metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${file_loc}`;
         response = await fetch(metaDataURL, {
           method: "GET",
         });
@@ -159,6 +162,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
         };
       }
+      else if (rasterType.name == "POINT_CLOUD") {
+        metadata = await uploadPointCloud(CESIUM_TOKEN, pathUtils.absPath(pathUtils.Directory.ROOT, file_loc), name);
+      }
       const size: number = Number(
         (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
       );
@@ -166,7 +172,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         name,
         type: "Raster",
         raster,
-        layerpath: `/raster/${req?.file?.filename}`,
+        layerpath: file_loc,
         fileSize: size,
         minp: minP,
         maxp: maxP,
@@ -177,6 +183,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
         createdBy: res.locals.user._id,
         updatedBy: res.locals.user._id,
+        metadata,
       });
     } else {
       return res.json({

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
+import { CesiumMetadata } from "../utils/cesium";
 export interface ILayer {
   _id: mongoose.Types.ObjectId;
   type: "Vector" | "Raster"; // index
@@ -35,6 +36,7 @@ export interface ILayer {
   commentCount: Number;
   createdAt: Date; // index
   updatedAt: Date;
+  metadata?: CesiumMetadata;
 }
 export const LayerType = {
   _id: Types.String(),
@@ -65,6 +67,7 @@ export const LayerType = {
   isFlagged: Types.Boolean(),
   createdAt: Types.DateTime(), // index
   updatedAt: Types.DateTime(),
+  metadata: Types.Object({ properties: {} }),
 };
 const layerSchema = new mongoose.Schema<ILayer>(
   {
@@ -180,6 +183,10 @@ const layerSchema = new mongoose.Schema<ILayer>(
     updatedAt: {
       type: Date,
     },
+    metadata: {
+      type: Object,
+      required: false,
+    }
   },
   {
     timestamps: true,
@@ -192,7 +199,7 @@ layerSchema.index({
   type: 1,
   isPublic: 1,
 });
-layerSchema.pre("save", async function () {
+layerSchema.pre("save", async function() {
   await Tenant.updateOne(
     { _id: this.tenantId },
     { $inc: { actualSize: this.fileSize, allLayerSize: this.fileSize } }
@@ -204,7 +211,7 @@ layerSchema.pre("save", async function () {
 });
 layerSchema.post(
   "remove",
-  async function (this: {
+  async function(this: {
     tenantId: mongoose.Types.ObjectId;
     missionId: mongoose.Types.ObjectId;
     fileSize: number;

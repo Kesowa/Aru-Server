@@ -2,35 +2,6 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { createReadStream } from "fs";
 import path from "path";
 
-type AssetResponse =
-  {
-    assetMetadata: {
-      id: number,
-      type: string,
-      name: string,
-      description: string,
-      bytes: number,
-      attribution: string,
-      dateAdded: string,
-      exportable: true,
-      status: string,
-      percentComplete: number,
-      archivable: true
-    },
-    uploadLocation: {
-      bucket: string,
-      endpoint: string,
-      prefix: string,
-      accessKey: string,
-      secretAccessKey: string,
-      sessionToken: string
-    },
-    onComplete: {
-      method: string,
-      url: string,
-      fields: {}
-    }
-  }
 export async function uploadPointCloud(token: string, filePath: string, name: string) {
 
   const postBody = {
@@ -99,3 +70,33 @@ async function uploadFile(options: {
   });
   await s3.send(cmd)
 }
+type AssetResponse =
+  {
+    assetMetadata: {
+      id: number,
+      type: string,
+      name: string,
+      description: string,
+      bytes: number,
+      attribution: string,
+      dateAdded: string,
+      exportable: true,
+      status: string,
+      percentComplete: number,
+      archivable: true
+    },
+    uploadLocation: {
+      bucket: string,
+      endpoint: string,
+      prefix: string,
+      accessKey: string,
+      secretAccessKey: string,
+      sessionToken: string
+    },
+    onComplete: {
+      method: string,
+      url: string,
+      fields: {}
+    }
+  }
+export type CesiumMetadata = AssetResponse["assetMetadata"];
