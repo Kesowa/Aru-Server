@@ -3,7 +3,6 @@ import { createReadStream } from "fs";
 import path from "path";
 
 export async function uploadPointCloud(token: string, filePath: string, name: string) {
-
   const postBody = {
     name: name,
     description: 'See [Wikipedia](https://en.wikipedia.org/?curid=217577).',
@@ -41,6 +40,18 @@ export async function uploadPointCloud(token: string, filePath: string, name: st
   return data.assetMetadata;
 }
 
+export async function deletePointCloud(token: string, assetId: CesiumMetadata["id"]) {
+  const response = await fetch(
+    `https://api.cesium.com/v1/assets/${assetId}`,
+    {
+      method: "delete",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    }
+  );
+  return response.status;
+}
 
 async function uploadFile(options: {
   aws: {
@@ -70,6 +81,7 @@ async function uploadFile(options: {
   });
   await s3.send(cmd)
 }
+
 type AssetResponse =
   {
     assetMetadata: {
@@ -99,4 +111,5 @@ type AssetResponse =
       fields: {}
     }
   }
+
 export type CesiumMetadata = AssetResponse["assetMetadata"];

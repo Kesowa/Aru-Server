@@ -58,7 +58,7 @@ import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
-import { uploadPointCloud } from "../../utils/cesium";
+import { deletePointCloud, uploadPointCloud } from "../../utils/cesium";
 
 // ********* create ***********
 
@@ -300,6 +300,9 @@ export const deleteLayer = async (req: Request, res: AuthResponse) => {
         });
       } else {
         const conf = await deletePublicFileUsingPath(d.layerpath);
+        if (d.metadata?.id !== undefined) {
+          await deletePointCloud(CESIUM_TOKEN, d.metadata.id);
+        }
         if (conf) {
           req.log.info("Files deleted");
         } else {
