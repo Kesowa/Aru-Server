@@ -15,6 +15,7 @@ export type DocPath = string;
  * All folders and subfolders in use
  */
 export enum Directory {
+  POINT_CLOUD = "point_cloud",
   CSV = "csv",
   DOCUMENTS = "documents",
   FLIGHT_LOGS = "flight_logs",

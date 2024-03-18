@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
-import { CesiumMetadata } from "../utils/cesium";
 export interface ILayer {
   _id: mongoose.Types.ObjectId;
   type: "Vector" | "Raster"; // index
@@ -33,10 +32,10 @@ export interface ILayer {
   flaggedFeatures: number[];
   isFlagged: boolean;
   isThreadExist: boolean;
-  commentCount: Number;
+  commentCount: number;
   createdAt: Date; // index
   updatedAt: Date;
-  metadata?: CesiumMetadata;
+  metadata?: string;
 }
 export const LayerType = {
   _id: Types.String(),
@@ -67,7 +66,7 @@ export const LayerType = {
   isFlagged: Types.Boolean(),
   createdAt: Types.DateTime(), // index
   updatedAt: Types.DateTime(),
-  metadata: Types.Object({ properties: {} }),
+  metadata: Types.String(),
 };
 const layerSchema = new mongoose.Schema<ILayer>(
   {
@@ -184,7 +183,7 @@ const layerSchema = new mongoose.Schema<ILayer>(
       type: Date,
     },
     metadata: {
-      type: Object,
+      type: String,
       required: false,
     }
   },

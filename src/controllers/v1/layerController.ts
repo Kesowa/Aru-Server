@@ -59,6 +59,7 @@ import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
 import { deletePointCloud, uploadPointCloud } from "../../utils/cesium";
+import { LazToTiles3D } from "../../utils/pointcloud";
 
 // ********* create ***********
 
@@ -163,7 +164,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         };
       }
       else if (rasterType.name == "POINT_CLOUD") {
-        metadata = await uploadPointCloud(CESIUM_TOKEN, pathUtils.absPath(pathUtils.Directory.ROOT, file_loc), name);
+        metadata = await LazToTiles3D(file_loc);
       }
       const size: number = Number(
         (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
