@@ -13,6 +13,7 @@ import { DirPath, Directory } from "../constants";
 import archiver from "archiver";
 import { createWriteStream } from "fs";
 import { Stream } from "stream";
+import { ObjectId } from "bson";
 
 const asyncExec = promisify(exec);
 
@@ -108,6 +109,9 @@ export const saveVectorLayer = async (
       } else {
         flagColor = getFlagColor(geojsonData);
       }
+      geojsonData.features.forEach(feature => {
+        feature.properties.sys_id = new ObjectId().toHexString();
+      });
       const stringData = JSON.stringify(geojsonData);
       try {
         await fs.rm(absLayerPath);
