@@ -15,6 +15,7 @@ import { Stream } from "stream";
 import initGdalJs from "gdal3.js/node";
 import { DOMParser } from "xmldom";
 import togeojson from "@mapbox/togeojson";
+import { ObjectId } from "bson";
 
 const asyncExec = promisify(exec);
 
@@ -131,6 +132,9 @@ export const saveVectorLayer = async (
       } else {
         flagColor = getFlagColor(geojsonData);
       }
+      geojsonData.features.forEach(feature => {
+        feature.properties.sys_id = new ObjectId().toHexString();
+      });
       const stringData = JSON.stringify(geojsonData);
       try {
         await fs.rm(absLayerPath);
