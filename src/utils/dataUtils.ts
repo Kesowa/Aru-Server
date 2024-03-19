@@ -132,7 +132,7 @@ export const saveVectorLayer = async (
       } else {
         flagColor = getFlagColor(geojsonData);
       }
-      geojsonData.features.forEach(feature => {
+      geojsonData.features.forEach((feature) => {
         feature.properties.sys_id = new ObjectId().toHexString();
       });
       const stringData = JSON.stringify(geojsonData);
