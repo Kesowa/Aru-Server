@@ -506,7 +506,7 @@ export const generatePlotReport = async (
         if (block != undefined) {
           block.push(plotFeature);
         } else {
-          const array = new Array();
+          const array = [];
           array.push(plotFeature);
           PlotsByBlock.set(plotFeature.properties.blockName, array);
         }
