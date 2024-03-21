@@ -499,7 +499,10 @@ export const generatePlotReport = async (
         plotLayer.flaggedFeatures.includes(index)
       );
 
-      const PlotsByBlock: Map<string, Array<Feature<turf.MultiPolygon, IPlotProperties>>> = new Map();
+      const PlotsByBlock: Map<
+        string,
+        Array<Feature<turf.MultiPolygon, IPlotProperties>>
+      > = new Map();
 
       for (const plotFeature of flaggedPlotGeojson) {
         const block = PlotsByBlock.get(plotFeature.properties.blockName);
@@ -566,22 +569,29 @@ export const generatePlotReport = async (
       );
       // await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); // For Debugging
 
+      const waterbodyGeojson = await readGeoJson(
+        DirPath(Directory.DEFAULT, waterbodyLayer.layerpath)
+      );
 
-      const waterbodyGeojson = await readGeoJson(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
+      const greeneryGeojson = await readGeoJson(
+        DirPath(Directory.DEFAULT, greeneryLayer.layerpath)
+      );
 
-      const greeneryGeojson = await readGeoJson(DirPath(Directory.DEFAULT, greeneryLayer.layerpath));
-
-      const canopyGeojson = await readGeoJson(DirPath(Directory.DEFAULT, treeCoverLayer.layerpath));
+      const canopyGeojson = await readGeoJson(
+        DirPath(Directory.DEFAULT, treeCoverLayer.layerpath)
+      );
 
       // ==================================================================================================================================
 
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
       for (const blockName of PlotsByBlock.keys()) {
-      // ************* BLOCK DETAILS ******************
-      // All plots belong to same block, so block properties need not be calculated repeatedly
+        // ************* BLOCK DETAILS ******************
+        // All plots belong to same block, so block properties need not be calculated repeatedly
 
-        const blockGeojson = actionAreaGeojson.features.find(block => block.properties.blockName == blockName);
+        const blockGeojson = actionAreaGeojson.features.find(
+          (block) => block.properties.blockName == blockName
+        );
         const blockArea = turf.area(blockGeojson);
         const blockImageBuffer = await saveScreenshot(
           [blockGeojson],
@@ -590,22 +600,32 @@ export const generatePlotReport = async (
         );
         const blockProperties = blockGeojson.properties; // block layer will have only one MultiPolygon features
 
-        const waterbodyArea = turf.area(turf.intersect(waterbodyGeojson, blockGeojson));
-        const greeneryArea = turf.area(turf.intersect(greeneryGeojson, blockGeojson));
-        const canopyArea = turf.area(turf.intersect(canopyGeojson, blockGeojson));
+        const waterbodyArea = turf.area(
+          turf.intersect(waterbodyGeojson, blockGeojson)
+        );
+        const greeneryArea = turf.area(
+          turf.intersect(greeneryGeojson, blockGeojson)
+        );
+        const canopyArea = turf.area(
+          turf.intersect(canopyGeojson, blockGeojson)
+        );
 
         for (const plotFeature of PlotsByBlock.get(blockName)) {
           try {
-            const filename = `plot_report | ${plotFeature.properties.plotNo || "plotNo"
-              } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${plotFeature.properties.sys_id
-              }.docx`;
+            const filename = `plot_report | ${
+              plotFeature.properties.plotNo || "plotNo"
+            } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${
+              plotFeature.properties.sys_id
+            }.docx`;
             const reportExists = await Document.exists({
               tenantId: res.locals.user.tenantId._id,
               missionId,
               name: filename,
             });
             if (reportExists) {
-              req.log.warn("plot report exists, skipping. filename: " + filename);
+              req.log.warn(
+                "plot report exists, skipping. filename: " + filename
+              );
             }
             const plotProperties = plotFeature.properties;
 
