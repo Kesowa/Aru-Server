@@ -438,7 +438,7 @@ export const generatePlotReport = async (
         vector.findOne({ name: VectorName.Green_Verge }),
       ]);
       const [
-        blockBoundaryLayer,
+        actionAreaLayer,
         plotLayer,
         buildingFootprintLayer,
         waterbodyLayer,
@@ -489,9 +489,9 @@ export const generatePlotReport = async (
       const buildingsGeojson = await readGeoJson<
         Feature<turf.MultiPolygon, IBuildingProperties>
       >(DirPath(Directory.DEFAULT, buildingFootprintLayer.layerpath));
-      const blockGeojson = await readGeoJson<
+      const actionAreaGeojson = await readGeoJson<
         Feature<turf.MultiPolygon, IBlockProperties>
-      >(DirPath(Directory.DEFAULT, blockBoundaryLayer.layerpath));
+      >(DirPath(Directory.DEFAULT, actionAreaLayer.layerpath));
 
       // multiple plot reports will be generated, one for each flagged plot
       // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
@@ -499,6 +499,18 @@ export const generatePlotReport = async (
         plotLayer.flaggedFeatures.includes(index)
       );
 
+      const PlotsByBlock: Map<string, Array<Feature<turf.MultiPolygon, IPlotProperties>>> = new Map();
+
+      for (const plotFeature of flaggedPlotGeojson) {
+        const block = PlotsByBlock.get(plotFeature.properties.blockName);
+        if (block != undefined) {
+          block.push(plotFeature);
+        } else {
+          const array = new Array();
+          array.push(plotFeature);
+          PlotsByBlock.set(plotFeature.properties.blockName, array);
+        }
+      }
       // plot images (one per plot, fail safe if absent)
       // const flaggedPlotFile = await layerFiles.find({
       //   tenantId: res.locals.user.tenantId._id,
@@ -515,8 +527,8 @@ export const generatePlotReport = async (
         new Set<string>([
           String(plotLayer.createdBy),
           String(plotLayer.updatedBy),
-          String(blockBoundaryLayer.createdBy),
-          String(blockBoundaryLayer.updatedBy),
+          String(actionAreaLayer.createdBy),
+          String(actionAreaLayer.updatedBy),
           String(buildingFootprintLayer.createdBy),
           String(buildingFootprintLayer.updatedBy),
           String(waterbodyLayer.createdBy),
@@ -544,7 +556,7 @@ export const generatePlotReport = async (
       // ************* COVER PAGE DETAILS ****************
       // Cover page in sample report shows block boundary and all the plots in the block, so it will be same for all plot reports
       const coverPageVectorFeatures = [
-        ...blockGeojson.features,
+        ...actionAreaGeojson.features,
         ...plotGeojson.features,
       ];
       const coverImageBuffer = await saveScreenshot(
@@ -554,205 +566,202 @@ export const generatePlotReport = async (
       );
       // await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); // For Debugging
 
-      // ************* BLOCK DETAILS ******************
-      // All plots belong to same block, so block properties need not be calculated repeatedly
 
-      const blockArea = findArea(blockGeojson.features);
-      const blockImageBuffer = await saveScreenshot(
-        blockGeojson.features,
-        [rasterFilePath],
-        req.log
-      );
-      const blockProperties = blockGeojson.features[0].properties; // block layer will have only one MultiPolygon features
+      const waterbodyGeojson = await readGeoJson(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
 
-      const waterbodyGeojson = await readGeoJson<
-        Feature<turf.Geometry, turf.Properties>
-      >(DirPath(Directory.DEFAULT, waterbodyLayer.layerpath));
-      const waterbodyArea = findArea(waterbodyGeojson.features);
+      const greeneryGeojson = await readGeoJson(DirPath(Directory.DEFAULT, greeneryLayer.layerpath));
 
-      const greeneryGeojson = await readGeoJson<
-        Feature<turf.Geometry, turf.Properties>
-      >(DirPath(Directory.DEFAULT, greeneryLayer.layerpath));
-      const greeneryArea = findArea(greeneryGeojson.features);
-
-      const canopyGeojson = await readGeoJson<
-        Feature<turf.Geometry, turf.Properties>
-      >(DirPath(Directory.DEFAULT, treeCoverLayer.layerpath));
-      const canopyArea = findArea(canopyGeojson.features);
+      const canopyGeojson = await readGeoJson(DirPath(Directory.DEFAULT, treeCoverLayer.layerpath));
 
       // ==================================================================================================================================
 
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
-      for (const plotFeature of flaggedPlotGeojson) {
-        try {
-          const filename = `plot_report | ${
-            plotFeature.properties.plotNo || "plotNo"
-          } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${
-            plotFeature.properties.sys_id
-          }.docx`;
-          const reportExists = await Document.exists({
-            tenantId: res.locals.user.tenantId._id,
-            missionId,
-            name: filename,
-          });
-          if (reportExists) {
-            req.log.warn("plot report exists, skipping. filename: " + filename);
+      for (const blockName of PlotsByBlock.keys()) {
+      // ************* BLOCK DETAILS ******************
+      // All plots belong to same block, so block properties need not be calculated repeatedly
+
+        const blockGeojson = actionAreaGeojson.features.find(block => block.properties.blockName == blockName);
+        const blockArea = turf.area(blockGeojson);
+        const blockImageBuffer = await saveScreenshot(
+          [blockGeojson],
+          [rasterFilePath],
+          req.log
+        );
+        const blockProperties = blockGeojson.properties; // block layer will have only one MultiPolygon features
+
+        const waterbodyArea = turf.area(turf.intersect(waterbodyGeojson, blockGeojson));
+        const greeneryArea = turf.area(turf.intersect(greeneryGeojson, blockGeojson));
+        const canopyArea = turf.area(turf.intersect(canopyGeojson, blockGeojson));
+
+        for (const plotFeature of PlotsByBlock.get(blockName)) {
+          try {
+            const filename = `plot_report | ${plotFeature.properties.plotNo || "plotNo"
+              } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${plotFeature.properties.sys_id
+              }.docx`;
+            const reportExists = await Document.exists({
+              tenantId: res.locals.user.tenantId._id,
+              missionId,
+              name: filename,
+            });
+            if (reportExists) {
+              req.log.warn("plot report exists, skipping. filename: " + filename);
+            }
+            const plotProperties = plotFeature.properties;
+
+            // ******************** PLOT DETAILS ***********************
+
+            // // front view image
+            // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
+            // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
+            const plotArea = findArea([plotFeature]);
+            const plotImageBuffer = await saveScreenshot(
+              [plotFeature],
+              [rasterFilePath],
+              req.log
+            );
+
+            // ******************** BUILDING DETAILS ************************
+
+            // for multiple buildings:
+            // const plotBuildingFeatures = buildingsGeojson.features.filter((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
+
+            // for single building:
+            const plotBuildingFeature = buildingsGeojson.features.find(
+              (feature) =>
+                feature.properties.premiseNo === plotProperties.premiseNo
+            );
+
+            const plotLayerFile = await layerFiles.findOne({
+              tenantId: res.locals.user.tenantId._id,
+              layerId: plotLayer._id,
+              sys_Id: plotFeature.properties.sys_id,
+            });
+            const frontViewImageBuffer = await readFile(
+              DirPath(Directory.DEFAULT, plotLayerFile.filePath)
+            );
+
+            const buildingProperties = plotBuildingFeature.properties;
+
+            const buildingArea = findArea([plotBuildingFeature]);
+
+            // ================= PUTTING TOGETHER THE DATA =======================
+
+            const data: IPlotReportData = {
+              // cover page details
+
+              date,
+              users,
+              coverImageBuffer,
+
+              // plot details
+
+              frontViewImageBuffer,
+              plotImageBuffer,
+              plotArea: plotArea.toFixed(2),
+              plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
+              premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
+              pincode: Number.isNaN(Number(plotProperties.pincode))
+                ? null
+                : plotProperties.pincode, // must be numeric
+              category: plotProperties.category,
+              infraction: plotProperties.infraction, // "Yes" or "No"
+              isGreenTopEligible: plotProperties.isGreenTopEligible, // "Yes" or "No"
+              isSolarPlantEligible: plotProperties.isSolarPlantEligible, // "Yes" or "No"
+              hasTradeLicense: plotProperties.hasTradeLicense, // "Yes" or "No"
+              tax: Number.isNaN(Number(plotProperties.tax))
+                ? null
+                : plotProperties.tax, // must be numeric
+
+              // building details
+
+              buildingArea: buildingArea.toFixed(2),
+              buildingFootprint: ((buildingArea / plotArea) * 100).toFixed(2),
+              buildingAvailable: plotProperties.buildingAvailable, // "Yes" or "No"
+              floorCount: plotProperties.shopFloor, // although seems like a number, can contain string like "G+(some number)"
+              buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
+              hasCompletionCertificate:
+                plotProperties.buildingStatus === "Constructed" ? "Yes" : "No",
+              buildingHeight: Number.isNaN(
+                Number(buildingProperties.buildingHeight)
+              )
+                ? null
+                : buildingProperties.buildingHeight, // must be numeric
+
+              // block details
+
+              blockImageBuffer,
+              blockArea: blockArea.toFixed(2),
+              greeneryArea: greeneryArea.toFixed(2),
+              canopyArea: canopyArea.toFixed(2),
+              waterbodyArea: waterbodyArea.toFixed(2),
+              greeneryPercent: ((greeneryArea / blockArea) * 100).toFixed(2),
+              canopyPercent: ((canopyArea / blockArea) * 100).toFixed(2),
+              waterbodyPercent: ((waterbodyArea / blockArea) * 100).toFixed(2),
+              blockName: plotProperties.blockName,
+              garbageCollectionInfo: blockProperties.garbageCollectionInfo,
+              averageBuildingHeight: Number.isNaN(
+                Number(blockProperties.averageBuildingHeight)
+              )
+                ? null
+                : blockProperties.averageBuildingHeight, // must be numeric
+              averageBlockHeight: Number.isNaN(
+                Number(blockProperties.averageBlockHeight)
+              )
+                ? null
+                : blockProperties.averageBlockHeight, // must be numeric
+              averageIncentives: Number.isNaN(
+                Number(blockProperties.averageIncentives)
+              )
+                ? null
+                : blockProperties.averageIncentives, // must be numeric
+            };
+
+            // req.log.info(data);
+
+            // saving the document
+            const doc = generatePlotReportDocument(data);
+            const buffer = await Packer.toBuffer(doc);
+            const { size } = await saveFile(
+              Directory.DOCUMENTS,
+              filename,
+              buffer
+            );
+
+            await Document.findOneAndDelete({
+              tenantId: res.locals.user.tenantId._id,
+              missionId,
+              name: filename,
+            });
+
+            const docDB = new Document({
+              name: filename,
+              modDate: new Date(),
+              fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
+              fileType: "docx",
+              folderName: "root1234",
+              filePath: `/documents/${filename}`,
+              missionId: missionId,
+              tenantId: res.locals.user.tenantId,
+              createdBy: res.locals.user._id,
+              updatedBy: res.locals.user._id,
+            });
+            const savedDoc = await docDB.save();
+
+            req.log.info("Report Generation Complete");
+
+            missionSpecificSocket
+              .to(missionId.toString())
+              .emit("REPORT_GENERATION_COMPLETE", savedDoc);
+          } catch (err) {
+            req.log.error(
+              { err, plot: plotFeature.properties },
+              "REPORT GENERATION FAILED for " + missionId
+            );
+            missionSpecificSocket
+              .to(missionId.toString())
+              .emit("REPORT_GENERATION_FAILED", { ...err, plotFeature });
           }
-          const plotProperties = plotFeature.properties;
-
-          // ******************** PLOT DETAILS ***********************
-
-          // // front view image
-          // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
-          // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
-          const plotArea = findArea([plotFeature]);
-          const plotImageBuffer = await saveScreenshot(
-            [plotFeature],
-            [rasterFilePath],
-            req.log
-          );
-
-          // ******************** BUILDING DETAILS ************************
-
-          // for multiple buildings:
-          // const plotBuildingFeatures = buildingsGeojson.features.filter((feature) => (feature.properties.premiseNo === plotProperties.premiseNo));
-
-          // for single building:
-          const plotBuildingFeature = buildingsGeojson.features.find(
-            (feature) =>
-              feature.properties.premiseNo === plotProperties.premiseNo
-          );
-
-          const plotLayerFile = await layerFiles.findOne({
-            tenantId: res.locals.user.tenantId._id,
-            layerId: plotLayer._id,
-            sys_Id: plotFeature.properties.sys_id,
-          });
-          const frontViewImageBuffer = await readFile(
-            DirPath(Directory.DEFAULT, plotLayerFile.filePath)
-          );
-
-          const buildingProperties = plotBuildingFeature.properties;
-
-          const buildingArea = findArea([plotBuildingFeature]);
-
-          // ================= PUTTING TOGETHER THE DATA =======================
-
-          const data: IPlotReportData = {
-            // cover page details
-
-            date,
-            users,
-            coverImageBuffer,
-
-            // plot details
-
-            frontViewImageBuffer,
-            plotImageBuffer,
-            plotArea: plotArea.toFixed(2),
-            plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
-            premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
-            pincode: Number.isNaN(Number(plotProperties.pincode))
-              ? null
-              : plotProperties.pincode, // must be numeric
-            category: plotProperties.category,
-            infraction: plotProperties.infraction, // "Yes" or "No"
-            isGreenTopEligible: plotProperties.isGreenTopEligible, // "Yes" or "No"
-            isSolarPlantEligible: plotProperties.isSolarPlantEligible, // "Yes" or "No"
-            hasTradeLicense: plotProperties.hasTradeLicense, // "Yes" or "No"
-            tax: Number.isNaN(Number(plotProperties.tax))
-              ? null
-              : plotProperties.tax, // must be numeric
-
-            // building details
-
-            buildingArea: buildingArea.toFixed(2),
-            buildingFootprint: ((buildingArea / plotArea) * 100).toFixed(2),
-            buildingAvailable: plotProperties.buildingAvailable, // "Yes" or "No"
-            floorCount: plotProperties.shopFloor, // although seems like a number, can contain string like "G+(some number)"
-            buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
-            hasCompletionCertificate:
-              plotProperties.buildingStatus === "Constructed" ? "Yes" : "No",
-            buildingHeight: Number.isNaN(
-              Number(buildingProperties.buildingHeight)
-            )
-              ? null
-              : buildingProperties.buildingHeight, // must be numeric
-
-            // block details
-
-            blockImageBuffer,
-            blockArea: blockArea.toFixed(2),
-            greeneryArea: greeneryArea.toFixed(2),
-            canopyArea: canopyArea.toFixed(2),
-            waterbodyArea: waterbodyArea.toFixed(2),
-            greeneryPercent: ((greeneryArea / blockArea) * 100).toFixed(2),
-            canopyPercent: ((canopyArea / blockArea) * 100).toFixed(2),
-            waterbodyPercent: ((waterbodyArea / blockArea) * 100).toFixed(2),
-            blockName: plotProperties.blockName,
-            garbageCollectionInfo: blockProperties.garbageCollectionInfo,
-            averageBuildingHeight: Number.isNaN(
-              Number(blockProperties.averageBuildingHeight)
-            )
-              ? null
-              : blockProperties.averageBuildingHeight, // must be numeric
-            averageBlockHeight: Number.isNaN(
-              Number(blockProperties.averageBlockHeight)
-            )
-              ? null
-              : blockProperties.averageBlockHeight, // must be numeric
-            averageIncentives: Number.isNaN(
-              Number(blockProperties.averageIncentives)
-            )
-              ? null
-              : blockProperties.averageIncentives, // must be numeric
-          };
-
-          // req.log.info(data);
-
-          // saving the document
-          const doc = generatePlotReportDocument(data);
-          const buffer = await Packer.toBuffer(doc);
-          const { size } = await saveFile(
-            Directory.DOCUMENTS,
-            filename,
-            buffer
-          );
-
-          await Document.findOneAndDelete({
-            tenantId: res.locals.user.tenantId._id,
-            missionId,
-            name: filename,
-          });
-
-          const docDB = new Document({
-            name: filename,
-            modDate: new Date(),
-            fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
-            fileType: "docx",
-            folderName: "root1234",
-            filePath: `/documents/${filename}`,
-            missionId: missionId,
-            tenantId: res.locals.user.tenantId,
-            createdBy: res.locals.user._id,
-            updatedBy: res.locals.user._id,
-          });
-          const savedDoc = await docDB.save();
-
-          req.log.info("Report Generation Complete");
-
-          missionSpecificSocket
-            .to(missionId.toString())
-            .emit("REPORT_GENERATION_COMPLETE", savedDoc);
-        } catch (err) {
-          req.log.error(
-            { err, plot: plotFeature.properties },
-            "REPORT GENERATION FAILED for " + missionId
-          );
-          missionSpecificSocket
-            .to(missionId.toString())
-            .emit("REPORT_GENERATION_FAILED", { ...err, plotFeature });
         }
       }
     } catch (error) {
