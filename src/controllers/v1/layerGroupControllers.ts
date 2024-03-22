@@ -50,7 +50,23 @@ export const editLayerGroup = async (req: Request, res: AuthResponse) => {
     });
 
     if (doc) {
-      const updatedLayers = await Layer.updateMany(
+      // Remove the layers from their existing groups
+      for(const layerId of req.body.layers) {
+        const layer = await Layer.findById(layerId);
+        await LayerGroup.findOneAndUpdate(
+          {
+            _id: layer.layerGroupId,
+            tenantId: res.locals.user.tenantId._id,
+          },
+          {
+            $pull: {
+              layers: layer._id,
+            }
+          }
+        );
+      }
+      // Update layers
+      await Layer.updateMany(
         {
           _id: { $in: req.body.layers },
           tenantId: res.locals.user.tenantId._id,
@@ -59,6 +75,7 @@ export const editLayerGroup = async (req: Request, res: AuthResponse) => {
           layerGroupId: doc._id,
         }
       );
+      // Update the new groups to which layers to be added
       const updatedLayerGroup = await LayerGroup.findOneAndUpdate(
         {
           _id: doc._id,
@@ -68,6 +85,7 @@ export const editLayerGroup = async (req: Request, res: AuthResponse) => {
           $addToSet: {
             layers: req.body.layers,
           },
+          [req.body.name && "name"]: req.body.name,
         },
         {
           new: true,
