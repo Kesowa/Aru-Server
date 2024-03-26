@@ -73,9 +73,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
           req.body.inHeritOriginalColorFromFile
             ? {
-              icon: req.body.icon,
-              color: req.body.color,
-            }
+                icon: req.body.icon,
+                color: req.body.color,
+              }
             : undefined
         );
 
@@ -1309,8 +1309,9 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${ar.length - 1
-              } and data index should start from 0`,
+            message: `Your data must be less than equal to ${
+              ar.length - 1
+            } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -1628,9 +1629,9 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
     const geojson = await readGeoJson(docpath);
     const flaggedIndex: number[] = [];
     const message: {
-      layerName: string,
-      data: ILayerFile[],
-      badImages: string[],
+      layerName: string;
+      data: ILayerFile[];
+      badImages: string[];
     } = {
       layerName: layerDoc.name,
       data: [],
@@ -1723,10 +1724,14 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           flaggedIndex.push(closestPoint.properties.featureIndex);
         }
       }
-
     } else if (req.query.mode == "LayerLabel") {
-      const labelLookupMap = new Map(geojson.features.map((feature, index) => [feature.properties[layerDoc.layerLabel] as string, index]));
-      for (const uploadFile of (req.files as Express.Multer.File[])) {
+      const labelLookupMap = new Map(
+        geojson.features.map((feature, index) => [
+          feature.properties[layerDoc.layerLabel] as string,
+          index,
+        ])
+      );
+      for (const uploadFile of req.files as Express.Multer.File[]) {
         const fileLabel = path.parse(uploadFile.originalname).name;
         const matchedFeatureIndex = labelLookupMap.get(fileLabel);
         if (matchedFeatureIndex == undefined) {
@@ -1773,15 +1778,14 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
       }
     }
     await layerDoc.updateOne({
-      "$addToSet": {
-        flaggedFeatures: flaggedIndex
-      }
+      $addToSet: {
+        flaggedFeatures: flaggedIndex,
+      },
     });
     missionSpecificSocket
       .to(missionId.toString())
       .emit("ASSIGNED SUCESSFULLY", message);
     req.log.info("sent");
-
   }
 };
 
@@ -2525,8 +2529,9 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${req.body.flag ? "flagged" : "unflagged"
-        } successfully`,
+      message: `feature ${
+        req.body.flag ? "flagged" : "unflagged"
+      } successfully`,
     });
   } else {
     res.status(501).json({
