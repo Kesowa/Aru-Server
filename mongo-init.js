@@ -179,7 +179,7 @@ db.tenants.insertOne({
   modefiedphoneNoRequestedOTPs: [],
   activePackage: ObjectId("608e7a7ee11f711a34fb0474"),
   bandwidthUsed: 0,
-  packageStartDate: ISODate("2022-01-15T00:00:00Z"),
+  packageStartDate: ISODate(),
   storageUsed: 0,
   actualAlertCount: 0,
   actualClientCount: 0,
