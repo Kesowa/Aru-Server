@@ -4,15 +4,17 @@ import * as pathUtils from "./pathUtils";
 import path from "path";
 import { Logger } from "pino";
 import fs from "fs/promises";
-import kmlToGjson from "tokml";
+import tokml from "tokml";
 import shp2json from "shpjs";
 import { GeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
-import tokml from "tokml";
 import { DirPath, Directory } from "../constants";
 import archiver from "archiver";
 import { createWriteStream } from "fs";
 import { Stream } from "stream";
+import initGdalJs from "gdal3.js/node";
+import { DOMParser } from "xmldom";
+import togeojson from "@mapbox/togeojson";
 import { ObjectId } from "bson";
 
 const asyncExec = promisify(exec);
@@ -85,14 +87,35 @@ export const saveVectorLayer = async (
   let flagColor = "multiColor";
   try {
     if (ext == ".geojson") {
-      geojsonData = JSON.parse(await fs.readFile(absLayerPath, "utf8"));
+      // ===== Check CRS and convert to EPSG:4326 if necessary =====
+
+      const gdal = await initGdalJs();
+      const dataset = (await gdal.open(absLayerPath)).datasets[0];
+      const info = await gdal.ogrinfo(dataset);
+
+      const { authority, code } =
+        info.layers[0].geometryFields[0].coordinateSystem.projjson.id;
+      const existingCRS = `${authority}:${code}`;
+
+      if (existingCRS !== "EPSG:4326") {
+        const options = ["-f", "GeoJSON", "-t_srs", "EPSG:4326"];
+        const output = await gdal.ogr2ogr(dataset, options);
+        const bytes = await gdal.getFileBytes(output); // it is an Uint8Array
+        geojsonData = JSON.parse(Buffer.from(bytes).toString("utf-8"));
+      } else {
+        geojsonData = JSON.parse(await fs.readFile(absLayerPath, "utf8"));
+      }
+
+      if (geojsonData.crs) delete geojsonData.crs;
+
+      // ===========================================================
     }
     if (ext == ".kml") {
       const fileData = await fs.readFile(absLayerPath, "utf8");
       const kmlData = new DOMParser().parseFromString(fileData, "text/xml");
-      geojsonData = kmlToGjson.kml(kmlData, { styles: true });
+      geojsonData = togeojson.kml(kmlData, { styles: true });
     }
-    if (ext == ".shp" || ext == ".zip") {
+    if (ext == ".zip") {
       const fileData = await fs.readFile(absLayerPath);
       geojsonData = await shp2json(fileData);
     }

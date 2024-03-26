@@ -693,7 +693,7 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
       res.status(200).json({
         status: true,
         message: "No layer exists for mission",
-        missionName: mission["name"],
+        mission: mission["name"],
         centerPoints: flight.centerPoints,
       });
     }
