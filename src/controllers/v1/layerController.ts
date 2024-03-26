@@ -1627,7 +1627,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
     const docpath = DirPath(Directory.ROOT, layerDoc.layerpath);
     const geojson = await readGeoJson(docpath);
     const flaggedIndex: number[] = [];
-    let message: {
+    const message: {
       layerName: string,
       data: ILayerFile[],
       badImages: string[],
