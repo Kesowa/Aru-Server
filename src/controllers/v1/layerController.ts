@@ -73,9 +73,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
           req.body.inHeritOriginalColorFromFile
             ? {
-                icon: req.body.icon,
-                color: req.body.color,
-              }
+              icon: req.body.icon,
+              color: req.body.color,
+            }
             : undefined
         );
 
@@ -1309,9 +1309,8 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${
-              ar.length - 1
-            } and data index should start from 0`,
+            message: `Your data must be less than equal to ${ar.length - 1
+              } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -1625,9 +1624,19 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
     if (!layerDoc) throw new Error("layerDoc not found");
 
     const missionId = layerDoc.missionId;
-    if (layerDoc) {
-      const docpath = DirPath(Directory.ROOT, layerDoc.layerpath);
-      const geojson = await readGeoJson(docpath);
+    const docpath = DirPath(Directory.ROOT, layerDoc.layerpath);
+    const geojson = await readGeoJson(docpath);
+    const flaggedIndex: number[] = [];
+    let message: {
+      layerName: string,
+      data: ILayerFile[],
+      badImages: string[],
+    } = {
+      layerName: layerDoc.name,
+      data: [],
+      badImages: [],
+    };
+    if (req.query.mode == "GeoCoord") {
       let snapRadius: number = 120; // meters
       if (req.body.radius) {
         const tmpRadius = Number(req.body.radius);
@@ -1636,106 +1645,143 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         }
       }
       req.log.info("snapping radius", snapRadius);
-      const badImages = [];
-      const dataa: Array<ILayerFile> = [];
       // Nearest point finder
-      if (geojson) {
-        const collection = turf.featureCollection<turf.Point>(
-          geojson.features.map(
-            (feature: { geometry: { coordinates: turf.helpers.Position } }) =>
-              turf.point(feature.geometry.coordinates)
-          )
-        );
-        const files = req.files as Express.Multer.File[];
-        for (let j = 0; j < files.length; j++) {
-          req.log.info("file number", j);
-          let closestPoint: NearestPoint;
-          // catch bad image
-          try {
-            const { latitude, longitude } = await exifr.gps(files[j].path);
-            if (latitude == null || longitude == null) {
-              throw new Error("invalid coordinates!");
-            }
-            const imagePoint = turf.point([longitude, latitude]);
-            closestPoint = nearestPoint(imagePoint, collection);
-            const distance =
-              turf.distance(imagePoint, closestPoint, { units: "kilometers" }) *
-              1000;
-            if (distance > snapRadius) {
-              throw new Error("image outside bounds!");
-            }
-          } catch (err) {
-            req.log.error(err);
-            badImages.push(files[j].originalname);
-            req.log.error("bad image", files[j].originalname);
-            continue;
+      const collection = turf.featureCollection<turf.Point>(
+        geojson.features.map(
+          (feature: { geometry: { coordinates: turf.helpers.Position } }) =>
+            turf.point(feature.geometry.coordinates)
+        )
+      );
+      const files = req.files as Express.Multer.File[];
+      for (let j = 0; j < files.length; j++) {
+        req.log.info("file number", j);
+        let closestPoint: NearestPoint;
+        // catch bad image
+        try {
+          const { latitude, longitude } = await exifr.gps(files[j].path);
+          if (latitude == null || longitude == null) {
+            throw new Error("invalid coordinates!");
           }
-          req.log.info("good image", files[j].originalname);
-
-          // this is the original closest point
-          const findex = geojson.features[closestPoint.properties.featureIndex];
-
-          const layerId = req.body.Id;
-          const centerPoints2 = {
-            lat: String(closestPoint.geometry.coordinates[1]),
-            lng: String(closestPoint.geometry.coordinates[0]),
-          };
-          const fpath = "/images/geojson/" + files[j].filename;
-          req.log.info("file path:", fpath);
-          let size: number = Number(
-            (Number(files[j].size) / (1024 * 1024)).toFixed(5)
-          );
-          if (
-            files[j].mimetype == "image/jpeg" ||
-            files[j].mimetype == "image/png"
-          ) {
-            const thumbs = await saveThumbnails(fpath);
-            size = thumbs.size;
+          const imagePoint = turf.point([longitude, latitude]);
+          closestPoint = nearestPoint(imagePoint, collection);
+          const distance =
+            turf.distance(imagePoint, closestPoint, { units: "kilometers" }) *
+            1000;
+          if (distance > snapRadius) {
+            throw new Error("image outside bounds!");
           }
-          req.log.info("file size", size);
-          const featureFile = new layerFiles({
-            name: files[j].originalname,
-            layerId: layerId,
-            filePath: fpath,
-            fileSize: size,
-            //! too complex
-            featureLabel: layerDoc.layerLabel
-              ? findex.properties[layerDoc.layerLabel]
-                ? findex.properties[layerDoc.layerLabel]
-                : null
-              : null,
-            centerPoints: centerPoints2,
-            fileType: files[j].mimetype,
-            sys_Id: findex.properties.sys_id,
-            tenantId: res.locals.user.tenantId,
-            createdBy: res.locals.user._id,
-            updatedBy: res.locals.user._id,
-          });
-          const savedDoc = await featureFile.save();
-          if (savedDoc) {
-            dataa.push(savedDoc);
-          }
+        } catch (err) {
+          req.log.error(err);
+          message.badImages.push(files[j].originalname);
+          req.log.error("bad image", files[j].originalname);
+          continue;
         }
-        const message = {
-          layerName: layerDoc.name,
-          data: dataa,
-          badImages: badImages,
+        req.log.info("good image", files[j].originalname);
+
+        // this is the original closest point
+        const findex = geojson.features[closestPoint.properties.featureIndex];
+
+        const layerId = req.body.Id;
+        const centerPoints2 = {
+          lat: String(closestPoint.geometry.coordinates[1]),
+          lng: String(closestPoint.geometry.coordinates[0]),
         };
-        if (dataa.length > 0) {
-          missionSpecificSocket
-            .to(missionId.toString())
-            .emit("ASSIGNED SUCESSFULLY", message);
-          req.log.info("sent");
-        } else {
-          missionSpecificSocket.to(missionId.toString()).emit("ERR");
+        const fpath = "/images/geojson/" + files[j].filename;
+        req.log.info("file path:", fpath);
+        let size: number = Number(
+          (Number(files[j].size) / (1024 * 1024)).toFixed(5)
+        );
+        if (
+          files[j].mimetype == "image/jpeg" ||
+          files[j].mimetype == "image/png"
+        ) {
+          const thumbs = await saveThumbnails(fpath);
+          size = thumbs.size;
+        }
+        req.log.info("file size", size);
+        const featureFile = new layerFiles({
+          name: files[j].originalname,
+          layerId: layerId,
+          filePath: fpath,
+          fileSize: size,
+          //! too complex
+          featureLabel: layerDoc.layerLabel
+            ? findex.properties[layerDoc.layerLabel]
+              ? findex.properties[layerDoc.layerLabel]
+              : null
+            : null,
+          centerPoints: centerPoints2,
+          fileType: files[j].mimetype,
+          sys_Id: findex.properties.sys_id,
+          tenantId: res.locals.user.tenantId,
+          createdBy: res.locals.user._id,
+          updatedBy: res.locals.user._id,
+        });
+        const savedDoc = await featureFile.save();
+        if (savedDoc) {
+          message.data.push(savedDoc);
+          flaggedIndex.push(closestPoint.properties.featureIndex);
         }
       }
-    } else {
-      res.json({
-        status: false,
-        message: "Layer ID does not match",
-      });
+
+    } else if (req.query.mode == "LayerLabel") {
+      const labelLookupMap = new Map(geojson.features.map((feature, index) => [feature.properties[layerDoc.layerLabel] as string, index]));
+      for (const uploadFile of (req.files as Express.Multer.File[])) {
+        const fileLabel = path.parse(uploadFile.originalname).name;
+        const matchedFeatureIndex = labelLookupMap.get(fileLabel);
+        if (matchedFeatureIndex == undefined) {
+          message.badImages.push(uploadFile.originalname);
+          continue;
+        }
+        const matchedFeature = geojson.features[matchedFeatureIndex];
+        const centerPoints = {
+          lat: matchedFeature.geometry.coordinates[1],
+          lng: matchedFeature.geometry.coordinates[0],
+        };
+        const fpath = "/images/geojson/" + uploadFile.filename;
+        req.log.info("file path:", fpath);
+        let size: number = Number(
+          (Number(uploadFile.size) / (1024 * 1024)).toFixed(5)
+        );
+        if (
+          uploadFile.mimetype == "image/jpeg" ||
+          uploadFile.mimetype == "image/png"
+        ) {
+          const thumbs = await saveThumbnails(fpath);
+          size = thumbs.size;
+        }
+        req.log.info("file size", size);
+        const featureFile = new layerFiles({
+          name: uploadFile.originalname,
+          layerId: layerDoc._id,
+          filePath: fpath,
+          fileSize: size,
+          //! too complex
+          featureLabel: fileLabel,
+          centerPoints: centerPoints,
+          fileType: uploadFile.mimetype,
+          sys_Id: matchedFeature.properties.sys_id,
+          tenantId: res.locals.user.tenantId,
+          createdBy: res.locals.user._id,
+          updatedBy: res.locals.user._id,
+        });
+        const savedDoc = await featureFile.save();
+        if (savedDoc) {
+          message.data.push(savedDoc);
+          flaggedIndex.push(matchedFeatureIndex);
+        }
+      }
     }
+    await layerDoc.updateOne({
+      "$addToSet": {
+        flaggedFeatures: flaggedIndex
+      }
+    });
+    missionSpecificSocket
+      .to(missionId.toString())
+      .emit("ASSIGNED SUCESSFULLY", message);
+    req.log.info("sent");
+
   }
 };
 
@@ -2479,9 +2525,8 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${
-        req.body.flag ? "flagged" : "unflagged"
-      } successfully`,
+      message: `feature ${req.body.flag ? "flagged" : "unflagged"
+        } successfully`,
     });
   } else {
     res.status(501).json({
