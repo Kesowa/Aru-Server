@@ -1665,8 +1665,9 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           }
           const imagePoint = turf.point([longitude, latitude]);
           closestPoint = nearestPoint(imagePoint, collection);
-          const distance =
-            turf.distance(imagePoint, closestPoint, { units: "meters" });
+          const distance = turf.distance(imagePoint, closestPoint, {
+            units: "meters",
+          });
           if (distance > snapRadius) {
             throw new Error("image outside bounds!");
           }
