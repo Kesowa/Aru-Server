@@ -1884,14 +1884,6 @@ export const imageReviewforLayerFileId = async (
         });
         const sys_Id: any = req.body.check[i].sys_Id;
         for (let j = 0; j < geojson.features.length; j++) {
-          const today = new Date();
-          const time: any =
-            today.getHours() +
-            ":" +
-            today.getMinutes() +
-            ":" +
-            today.getSeconds();
-          req.log.info("Match start time: " + time);
           if (geojson.features[j].properties.sys_id == sys_Id) {
             const centerPoints2 = {
               lat: String(geojson.features[j].geometry.coordinates[1]),
@@ -1911,18 +1903,7 @@ export const imageReviewforLayerFileId = async (
                   : j;
                 doc.centerPoints = centerPoints2;
               }
-              const promise: any = await doc.save();
-              if (promise) {
-                const time2: any =
-                  today.getHours() +
-                  ":" +
-                  today.getMinutes() +
-                  ":" +
-                  today.getSeconds();
-                req.log.info("Match found time: " + time2);
-                const elapsedT: any = time2 - time;
-                req.log.info("Elapsed time: " + elapsedT);
-              }
+              await doc.save();
             }
             break;
           }

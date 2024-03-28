@@ -489,9 +489,9 @@ export const generatePlotReport = async (
       const buildingsGeojson = await readGeoJson<
         Feature<turf.MultiPolygon, IBuildingProperties>
       >(DirPath(Directory.DEFAULT, buildingFootprintLayer.layerpath));
-      const actionAreaGeojson = await readGeoJson<
+      const actionAreaGeojson = turf.featureCollection((await readGeoJson<
         Feature<turf.MultiPolygon, IBlockProperties>
-      >(DirPath(Directory.DEFAULT, actionAreaLayer.layerpath));
+      >(DirPath(Directory.DEFAULT, actionAreaLayer.layerpath))).features);
 
       // multiple plot reports will be generated, one for each flagged plot
       // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
@@ -573,13 +573,19 @@ export const generatePlotReport = async (
         DirPath(Directory.DEFAULT, waterbodyLayer.layerpath)
       );
 
+      const combinedWaterbody = turf.combine(turf.featureCollection(waterbodyGeojson.features));
+
       const greeneryGeojson = await readGeoJson(
         DirPath(Directory.DEFAULT, greeneryLayer.layerpath)
       );
 
+      const combinedGreenery = turf.combine(turf.featureCollection(greeneryGeojson.features));
+
       const canopyGeojson = await readGeoJson(
         DirPath(Directory.DEFAULT, treeCoverLayer.layerpath)
       );
+
+      const combinedCanopy = turf.combine(turf.featureCollection(canopyGeojson.features));
 
       // ==================================================================================================================================
 
@@ -600,23 +606,20 @@ export const generatePlotReport = async (
         );
         const blockProperties = blockGeojson.properties; // block layer will have only one MultiPolygon features
 
-        const waterbodyArea = turf.area(
-          turf.intersect(waterbodyGeojson, blockGeojson)
-        );
-        const greeneryArea = turf.area(
-          turf.intersect(greeneryGeojson, blockGeojson)
-        );
-        const canopyArea = turf.area(
-          turf.intersect(canopyGeojson, blockGeojson)
-        );
+        const intersectWaterbody = turf.intersect(combinedWaterbody.features[0], blockGeojson);
+        const waterbodyArea = intersectWaterbody === null ? 0 : turf.area(intersectWaterbody);
+
+        const intersectGreenery = turf.intersect(combinedGreenery.features[0], blockGeojson);
+        const greeneryArea = intersectGreenery === null ? 0 : turf.area(intersectGreenery);
+
+        const intersectCanopy = turf.intersect(combinedCanopy.features[0], blockGeojson);
+        const canopyArea = intersectCanopy === null ? 0 : turf.area(intersectCanopy);
 
         for (const plotFeature of PlotsByBlock.get(blockName)) {
           try {
-            const filename = `plot_report | ${
-              plotFeature.properties.plotNo || "plotNo"
-            } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${
-              plotFeature.properties.sys_id
-            }.docx`;
+            const filename = `plot_report | ${plotFeature.properties.plotNo || "plotNo"
+              } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${plotFeature.properties.sys_id
+              }.docx`;
             const reportExists = await Document.exists({
               tenantId: res.locals.user.tenantId._id,
               missionId,
