@@ -1725,13 +1725,15 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         }
       }
     } else if (req.query.mode == "LayerLabel") {
+      req.log.info(layerDoc.layerLabel, "Layer Label");
       const labelLookupMap = new Map(
         geojson.features.map((feature, index) => [
-          feature.properties[layerDoc.layerLabel] as string,
+          String(feature.properties[layerDoc.layerLabel]),
           index,
         ])
       );
       for (const uploadFile of req.files as Express.Multer.File[]) {
+        req.log.info(uploadFile.originalname, "Processing file name");
         const fileLabel = path.parse(uploadFile.originalname).name;
         const matchedFeatureIndex = labelLookupMap.get(fileLabel);
         if (matchedFeatureIndex == undefined) {
@@ -1739,9 +1741,10 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           continue;
         }
         const matchedFeature = geojson.features[matchedFeatureIndex];
+        const centroid = turf.centroid(matchedFeature.geometry);
         const centerPoints = {
-          lat: matchedFeature.geometry.coordinates[1],
-          lng: matchedFeature.geometry.coordinates[0],
+          lat: centroid.geometry.coordinates[1],
+          lng: centroid.geometry.coordinates[0],
         };
         const fpath = "/images/geojson/" + uploadFile.filename;
         req.log.info("file path:", fpath);
@@ -1782,6 +1785,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         flaggedFeatures: flaggedIndex,
       },
     });
+    req.log.info(message, "AUTO ASSIGN MESSAGE");
     missionSpecificSocket
       .to(missionId.toString())
       .emit("ASSIGNED SUCESSFULLY", message);
