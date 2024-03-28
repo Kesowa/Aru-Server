@@ -48,6 +48,7 @@ import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
 import { readFile, saveFile } from "../../utils/dataUtils";
+import { randomUUID } from "crypto";
 
 export function findArea(features: Feature<turf.Geometry, turf.Properties>[]) {
   try {
@@ -769,9 +770,10 @@ export const generatePlotReport = async (
             // saving the document
             const doc = generatePlotReportDocument(data);
             const buffer = await Packer.toBuffer(doc);
+            const filenamePath = randomUUID() + ".docx";
             const { size } = await saveFile(
               Directory.DOCUMENTS,
-              filename,
+              filenamePath,
               buffer
             );
 
@@ -787,7 +789,7 @@ export const generatePlotReport = async (
               fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
               fileType: "docx",
               folderName: "root1234",
-              filePath: `/documents/${filename}`,
+              filePath: `/documents/${filenamePath}`,
               missionId: missionId,
               tenantId: res.locals.user.tenantId,
               createdBy: res.locals.user._id,
