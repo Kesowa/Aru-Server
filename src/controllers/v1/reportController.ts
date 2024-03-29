@@ -610,10 +610,13 @@ export const generatePlotReport = async (
         turf.featureCollection(buildingsGeojson.features)
       );
 
-      
-      const garbageCollectionGeojson = turf.featureCollection((await readGeoJson(
-        DirPath(Directory.DEFAULT, garbageCollectionLayer.layerpath)
-      )).features);
+      const garbageCollectionGeojson = turf.featureCollection(
+        (
+          await readGeoJson(
+            DirPath(Directory.DEFAULT, garbageCollectionLayer.layerpath)
+          )
+        ).features
+      );
 
       // ==================================================================================================================================
 
@@ -660,9 +663,13 @@ export const generatePlotReport = async (
           blockGeojson
         );
 
-        const garbageCollectionCount = intersectGarbageCollection.features.length;
+        const garbageCollectionCount =
+          intersectGarbageCollection.features.length;
 
-        const averageBuildingHeight = buildingsGeojson.features.filter(building => building.properties.blockName === blockName).map(building => building.properties.height).reduce((prev, curr) => Number(curr) + prev, 0);
+        const averageBuildingHeight = buildingsGeojson.features
+          .filter((building) => building.properties.blockName === blockName)
+          .map((building) => building.properties.height)
+          .reduce((prev, curr) => Number(curr) + prev, 0);
 
         for (const plotFeature of PlotsByBlock.get(blockName)) {
           try {

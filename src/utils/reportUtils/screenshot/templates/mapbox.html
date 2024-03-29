@@ -1,225 +1,230 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-  <meta charset="utf-8" />
-  <title>Mapbox Raster and Vector Layers</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0"></script>
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css" rel="stylesheet" />
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-    }
-
-    #map {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 100%;
-    }
-  </style>
-</head>
-
-<body>
-  <div id="map"></div>
-  <script>
-    function promisify(rawFn) {
-      return (...args) =>
-        new Promise((res, rej) => {
-          try {
-            rawFn(...args, res);
-          } catch (err) {
-            rawFn(...args, () => rej(err));
-          }
-        });
-    }
-    async function takeScreenshot(
-      serverUrl,
-      rasterFilePaths,
-      vectorFeatures
-    ) {
-      const map = await setupMap(serverUrl);
-      removeExternalLayers(map);
-      console.log(
-        "EXTERNAL LAYERS BEFORE => ",
-        map
-          .getStyle()
-          .layers.filter(
-            (layer) =>
-              layer.id.startsWith("vector-layer-") ||
-              layer.id.startsWith("raster-layer-")
-          )
-      );
-      const rasterBounds = await renderRaster(
-        rasterFilePaths,
-        serverUrl,
-        map
-      );
-      const vectorBounds = renderVector(vectorFeatures, map);
-      // const allBounds = turf.multiPoint(rasterBounds.concat(vectorBounds));
-      const allBounds =
-        vectorFeatures.length > 0
-          ? turf.multiPoint(vectorBounds)
-          : turf.multiPoint(rasterBounds);
-      // if both raster and vector given, vector bounds prioritized, else if only rasters given, raster bounds considered
-      const points = turf.bbox(allBounds);
-      // console.log("POINTS", JSON.stringify({rasterFilePaths, vectorFeatures, rasterBounds, vectorBounds, points}));
-      console.log(
-        "BOUNDS and POINTS",
-        JSON.stringify({rasterBounds, vectorBounds, points})
-      );
-      if (points.every((v) => v != null)) {
-        map.fitBounds(points, {
-          duration: 0, padding: {
-            top: 100,
-            bottom: 100,
-            left: 100,
-            right: 100
-          }
-        });
-      } else {
-        console.error("CANNOT FIND BOUNDS, ALL NULL");
+  <head>
+    <meta charset="utf-8" />
+    <title>Mapbox Raster and Vector Layers</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js"></script>
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
       }
-      console.log("WAITING FOR LOAD");
-      await map.once("idle");
-      console.log("LOAD FIRED");
-      console.log(
-        "EXTERNAL LAYERS AFTER => ",
-        map
-          .getStyle()
-          .layers.filter(
-            (layer) =>
-              layer.id.startsWith("vector-layer-") ||
-              layer.id.startsWith("raster-layer-")
-          )
-      );
-    }
-    async function setupMap() {
-      mapboxgl.accessToken =
-        "pk.eyJ1IjoibmVlbGR1dHRhMTkiLCJhIjoiY2tweG9mN3F4MThrNTJ4cDk0enVjcTN4dCJ9.uxa_h0rjqumTxFMI1QELKQ"; // Replace with your Mapbox access token
 
-      let map = new mapboxgl.Map({
-        container: "map",
-        style: "mapbox://styles/mapbox/streets-v11", // Replace with your preferred map style
-        center: [88.22, 22.22], // Replace with your desired initial center coordinates
-        zoom: 7, // Replace with your desired initial zoom level
-        preserveDrawingBuffer: true,
-      });
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+  </head>
 
-      console.log("HEEEEEEEEEEEELLLLLLLLPPPPPPPPPPPPPPP");
-      console.log("WAITING FOR IDLE");
-      await map.once("idle");
-      console.log("IDLE FIRED");
-      return map;
-    }
+  <body>
+    <div id="map"></div>
+    <script>
+      function promisify(rawFn) {
+        return (...args) =>
+          new Promise((res, rej) => {
+            try {
+              rawFn(...args, res);
+            } catch (err) {
+              rawFn(...args, () => rej(err));
+            }
+          });
+      }
+      async function takeScreenshot(
+        serverUrl,
+        rasterFilePaths,
+        vectorFeatures
+      ) {
+        const map = await setupMap(serverUrl);
+        removeExternalLayers(map);
+        console.log(
+          "EXTERNAL LAYERS BEFORE => ",
+          map
+            .getStyle()
+            .layers.filter(
+              (layer) =>
+                layer.id.startsWith("vector-layer-") ||
+                layer.id.startsWith("raster-layer-")
+            )
+        );
+        const rasterBounds = await renderRaster(
+          rasterFilePaths,
+          serverUrl,
+          map
+        );
+        const vectorBounds = renderVector(vectorFeatures, map);
+        // const allBounds = turf.multiPoint(rasterBounds.concat(vectorBounds));
+        const allBounds =
+          vectorFeatures.length > 0
+            ? turf.multiPoint(vectorBounds)
+            : turf.multiPoint(rasterBounds);
+        // if both raster and vector given, vector bounds prioritized, else if only rasters given, raster bounds considered
+        const points = turf.bbox(allBounds);
+        // console.log("POINTS", JSON.stringify({rasterFilePaths, vectorFeatures, rasterBounds, vectorBounds, points}));
+        console.log(
+          "BOUNDS and POINTS",
+          JSON.stringify({ rasterBounds, vectorBounds, points })
+        );
+        if (points.every((v) => v != null)) {
+          map.fitBounds(points, {
+            duration: 0,
+            padding: {
+              top: 100,
+              bottom: 100,
+              left: 100,
+              right: 100,
+            },
+          });
+        } else {
+          console.error("CANNOT FIND BOUNDS, ALL NULL");
+        }
+        console.log("WAITING FOR LOAD");
+        await map.once("idle");
+        console.log("LOAD FIRED");
+        console.log(
+          "EXTERNAL LAYERS AFTER => ",
+          map
+            .getStyle()
+            .layers.filter(
+              (layer) =>
+                layer.id.startsWith("vector-layer-") ||
+                layer.id.startsWith("raster-layer-")
+            )
+        );
+      }
+      async function setupMap() {
+        mapboxgl.accessToken =
+          "pk.eyJ1IjoibmVlbGR1dHRhMTkiLCJhIjoiY2tweG9mN3F4MThrNTJ4cDk0enVjcTN4dCJ9.uxa_h0rjqumTxFMI1QELKQ"; // Replace with your Mapbox access token
 
-    // Add raster layer from GeoJSON
-    async function renderRaster(rasterFilePaths, cogServerUrl, map) {
-      const bounds = [];
-      for (const rasterFilePath of rasterFilePaths) {
-        const rasterSourceId = `raster-source-${rasterFilePath}`;
-        const rasterLayerId = `raster-layer-${rasterFilePath}`;
-
-        //-------handle for detail:not found----
-        const metaDataURL = `${cogServerUrl}/cog/info?url=${rasterFilePath}`;
-        const response = await fetch(metaDataURL, {
-          method: "GET",
+        let map = new mapboxgl.Map({
+          container: "map",
+          style: "mapbox://styles/mapbox/streets-v11", // Replace with your preferred map style
+          center: [88.22, 22.22], // Replace with your desired initial center coordinates
+          zoom: 7, // Replace with your desired initial zoom level
+          preserveDrawingBuffer: true,
         });
-        const metadata = await response.json();
-        console.log("metadata", metadata);
 
-        bounds.push([metadata["bounds"][0], metadata["bounds"][1]]);
-        bounds.push([metadata["bounds"][2], metadata["bounds"][3]]);
+        console.log("HEEEEEEEEEEEELLLLLLLLPPPPPPPPPPPPPPP");
+        console.log("WAITING FOR IDLE");
+        await map.once("idle");
+        console.log("IDLE FIRED");
+        return map;
+      }
 
-        // Add the raster source
-        map.addSource(rasterSourceId, {
-          type: "raster",
-          tiles: [
-            `${cogServerUrl}/cog/tiles/{z}/{x}/{y}.png?url=${rasterFilePath}`,
-          ], // Replace with the path to your raster tiles
-          tileSize: 256,
-        });
+      // Add raster layer from GeoJSON
+      async function renderRaster(rasterFilePaths, cogServerUrl, map) {
+        const bounds = [];
+        for (const rasterFilePath of rasterFilePaths) {
+          const rasterSourceId = `raster-source-${rasterFilePath}`;
+          const rasterLayerId = `raster-layer-${rasterFilePath}`;
 
-        // Add the raster layer
-        map.addLayer({
-          id: rasterLayerId,
-          type: "raster",
-          source: rasterSourceId,
-          /*paint: {
+          //-------handle for detail:not found----
+          const metaDataURL = `${cogServerUrl}/cog/info?url=${rasterFilePath}`;
+          const response = await fetch(metaDataURL, {
+            method: "GET",
+          });
+          const metadata = await response.json();
+          console.log("metadata", metadata);
+
+          bounds.push([metadata["bounds"][0], metadata["bounds"][1]]);
+          bounds.push([metadata["bounds"][2], metadata["bounds"][3]]);
+
+          // Add the raster source
+          map.addSource(rasterSourceId, {
+            type: "raster",
+            tiles: [
+              `${cogServerUrl}/cog/tiles/{z}/{x}/{y}.png?url=${rasterFilePath}`,
+            ], // Replace with the path to your raster tiles
+            tileSize: 256,
+          });
+
+          // Add the raster layer
+          map.addLayer({
+            id: rasterLayerId,
+            type: "raster",
+            source: rasterSourceId,
+            /*paint: {
           // Apply your desired paint properties here
           //"raster-opacity": 0.7,
           //"raster-hue-rotate": 180,
           // Add more paint properties as needed
         },*/
+          });
+        }
+        return bounds;
+      }
+
+      // Add vector layer from GeoJSON
+      function renderVector(features, map) {
+        const bounds = [];
+        const bound = turf.bbox(turf.featureCollection(features));
+        bounds.push([bound[0], bound[1]]);
+        bounds.push([bound[2], bound[3]]);
+
+        const id = Math.floor(Math.random() * 1000000).toString(); // doesn't need to be very unique, as before every render previous layers are removed
+
+        map.addSource(id, {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features,
+          },
+        });
+
+        map.addLayer({
+          id: `vector-layer-outline-${id}`,
+          type: "line",
+          source: id,
+          paint: {
+            "line-color": ["to-color", ["get", "color"]],
+            "line-width": 2,
+            "line-opacity": 1,
+          },
+          // filter: ["==", ["geometry-type"], "Polygon"],
+        });
+
+        map.addLayer({
+          id: `vector-layer-${id}`,
+          type: "fill",
+          source: id,
+          paint: {
+            "fill-color": ["to-color", ["get", "color"]],
+            "fill-opacity": 0.3,
+          },
+          // filter: ["==", ["geometry-type"], "Polygon"],
+        });
+
+        return bounds;
+      }
+
+      function removeExternalLayers(map) {
+        const externalLayers = map
+          .getStyle()
+          .layers.filter(
+            (layer) =>
+              layer.id.startsWith("vector-layer-") ||
+              layer.id.startsWith("raster-layer-")
+          );
+        const externalSources = new Set();
+        externalLayers.forEach((layer) => {
+          externalSources.add(layer.source);
+          map.removeLayer(layer.id);
+        });
+        externalSources.forEach((source) => {
+          map.removeSource(source);
         });
       }
-      return bounds;
-    }
-
-    // Add vector layer from GeoJSON
-    function renderVector(features, map) {
-      const bounds = [];
-      const bound = turf.bbox(turf.featureCollection(features));
-      bounds.push([bound[0], bound[1]]);
-      bounds.push([bound[2], bound[3]]);
-
-      const id = Math.floor(Math.random() * 1000000).toString(); // doesn't need to be very unique, as before every render previous layers are removed
-
-      map.addSource(id, {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features,
-        },
-      });
-
-      map.addLayer({
-        id: `vector-layer-outline-${id}`,
-        type: "line",
-        source: id,
-        paint: {
-          "line-color": ["to-color", ["get", "color"]],
-          "line-width": 2,
-          "line-opacity": 1,
-        },
-        // filter: ["==", ["geometry-type"], "Polygon"],
-      });
-
-      map.addLayer({
-        id: `vector-layer-${id}`,
-        type: "fill",
-        source: id,
-        paint: {
-          "fill-color": ["to-color", ["get", "color"]],
-          "fill-opacity": 0.3,
-        },
-        // filter: ["==", ["geometry-type"], "Polygon"],
-      });
-
-      return bounds;
-    }
-
-    function removeExternalLayers(map) {
-      const externalLayers = map
-        .getStyle()
-        .layers.filter(
-          (layer) =>
-            layer.id.startsWith("vector-layer-") ||
-            layer.id.startsWith("raster-layer-")
-        );
-      const externalSources = new Set();
-      externalLayers.forEach((layer) => {
-        externalSources.add(layer.source);
-        map.removeLayer(layer.id);
-      });
-      externalSources.forEach((source) => {
-        map.removeSource(source);
-      });
-    }
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
