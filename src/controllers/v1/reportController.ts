@@ -429,6 +429,7 @@ export const generatePlotReport = async (
         orthoType,
         treeCoverType,
         greeneryType,
+        garbageCollectionType,
       ] = await Promise.all([
         vector.findOne({ name: VectorName.Block_Boundary }),
         vector.findOne({ name: VectorName.Plot }),
@@ -437,6 +438,7 @@ export const generatePlotReport = async (
         raster.findOne({ name: "ORTHO" }),
         vector.findOne({ name: VectorName.Jungle }),
         vector.findOne({ name: VectorName.Green_Verge }),
+        vector.findOne({ name: VectorName.Garbage_Collection_Point }),
       ]);
       const [
         actionAreaLayer,
@@ -446,6 +448,7 @@ export const generatePlotReport = async (
         rasterLayer,
         treeCoverLayer,
         greeneryLayer,
+        garbageCollectionLayer,
       ] = await Promise.all([
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
@@ -481,6 +484,11 @@ export const generatePlotReport = async (
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
           vector: greeneryType._id,
+        }),
+        Layer.findOne({
+          tenantId: res.locals.user.tenantId._id,
+          missionId: req.body.missionId,
+          vector: garbageCollectionType._id,
         }),
       ]);
       const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;
@@ -598,6 +606,15 @@ export const generatePlotReport = async (
         turf.featureCollection(canopyGeojson.features)
       );
 
+      const combinedBuildings = turf.combine(
+        turf.featureCollection(buildingsGeojson.features)
+      );
+
+      
+      const garbageCollectionGeojson = turf.featureCollection((await readGeoJson(
+        DirPath(Directory.DEFAULT, garbageCollectionLayer.layerpath)
+      )).features);
+
       // ==================================================================================================================================
 
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
@@ -637,6 +654,15 @@ export const generatePlotReport = async (
         );
         const canopyArea =
           intersectCanopy === null ? 0 : turf.area(intersectCanopy);
+
+        const intersectGarbageCollection = turf.pointsWithinPolygon(
+          garbageCollectionGeojson,
+          blockGeojson
+        );
+
+        const garbageCollectionCount = intersectGarbageCollection.features.length;
+
+        const averageBuildingHeight = buildingsGeojson.features.filter(building => building.properties.blockName === blockName).map(building => building.properties.height).reduce((prev, curr) => Number(curr) + prev, 0);
 
         for (const plotFeature of PlotsByBlock.get(blockName)) {
           try {
@@ -730,11 +756,7 @@ export const generatePlotReport = async (
               buildingNo: plotProperties.sanctionedBuildingNo, // no data on format
               hasCompletionCertificate:
                 plotProperties.buildingStatus === "Constructed" ? "Yes" : "No",
-              buildingHeight: Number.isNaN(
-                Number(buildingProperties.buildingHeight)
-              )
-                ? null
-                : buildingProperties.buildingHeight, // must be numeric
+              buildingHeight: String(buildingProperties.height), // must be numeric
 
               // block details
 
@@ -747,12 +769,8 @@ export const generatePlotReport = async (
               canopyPercent: ((canopyArea / blockArea) * 100).toFixed(2),
               waterbodyPercent: ((waterbodyArea / blockArea) * 100).toFixed(2),
               blockName: plotProperties.blockName,
-              garbageCollectionInfo: blockProperties.garbageCollectionInfo,
-              averageBuildingHeight: Number.isNaN(
-                Number(blockProperties.averageBuildingHeight)
-              )
-                ? null
-                : blockProperties.averageBuildingHeight, // must be numeric
+              garbageCollectionInfo: String(garbageCollectionCount),
+              averageBuildingHeight: averageBuildingHeight.toFixed(2),
               averageBlockHeight: Number.isNaN(
                 Number(blockProperties.averageBlockHeight)
               )
