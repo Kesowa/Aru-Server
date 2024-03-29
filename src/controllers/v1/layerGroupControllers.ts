@@ -51,7 +51,7 @@ export const editLayerGroup = async (req: Request, res: AuthResponse) => {
 
     if (doc) {
       // Remove the layers from their existing groups
-      for(const layerId of req.body.layers) {
+      for (const layerId of req.body.layers) {
         const layer = await Layer.findById(layerId);
         await LayerGroup.findOneAndUpdate(
           {
@@ -61,7 +61,7 @@ export const editLayerGroup = async (req: Request, res: AuthResponse) => {
           {
             $pull: {
               layers: layer._id,
-            }
+            },
           }
         );
       }
