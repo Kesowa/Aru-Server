@@ -58,7 +58,7 @@ import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
-import { deletePointCloud, uploadPointCloud } from "../../utils/cesium";
+import { deletePointCloud } from "../../utils/cesium";
 import { LazToTiles3D } from "../../utils/pointcloud";
 
 // ********* create ***********

@@ -24,7 +24,7 @@ export async function uploadPointCloud(token: string, filePath: string, name: st
       body: JSON.stringify(postBody),
     }
   );
-  let data = await response.json() as AssetResponse;
+  const data = await response.json() as AssetResponse;
   await uploadFile({
     aws: data.uploadLocation,
     filePath
