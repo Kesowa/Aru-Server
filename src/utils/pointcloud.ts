@@ -15,7 +15,7 @@ export async function LazToTiles3D(docLaz: string) {
   await LazToLas(absLaz, absLas);
   await LasToTiles3D(absLas, absDir);
   await fs.rm(absLas);
-  return path.join(docDir, "tileset.json")
+  return path.join(docDir, "tileset.json");
 }
 
 async function LazToLas(absLaz: string, absLas: string) {
@@ -25,5 +25,7 @@ async function LazToLas(absLaz: string, absLas: string) {
 async function LasToTiles3D(absLas: string, absTileDir: string) {
   if ((await fs.stat(absTileDir)).isDirectory() != true)
     await fs.mkdir(absTileDir);
-  await asyncExec(`gocesiumtiler -i "${absLas}" -o "${absTileDir}" -srid 32633`);
+  await asyncExec(
+    `gocesiumtiler -i "${absLas}" -o "${absTileDir}" -srid 32633`
+  );
 }

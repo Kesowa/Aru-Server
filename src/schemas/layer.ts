@@ -185,7 +185,7 @@ const layerSchema = new mongoose.Schema<ILayer>(
     metadata: {
       type: String,
       required: false,
-    }
+    },
   },
   {
     timestamps: true,
@@ -198,7 +198,7 @@ layerSchema.index({
   type: 1,
   isPublic: 1,
 });
-layerSchema.pre("save", async function() {
+layerSchema.pre("save", async function () {
   await Tenant.updateOne(
     { _id: this.tenantId },
     { $inc: { actualSize: this.fileSize, allLayerSize: this.fileSize } }
@@ -210,7 +210,7 @@ layerSchema.pre("save", async function() {
 });
 layerSchema.post(
   "remove",
-  async function(this: {
+  async function (this: {
     tenantId: mongoose.Types.ObjectId;
     missionId: mongoose.Types.ObjectId;
     fileSize: number;

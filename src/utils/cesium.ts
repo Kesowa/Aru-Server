@@ -2,74 +2,75 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { createReadStream } from "fs";
 import path from "path";
 
-export async function uploadPointCloud(token: string, filePath: string, name: string) {
+export async function uploadPointCloud(
+  token: string,
+  filePath: string,
+  name: string
+) {
   const postBody = {
     name: name,
-    description: 'See [Wikipedia](https://en.wikipedia.org/?curid=217577).',
-    type: '3DTILES',
+    description: "See [Wikipedia](https://en.wikipedia.org/?curid=217577).",
+    type: "3DTILES",
     options: {
-      sourceType: 'POINT_CLOUD',
+      sourceType: "POINT_CLOUD",
       clampToTerrain: true,
-      baseTerrainId: 1
-    }
-  }
-  let response = await fetch(
-    "https://api.cesium.com/v1/assets",
-    {
-      method: "post",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "content-type": "application/json; charset=utf-8"
-      },
-      body: JSON.stringify(postBody),
-    }
-  );
-  const data = await response.json() as AssetResponse;
+      baseTerrainId: 1,
+    },
+  };
+  let response = await fetch("https://api.cesium.com/v1/assets", {
+    method: "post",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "content-type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify(postBody),
+  });
+  const data = (await response.json()) as AssetResponse;
   await uploadFile({
     aws: data.uploadLocation,
-    filePath
-  })
+    filePath,
+  });
   response = await fetch(data.onComplete.url, {
     method: data.onComplete.method,
     body: JSON.stringify(data.onComplete.fields),
     headers: {
-      "Authorization": `Bearer ${token}`,
-      "content-type": "application/json; charset=utf-8"
+      Authorization: `Bearer ${token}`,
+      "content-type": "application/json; charset=utf-8",
     },
   });
   return data.assetMetadata;
 }
 
-export async function deletePointCloud(token: string, assetId: CesiumMetadata["id"]) {
-  const response = await fetch(
-    `https://api.cesium.com/v1/assets/${assetId}`,
-    {
-      method: "delete",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-    }
-  );
+export async function deletePointCloud(
+  token: string,
+  assetId: CesiumMetadata["id"]
+) {
+  const response = await fetch(`https://api.cesium.com/v1/assets/${assetId}`, {
+    method: "delete",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.status;
 }
 
 async function uploadFile(options: {
   aws: {
-    bucket: string,
-    accessKey: string,
-    secretAccessKey: string,
-    sessionToken: string,
-    endpoint: string,
-    prefix: string,
-  },
-  filePath: string,
+    bucket: string;
+    accessKey: string;
+    secretAccessKey: string;
+    sessionToken: string;
+    endpoint: string;
+    prefix: string;
+  };
+  filePath: string;
 }) {
-  const readStream = createReadStream(options.filePath)
+  const readStream = createReadStream(options.filePath);
   const cmd = new PutObjectCommand({
     Bucket: options.aws.bucket,
     Key: path.join(options.aws.prefix, path.basename(options.filePath)),
-    Body: readStream
-  })
+    Body: readStream,
+  });
   const s3 = new S3Client({
     credentials: {
       accessKeyId: options.aws.accessKey,
@@ -77,39 +78,38 @@ async function uploadFile(options: {
       sessionToken: options.aws.sessionToken,
     },
     endpoint: options.aws.endpoint,
-    region: "us-east-1"
+    region: "us-east-1",
   });
-  await s3.send(cmd)
+  await s3.send(cmd);
 }
 
-type AssetResponse =
-  {
-    assetMetadata: {
-      id: number,
-      type: string,
-      name: string,
-      description: string,
-      bytes: number,
-      attribution: string,
-      dateAdded: string,
-      exportable: true,
-      status: string,
-      percentComplete: number,
-      archivable: true
-    },
-    uploadLocation: {
-      bucket: string,
-      endpoint: string,
-      prefix: string,
-      accessKey: string,
-      secretAccessKey: string,
-      sessionToken: string
-    },
-    onComplete: {
-      method: string,
-      url: string,
-      fields: {}
-    }
-  }
+type AssetResponse = {
+  assetMetadata: {
+    id: number;
+    type: string;
+    name: string;
+    description: string;
+    bytes: number;
+    attribution: string;
+    dateAdded: string;
+    exportable: true;
+    status: string;
+    percentComplete: number;
+    archivable: true;
+  };
+  uploadLocation: {
+    bucket: string;
+    endpoint: string;
+    prefix: string;
+    accessKey: string;
+    secretAccessKey: string;
+    sessionToken: string;
+  };
+  onComplete: {
+    method: string;
+    url: string;
+    fields: {};
+  };
+};
 
 export type CesiumMetadata = AssetResponse["assetMetadata"];

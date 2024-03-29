@@ -20,7 +20,7 @@ import { IPackage } from "../../schemas/package";
 import { ITenant } from "../../schemas/tenant";
 import mongoose, { HydratedDocument } from "mongoose";
 import {
-    CESIUM_TOKEN,
+  CESIUM_TOKEN,
   Directory,
   DirPath,
   TITILER_SERVER,
@@ -1322,9 +1322,12 @@ export const createBaseRasterfromUpload = async (
         lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
         lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
       };
-    }
-    else if (rasterType.name == "POINT_CLOUD") {
-      metadata = await uploadPointCloud(CESIUM_TOKEN, pathUtils.absPath(pathUtils.Directory.ROOT, file_loc), name);
+    } else if (rasterType.name == "POINT_CLOUD") {
+      metadata = await uploadPointCloud(
+        CESIUM_TOKEN,
+        pathUtils.absPath(pathUtils.Directory.ROOT, file_loc),
+        name
+      );
     }
     // let center = {
     //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,

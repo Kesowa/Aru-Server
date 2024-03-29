@@ -18,7 +18,7 @@ export interface IRaster {
 
 export const RasterType = {
   _id: Types.String(),
-  name: Types.StringEnum({ values: [...NAMES]}),
+  name: Types.StringEnum({ values: [...NAMES] }),
   bidx: Types.String(),
   bandExp: Types.String(),
   colorMap: Types.String(),

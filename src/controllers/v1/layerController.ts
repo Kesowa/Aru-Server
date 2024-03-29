@@ -38,7 +38,7 @@ import type { IRaster } from "../../schemas/rasterprops";
 import type { IPackage } from "../../schemas/package";
 import type { ILayerGroup } from "../../schemas/layerGroup";
 import {
-    CESIUM_TOKEN,
+  CESIUM_TOKEN,
   Directory,
   DirPath,
   TITILER_SERVER,
@@ -162,8 +162,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
           lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
         };
-      }
-      else if (rasterType.name == "POINT_CLOUD") {
+      } else if (rasterType.name == "POINT_CLOUD") {
         metadata = await LazToTiles3D(file_loc);
       }
       const size: number = Number(
