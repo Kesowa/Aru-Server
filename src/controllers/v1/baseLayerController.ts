@@ -20,7 +20,6 @@ import { IPackage } from "../../schemas/package";
 import { ITenant } from "../../schemas/tenant";
 import mongoose, { HydratedDocument } from "mongoose";
 import {
-  CESIUM_TOKEN,
   Directory,
   DirPath,
   TITILER_SERVER,
