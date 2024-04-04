@@ -36,10 +36,15 @@ export async function delete3DTiles(tilesetJson: string) {
   const docDir = decomposePath.dir;
   const pointCloudDir = path.basename(path.dirname(docDir));
   const filename = decomposePath.base;
-  if (filename == "tileset.json" && pointCloudDir == pathUtils.Directory.POINT_CLOUD) {
+  if (
+    filename == "tileset.json" &&
+    pointCloudDir == pathUtils.Directory.POINT_CLOUD
+  ) {
     // delete the directory containing 3D tiles
-    await fs.rm(pathUtils.absPath(pathUtils.Directory.ROOT, docDir), { recursive: true });
-    return true
+    await fs.rm(pathUtils.absPath(pathUtils.Directory.ROOT, docDir), {
+      recursive: true,
+    });
+    return true;
   }
   return false;
 }

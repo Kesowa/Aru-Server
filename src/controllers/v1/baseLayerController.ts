@@ -1322,7 +1322,7 @@ export const createBaseRasterfromUpload = async (
         lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
       };
     } else if (rasterType.name == "POINT_CLOUD") {
-        metadata = await LazToTiles3D(file_loc);
+      metadata = await LazToTiles3D(file_loc);
     }
     // let center = {
     //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
