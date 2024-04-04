@@ -38,7 +38,6 @@ import type { IRaster } from "../../schemas/rasterprops";
 import type { IPackage } from "../../schemas/package";
 import type { ILayerGroup } from "../../schemas/layerGroup";
 import {
-  CESIUM_TOKEN,
   Directory,
   DirPath,
   TITILER_SERVER,
@@ -58,8 +57,7 @@ import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
-import { deletePointCloud } from "../../utils/cesium";
-import { LazToTiles3D } from "../../utils/pointcloud";
+import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
 
 // ********* create ***********
 
@@ -300,8 +298,8 @@ export const deleteLayer = async (req: Request, res: AuthResponse) => {
         });
       } else {
         const conf = await deletePublicFileUsingPath(d.layerpath);
-        if (d.metadata?.id !== undefined) {
-          await deletePointCloud(CESIUM_TOKEN, d.metadata.id);
+        if (d.metadata !== undefined) {
+          await delete3DTiles(d.metadata);
         }
         if (conf) {
           req.log.info("Files deleted");

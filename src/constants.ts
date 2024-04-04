@@ -147,4 +147,3 @@ export const SEQ_SERVER_URL = new EnvVar("SEQ_URL").isUrl().toString();
 export const SEQ_API_KEY = new EnvVar("SEQ_KEY").toString();
 
 export const AIML_SERVER = new EnvVar("AIML_SERVER").isUrl().toString();
-export const CESIUM_TOKEN = new EnvVar("CESIUM_TOKEN").toString();

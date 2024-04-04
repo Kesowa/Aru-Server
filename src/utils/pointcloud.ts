@@ -26,6 +26,20 @@ async function LasToTiles3D(absLas: string, absTileDir: string) {
   if ((await fs.stat(absTileDir)).isDirectory() != true)
     await fs.mkdir(absTileDir);
   await asyncExec(
-    `gocesiumtiler -i "${absLas}" -o "${absTileDir}" -srid 32633`
+    `gocesiumtiler -a grid -grid-max-size 5 -grid-min-size 1 -i "${absLas}" -o "${absTileDir}" -srid 32633`
   );
+}
+
+export async function delete3DTiles(tilesetJson: string) {
+  // check if it is really a tilesetJson string
+  const decomposePath = path.parse(tilesetJson);
+  const docDir = decomposePath.dir;
+  const pointCloudDir = path.basename(path.dirname(docDir));
+  const filename = decomposePath.base;
+  if (filename == "tileset.json" && pointCloudDir == pathUtils.Directory.POINT_CLOUD) {
+    // delete the directory containing 3D tiles
+    await fs.rm(pathUtils.absPath(pathUtils.Directory.ROOT, docDir), { recursive: true });
+    return true
+  }
+  return false;
 }
