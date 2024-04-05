@@ -1314,6 +1314,19 @@ db.vectors.insertMany([
 
 db.rasters.insertMany([
   {
+    _id: ObjectId("60c4238f4764fb024a3c1a59"),
+    bidx: null,
+    name: "POINT_CLOUD",
+    bandExp: null,
+    colorMap: null,
+    resamplingMethod: null,
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    __v: 0,
+  },
+  {
     _id: ObjectId("60c3138f4764fb024a3c1a59"),
     bidx: null,
     name: "ORTHO",

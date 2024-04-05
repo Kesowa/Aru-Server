@@ -32,9 +32,10 @@ export interface ILayer {
   flaggedFeatures: number[];
   isFlagged: boolean;
   isThreadExist: boolean;
-  commentCount: Number;
+  commentCount: number;
   createdAt: Date; // index
   updatedAt: Date;
+  metadata?: string;
 }
 export const LayerType = {
   _id: Types.String(),
@@ -65,6 +66,7 @@ export const LayerType = {
   isFlagged: Types.Boolean(),
   createdAt: Types.DateTime(), // index
   updatedAt: Types.DateTime(),
+  metadata: Types.String(),
 };
 const layerSchema = new mongoose.Schema<ILayer>(
   {
@@ -179,6 +181,10 @@ const layerSchema = new mongoose.Schema<ILayer>(
     },
     updatedAt: {
       type: Date,
+    },
+    metadata: {
+      type: String,
+      required: false,
     },
   },
   {
