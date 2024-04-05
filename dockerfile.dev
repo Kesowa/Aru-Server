@@ -17,7 +17,12 @@ RUN go build
 
 FROM node:18-bookworm-slim@sha256:e01db0ed571851e2a67b11624abb90992af585db0afaff451972e64c604dffa1
 WORKDIR /app
-RUN apt-get update && apt-get install -y git gcc-multilib
+RUN apt-get update && apt-get install -y git gcc-multilib curl gnupg \
+  && curl --location --silent https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+  && apt-get update \
+  && apt-get install google-chrome-stable -y --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/*
 COPY --from=lastools /build/LASlib/ /app/lib
 COPY --from=lastools /build/bin64/ /app/bin
 COPY --from=gocesiumtiler /build/gocesiumtiler /app/bin/gocesiumtiler
@@ -31,8 +36,8 @@ ADD ./dji_bin.tar.gz /bin
 ADD ./dji_lib.tar.gz /lib
 RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
 COPY package*.json ./
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 RUN npm ci
-RUN npm i puppeteer
 COPY ./tsconfig.json ./
 ENV NODE_ENV=development
 CMD ["npm", "run", "dev"]
