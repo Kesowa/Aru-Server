@@ -67,7 +67,7 @@ export const LayerType = {
   createdAt: Types.DateTime(), // index
   updatedAt: Types.DateTime(),
   metadata: Types.Object({
-    properties: {}
+    properties: {},
   }),
 };
 const layerSchema = new mongoose.Schema<ILayer>(
