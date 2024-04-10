@@ -298,7 +298,7 @@ export const deleteLayer = async (req: Request, res: AuthResponse) => {
         });
       } else {
         const conf = await deletePublicFileUsingPath(d.layerpath);
-        if (d.metadata !== undefined) {
+        if (typeof d.metadata == "string") {
           await delete3DTiles(d.metadata);
         }
         if (conf) {

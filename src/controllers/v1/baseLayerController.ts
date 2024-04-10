@@ -1243,7 +1243,7 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
               tenantId: res.locals.user.tenantId._id,
             });
 
-            if (layerArray[i].metadata?.id !== undefined) {
+            if (typeof layerArray[i].metadata?.id == "string") {
               await delete3DTiles(layerArray[i].metadata);
             }
             if (data) {
