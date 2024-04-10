@@ -35,7 +35,7 @@ export interface ILayer {
   commentCount: number;
   createdAt: Date; // index
   updatedAt: Date;
-  metadata?: string;
+  metadata?: string | Object;
 }
 export const LayerType = {
   _id: Types.String(),
@@ -66,7 +66,9 @@ export const LayerType = {
   isFlagged: Types.Boolean(),
   createdAt: Types.DateTime(), // index
   updatedAt: Types.DateTime(),
-  metadata: Types.String(),
+  metadata: Types.Object({
+    properties: {}
+  }),
 };
 const layerSchema = new mongoose.Schema<ILayer>(
   {
@@ -183,7 +185,7 @@ const layerSchema = new mongoose.Schema<ILayer>(
       type: Date,
     },
     metadata: {
-      type: String,
+      type: mongoose.Schema.Types.Mixed,
       required: false,
     },
   },
