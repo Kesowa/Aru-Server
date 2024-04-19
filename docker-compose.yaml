@@ -17,6 +17,8 @@ services:
       - 5011:5011
     extra_hosts:
       - host.docker.internal:host-gateway
+    mem_limit: 512m
+    memswap_limit: 0
 
   mongodb:
     image: mongo@sha256:06cd2e814b2641d4c7ac6b093e870fe72c1ddbc7c6ddaaef16d4cb5a61c0ee6b
@@ -26,6 +28,8 @@ services:
       - MONGO_INITDB_DATABASE=test
     ports:
       - 27019:27017
+    mem_limit: 128m
+    memswap_limit: 0
 
   titiler:
     environment:
@@ -34,6 +38,10 @@ services:
     image: ghcr.io/developmentseed/titiler@sha256:45565498b88d5b77360014ab9dd217c17617ae59d308769f67c24e7540a78d02
     ports:
       - 8000:8000
+    mem_limit: 256m
+    memswap_limit: 0
 
   redis:
     image: redis@sha256:aeed51f49a6331df0cb2c1039ae3d1d70d882be3f48bde75cd240452a2348e88
+    mem_limit: 128m
+    memswap_limit: 0
