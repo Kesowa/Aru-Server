@@ -119,8 +119,9 @@ export interface IPlotProperties {
 
 export interface IBuildingProperties {
   premiseNo: string; // connects building to plot
-  buildingHeight?: string;
+  height: number;
   sys_id: string;
+  blockName: string;
 }
 
 export interface IBlockProperties {

@@ -39,10 +39,11 @@ export const RobustRunner = <A, B, C, D, T extends Response>(
       .then()
       .catch((err) => {
         req.log.error(err);
-        res.status(500).json({
-          status: false,
-          message: "Server error!",
-        });
+        if (!res.headersSent)
+          res.status(500).json({
+            status: false,
+            message: "Server error!",
+          });
       });
   };
 };

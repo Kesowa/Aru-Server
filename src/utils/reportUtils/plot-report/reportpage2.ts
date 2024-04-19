@@ -18,10 +18,10 @@ const imageTopHeading = (imageHeading: string) => {
     frame: {
       position: {
         x: 10000,
-        y: 200,
+        y: 100,
       },
-      width: 5000,
-      height: 1000,
+      width: 4000,
+      height: 800,
       anchor: {
         horizontal: FrameAnchorType.MARGIN,
         vertical: FrameAnchorType.MARGIN,
@@ -43,7 +43,7 @@ const imageTopHeading = (imageHeading: string) => {
         font: {
           name: "Arial",
         },
-        size: "35pt",
+        size: "28pt",
         bold: true,
       }),
     ],

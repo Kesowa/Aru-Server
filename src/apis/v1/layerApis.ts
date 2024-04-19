@@ -370,6 +370,7 @@ router.patch(
   upload.array("file"), // array of files
   body("radius").optional().isNumeric(),
   body("Id").notEmpty().isMongoId(),
+  query("mode").notEmpty().isIn(["LayerLabel", "GeoCoord"]),
   validator,
   canAutoAssignImage,
   isSize,

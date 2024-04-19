@@ -77,7 +77,15 @@
           JSON.stringify({ rasterBounds, vectorBounds, points })
         );
         if (points.every((v) => v != null)) {
-          map.fitBounds(points, { duration: 0 });
+          map.fitBounds(points, {
+            duration: 0,
+            padding: {
+              top: 100,
+              bottom: 100,
+              left: 100,
+              right: 100,
+            },
+          });
         } else {
           console.error("CANNOT FIND BOUNDS, ALL NULL");
         }
@@ -147,11 +155,11 @@
             type: "raster",
             source: rasterSourceId,
             /*paint: {
-            // Apply your desired paint properties here
-            //"raster-opacity": 0.7,
-            //"raster-hue-rotate": 180,
-            // Add more paint properties as needed
-          },*/
+          // Apply your desired paint properties here
+          //"raster-opacity": 0.7,
+          //"raster-hue-rotate": 180,
+          // Add more paint properties as needed
+        },*/
           });
         }
         return bounds;
