@@ -13,8 +13,9 @@ export async function LazToTiles3D(docLaz: string) {
   const absLaz = pathUtils.absPath(pathUtils.Directory.ROOT, docLaz);
   const absLas = pathUtils.absPath(pathUtils.Directory.TEMP, name + ".las");
   const { size } = await fs.stat(absLaz);
-  if (size > 1e9) { // larger than 1GB
-    return { error: "PointCloud too big for conversion!" }
+  if (size > 1e9) {
+    // larger than 1GB
+    return { error: "PointCloud too big for conversion!" };
   }
   await LazToLas(absLaz, absLas);
   await LasToTiles3D(absLas, absDir);
