@@ -17,7 +17,7 @@ services:
       - 5011:5011
     extra_hosts:
       - host.docker.internal:host-gateway
-    mem_limit: 512m
+    mem_limit: 1024m
     memswap_limit: 0
 
   mongodb:
@@ -28,7 +28,7 @@ services:
       - MONGO_INITDB_DATABASE=test
     ports:
       - 27019:27017
-    mem_limit: 128m
+    mem_limit: 256m
     memswap_limit: 0
 
   titiler:
