@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
 
-const NAMES = <const>["ORTHO", "DEM", "NDVI", "DTM", "NDWI", "POINT_CLOUD"];
+const NAMES = <const>["ORTHO", "DEM", "NDVI", "DTM", "NDWI", "POINT_CLOUD", "CESIUM_3D"];
 
 export interface IRaster {
   _id: mongoose.Types.ObjectId;
