@@ -17,8 +17,8 @@ services:
       - 5011:5011
     extra_hosts:
       - host.docker.internal:host-gateway
-    mem_limit: 1024m
-    memswap_limit: 2g
+    mem_limit: 2g
+    memswap_limit: 4g
     cpus: 1.5
 
   mongodb:
