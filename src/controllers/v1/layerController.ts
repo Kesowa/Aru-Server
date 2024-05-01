@@ -58,6 +58,7 @@ import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
+import { ZipToTiles3D } from "../../utils/cesium";
 
 // ********* create ***********
 
@@ -138,6 +139,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let maxP = 1;
       let center = { lat: 0, lng: 0 };
       let metadata = {};
+      const size: number = Number(
+        (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
+      );
       if (rasterType.name == "DEM") {
         let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${file_loc}`;
         //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
@@ -161,11 +165,19 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
         };
       } else if (rasterType.name == "POINT_CLOUD") {
-        metadata = await LazToTiles3D(file_loc);
+        const POINTCLOUD_LIMIT = 1e3;
+        if (size > POINTCLOUD_LIMIT) {
+          req.log.error(
+            { POINTCLOUD_LIMIT, file_loc },
+            "pointcloud too large, not converting"
+          );
+        } else {
+          metadata = await LazToTiles3D(file_loc);
+        }
+      } else if (rasterType.name == "CESIUM_3D") {
+        // Extract zip, locate tileset, move to correct location
+        metadata = await ZipToTiles3D(file_loc);
       }
-      const size: number = Number(
-        (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-      );
       layer = new Layer({
         name,
         type: "Raster",
