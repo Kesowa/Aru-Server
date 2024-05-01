@@ -167,7 +167,10 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       } else if (rasterType.name == "POINT_CLOUD") {
         const POINTCLOUD_LIMIT = 1e3;
         if (size > POINTCLOUD_LIMIT) {
-          req.log.error({POINTCLOUD_LIMIT, file_loc}, "pointcloud too large, not converting");
+          req.log.error(
+            { POINTCLOUD_LIMIT, file_loc },
+            "pointcloud too large, not converting"
+          );
         } else {
           metadata = await LazToTiles3D(file_loc);
         }

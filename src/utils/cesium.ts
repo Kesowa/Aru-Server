@@ -9,12 +9,17 @@ export async function ZipToTiles3D(docLaz: string) {
   const absDir = pathUtils.absPath(pathUtils.Directory.ROOT, docDir);
   const absZip = pathUtils.absPath(pathUtils.Directory.ROOT, docLaz);
   const directory = await unzipper.Open.file(absZip);
-  if (directory.files.findIndex(entry => entry.type == "File" && entry.path == "tileset.json") == -1) {
+  if (
+    directory.files.findIndex(
+      (entry) => entry.type == "File" && entry.path == "tileset.json"
+    ) == -1
+  ) {
     // tileset.json not found
-    return undefined
+    return undefined;
   }
-  await fs.createReadStream(absZip)
-  .pipe(unzipper.Extract({path: absDir}))
-  .promise();
+  await fs
+    .createReadStream(absZip)
+    .pipe(unzipper.Extract({ path: absDir }))
+    .promise();
   return path.join(docDir, "tileset.json");
 }
