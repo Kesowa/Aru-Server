@@ -181,12 +181,11 @@ export const createVectorBaseLayer = async (
   try {
     const vectorLayer = await saveVectorLayer(
       pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
-      req.body.inHeritOriginalColorFromFile
-        ? {
-            icon: req.body.icon,
-            color: req.body.color,
-          }
-        : undefined
+      {
+        icon: req.body.icon,
+        color: req.body.color,
+        inheritColor: req.body.inHeritOriginalColorFromFile
+      }
     );
 
     if (vectorLayer == undefined) {

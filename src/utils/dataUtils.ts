@@ -58,9 +58,14 @@ const getFlagColor = (geojson: GeoJson) => {
  */
 export const saveVectorLayer = async (
   layer: pathUtils.DocPath | pathUtils.DirPath | GeoJson,
-  options?: {
+  options: {
     icon: string;
     color: string;
+    inheritColor: boolean;
+  } = {
+    icon: "Marker",
+    color: "#666",
+    inheritColor: false,
   }
 ) => {
   let layerPath = "";
@@ -120,14 +125,15 @@ export const saveVectorLayer = async (
       geojsonData = await shp2json(fileData);
     }
     if (geojsonData) {
-      if (options) {
-        geojsonData.features.forEach(
-          (feature) =>
-            (feature.properties = {
-              ...feature.properties,
-              ...options,
-            })
-        );
+      geojsonData.features.forEach(
+        (feature) =>
+          (feature.properties = {
+            ...feature.properties,
+            icon: options.icon,
+            color: options.inheritColor ? feature.properties.color || options.color : options.color
+          })
+      );
+      if (options.inheritColor == false) {
         flagColor = options.color;
       } else {
         flagColor = getFlagColor(geojsonData);
