@@ -130,7 +130,9 @@ export const saveVectorLayer = async (
           (feature.properties = {
             ...feature.properties,
             icon: options.icon,
-            color: options.inheritColor ? feature.properties.color || options.color : options.color
+            color: options.inheritColor
+              ? feature.properties.color || options.color
+              : options.color,
           })
       );
       if (options.inheritColor == false) {

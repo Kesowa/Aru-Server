@@ -184,7 +184,7 @@ export const createVectorBaseLayer = async (
       {
         icon: req.body.icon,
         color: req.body.color,
-        inheritColor: req.body.inHeritOriginalColorFromFile
+        inheritColor: req.body.inHeritOriginalColorFromFile,
       }
     );
 

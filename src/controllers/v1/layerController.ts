@@ -76,7 +76,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           {
             icon: req.body.icon,
             color: req.body.color,
-            inheritColor: req.body.inHeritOriginalColorFromFile
+            inheritColor: req.body.inHeritOriginalColorFromFile,
           }
         );
 
@@ -1328,8 +1328,9 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${ar.length - 1
-              } and data index should start from 0`,
+            message: `Your data must be less than equal to ${
+              ar.length - 1
+            } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -2532,8 +2533,9 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${req.body.flag ? "flagged" : "unflagged"
-        } successfully`,
+      message: `feature ${
+        req.body.flag ? "flagged" : "unflagged"
+      } successfully`,
     });
   } else {
     res.status(501).json({
