@@ -39,6 +39,7 @@ COPY package*.json ./
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 RUN npm ci
 COPY ./tsconfig.json ./
+COPY ./src ./
 
 RUN npm run build
 WORKDIR /app/src
