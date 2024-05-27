@@ -34,6 +34,7 @@ import {
   saveMultiGeojson,
   saveVectorLayer,
 } from "../../utils/dataUtils";
+import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -1241,6 +1242,10 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
               _id: layerArray[i],
               tenantId: res.locals.user.tenantId._id,
             });
+
+            if (typeof layerArray[i].metadata?.id == "string") {
+              await delete3DTiles(layerArray[i].metadata);
+            }
             if (data) {
               return res.status(200).json({
                 status: true,
@@ -1274,7 +1279,7 @@ export const createBaseRasterfromUpload = async (
   res: AuthResponse
 ) => {
   {
-    const tif_loc = `/raster/${req.file?.filename}`;
+    const file_loc = `/raster/${req.file?.filename}`;
     let layer: HydratedDocument<ILayer>;
     const dataArr = [];
 
@@ -1295,8 +1300,9 @@ export const createBaseRasterfromUpload = async (
       return;
     }
     let center = { lat: 0, lng: 0 };
+    let metadata = {};
     if (rasterType.name == "DEM") {
-      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${file_loc}`;
       //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       let response = await fetch(metaDataURL, {
         method: "GET",
@@ -1306,7 +1312,7 @@ export const createBaseRasterfromUpload = async (
       minP = metadata["1"]["min"];
       maxP = metadata["1"]["max"];
 
-      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
+      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${file_loc}`;
       response = await fetch(metaDataURL, {
         method: "GET",
       });
@@ -1315,6 +1321,8 @@ export const createBaseRasterfromUpload = async (
         lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
         lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
       };
+    } else if (rasterType.name == "POINT_CLOUD") {
+      metadata = await LazToTiles3D(file_loc);
     }
     // let center = {
     //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
@@ -1347,6 +1355,7 @@ export const createBaseRasterfromUpload = async (
       tenantId: res.locals.user.tenantId,
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
+      metadata,
     });
     if (layer) {
       const savedDoc = await layer.save();

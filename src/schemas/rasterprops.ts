@@ -1,9 +1,19 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
 
+const NAMES = <const>[
+  "ORTHO",
+  "DEM",
+  "NDVI",
+  "DTM",
+  "NDWI",
+  "POINT_CLOUD",
+  "CESIUM_3D",
+];
+
 export interface IRaster {
   _id: mongoose.Types.ObjectId;
-  name: "ORTHO" | "DEM" | "NDVI" | "DTM" | "NDWI";
+  name: typeof NAMES[number];
   bidx?: string;
   bandExp?: string;
   colorMap?: string;
@@ -16,7 +26,7 @@ export interface IRaster {
 
 export const RasterType = {
   _id: Types.String(),
-  name: Types.StringEnum({ values: ["ORTHO", "DEM", "NDVI", "DTM", "NDWI"] }),
+  name: Types.StringEnum({ values: [...NAMES] }),
   bidx: Types.String(),
   bandExp: Types.String(),
   colorMap: Types.String(),
@@ -31,7 +41,7 @@ const rasterSchema = new mongoose.Schema<IRaster>(
   {
     name: {
       type: String,
-      enum: ["ORTHO", "DEM", "NDVI", "DTM", "NDWI"],
+      enum: NAMES,
     },
     bidx: {
       type: String,
