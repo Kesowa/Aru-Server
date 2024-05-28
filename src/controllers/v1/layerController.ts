@@ -1065,7 +1065,7 @@ export const filterLayer = async (
         startTime = new Date("2020-01-01");
         break;
     }
-    const d = [];
+    const d = new Map();
     const match = { name: req.body.rasterProps };
     const match2 = { name: req.body.vectorProps };
     const match3 = { type: req.body.vectorPropsType };
@@ -1093,7 +1093,7 @@ export const filterLayer = async (
           });
         for (let i = 0; i < result.length; i++) {
           if (result[i].vector || result[i].raster) {
-            d.push(result[i]);
+            d.set(result[i]._id.toHexString(), result[i]);
           }
         }
       } else {
@@ -1115,7 +1115,7 @@ export const filterLayer = async (
             });
           for (let i = 0; i < result.length; i++) {
             if (result[i].raster) {
-              d.push(result[i]);
+              d.set(result[i]._id.toHexString(), result[i]);
             }
           }
         } else {
@@ -1137,7 +1137,7 @@ export const filterLayer = async (
               });
             for (let i = 0; i < result.length; i++) {
               if (result[i].vector) {
-                d.push(result[i]);
+                d.set(result[i]._id.toHexString(), result[i]);
               }
             }
           }
@@ -1168,7 +1168,7 @@ export const filterLayer = async (
         });
       for (let i = 0; i < result.length; i++) {
         if (result[i].vector || result[i].raster) {
-          d.push(result[i]);
+          d.set(result[i]._id.toHexString(), result[i]);
         }
       }
     }
@@ -1187,7 +1187,7 @@ export const filterLayer = async (
         for (let j = 0; j < match3.type.length; j++) {
           if (result[i].vector) {
             if (result[i].vector.type == match3.type[j]) {
-              d.push(result[i]);
+              d.set(result[i]._id.toHexString(), result[i]);
             }
           }
         }
@@ -1208,7 +1208,7 @@ export const filterLayer = async (
         for (let j = 0; j < match2.name.length; j++) {
           if (result[i].vector) {
             if (result[i].vector.name == match2.name[j]) {
-              d.push(result[i]);
+              d.set(result[i]._id.toHexString(), result[i]);
             }
           }
         }
@@ -1229,17 +1229,17 @@ export const filterLayer = async (
         for (let j = 0; j < match.name.length; j++) {
           if (result[i].raster) {
             if (result[i].raster.name == match.name[j]) {
-              d.push(result[i]);
+              d.set(result[i]._id.toHexString(), result[i]);
             }
           }
         }
       }
     }
-    if (d.length) {
+    if (d.size) {
       return res.json({
         status: true,
         message: "Sucessfully get Vector or Raster data ",
-        data: d,
+        data: Array.from(d.values()),
       });
     } else
       return res.json({
