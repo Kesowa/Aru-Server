@@ -47,12 +47,10 @@ export const createAlert = async (
     const size1: number = await getFileSize(docPath);
     const newAlert = new Alert({
       locationName,
-      location: req.body.location
-        ? req.body.location
-        : {
-            lat: 0,
-            long: 0,
-          },
+      location: {
+        long: req.body.location?.long || 0,
+        lat: req.body.location?.lat || 0,
+      },
       missionId,
       locationId,
       createdBy: res.locals.user._id,
@@ -813,12 +811,12 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
     req.body.location = {
-      lat: ff ? ff.lat : 0,
       long: ff ? ff.lng : 0,
+      lat: ff ? ff.lat : 0,
     };
     const newAlert = new Alert({
       locationName,
-      location: req.body.location ? req.body.location : null,
+      location: req.body.location,
       missionId,
       locationId,
       createdBy: res.locals.user._id,

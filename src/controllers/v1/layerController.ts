@@ -136,7 +136,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       }
       let minP = 0;
       let maxP = 1;
-      let center = { lat: 0, lng: 0 };
+      let center = { lng: 0, lat: 0 };
       let metadata = {};
       const size: number = Number(
         (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
@@ -160,8 +160,8 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         });
         metadata = await response.json();
         center = {
-          lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
           lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+          lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
         };
       } else if (rasterType.name == "POINT_CLOUD") {
         const POINTCLOUD_LIMIT = 1e3;
@@ -634,7 +634,10 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
       fileSize: thumbs.size,
       isReview: true,
       featureLabel: req.body.featureLabel,
-      centerPoints: req.body.centerPoints,
+      centerPoints: {
+        lng: req.body.centerPoints.lng,
+        lat: req.body.centerPoints.lat
+      },
       fileType: req.body.type,
       sys_Id: sys_Id,
       tenantId: res.locals.user.tenantId,
@@ -1328,9 +1331,8 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${
-              ar.length - 1
-            } and data index should start from 0`,
+            message: `Your data must be less than equal to ${ar.length - 1
+              } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -1703,8 +1705,8 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
 
         const layerId = req.body.Id;
         const centerPoints2 = {
-          lat: String(closestPoint.geometry.coordinates[1]),
           lng: String(closestPoint.geometry.coordinates[0]),
+          lat: String(closestPoint.geometry.coordinates[1]),
         };
         const fpath = "/images/geojson/" + files[j].filename;
         req.log.info("file path:", fpath);
@@ -1762,8 +1764,8 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         const matchedFeature = geojson.features[matchedFeatureIndex];
         const centroid = turf.centroid(matchedFeature.geometry);
         const centerPoints = {
-          lat: centroid.geometry.coordinates[1],
           lng: centroid.geometry.coordinates[0],
+          lat: centroid.geometry.coordinates[1],
         };
         const fpath = "/images/geojson/" + uploadFile.filename;
         req.log.info("file path:", fpath);
@@ -2306,9 +2308,10 @@ export const picktoMapUseForLayerCreate = async (
             const size: number = Number(
               (Number(files[i]?.size) / (1024 * 1024)).toFixed(5)
             );
-            const centerPoints2: any = {};
-            centerPoints2["lng"] = allImageData[i].coordinates[0];
-            centerPoints2["lat"] = allImageData[i].coordinates[1];
+            const centerPoints2 = {
+              lng: allImageData[i].coordinates[0],
+              lat: allImageData[i].coordinates[1]
+            };
             const featureFile = new layerFiles({
               name: allImageData[i].originalname,
               layerId: savedDoc1._id,
@@ -2533,9 +2536,8 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${
-        req.body.flag ? "flagged" : "unflagged"
-      } successfully`,
+      message: `feature ${req.body.flag ? "flagged" : "unflagged"
+        } successfully`,
     });
   } else {
     res.status(501).json({

@@ -83,7 +83,7 @@ const locationSchema = new mongoose.Schema<ILocation>({
       ],
       required: true,
     },
-    coordinates: {},
+    coordinates: mongoose.Schema.Types.Mixed,
   },
   properties: {
     name: String,

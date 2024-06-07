@@ -37,8 +37,8 @@ export interface droneStat {
   index: number;
   flightID: string;
   location: {
-    lat: number;
     long: number;
+    lat: number;
   };
   battery: number;
   timestamp: string;

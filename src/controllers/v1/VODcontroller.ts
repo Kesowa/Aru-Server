@@ -1,9 +1,7 @@
 import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
-import format from "date-fns/format";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { generateToken } from "./streamTokenController";
 import {
   deleteVideo,
   extractTelemetry,
@@ -19,6 +17,7 @@ import { WiproInterface } from "../../utils/wipro";
 import Flight from "../../models/flight";
 import * as pathUtils from "../../utils/pathUtils";
 import Location from "../../models/location";
+import { randomUUID } from "crypto";
 
 export const saveVOD = async (
   req: Request<
@@ -276,18 +275,14 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
   {
     const tenantId = String(res.locals.user.tenantId._id);
     let { missionID, flightID, locationID } = req.body;
-    const token = generateToken(missionID, flightID, locationID, tenantId);
-    const timestamp = format(new Date(), "dd-MMM-yy-hh-mm-ss");
-    const filename = `${token}-${timestamp}`;
+    req.log.info({missionID, flightID }, "VOD Info");
+    const filename = randomUUID();
     if (locationID == null || locationID == undefined) {
       const flight = await Flight.findOne(
         { _id: flightID, tenant: tenantId },
         { locationID: 1 }
       );
       locationID = flight.locationID;
-      if (locationID == null || locationID == undefined) {
-        locationID = new Types.ObjectId("5f202f03b9225726102721b8");
-      }
     }
     if (req.file) {
       res.json({
@@ -301,7 +296,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
       );
       const telemetryData = await extractTelemetry(filepath);
       const transcodeData = await transcodeVideo(filepath);
-      if (telemetryData && !locationID) {
+      if (telemetryData) {
         const location = await Location.create({
           properties: {
             name: req.file.originalname,
@@ -310,8 +305,8 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
           geometry: {
             type: "Point",
             coordinates: {
-              lng: telemetryData.metadata.stats.GPS.LONGITUDE,
-              lat: telemetryData.metadata.stats.GPS.LATITUDE,
+              lng: telemetryData.metadata.stats.GPS.LONGITUDE.avg,
+              lat: telemetryData.metadata.stats.GPS.LATITUDE.avg,
             },
           },
         });
