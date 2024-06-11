@@ -127,7 +127,7 @@ export interface IBlockProperties {
 }
 
 export interface IPlotReportError {
-  layers: string[],
+  layers: string[];
   plots: {
     plotNo: number[];
     premiseNo: number[];
@@ -145,16 +145,16 @@ export interface IPlotReportError {
     isSolarPlantEligible: number[];
     hasTradeLicense: number[];
     tax: number[];
-  },
+  };
   blocks: {
     blockName: number[];
     averageBlockHeight: number[];
     averageIncentives: number[];
-  },
+  };
   buildings: {
     premiseNo: number[];
     height: number[];
     sys_id: number[];
     blockName: number[];
-  }
+  };
 }

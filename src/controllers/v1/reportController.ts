@@ -452,7 +452,7 @@ export const generatePlotReport = async (
         height: [],
         sys_id: [],
         blockName: [],
-      }
+      },
     };
 
     try {
@@ -529,18 +529,20 @@ export const generatePlotReport = async (
 
       if (!actionAreaLayer) errors.layers.push(VectorName.Block_Boundary);
       if (!plotLayer) errors.layers.push(VectorName.Plot);
-      if (!buildingFootprintLayer) errors.layers.push(VectorName.Building_Footprint);
+      if (!buildingFootprintLayer)
+        errors.layers.push(VectorName.Building_Footprint);
       if (!waterbodyLayer) errors.layers.push(VectorName.Water_Body);
       if (!rasterLayer) errors.layers.push("ORTHO");
       if (!treeCoverLayer) errors.layers.push(VectorName.Jungle);
       if (!greeneryLayer) errors.layers.push(VectorName.Green_Verge);
-      if (!garbageCollectionLayer) errors.layers.push(VectorName.Garbage_Collection_Point);
+      if (!garbageCollectionLayer)
+        errors.layers.push(VectorName.Garbage_Collection_Point);
 
       if (errors.layers.length > 0) {
         return res.status(400).json({
           status: false,
           message: "Some layers are missing in the mission",
-          errors
+          errors,
         });
       }
 
@@ -568,67 +570,67 @@ export const generatePlotReport = async (
       let foundError = false;
 
       plotGeojson.features.forEach((plot, index) => {
-        for(const key of Object.keys(errors.plots)) {
-          if(!plot.properties[key]) {
+        for (const key of Object.keys(errors.plots)) {
+          if (!plot.properties[key]) {
             foundError = true;
             errors.plots[key].push(index);
           }
         }
       });
       actionAreaGeojson.features.forEach((block, index) => {
-        for(const key of Object.keys(errors.blocks)) {
-          if(!block.properties[key]) {
+        for (const key of Object.keys(errors.blocks)) {
+          if (!block.properties[key]) {
             foundError = true;
             errors.blocks[key].push(index);
           }
         }
       });
       buildingsGeojson.features.forEach((building, index) => {
-        for(const key of Object.keys(errors.buildings)) {
-          if(!building.properties[key]) {
+        for (const key of Object.keys(errors.buildings)) {
+          if (!building.properties[key]) {
             foundError = true;
             errors.buildings[key].push(index);
           }
         }
       });
 
-      if(foundError) {
+      if (foundError) {
         // generate error csv
         const rows = [];
         errors.layers.forEach((layerType) => {
           rows.push({
             "Error Location": "Mission",
             "Invalid / Missing Property": `Layer of type ${layerType}`,
-            "Feature Indices": "N/A"
+            "Feature Indices": "N/A",
           });
-        })
+        });
         Object.keys(errors.plots).map((key) => {
           if (errors.plots[key].length > 0) {
             rows.push({
               "Error Location": "Plot Layer",
               "Invalid / Missing Property": `${key} property`,
-              "Feature Indices": errors.plots[key].join(",")
+              "Feature Indices": errors.plots[key].join(","),
             });
           }
-        })
+        });
         Object.keys(errors.blocks).map((key) => {
           if (errors.blocks[key].length > 0) {
             rows.push({
               "Error Location": "Action Area Layer",
               "Invalid / Missing Property": `${key} property`,
-              "Feature Indices": errors.blocks[key].join(",")
+              "Feature Indices": errors.blocks[key].join(","),
             });
           }
-        })
+        });
         Object.keys(errors.buildings).map((key) => {
           if (errors.buildings[key].length > 0) {
             rows.push({
               "Error Location": "Building Footprint Layer",
               "Invalid / Missing Property": `${key} property`,
-              "Feature Indices": errors.buildings[key].join(",")
+              "Feature Indices": errors.buildings[key].join(","),
             });
           }
-        })
+        });
         const csv = new ObjectsToCsv(rows);
         const filename = Math.floor(Math.random() * 620000);
         const file = DirPath(Directory.CSV, `${filename}.csv`);
