@@ -7,8 +7,8 @@ export interface IAlert {
   _id: mongoose.Types.ObjectId;
   missionId: mongoose.Types.ObjectId; // index
   location: {
-    lat: number;
     long: number;
+    lat: number;
   };
   isFlagged: boolean;
   isThreadExist: boolean;
@@ -31,8 +31,8 @@ export const AlertType = {
   _id: Types.String(),
   missionId: Types.String(), // index
   location: {
-    lat: Types.Number(),
     long: Types.Number(),
+    lat: Types.Number(),
   },
   isFlagged: Types.Boolean(),
   isThreadExist: Types.Boolean(),
@@ -54,11 +54,11 @@ export const AlertType = {
 const alertSchema = new mongoose.Schema<IAlert>(
   {
     location: {
-      lat: {
+      long: {
         type: Number,
         required: false,
       },
-      long: {
+      lat: {
         type: Number,
         required: false,
       },

@@ -167,8 +167,8 @@ export const createMission = async (
         geometry: {
           type: "Point",
           coordinates: {
-            lat: centerPoints.lat,
             lng: centerPoints.lng,
+            lat: centerPoints.lat,
           },
         },
         properties: {

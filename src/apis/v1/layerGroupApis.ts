@@ -22,7 +22,7 @@ router.patch(
   "/edit",
   isAuthenticated,
   body("_id").notEmpty().isMongoId(),
-  body("name").notEmpty().trim(),
+  body("name").optional().notEmpty().trim(),
   // for the renaming request, the layers field is empty array
   // for adding/removing layers from group, the layers field is non-empty
   body("layers").exists({ checkFalsy: true }).isArray(),

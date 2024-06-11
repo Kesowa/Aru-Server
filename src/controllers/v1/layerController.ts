@@ -57,6 +57,8 @@ import vector from "../../models/vectorprops";
 import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
+import { ZipToTiles3D } from "../../utils/cesium";
 
 // ********* create ***********
 
@@ -71,12 +73,11 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       try {
         const vectorLayer = await saveVectorLayer(
           pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
-          req.body.inHeritOriginalColorFromFile
-            ? {
-                icon: req.body.icon,
-                color: req.body.color,
-              }
-            : undefined
+          {
+            icon: req.body.icon,
+            color: req.body.color,
+            inheritColor: req.body.inHeritOriginalColorFromFile,
+          }
         );
 
         if (vectorLayer == undefined) {
@@ -117,7 +118,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         updatedBy: res.locals.user._id,
       });
     } else if (req.params.type == "Raster") {
-      const tif_loc = `/raster/${req.file?.filename}`;
+      const file_loc = `/raster/${req.file?.filename}`;
 
       //----------TITILER API HAS CHANGED-------------------
       //  Metadata api has been removed
@@ -135,9 +136,13 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       }
       let minP = 0;
       let maxP = 1;
-      let center = { lat: 0, lng: 0 };
+      let center = { lng: 0, lat: 0 };
+      let metadata = {};
+      const size: number = Number(
+        (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
+      );
       if (rasterType.name == "DEM") {
-        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
+        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${file_loc}`;
         //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
         req.log.info("fetching metadata from titiler");
         let response = await fetch(metaDataURL, {
@@ -149,24 +154,34 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         //-------handle for detail:not found----
         minP = metadata["1"]["min"];
         maxP = metadata["1"]["max"];
-        metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${tif_loc}`;
+        metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${file_loc}`;
         response = await fetch(metaDataURL, {
           method: "GET",
         });
         metadata = await response.json();
         center = {
-          lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
           lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+          lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
         };
+      } else if (rasterType.name == "POINT_CLOUD") {
+        const POINTCLOUD_LIMIT = 1e3;
+        if (size > POINTCLOUD_LIMIT) {
+          req.log.error(
+            { POINTCLOUD_LIMIT, file_loc },
+            "pointcloud too large, not converting"
+          );
+        } else {
+          metadata = await LazToTiles3D(file_loc);
+        }
+      } else if (rasterType.name == "CESIUM_3D") {
+        // Extract zip, locate tileset, move to correct location
+        metadata = await ZipToTiles3D(file_loc);
       }
-      const size: number = Number(
-        (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-      );
       layer = new Layer({
         name,
         type: "Raster",
         raster,
-        layerpath: `/raster/${req?.file?.filename}`,
+        layerpath: file_loc,
         fileSize: size,
         minp: minP,
         maxp: maxP,
@@ -177,6 +192,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
         createdBy: res.locals.user._id,
         updatedBy: res.locals.user._id,
+        metadata,
       });
     } else {
       return res.json({
@@ -293,6 +309,9 @@ export const deleteLayer = async (req: Request, res: AuthResponse) => {
         });
       } else {
         const conf = await deletePublicFileUsingPath(d.layerpath);
+        if (typeof d.metadata == "string") {
+          await delete3DTiles(d.metadata);
+        }
         if (conf) {
           req.log.info("Files deleted");
         } else {
@@ -615,7 +634,10 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
       fileSize: thumbs.size,
       isReview: true,
       featureLabel: req.body.featureLabel,
-      centerPoints: req.body.centerPoints,
+      centerPoints: {
+        lng: req.body.centerPoints.lng,
+        lat: req.body.centerPoints.lat,
+      },
       fileType: req.body.type,
       sys_Id: sys_Id,
       tenantId: res.locals.user.tenantId,
@@ -1046,7 +1068,7 @@ export const filterLayer = async (
         startTime = new Date("2020-01-01");
         break;
     }
-    const d = [];
+    const d = new Map();
     const match = { name: req.body.rasterProps };
     const match2 = { name: req.body.vectorProps };
     const match3 = { type: req.body.vectorPropsType };
@@ -1074,7 +1096,7 @@ export const filterLayer = async (
           });
         for (let i = 0; i < result.length; i++) {
           if (result[i].vector || result[i].raster) {
-            d.push(result[i]);
+            d.set(result[i]._id.toHexString(), result[i]);
           }
         }
       } else {
@@ -1096,7 +1118,7 @@ export const filterLayer = async (
             });
           for (let i = 0; i < result.length; i++) {
             if (result[i].raster) {
-              d.push(result[i]);
+              d.set(result[i]._id.toHexString(), result[i]);
             }
           }
         } else {
@@ -1118,7 +1140,7 @@ export const filterLayer = async (
               });
             for (let i = 0; i < result.length; i++) {
               if (result[i].vector) {
-                d.push(result[i]);
+                d.set(result[i]._id.toHexString(), result[i]);
               }
             }
           }
@@ -1149,7 +1171,7 @@ export const filterLayer = async (
         });
       for (let i = 0; i < result.length; i++) {
         if (result[i].vector || result[i].raster) {
-          d.push(result[i]);
+          d.set(result[i]._id.toHexString(), result[i]);
         }
       }
     }
@@ -1168,7 +1190,7 @@ export const filterLayer = async (
         for (let j = 0; j < match3.type.length; j++) {
           if (result[i].vector) {
             if (result[i].vector.type == match3.type[j]) {
-              d.push(result[i]);
+              d.set(result[i]._id.toHexString(), result[i]);
             }
           }
         }
@@ -1189,7 +1211,7 @@ export const filterLayer = async (
         for (let j = 0; j < match2.name.length; j++) {
           if (result[i].vector) {
             if (result[i].vector.name == match2.name[j]) {
-              d.push(result[i]);
+              d.set(result[i]._id.toHexString(), result[i]);
             }
           }
         }
@@ -1210,17 +1232,17 @@ export const filterLayer = async (
         for (let j = 0; j < match.name.length; j++) {
           if (result[i].raster) {
             if (result[i].raster.name == match.name[j]) {
-              d.push(result[i]);
+              d.set(result[i]._id.toHexString(), result[i]);
             }
           }
         }
       }
     }
-    if (d.length) {
+    if (d.size) {
       return res.json({
         status: true,
         message: "Sucessfully get Vector or Raster data ",
-        data: d,
+        data: Array.from(d.values()),
       });
     } else
       return res.json({
@@ -1684,8 +1706,8 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
 
         const layerId = req.body.Id;
         const centerPoints2 = {
-          lat: String(closestPoint.geometry.coordinates[1]),
           lng: String(closestPoint.geometry.coordinates[0]),
+          lat: String(closestPoint.geometry.coordinates[1]),
         };
         const fpath = "/images/geojson/" + files[j].filename;
         req.log.info("file path:", fpath);
@@ -1743,8 +1765,8 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         const matchedFeature = geojson.features[matchedFeatureIndex];
         const centroid = turf.centroid(matchedFeature.geometry);
         const centerPoints = {
-          lat: centroid.geometry.coordinates[1],
           lng: centroid.geometry.coordinates[0],
+          lat: centroid.geometry.coordinates[1],
         };
         const fpath = "/images/geojson/" + uploadFile.filename;
         req.log.info("file path:", fpath);
@@ -2287,9 +2309,10 @@ export const picktoMapUseForLayerCreate = async (
             const size: number = Number(
               (Number(files[i]?.size) / (1024 * 1024)).toFixed(5)
             );
-            const centerPoints2: any = {};
-            centerPoints2["lng"] = allImageData[i].coordinates[0];
-            centerPoints2["lat"] = allImageData[i].coordinates[1];
+            const centerPoints2 = {
+              lng: allImageData[i].coordinates[0],
+              lat: allImageData[i].coordinates[1],
+            };
             const featureFile = new layerFiles({
               name: allImageData[i].originalname,
               layerId: savedDoc1._id,

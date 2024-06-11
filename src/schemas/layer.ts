@@ -32,9 +32,10 @@ export interface ILayer {
   flaggedFeatures: number[];
   isFlagged: boolean;
   isThreadExist: boolean;
-  commentCount: Number;
+  commentCount: number;
   createdAt: Date; // index
   updatedAt: Date;
+  metadata?: string | Object;
 }
 export const LayerType = {
   _id: Types.String(),
@@ -51,7 +52,9 @@ export const LayerType = {
   layerpath: Types.String(),
   name: Types.String(),
   layerdataArr: Types.Array({ arrayType: Types.Object({ properties: {} }) }),
-  center: Types.Array({ arrayType: Types.Object({ properties: {} }) }),
+  center: Types.Object({
+    properties: { lng: Types.Number(), lat: Types.Number() },
+  }),
   minp: Types.Number(),
   maxp: Types.Number(),
   featureCount: Types.Number(),
@@ -65,6 +68,9 @@ export const LayerType = {
   isFlagged: Types.Boolean(),
   createdAt: Types.DateTime(), // index
   updatedAt: Types.DateTime(),
+  metadata: Types.Object({
+    properties: {},
+  }),
 };
 const layerSchema = new mongoose.Schema<ILayer>(
   {
@@ -127,7 +133,13 @@ const layerSchema = new mongoose.Schema<ILayer>(
       require: true,
     },
     center: {
-      type: [{}],
+      lng: {
+        type: Number,
+      },
+      lat: {
+        type: Number,
+      },
+      required: false,
     },
     fileSize: {
       type: Number,
@@ -179,6 +191,10 @@ const layerSchema = new mongoose.Schema<ILayer>(
     },
     updatedAt: {
       type: Date,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      required: false,
     },
   },
   {
