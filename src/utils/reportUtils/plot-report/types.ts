@@ -100,7 +100,7 @@ export interface IPlotProperties {
   category?: string;
   shopFloor?: string; // no. of floor
   buildingStatus?: string; // completion certificate
-  blockName?: string;
+  blockName?: string; // connects plot to block
   sys_id: string;
 
   // not present on test geojson
@@ -111,23 +111,50 @@ export interface IPlotProperties {
   isSolarPlantEligible?: string;
   hasTradeLicense?: string;
   tax?: string;
-  garbageCollectionInfo?: string;
-  averageBuildingHeight?: string;
-  averageBlockHeight?: string;
-  averageIncentives?: string;
 }
 
 export interface IBuildingProperties {
   premiseNo: string; // connects building to plot
   height: number;
-  sys_id: string;
-  blockName: string;
+  sys_id: string; // system assigned, not user assigned
+  blockName: string; // connects building to block
 }
 
 export interface IBlockProperties {
   blockName: string;
-  garbageCollectionInfo: string;
-  averageBuildingHeight: string;
   averageBlockHeight: string;
   averageIncentives: string;
+}
+
+export interface IPlotReportError {
+  layers: string[],
+  plots: {
+    plotNo: number[];
+    premiseNo: number[];
+    buildingAvailable: number[];
+    pincode: number[];
+    category: number[];
+    shopFloor: number[];
+    buildingStatus: number[];
+    blockName: number[];
+    sys_id: number[];
+    sanctionedBuildingNo: number[];
+    infraction: number[];
+    isIncentiveEligible: number[];
+    isGreenTopEligible: number[];
+    isSolarPlantEligible: number[];
+    hasTradeLicense: number[];
+    tax: number[];
+  },
+  blocks: {
+    blockName: number[];
+    averageBlockHeight: number[];
+    averageIncentives: number[];
+  },
+  buildings: {
+    premiseNo: number[];
+    height: number[];
+    sys_id: number[];
+    blockName: number[];
+  }
 }
