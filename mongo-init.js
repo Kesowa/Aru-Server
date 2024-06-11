@@ -16,10 +16,15 @@ db.createCollection("streamkeys", { capped: false });
 db.createCollection("flights", { capped: false });
 db.createCollection("locations", { capped: false });
 
+const TENANT = ObjectId("5f204f03b9445726102781a8");
+const SUPER_ADMIN = ObjectId("5f12572c3c19462d3673dbe9");
+const TENANT_ROOT = ObjectId("608e7b3ae11f711a34fb0476");
+const FIRST_USER = ObjectId("614ec3dcd44bea14a721326a");
+
 const commonProps = {
   all: {
-    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
-    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    createdBy: FIRST_USER,
+    updatedBy: FIRST_USER,
     createdAt: ISODate(),
     updatedAt: ISODate(),
     __v: 0,
@@ -28,8 +33,8 @@ const commonProps = {
     customPermissions: [],
     isActive: true,
     isBanned: false,
-    password: "$2a$10$tUth515EOFQs0Gzz6iFI9uPYjorlrxz2Inl10wJZGIxnM9H5qgISy",
-    tenantId: ObjectId("5f204f03b9445726102781a8"),
+    password: "$2a$10$tUth515EOFQs0Gzz6iFI9uPYjorlrxz2Inl10wJZGIxnM9H5qgISy", // fsipl1@3$
+    tenantId: TENANT,
     avatar: "/images/userAvatars/avatar-1632551865904.png",
     isTermsAccepted: true,
     loginOtps: [583630],
@@ -39,8 +44,8 @@ const commonProps = {
   layers: {
     layers: [],
     layerGroupId: null,
-    captureDate: ISODate("2022-01-15T00:00:00Z"),
-    tenantId: ObjectId("5f204f03b9445726102781a8"),
+    captureDate: ISODate(),
+    tenantId: TENANT,
     layerLabel: "filename",
     isBase: false,
     isPublic: false,
@@ -62,9 +67,9 @@ const commonProps = {
     description: "Sample Description",
     deliverables: ["Orthomosaic", "DEM", "DTM"],
     status: "Completed",
-    user: ObjectId("608e7b3ae11f711a34fb0476"),
+    user: TENANT_ROOT,
     assetID: ObjectId("609249c6c287ba31a4d23ef9"),
-    tenantId: ObjectId("5f204f03b9445726102781a8"),
+    tenantId: TENANT,
     missionType: ObjectId("60cc7d408fb1793e8c76d4a3"),
     clientId: [],
     invites: [],
@@ -73,14 +78,14 @@ const commonProps = {
   },
   usergroups: {
     isActive: true,
-    tenantId: ObjectId("5f204f03b9445726102781a8"),
+    tenantId: TENANT,
   },
   flights: {
     date: "2023-12-17",
     geoLocation: "HFFC+G3V, Major Arterial Road (South East Extension), DC Block(Newtown), Action Area I, Newtown, New Town, Koch Pukur, West Bengal 700156, India",
     centerPoints: {
-      lat: 22.573772651224107,
       lng: 88.47035320408446,
+      lat: 22.573772651224107,
     },
     locationID: ObjectId("5f202f03b9225726102721b8"),
     assetID: ObjectId("609249c6c287ba31a4d23ef9"),
@@ -94,14 +99,14 @@ const commonProps = {
         radius: 854.8149453079126,
         area: 9180622.733828312,
         center: {
-          lat: 22.573772651224107,
           lng: 88.47035320408446,
+          lat: 22.573772651224107,
         },
       },
     },
-    client: ObjectId("608e7b3ae11f711a34fb0476"),
-    tenant: ObjectId("5f204f03b9445726102781a8"),
-    pilotID: ObjectId("614ec3dcd44bea14a721326a"),
+    client: TENANT_ROOT,
+    tenant: TENANT,
+    pilotID: FIRST_USER,
   }
 }
 
@@ -110,14 +115,14 @@ db.locations.insertOne({
   geometry: {
     type: "Point",
     coordinates: {
-      lat: 22.22,
       lng: 88.88,
+      lat: 22.22,
     },
   },
   properties: {
     name: "Base",
   },
-  tenantId: ObjectId("5f204f03b9445726102781a8"),
+  tenantId: TENANT,
   ...commonProps.all,
 });
 
@@ -127,7 +132,7 @@ db.streamkeys.insertOne({
   pStatus: true,
   streamKey:
     "NjFmYmNjZWNiMGY1ZjcwYmVkYTRjZDExLTYyNjdkZDRiMmEyZDM5NDA4MGEyMDg0OS11bmRlZmluZWQtNjA4ZTdiMzllMTFmNzExYTM0ZmIwNDc1",
-  tenantID: ObjectId("5f204f03b9445726102781a8"),
+  tenantID: TENANT,
   assetID: ObjectId("609249c6c287ba31a4d23ef9"),
   missionID: ObjectId("61fbccecb0f5f70beda4cd11"),
   flightID: ObjectId("5f202f03b9225726102721a2"),
@@ -145,11 +150,11 @@ db.assets.insertOne({
     },
   ],
   assetName: "NKDA Phantom",
-  userID: ObjectId("608e7b3ae11f711a34fb0476"),
-  tenantID: ObjectId("5f204f03b9445726102781a8"),
+  userID: TENANT_ROOT,
+  tenantID: TENANT,
   isActive: true,
   modelID: ObjectId("6091a6cb9c78264570101eb6"),
-  assetOwner: ObjectId("608e7b3ae11f711a34fb0476"),
+  assetOwner: TENANT_ROOT,
   manufactureDate: ISODate("2022-01-15T00:00:00Z"),
   manufactureID: ObjectId("6091a0559c78264570101eb1"),
   ...commonProps.all,
@@ -167,7 +172,7 @@ db.models.insertOne({
   },
   manufacturerID: ObjectId("615acf24e5324204d8b97c84"),
   website: "https://www.dji.com/phantom-4-pro/info#specs",
-  tenantID: ObjectId("5f204f03b9445726102781a8"),
+  tenantID: TENANT,
   props: {
     Payloads: "Megaphone, RGB sensor, Tharmal",
   },
@@ -195,12 +200,12 @@ db.manufacturers.insertOne({
       email: "shashi@throttleaerospace.com",
     },
   ],
-  tenantID: ObjectId("5f204f03b9445726102781a8"),
+  tenantID: TENANT,
   ...commonProps.all,
 });
 
 db.tenants.insertOne({
-  _id: ObjectId("5f204f03b9445726102781a8"),
+  _id: TENANT,
   upcomingPackages: [],
   isActive: false,
   isActivated: true,
@@ -235,29 +240,36 @@ db.tenants.insertOne({
   actualSize: NumberDecimal("0.0"),
   publicMapRef: "5f204f03b9445726102781a862148702831c465d972286b3",
   ...commonProps.all,
-  createdBy: ObjectId("5f12572c3c19462d3673dbe9"),
-  updatedBy: ObjectId("5f204f03b9445726102781a9"),
+  createdBy: SUPER_ADMIN,
+  updatedBy: TENANT_ROOT,
 });
 
 db.users.insertMany([
   {
-    _id: ObjectId("608e7b3ae11f711a34fb0476"),
+    _id: TENANT_ROOT,
     name: "NKDA",
     email: "admin@NKDA.com",
     phoneNo: "9903032571",
     userType: "tenant-root",
-    ...commonProps.users
+    ...commonProps.users,
+    ...commonProps.all,
+    createdBy: SUPER_ADMIN,
+    updatedBy: SUPER_ADMIN,
   },
   {
-    _id: ObjectId("5f12572c3c19462d3673dbe9"),
+    _id: SUPER_ADMIN,
     name: "KESOWA",
     email: "admin@kesowa.com",
     phoneNo: "9903032572",
     userType: "super-admin",
-    ...commonProps.users
+    ...commonProps.users,
+    ...commonProps.all,
+    tenantId: null,
+    createdBy: SUPER_ADMIN,
+    updatedBy: SUPER_ADMIN,
   },
   {
-    _id: ObjectId("614ec3dcd44bea14a721326a"),
+    _id: FIRST_USER,
     name: "Neel Dutta pilot",
     email: "pilot1@kesowa.com",
     phoneNo: "1234567823",
@@ -265,13 +277,15 @@ db.users.insertMany([
     userGroupId: ObjectId("6034c331a2f9c7554b1d42e0"),
     ...commonProps.users,
     ...commonProps.all,
+    createdBy: TENANT_ROOT,
+    updatedBy: FIRST_USER,
   },
 ]);
 
 db.users.insertMany("0123456789".split("").map((i) => ({
   name: `TestClient${i}`,
   email: `client${i}@kesowa.com`,
-  phoneNo: "9" + Math.random().toString().substring(2,11),
+  phoneNo: "9" + Math.random().toString().substring(2, 11),
   userType: "tenant-client",
   userGroupId: ObjectId("6116058af270c9142c1588f2"),
   ...commonProps.users,
@@ -297,6 +311,8 @@ db.packages.insertMany([
     price: 1, // added price property for testing payments
     poster: "/images/packagePosters/poster-1619950204943.png",
     ...commonProps.all,
+    createdBy: SUPER_ADMIN,
+    updatedBy: SUPER_ADMIN,
   },
   {
     _id: ObjectId("608e7a7ee11f722a34fb0585"),
@@ -324,7 +340,7 @@ const missionTypes = [
   { _id: ObjectId("5f4771e3976282570dbfffc8"), name: "Surveillance", description: "Request a live video surveillance from a device" },
 ]
 
-db.missiontypes.insertMany(missionTypes.map(missionType => ({ ...commonProps.all, ...missionType, isActive: true })));
+db.missiontypes.insertMany(missionTypes.map(missionType => ({ ...commonProps.all, ...missionType, isActive: true, createdBy: SUPER_ADMIN, updatedBy: SUPER_ADMIN })));
 
 const vectorProps = [
   { _id: ObjectId("60c3a062ca0cbe039fce0d45"), name: "Zone Boundary", type: "MultiPolygon" },
@@ -424,7 +440,7 @@ const vectorProps = [
   { _id: ObjectId("61175c9cef93cee1a57bab42"), name: "Potholes", type: "MultiPolygon" },
 ];
 
-db.vectors.insertMany(vectorProps.map(prop => ({ ...commonProps.all, ...prop })));
+db.vectors.insertMany(vectorProps.map(prop => ({ ...commonProps.all, ...prop, createdBy: SUPER_ADMIN, updatedBy: SUPER_ADMIN })));
 
 const rasterProps = [
   { _id: ObjectId("60c4238f4764fb024a3c1a59"), name: "POINT_CLOUD" },
@@ -434,7 +450,7 @@ const rasterProps = [
   { _id: ObjectId("70c3138f4764fb024a3c1a59"), name: "NDWI", bidx: "1%2C2%2C4", resamplingMethod: "nearest" },
 ];
 
-db.rasters.insertMany(rasterProps.map(prop => ({ ...commonProps.all, ...commonProps.rasters, ...prop })));
+db.rasters.insertMany(rasterProps.map(prop => ({ ...commonProps.all, ...commonProps.rasters, ...prop, createdBy: SUPER_ADMIN, updatedBy: SUPER_ADMIN })));
 
 const missions = [
   { _id: ObjectId("61f3b1e65f915a05cb8885ec"), name: "Mapping mission sample" },
@@ -636,14 +652,14 @@ db.layerfiles.insertMany([
     featureLabel: "AA/8",
     fileSize: 1.11439,
     centerPoints: {
-      lat: 22.572921902329387,
       lng: 88.47365253647386,
+      lat: 22.572921902329387,
     },
     filePath: "/images/geojson/PlotReportDemo_FrontView.png",
     fileType: "image/png",
-    tenantId: ObjectId("5f204f03b9445726102781a8"),
-    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
-    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    tenantId: TENANT,
+    createdBy: TENANT_ROOT,
+    updatedBy: TENANT_ROOT,
     isReview: true,
     isThreadExist: false,
     commentCount: 0,
@@ -729,8 +745,8 @@ db.permissions.insertMany(
     isClient: false || isClient,
     isPilot: false,
     ...commonProps.all,
-    createdBy: ObjectId("5f12572c3c19462d3673dbe9"),
-    updatedBy: ObjectId("5f12572c3c19462d3673dbe9"),
+    createdBy: SUPER_ADMIN,
+    updatedBy: SUPER_ADMIN,
   }))
 );
 db.permissions.insertMany([
@@ -745,8 +761,8 @@ db.permissions.insertMany([
     name: "pilot",
     isClient: false,
     ...commonProps.all,
-    createdBy: ObjectId("5f12572c3c19462d3673dbe9"),
-    updatedBy: ObjectId("5f12572c3c19462d3673dbe9"),
+    createdBy: SUPER_ADMIN,
+    updatedBy: SUPER_ADMIN,
   },
   {
     _id: ObjectId("6034c12d31621054e4c04de6"),
@@ -759,8 +775,8 @@ db.permissions.insertMany([
     name: "client",
     isClient: true,
     ...commonProps.all,
-    createdBy: ObjectId("5f12572c3c19462d3673dbe9"),
-    updatedBy: ObjectId("5f12572c3c19462d3673dbe9"),
+    createdBy: SUPER_ADMIN,
+    updatedBy: SUPER_ADMIN,
   },
 ]);
 
@@ -941,4 +957,4 @@ const usergroups = [
   },
 ]
 
-db.usergroups.insertMany(usergroups.map(usergroup => ({ ...commonProps.all, ...commonProps.usergroups, ...usergroup })));
+db.usergroups.insertMany(usergroups.map(usergroup => ({ ...commonProps.all, ...commonProps.usergroups, ...usergroup, createdBy: TENANT_ROOT, updatedBy: TENANT_ROOT })));
