@@ -92,7 +92,7 @@ const alertSocketController = (alertSocket: Namespace) => {
             key: MAP_KEY,
           },
         });
-        data.location = stat.location;
+        data.location = { long: stat.location.long, lat: stat.location.lat };
         data.image = filePath;
         data.locationName = mapResponse?.data?.results[0]?.formatted_address;
         data.createdBy = new Types.ObjectId("6099204ee930187488a1487b");

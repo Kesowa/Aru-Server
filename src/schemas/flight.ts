@@ -13,8 +13,8 @@ export interface IFlight {
   locationID: mongoose.Types.ObjectId; // index
   geoFence: mongoose.Schema.Types.Mixed;
   centerPoints?: {
-    lat: number;
     lng: number;
+    lat: number;
   };
   tenant: mongoose.Types.ObjectId; // index
   geoLocation?: string;
@@ -35,8 +35,8 @@ export const FlightType = {
   locationID: Types.String(), // index
   geoFence: Types.Object({ properties: {} }),
   centerPoints: {
-    lat: Types.Number(),
     lng: Types.Number(),
+    lat: Types.Number(),
   },
   tenant: Types.String(), // index
   geoLocation: Types.String(),
@@ -65,8 +65,8 @@ const flightSchema = new mongoose.Schema<IFlight>(
     },
     centerPoints: {
       type: {
-        lat: Number,
         lng: Number,
+        lat: Number,
       },
     },
     locationID: {
@@ -96,8 +96,8 @@ const flightSchema = new mongoose.Schema<IFlight>(
       polygon: {
         points: [
           {
-            lat: Number,
             lng: Number,
+            lat: Number,
           },
         ],
         area: {
@@ -115,10 +115,10 @@ const flightSchema = new mongoose.Schema<IFlight>(
           type: Number,
         },
         center: {
-          lat: {
+          lng: {
             type: Number,
           },
-          lng: {
+          lat: {
             type: Number,
           },
         },
