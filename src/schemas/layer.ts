@@ -52,7 +52,9 @@ export const LayerType = {
   layerpath: Types.String(),
   name: Types.String(),
   layerdataArr: Types.Array({ arrayType: Types.Object({ properties: {} }) }),
-  center: Types.Object({properties: {lng: Types.Number(), lat: Types.Number()}}),
+  center: Types.Object({
+    properties: { lng: Types.Number(), lat: Types.Number() },
+  }),
   minp: Types.Number(),
   maxp: Types.Number(),
   featureCount: Types.Number(),
@@ -132,10 +134,10 @@ const layerSchema = new mongoose.Schema<ILayer>(
     },
     center: {
       lng: {
-        type: Number
+        type: Number,
       },
       lat: {
-        type: Number
+        type: Number,
       },
       required: false,
     },

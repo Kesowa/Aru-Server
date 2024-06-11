@@ -275,7 +275,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
   {
     const tenantId = String(res.locals.user.tenantId._id);
     let { missionID, flightID, locationID } = req.body;
-    req.log.info({missionID, flightID }, "VOD Info");
+    req.log.info({ missionID, flightID }, "VOD Info");
     const filename = randomUUID();
     if (locationID == null || locationID == undefined) {
       const flight = await Flight.findOne(

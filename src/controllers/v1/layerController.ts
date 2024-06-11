@@ -636,7 +636,7 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
       featureLabel: req.body.featureLabel,
       centerPoints: {
         lng: req.body.centerPoints.lng,
-        lat: req.body.centerPoints.lat
+        lat: req.body.centerPoints.lat,
       },
       fileType: req.body.type,
       sys_Id: sys_Id,
@@ -1331,8 +1331,9 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${ar.length - 1
-              } and data index should start from 0`,
+            message: `Your data must be less than equal to ${
+              ar.length - 1
+            } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -2310,7 +2311,7 @@ export const picktoMapUseForLayerCreate = async (
             );
             const centerPoints2 = {
               lng: allImageData[i].coordinates[0],
-              lat: allImageData[i].coordinates[1]
+              lat: allImageData[i].coordinates[1],
             };
             const featureFile = new layerFiles({
               name: allImageData[i].originalname,
@@ -2536,8 +2537,9 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${req.body.flag ? "flagged" : "unflagged"
-        } successfully`,
+      message: `feature ${
+        req.body.flag ? "flagged" : "unflagged"
+      } successfully`,
     });
   } else {
     res.status(501).json({
