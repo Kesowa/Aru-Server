@@ -20,14 +20,6 @@ router.post(
   isAuthenticated,
   onlySuperAdminAccess,
   body("name").notEmpty().trim(),
-  body("isVisibleToTenant").notEmpty().isBoolean().toBoolean(),
-  body("isVisibleToSuperAdmin").notEmpty().isBoolean().toBoolean(),
-  body("isFrontendRoute").notEmpty().isBoolean().toBoolean(),
-  body("isSideNavOption").optional().notEmpty().isBoolean().toBoolean(), // exists only if isFrontendRoute is true
-  body("frontendRoute").optional().notEmpty().trim(), // exists only if isFrontendRoute is true
-  body("sideNavOptionIcon").optional().notEmpty().trim(), // exists only if isFrontendRoute is true
-  body("sideNavOptionLabel").optional().notEmpty().trim(), // exists only if isFrontendRoute is true
-  body("isPilot").optional().notEmpty().isBoolean().toBoolean(), // not currently being sent by frontend
   validator,
   RobustRunner(createPermission)
 );
