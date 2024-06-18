@@ -9,10 +9,16 @@ services:
     environment:
       - TZ="Asia/Kolkata"
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
+      - REDIS_URI=redis://redis:6379
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET_NAME=aru
     env_file:
       - ./server.env
     depends_on:
       - mongodb
+      - redis
+      - minio
     ports:
       - 5011:5011
     extra_hosts:
@@ -48,3 +54,34 @@ services:
     image: redis@sha256:aeed51f49a6331df0cb2c1039ae3d1d70d882be3f48bde75cd240452a2348e88
     mem_limit: 128m
     memswap_limit: 128m
+
+  minio:
+    image: minio/minio@sha256:c7175077d39a8cc10c9fd611cdcc68b6a5b365793e9ac6f4198ffff1ef0fe555
+    volumes:
+      - datastore:/data
+    command: server /data --console-address ":9001"
+    expose:
+      - "9000"
+      - "9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - 9001:9001
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+        /usr/bin/mc mb myminio/aru;
+        /usr/bin/mc anonymous set public myminio/aru;
+        exit 0;
+      "
+
+volumes:
+  datastore:
