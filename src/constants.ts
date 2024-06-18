@@ -147,3 +147,9 @@ export const SEQ_SERVER_URL = new EnvVar("SEQ_URL").isUrl().toString();
 export const SEQ_API_KEY = new EnvVar("SEQ_KEY").toString();
 
 export const AIML_SERVER = new EnvVar("AIML_SERVER").isUrl().toString();
+
+
+export const S3_ACCESS_KEY = new EnvVar("S3_ACCESS_KEY").toString();
+export const S3_SECRET_KEY = new EnvVar("S3_SECRET_KEY").toString();
+export const S3_BUCKET_NAME = new EnvVar("S3_BUCKET_NAME").toString();
+export const S3_ENDPOINT = new EnvVar("S3_ENDPOINT").toString();

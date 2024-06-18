@@ -22,6 +22,10 @@ import {
 } from "./constants";
 import { IUser } from "./schemas/user";
 import { clientReactivationMail } from "./controllers/v1/clientController";
+import { minioClient } from "./utils/objectStorage";
+import { S3_BUCKET_NAME } from "./constants";
+
+minioClient.fPutObject(S3_BUCKET_NAME, "server.ts", "./src/server.ts", { 'Content-Type': 'text/plain', 'X-Amz-Meta-Testing': 1234, example: 5678 }).then(console.log).catch(console.error);
 
 const tempCleanup = async () => {
   logger.info("Running Cron Job");
@@ -59,9 +63,8 @@ const expiredSubs = async () => {
           "Kesowa Infinite Ventures Pvt. Ltd",
           "",
           `               
-                        <p>Your subscription is expiring in ${
-                          30 - diffInDays
-                        } days.</b>
+                        <p>Your subscription is expiring in ${30 - diffInDays
+          } days.</b>
                         <p>Best regards,</p>
                         <p><b>Team Kesowa</b></p>
                         `,
