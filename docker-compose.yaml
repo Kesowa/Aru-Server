@@ -6,10 +6,11 @@ services:
     volumes:
       - ./src:/app/src
       - ./public:/app/public:rw
+      - ./adapter:/app/adapter:ro
     environment:
       - TZ="Asia/Kolkata"
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
-      - RABBITMQ_CONNECTION_STRING=ampq://rabbitmq
+      - RABBITMQ_CONNECTION_STRING=amqp://rabbitmq
     env_file:
       - ./server.env
     depends_on:

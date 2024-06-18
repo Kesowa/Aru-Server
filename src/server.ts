@@ -3,7 +3,7 @@ import cron from "node-cron";
 import User from "./models/user";
 import http from "http";
 import { Server } from "socket.io";
-import { createAdapter } from "socket.io-amqp0";
+import { createAdapter } from "./utils/socket.io-adapter";
 import { connect } from "amqplib";
 import { ioHandler } from "./socket";
 

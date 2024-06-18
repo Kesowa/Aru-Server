@@ -106,7 +106,7 @@
     "sharp": "^0.31.3",
     "shpjs": "^4.0.4",
     "socket.io": "^4.5.3",
-    "socket.io-amqp0": "^7.0.1",
+    "socket.io-amqp0": "file:adapter",
     "swagger-ui-express": "^4.6.3",
     "tokml": "^0.4.0",
     "ts-openapi": "^1.1.4",
