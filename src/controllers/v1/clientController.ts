@@ -2,7 +2,6 @@ import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Usergroup from "../../models/usergroup";
 import Mission from "../../models/mission";
-import Permission from "../../models/permission";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import Flight from "../../models/flight";
@@ -28,6 +27,7 @@ import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
+import { PERMS } from "../../utils/permissions";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -37,6 +37,7 @@ export const createClientformissionGroup = async (
     const result = await Usergroup.findOne(
       {
         _id: req.body.userGroupId,
+        permissions: {$in: [PERMS.CREATE_CLIENT]}
       },
       {
         permissions: 1,

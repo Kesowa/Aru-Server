@@ -10,7 +10,7 @@ import PassReset from "../models/passwordReset";
 import crypto from "crypto";
 import { MODE, Mode, SECRET_KEY } from "../constants";
 import { ObjectId } from "mongodb";
-import { permissions } from "./permissions";
+import { PERMS } from "./permissions";
 import { IPermission } from "../schemas/permission";
 
 enum InvalidAuth {
@@ -148,7 +148,7 @@ export const isAuthenticated = (
 type permGuardType = {
   userTypes: Array<string>;
   userGroups?: Array<string>;
-  perm: Array<permissions>;
+  perm: Array<PERMS>;
 };
 
 function genPermissionGuard(perm: permGuardType) {
@@ -236,25 +236,25 @@ export const onlyTenantRootAccess = genPermissionGuard({
 
 export const canListUserGroup = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.EDIT_CLIENT],
+  perm: [PERMS.EDIT_CLIENT],
 });
 // Mission Management Permissions:
 export const canCreateMission = genPermissionGuard({
   userTypes: ["tenant-root"],
   userGroups: ["6034c331a2f9c7554b1d42e0"],
-  perm: [permissions.MISSION_CREATE],
+  perm: [PERMS.MISSION_CREATE],
 });
 export const canUpdateMission = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MISSION_UPDATE],
+  perm: [PERMS.MISSION_UPDATE],
 });
 export const canDeleteMission = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MISSION_DELETE],
+  perm: [PERMS.MISSION_DELETE],
 });
 export const canListMission = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MISSION_LIST],
+  perm: [PERMS.MISSION_LIST],
 });
 
 // Flight Management Permissions:
@@ -278,19 +278,19 @@ export const canListMission = genPermissionGuard({
 //Asset Management Permissions :
 export const canCreateAsset = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.ASSET_CREATE],
+  perm: [PERMS.ASSET_CREATE],
 });
 export const canUpdateAsset = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.ASSET_UPDATE],
+  perm: [PERMS.ASSET_UPDATE],
 });
 export const canDeleteAsset = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.ASSET_DELETE],
+  perm: [PERMS.ASSET_DELETE],
 });
 export const canListAsset = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.ASSET_LIST],
+  perm: [PERMS.ASSET_LIST],
 });
 
 //Asset Class Management Permissions :
@@ -309,131 +309,131 @@ export const canListAsset = genPermissionGuard({
 
 export const canListAssetClass = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.ASSET_CLASS_LIST],
+  perm: [PERMS.ASSET_CLASS_LIST],
 });
 
 //FlightLog Apis
 export const canListFlightLogs = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.FLIGHT_LOG_LIST],
+  perm: [PERMS.FLIGHT_LOG_LIST],
 });
 
 //User Management Permission:
 export const canListUsers = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.USER_LIST],
+  perm: [PERMS.USER_LIST],
 });
 
 //Location Management Permissions :
 export const canCreateLocation = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.LOCATION_CREATE],
+  perm: [PERMS.LOCATION_CREATE],
 });
 export const canUpdateLocation = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.LOCATION_UPDATE],
+  perm: [PERMS.LOCATION_UPDATE],
 });
 export const canDeleteLocation = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.LOCATION_DELETE],
+  perm: [PERMS.LOCATION_DELETE],
 });
 export const canListLocation = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.LOCATION_LIST],
+  perm: [PERMS.LOCATION_LIST],
 });
 
 //Manufacturer Management Permissions :
 export const canCreateManufacturer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MANUFACTURER_CREATE],
+  perm: [PERMS.MANUFACTURER_CREATE],
 });
 export const canUpdateManufacturer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MANUFACTURER_UPDATE],
+  perm: [PERMS.MANUFACTURER_UPDATE],
 });
 export const canDeleteManufacturer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MANUFACTURER_DELETE],
+  perm: [PERMS.MANUFACTURER_DELETE],
 });
 export const canListManufacturer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MANUFACTURER_LIST],
+  perm: [PERMS.MANUFACTURER_LIST],
 });
 
 //Model Management Permissions :
 export const canCreateModel = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MODEL_CREATE],
+  perm: [PERMS.MODEL_CREATE],
 });
 export const canUpdateModel = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MODEL_UPDATE],
+  perm: [PERMS.MODEL_UPDATE],
 });
 export const canDeleteModel = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MODEL_DELETE],
+  perm: [PERMS.MODEL_DELETE],
 });
 export const canListModel = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MODEL_LIST],
+  perm: [PERMS.MODEL_LIST],
 });
 
 //Thread Management Permissions :
 export const canCreateThread = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.THREAD_CREATE],
+  perm: [PERMS.THREAD_CREATE],
 });
 export const canUpdateThread = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.THREAD_UPDATE],
+  perm: [PERMS.THREAD_UPDATE],
 });
 export const canDeleteComment = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.COMMENT_DELETE],
+  perm: [PERMS.COMMENT_DELETE],
 });
 export const canListThread = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.THREAD_LIST],
+  perm: [PERMS.THREAD_LIST],
 });
 
 //VOD Management Permissions :
 export const canCreateVOD = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.VOD_CREATE],
+  perm: [PERMS.VOD_CREATE],
 });
 export const canUpdateVOD = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.VOD_UPDATE],
+  perm: [PERMS.VOD_UPDATE],
 });
 export const canDeleteVOD = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.VOD_DELETE],
+  perm: [PERMS.VOD_DELETE],
 });
 export const canListVOD = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.VOD_LIST],
+  perm: [PERMS.VOD_LIST],
 });
 
 //Alert Management Permissions :
 export const canCreateAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
   userGroups: ["6034c331a2f9c7554b1d42e0"],
-  perm: [permissions.ALERT_CREATE],
+  perm: [PERMS.ALERT_CREATE],
 });
 export const canUpdateAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.ALERT_UPDATE],
+  perm: [PERMS.ALERT_UPDATE],
 });
 export const canDeleteAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.ALERT_DELETE],
+  perm: [PERMS.ALERT_DELETE],
 });
 export const canListAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
   perm: [
-    permissions.ALERT_LIST,
-    permissions.MISSION_LIST,
-    permissions.DATA_PAGE,
+    PERMS.ALERT_LIST,
+    PERMS.MISSION_LIST,
+    PERMS.DATA_PAGE,
   ],
 });
 
@@ -441,7 +441,7 @@ export const canListAlert = genPermissionGuard({
 
 export const canListPilots = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.MISSION_LIST],
+  perm: [PERMS.MISSION_LIST],
 });
 
 //Mapping Management Permissions
@@ -482,15 +482,15 @@ export const canListPilots = genPermissionGuard({
 //---------------------Feature File upload perms----------
 export const canUploadFiletoGEOJSON = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.FEATURE_FILE_UPLOAD],
+  perm: [PERMS.FEATURE_FILE_UPLOAD],
 });
 export const candeleteFilefromGEOJSON = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.FEATURE_FILE_DELETE],
+  perm: [PERMS.FEATURE_FILE_DELETE],
 });
 export const canSetCoverPhoto = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.SET_COVER_PHOTO],
+  perm: [PERMS.SET_COVER_PHOTO],
 });
 
 export const canAutoAssignImage = genPermissionGuard({
@@ -502,74 +502,74 @@ export const canAutoAssignImage = genPermissionGuard({
 export const caneditGEOJSON = genPermissionGuard({
   //Change color is also included in this, because change feature color is the same as edit feature
   userTypes: ["tenant-root"],
-  perm: [permissions.EDIT_FEATURE],
+  perm: [PERMS.EDIT_FEATURE],
 });
 export const canDeleteFeature = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.DELETE_FEATURE],
+  perm: [PERMS.DELETE_FEATURE],
 });
 export const canaddFeature = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.ADD_FEATURE],
+  perm: [PERMS.ADD_FEATURE],
 });
 
 //--------------Layer Related---------------------------
 export const canCreateLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.UPLOAD_LAYER],
+  perm: [PERMS.UPLOAD_LAYER],
 });
 export const canDeleteLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.DELETE_LAYER],
+  perm: [PERMS.DELETE_LAYER],
 });
 export const canEditLayer = genPermissionGuard({
   //perm gaurd to be used in both edit layer and change color of layer api
   userTypes: ["tenant-root"],
-  perm: [permissions.EDIT_LAYER],
+  perm: [PERMS.EDIT_LAYER],
 });
 export const canCreateVectorLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.SAVE_DRAWINGS],
+  perm: [PERMS.SAVE_DRAWINGS],
 });
 export const canDownloadLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.DOWNLOAD_LAYER],
+  perm: [PERMS.DOWNLOAD_LAYER],
 });
 
 // ----------------BaseMap Permissions-----------------------------
 export const canCreateBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.CAN_CREATE_BASE_LAYER],
+  perm: [PERMS.CAN_CREATE_BASE_LAYER],
 });
 
 export const canUpdateBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.CAN_UPDATE_BASE_LAYER],
+  perm: [PERMS.CAN_UPDATE_BASE_LAYER],
 });
 
 export const canDeleteBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.CAN_DELETE_BASE_LAYER],
+  perm: [PERMS.CAN_DELETE_BASE_LAYER],
 });
 
 export const canEditBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.CAN_EDIT_BASE_LAYER],
+  perm: [PERMS.CAN_EDIT_BASE_LAYER],
 });
 
 export const canUploadToBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.CAN_UPLOAD_TO_BASE_LAYER],
+  perm: [PERMS.CAN_UPLOAD_TO_BASE_LAYER],
 });
 
 //-----------------Document permissions----------------------------
 export const canUploadDocument = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.UPLOAD_DOCUMENT],
+  perm: [PERMS.UPLOAD_DOCUMENT],
 });
 export const canDeleteDocument = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.DELETE_DOCUMENT],
+  perm: [PERMS.DELETE_DOCUMENT],
 });
 
 //---------Client Perms----------------------
@@ -581,39 +581,39 @@ export const canClient = genPermissionGuard({
 export const canCreateClient = genPermissionGuard({
   userTypes: ["tenant-root"],
   perm: [
-    permissions.CREATE_CLIENT,
-    permissions.CLIENT_LIST,
+    PERMS.CREATE_CLIENT,
+    PERMS.CLIENT_LIST,
   ],
 });
 
 export const canEditClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.EDIT_CLIENT],
+  perm: [PERMS.EDIT_CLIENT],
 });
 
 export const canDeleteClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.DELETE_CLIENT],
+  perm: [PERMS.DELETE_CLIENT],
 });
 
 export const canListClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [permissions.CLIENT_LIST],
+  perm: [PERMS.CLIENT_LIST],
 });
 
 export const canManageClient = genPermissionGuard({
   userTypes: ["tenant-root"],
   perm: [
-    permissions.CREATE_CLIENT,
-    permissions.EDIT_CLIENT,
-    permissions.DELETE_CLIENT,
+    PERMS.CREATE_CLIENT,
+    PERMS.EDIT_CLIENT,
+    PERMS.DELETE_CLIENT,
   ],
 });
 
 export const canViewRTCstream = genPermissionGuard({
   userTypes: ["tenant-root"],
   perm: [
-    permissions.WEBRTC_VIEW,
-    permissions.MISSION_LIST,
+    PERMS.WEBRTC_VIEW,
+    PERMS.MISSION_LIST,
   ],
 });

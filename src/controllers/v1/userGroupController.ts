@@ -1,5 +1,4 @@
 import { Request } from "express";
-import Permission from "../../models/permission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import User from "../../models/user";
 import UserGroup from "../../models/usergroup";
@@ -7,6 +6,7 @@ import Tenant from "../../models/tenant";
 import { IPermission } from "../../schemas/permission";
 import { sanitizeSort } from "../../utils/requestHelpers";
 import { IUserGroup } from "../../schemas/usergroup";
+import { PERMS } from "../../utils/permissions";
 
 //create new  permission
 export const createUserGroupforTenant = async (
@@ -19,10 +19,7 @@ export const createUserGroupforTenant = async (
         name: req.body.name,
         tenantId: res.locals.user.tenantId._id,
       }),
-      Permission.find({
-        _id: { $in: req.body.permissions },
-        isVisibleToTenant: true,
-      }),
+      Object.values(PERMS).filter(perm => req.body.permissions.includes(perm))
     ]);
     if (existing_group) {
       res.json({
@@ -30,17 +27,16 @@ export const createUserGroupforTenant = async (
         message: "Duplicate group name.",
       });
     } else {
-      const permission_ids = permissions.map((ele) => ele._id);
       const user_group = new UserGroup({
         name: req.body.name,
-        permissions: permission_ids,
+        permissions: permissions,
         tenantId: res.locals.user.tenantId._id,
         createdBy: res.locals.user._id,
         updatedBy: res.locals.user._id,
         isActive: true,
       });
       const ug = await user_group.save();
-      const tenant: any = await Tenant.findOne({
+      const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,
       });
       if (ug && tenant.actualUserGroupCount >= 0) {
@@ -48,8 +44,6 @@ export const createUserGroupforTenant = async (
           { _id: res.locals.user.tenantId },
           { $inc: { actualUserGroupCount: 1 } }
         );
-        // tenant.actualUserGroupCount = Number(tenant.actualUserGroupCount) + 1;
-        // await tenant.save();
       }
       res.status(201).json({
         status: true,

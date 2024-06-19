@@ -1,4 +1,4 @@
-export enum permissions {
+export enum PERMS {
   MISSION_CREATE = "mission_create",
   MISSION_DELETE = "mission_delete",
   DATA_PAGE = "data_page",
