@@ -37,33 +37,17 @@ export const createClientformissionGroup = async (
     const result = await Usergroup.findOne(
       {
         _id: req.body.userGroupId,
-        permissions: {$in: [PERMS.CREATE_CLIENT]}
+        tenantId: res.locals.user.tenantId._id
       },
-      {
-        permissions: 1,
-      }
     );
+    const onlyClientPerms = result.permissions.every(perm => [PERMS.CLIENT_DATA, PERMS.CLIENT_LIST, PERMS.CLIENT_MISSION_LIST].includes(perm))
     if (result) {
-      let cflag = 0;
-      let cId;
-      const permission = await Permission.findOne(
-        {
-          _id: { $in: result.permissions },
-          isClient: true,
-        },
-        { _id: 1 }
-      );
-      if (permission) {
+      if (onlyClientPerms) {
         const existingClient = await User.findOne(
-          { email: req.body.email },
-          { _id: 1 }
+          { email: req.body.email, tenantId: res.locals.user.tenantId._id },
         );
-        if (existingClient) {
-          cflag = 1;
-          cId = existingClient._id;
-        }
 
-        if (cflag == 1) {
+        if (existingClient) {
           const temppass = crypto.randomBytes(10).toString("hex");
           const date2 = new Date(req.body.expiryDate);
           // let docPath = DirPath(Directory.DEFAULT, req.body.avatar);
@@ -88,11 +72,11 @@ export const createClientformissionGroup = async (
             city,
             country,
           };
-          await User.findOneAndUpdate({ _id: cId }, modClient, {
+          await User.findOneAndUpdate({ _id: existingClient._id }, modClient, {
             upsert: true,
             useFindAndModify: false,
           });
-          const modDoc = await User.findOne({ _id: cId });
+          const modDoc = await User.findOne({ _id: existingClient._id });
           if (req.body.avatar && modDoc) {
             copyFiled(
               req.body.avatar,
