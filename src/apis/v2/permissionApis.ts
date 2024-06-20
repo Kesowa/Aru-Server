@@ -2,9 +2,8 @@
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
-import { PermissionType } from "../../schemas/permission";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { PERMS } from "../../utils/permissions";
+import { PERMS } from "../../schemas/permission";
 
 const permissionApi = Router();
 
@@ -68,7 +67,7 @@ openApi.addPath(
           Types.Object({
             description: "Successful Operation",
             properties: {
-              data: Types.Array({ arrayType: PermissionType }),
+              data: Types.Array({ arrayType: PERMS }),
               pagination: Types.Object({
                 description: "pagination information for data",
                 properties: {

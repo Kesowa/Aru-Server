@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { PERMS } from "../../utils/permissions";
+import { PERMS } from "../../schemas/permission";
 
 //create new  permission
 export const createPermission = async (_req: Request, res: AuthResponse) => {

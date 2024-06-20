@@ -10,8 +10,7 @@ import PassReset from "../models/passwordReset";
 import crypto from "crypto";
 import { MODE, Mode, SECRET_KEY } from "../constants";
 import { ObjectId } from "mongodb";
-import { PERMS } from "./permissions";
-import { IPermission } from "../schemas/permission";
+import { PERMS } from "../schemas/permission";
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,

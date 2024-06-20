@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
-import { PERMS } from "../utils/permissions";
+import { PERMS } from "./permission";
 
 export interface IUserGroup {
   _id: mongoose.Types.ObjectId;

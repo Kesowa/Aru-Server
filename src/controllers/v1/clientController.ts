@@ -27,7 +27,7 @@ import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
-import { PERMS } from "../../utils/permissions";
+import { PERMS } from "../../schemas/permission";
 
 export const createClientformissionGroup = async (
   req: Request,
