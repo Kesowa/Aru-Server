@@ -10,7 +10,7 @@ import PassReset from "../models/passwordReset";
 import crypto from "crypto";
 import { MODE, Mode, SECRET_KEY } from "../constants";
 import { ObjectId } from "mongodb";
-import { PERMS } from "../schemas/permission";
+import { GetPermissions, PERMS } from "../schemas/permission";
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,
@@ -66,12 +66,7 @@ const Authenticator = async (token: string, ip: string, agent: string) => {
   const user = await User.findById(session?.owner).populate("tenantId").lean();
 
   if (user && session) {
-    if (user.userGroupId) {
-      const userGroup = await UserGroup.findById(user.userGroupId).populate(
-        "permissions"
-      );
-      user.customPermissions = Array.from(userGroup?.permissions || []);
-    }
+    user["customPermissions"] = await GetPermissions(user.userGroupId, user.userType, user.tenantId);
     if (user.userType == "super-admin") return user;
     const doc = await Tenant.findOne({ _id: user.tenantId }).populate<{
       activePackage: IPackage;
