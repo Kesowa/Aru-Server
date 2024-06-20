@@ -145,6 +145,22 @@ type permGuardType = {
   perm: Array<PERMS>;
 };
 
+export function PermissionGuard(...perms: PERMS[]) {
+  return (req: Request, res: AuthResponse, next: NextFunction) => {
+    const sufficientPerms = perms.every(perm => res.locals.user.customPermissions.includes(perm));
+    if (sufficientPerms) {
+      req.log.info("user has sufficient perms");
+      next();
+    }
+    const missingPerms = perms.filter(perm => !res.locals.user.customPermissions.includes(perm));
+    res.status(403).json({
+      status: false,
+      message: "Permission denied",
+      data: missingPerms,
+    })
+  }
+}
+
 function genPermissionGuard(perm: permGuardType) {
   return (req: Request, res: AuthResponse, next: NextFunction) => {
     let authorized = false;
