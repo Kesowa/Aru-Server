@@ -16,7 +16,7 @@ router.post(
 );
 
 
-router.get(
+router.post(
   "/upload-url",
   isAuthenticated,
   body("name").isString(),

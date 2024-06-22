@@ -139,7 +139,7 @@ export const uploadFileforUSer = async (req: Request, res: AuthResponse) => {
 };
 
 
-const createUploadUrl = async (req: Request<{}, {}, {
+export const createUploadUrl = async (req: Request<{}, {}, {
   name: string;
   size: number;
   type: string;
@@ -174,7 +174,7 @@ const createUploadUrl = async (req: Request<{}, {}, {
   res.status(201).json({
     status: true,
     message: "created presigned url",
-    data: presignedUrl.postURL,
+    data: presignedUrl,
   })
 
 }

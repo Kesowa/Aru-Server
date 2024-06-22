@@ -58,8 +58,8 @@ services:
 
   minio:
     image: minio/minio@sha256:c7175077d39a8cc10c9fd611cdcc68b6a5b365793e9ac6f4198ffff1ef0fe555
-    volumes:
-      - datastore:/data
+    # volumes:
+    #   - datastore:/data
     command: server /data --console-address ":9001"
     expose:
       - "9000"
@@ -71,6 +71,7 @@ services:
       retries: 3
     ports:
       - 9001:9001
+      - 9000:9000
 
   createbuckets:
     image: minio/mc
@@ -84,5 +85,5 @@ services:
         exit 0;
       "
 
-volumes:
-  datastore:
+# volumes:
+#   datastore:
