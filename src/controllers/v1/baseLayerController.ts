@@ -1,7 +1,6 @@
 import { Request } from "express";
 import * as pathUtils from "../../utils/pathUtils";
 import Layer from "../../models/layer";
-import Raster from "../../models/rasterprops";
 import fetch from "node-fetch";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
@@ -13,9 +12,9 @@ import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
 import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 import { ObjectId } from "bson";
 import layerFiles from "../../models/layerFiles";
-import { IVector } from "../../schemas/vectorprops";
+import { featureType, vectorProps } from "../../schemas/vectorprops";
 import { IMission } from "../../schemas/mission";
-import { IRaster } from "../../schemas/rasterprops";
+import { rasterProps } from "../../schemas/rasterprops";
 import { IPackage } from "../../schemas/package";
 import { ITenant } from "../../schemas/tenant";
 import mongoose, { HydratedDocument } from "mongoose";
@@ -75,9 +74,7 @@ export const getMetadataForBaseLayer = async (
         missionId: 1,
         vector: 1,
       }
-    )
-      .populate<{ missionId: IMission }>("missionId")
-      .populate<{ vector: IVector }>("vector");
+    ).populate<{ missionId: IMission }>("missionId");
 
     if (data.length !== req.body.layers.length) {
       res.json({
@@ -88,7 +85,7 @@ export const getMetadataForBaseLayer = async (
       const layerTypes = new Set();
 
       data.forEach((element) => {
-        layerTypes.add(element.vector.type);
+        layerTypes.add(featureType[element.vector]);
       });
 
       if (layerTypes.size > 1) {
@@ -264,9 +261,7 @@ export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
     const doc = await Layer.findOne({
       _id: req.body.id,
       tenantId: res.locals.user.tenantId._id,
-    }).populate<{
-      vector: IVector;
-    }>("vector");
+    });
     if (!doc) {
       res.status(404).json({
         success: false,
@@ -302,7 +297,7 @@ export const createBaseLayerByAttr = async (
         key: number;
         occurs: "Present in all layers";
       }[];
-      vectorTypeId: string;
+      vectorType: vectorProps;
     }
   >,
   res: AuthResponse
@@ -344,7 +339,7 @@ export const createBaseLayerByAttr = async (
     const vectorLayer = new Layer({
       name: req.body.name,
       type: "Vector",
-      vector: req.body.vectorTypeId,
+      vector: req.body.vectorType,
       tenantId: res.locals.user.tenantId._id,
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
@@ -377,7 +372,6 @@ export const createBaseLayerByAttr = async (
             },
           }
         );
-        await savedDoc.populate("vector");
       }
       return res.status(201).json({
         status: true,
@@ -451,8 +445,6 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
         $or: [{ vector: { $exists: true } }, { raster: { $exists: true } }],
       })
         .sort(sort)
-        .populate<{ raster: IRaster }>({ path: "raster" })
-        .populate<{ vector: IVector }>({ path: "vector" })
         .exec();
       if (!d.length)
         return res.json({
@@ -470,14 +462,13 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
         },
         vector: { $exists: true },
       })
-        .sort(sort)
-        .populate<{ vector: IVector }>({ path: "vector" });
+        .sort(sort);
       // Scope for optimization:
       // The below for loop could be completely removed and lesser docs would be read if we could use { vector: { $in: match3.type } },
       // but we can't as initially vector is just an id before populate() is done
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match3.type.length; j++) {
-          if (result[i].vector.type == match3.type[j]) {
+          if (featureType[result[i].vector] == match3.type[j]) {
             d.push(result[i]);
           }
         }
@@ -493,11 +484,10 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
         },
         vector: { $exists: true },
       })
-        .sort(sort)
-        .populate<{ vector: IVector }>({ path: "vector" });
+        .sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match2.name.length; j++) {
-          if (result[i].vector.name == match2.name[j]) {
+          if (result[i].vector == match2.name[j]) {
             d.push(result[i]);
           }
         }
@@ -513,11 +503,10 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
         },
         raster: { $exists: true },
       })
-        .sort(sort)
-        .populate<{ raster: IRaster }>({ path: "raster" });
+        .sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match.name.length; j++) {
-          if (result[i].raster.name == match.name[j]) {
+          if (result[i].raster == match.name[j]) {
             d.push(result[i]);
           }
         }
@@ -555,8 +544,7 @@ export const getMetadataForUpdatingBaseLayer = async (
         vector: 1,
       }
     )
-      .populate<{ missionId: IMission }>("missionId")
-      .populate<{ vector: IVector }>("vector");
+      .populate<{ missionId: IMission }>("missionId");
 
     const baseLayerData = await Layer.findOne(
       {
@@ -568,7 +556,7 @@ export const getMetadataForUpdatingBaseLayer = async (
         vector: 1,
         layerpath: 1,
       }
-    ).populate<{ vector: IVector }>("vector");
+    );
 
     if (!baseLayerData) throw new Error("baseLayer data is null");
 
@@ -580,7 +568,7 @@ export const getMetadataForUpdatingBaseLayer = async (
     } else {
       const layerTypes = new Set();
       data.forEach((element) => {
-        layerTypes.add(element.vector.type);
+        layerTypes.add(featureType[element.vector]);
       });
 
       if (layerTypes.size > 1) {
@@ -589,7 +577,7 @@ export const getMetadataForUpdatingBaseLayer = async (
           data: Array.from(layerTypes.values()),
           message: "Only one type of layers can be mapped",
         });
-      } else if (!layerTypes.has(baseLayerData.vector.type)) {
+      } else if (!layerTypes.has(featureType[baseLayerData.vector])) {
         return res.json({
           success: false,
           message:
@@ -731,7 +719,7 @@ export const updateBaseLayerByAttr = async (
       vector: 1,
       fileSize: 1,
     }
-  ).populate<{ vector: IVector }>("vector");
+  );
 
   if (!baseLayer) throw new Error("baseLayer is null or undefined");
 
@@ -746,11 +734,10 @@ export const updateBaseLayerByAttr = async (
         vector: 1,
       }
     )
-      .populate<{ missionId: IMission }>("missionId")
-      .populate<{ vector: IVector }>("vector");
+      .populate<{ missionId: IMission }>("missionId");
 
     for (const d of layerData) {
-      if (d.vector.type !== baseLayer.vector.type) {
+      if (featureType[d.vector] !== featureType[baseLayer.vector]) {
         return res.json({
           success: false,
           message: "Layer type must be same as base layer",
@@ -781,7 +768,7 @@ export const updateBaseLayerByAttr = async (
         fileSize: clonedGeojson.size,
       },
       { new: true }
-    ).populate<{ vector: IVector }>("vector");
+    );
     await Tenant.updateOne({
       _id: res.locals.user.tenantId._id
         ? res.locals.user.tenantId._id
@@ -818,9 +805,7 @@ export const getBaseLayers = async (req: Request, res: AuthResponse) => {
           ],
         },
       ],
-    })
-      .populate<{ raster: IRaster }>({ path: "raster" })
-      .populate<{ vector: IVector }>({ path: "vector" });
+    });
 
     res.status(200).json({
       success: true,
@@ -1036,9 +1021,7 @@ export const updateBaseLayerByUploadedFile = async (
 
     await deleteDirFileUsingName(Directory.ROOT, req.body.filePath);
 
-    const layer = await Layer.findOne({ _id: baseLayer._id })
-      .populate<{ vector: IVector }>("vector")
-      .populate<{ raster: IRaster }>("raster");
+    const layer = await Layer.findOne({ _id: baseLayer._id });
 
     res.json({
       success: true,
@@ -1098,14 +1081,12 @@ export const createBaseRasterfromMission = async (
         maxp: 1,
         type: 1,
       }
-    )
-      .populate<{ missionId: IMission }>("missionId")
-      .populate<{ raster: IRaster }>("raster");
-    const type = data[0].raster.name;
+    ).populate<{ missionId: IMission }>("missionId");
+    const type = data[0].raster;
     if (data.length) {
       const dataArr: any = [];
       for (let i = 0; i < data.length; i++) {
-        if (data[i].raster.name === type) {
+        if (data[i].raster === type) {
           const layerdata: any = [
             {
               path: data[i].layerpath,
@@ -1125,7 +1106,7 @@ export const createBaseRasterfromMission = async (
       baseRasterLayer = new Layer({
         name: name,
         type: data[0].type,
-        raster: data[0].raster._id,
+        raster: data[0].raster,
         layerdataArr: dataArr,
         fileSize: 0,
         captureDate: req.body.captureDate,
@@ -1290,8 +1271,8 @@ export const createBaseRasterfromUpload = async (
     let minP = 0;
     let maxP = 1;
     const { name, raster, captureDate } = req.body;
-    const rasterType = await Raster.findOne({ _id: raster });
-    if (!rasterType) {
+    const rasterType = raster as rasterProps;
+    if (!Object.values(rasterProps).includes(rasterType)) {
       res.status(404).json({
         status: false,
         message: "raster type not found",
@@ -1300,7 +1281,7 @@ export const createBaseRasterfromUpload = async (
     }
     let center = { lat: 0, lng: 0 };
     let metadata = {};
-    if (rasterType.name == "DEM") {
+    if (rasterType == rasterProps.DEM) {
       let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${file_loc}`;
       //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       let response = await fetch(metaDataURL, {
@@ -1320,7 +1301,7 @@ export const createBaseRasterfromUpload = async (
         lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
         lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
       };
-    } else if (rasterType.name == "POINT_CLOUD") {
+    } else if (rasterType == rasterProps.POINT_CLOUD) {
       metadata = await LazToTiles3D(file_loc);
     }
     // let center = {
@@ -1344,7 +1325,7 @@ export const createBaseRasterfromUpload = async (
     layer = new Layer({
       name: `base - ${name}`,
       type: "Raster",
-      raster,
+      raster: rasterType,
       layerdataArr: dataArr,
       captureDate,
       center,
@@ -1498,7 +1479,7 @@ export const updateBaseLayerRasterImport = async (
         raster: 1,
         layerdataArr: 1,
       }
-    ).populate<{ raster: IRaster }>("raster");
+    );
     if (doc) {
       const data = await Layer.find(
         {
@@ -1512,14 +1493,12 @@ export const updateBaseLayerRasterImport = async (
           minp: 1,
           maxp: 1,
         }
-      )
-        .populate<{ missionId: IMission }>("missionId")
-        .populate<{ raster: IRaster }>("raster");
-      const type = doc.raster.name;
+      );
+      const type = doc.raster;
       if (data.length) {
         const dataArr: any = [];
         for (let i = 0; i < data.length; i++) {
-          if (data[i].raster.name === type) {
+          if (data[i].raster === type) {
             const layerdata: any = {
               path: data[i].layerpath,
               minp: data[i].minp,
@@ -1658,7 +1637,7 @@ export const createBaseVectorLayer = async (
     const layer = await Layer.create({
       name: req.body.name,
       type: "Vector",
-      vector: req.body.vectorId,
+      vector: req.body.vectorType,
       missionId: null,
       tenantId: res.locals.user.tenantId._id,
       createdBy: res.locals.user._id,
@@ -1679,7 +1658,6 @@ export const createBaseVectorLayer = async (
           actualLayerCount: 1,
         }
       );
-      await layer.populate("vector");
       if (layer && tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },
@@ -1732,8 +1710,7 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
         await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
       }
       const getDoc = await Layer.findOne({ _id: req.body.layerId })
-        .populate<{ tenantId: ITenant }>("tenantId")
-        .populate<{ vector: IVector }>("vector");
+        .populate<{ tenantId: ITenant }>("tenantId");
       if (getDoc) {
         res.status(200).json({
           status: true,
@@ -1771,8 +1748,7 @@ export const getallpublicbaselayer = async (
       }
     );
     const docs = await Layer.find({ tenantId: tenant._id, isPublic: true })
-      .populate<{ tenantId: ITenant }>("tenantId", "name")
-      .populate<{ vector: IVector }>("vector");
+      .populate<{ tenantId: ITenant }>("tenantId", "name");
     if (req.query.mapRef) {
       if (docs.length) {
         res.status(200).json({

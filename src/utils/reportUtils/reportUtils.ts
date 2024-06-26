@@ -8,6 +8,7 @@ import {
   Paragraph,
   TextRun,
 } from "docx";
+import { vectorProps } from "../../schemas/vectorprops";
 
 // =============================== DOCX GENERATION UTILS ===============================================================================
 
@@ -102,55 +103,55 @@ export const commonPageFooter = {
 
 // areas
 export const privateCommercialLayerTypes = [
-  "Bus Shelters",
-  "Parking Area",
-  "Cycle Stand",
-  "Boundary Wall",
-  "Cellphone Tower",
-  "Parcel",
-  "Farming Land",
+  vectorProps.BUS_SHELTERS,
+  vectorProps.PARKING_AREA,
+  vectorProps.CYCLE_STAND,
+  vectorProps.BOUNDARY_WALL,
+  vectorProps.CELLPHONE_TOWER,
+  vectorProps.PARCEL,
+  vectorProps.FARMING_LAND,
 ];
-export const residentialLayerTypes = ["Plot"];
+export const residentialLayerTypes = [vectorProps.PLOT];
 export const govtCommercialLayerTypes = [
-  "Sub Station",
-  "Metro station",
-  "Metro Route",
-  "Public Convenience",
-  "Mobile Drone Port",
+  vectorProps.SUB_STATION,
+  vectorProps.METRO_STATION,
+  vectorProps.METRO_ROUTE,
+  vectorProps.PUBLIC_CONVENIENCE,
+  vectorProps.MOBILE_DRONE_PORT,
 ];
 export const housingComplexLayerTypes = [];
 export const govtLayerTypes = [
-  "Restricted Area",
-  "Powersupply Network",
-  "Landfill",
-  "Fire Station",
-  "Right of Way",
-  "Water Transmission Line",
-  "Water Treatment Plant",
-  "Garbage Collection Area",
+  vectorProps.RESTRICTED_AREA,
+  vectorProps.POWER_SUPPLY_NETWORK,
+  vectorProps.LANDFILL,
+  vectorProps.FIRE_STATION,
+  vectorProps.RIGHT_OF_WAY,
+  vectorProps.WATER_TRANSMISSION_LINE,
+  vectorProps.WATER_TREATMENT_PLANT,
+  vectorProps.GARBAGE_COLLECTION_AREA,
 ];
 export const motorableRoadsLayerTypes = [
-  "Flyover",
-  "Roundabout",
-  "Bridge/Flyover",
-  "Bridge",
-  "Carriage Way",
-  "Road",
-  "Street",
+  vectorProps.FLYOVER,
+  vectorProps.ROUNDABOUT,
+  vectorProps.BRIDGE_FLYOVER,
+  vectorProps.BRIDGE,
+  vectorProps.CARRIAGE_WAY,
+  vectorProps.ROAD,
+  vectorProps.STREET,
 ];
-export const footpathLayerTypes = ["Footpath"];
-export const cycleTrackLayerTypes = ["Cycle Track"];
+export const footpathLayerTypes = [vectorProps.FOOTPATH];
+export const cycleTrackLayerTypes = [vectorProps.CYCLE_TRACK];
 export const greeneryLayerTypes = [
-  "Playground",
-  "Park",
-  "Green Verge",
-  "Jungle",
+  vectorProps.PLAYGROUND,
+  vectorProps.PARK,
+  vectorProps.GREEN_VERGE,
+  vectorProps.JUNGLE,
 ];
 export const waterBodyLayerTypes = [
-  "Drainage Network",
-  "Canal",
-  "Sewerage Network",
-  "Waterbody",
+  vectorProps.DRAINAGE_NETWORK,
+  vectorProps.CANAL,
+  vectorProps.SEWERAGE_NETWORK,
+  vectorProps.WATER_BODY,
 ];
 
 // Doubt in areas:
@@ -188,23 +189,23 @@ export const vacantTypes = ["Vacant Plot"];
 // ===================================================================================================================================
 
 export const deliverableTypes: { [key: string]: string[] } = {
-  OVERVIEW: ["Plot"],
+  OVERVIEW: [vectorProps.PLOT],
   BOUNDARY: [],
-  "BUILT-UP AREA": ["Building Footprint"],
+  "BUILT-UP AREA": [vectorProps.BUILDING_FOOTPRINT],
   "AMENITIES AND POI": [],
   "OTHER FEATURES": [],
   "ACTIONABLE POINTS": [],
   "OCCUPIED UNTAXED AREA (ENCROACHMENT)": [],
-  "ROAD DETAILS": ["Road"],
-  "FOOTPATH DETAILS": ["Footpath"],
-  "CYCLE TRACK DETAILS": ["Cycle Track"],
+  "ROAD DETAILS": [vectorProps.ROAD],
+  "FOOTPATH DETAILS": [vectorProps.FOOTPATH],
+  "CYCLE TRACK DETAILS": [vectorProps.CYCLE_TRACK],
   "WATERBODIES DETAILS": [
-    "Drainage Network",
-    "Canal",
-    "Sewerage Network",
-    "Waterbody",
+    vectorProps.DRAINAGE_NETWORK,
+    vectorProps.CANAL,
+    vectorProps.SEWERAGE_NETWORK,
+    vectorProps.WATER_BODY,
   ],
-  "GREENERY DETAILS": ["Playground", "Park", "Green Verge", "Jungle"],
+  "GREENERY DETAILS": [vectorProps.PLAYGROUND, vectorProps.PARK, vectorProps.GREEN_VERGE, vectorProps.JUNGLE],
   "WATER TANK": [],
   "STREET-LIGHT DETAILS": [],
 };
