@@ -77,14 +77,14 @@ routerV2.use("/package", packageApi);
 routerV2.use("/payment", paymentApi);
 routerV2.use("/permission", permissionApi);
 routerV2.use("/pilot", pilotApi);
-routerV2.use("/rasterProp", rasterApi);
+// routerV2.use("/rasterProp", rasterApi);
 routerV2.use("/setting", settingApi);
 routerV2.use("/streamtoken", streamKeyApi);
 routerV2.use("/tenant", tenantApi);
 routerV2.use("/thread", threadApi);
 routerV2.use("/user", userApi);
 routerV2.use("/usergroup", userGroupApi);
-routerV2.use("/vectorProp", vectorApi);
+// routerV2.use("/vectorProp", vectorApi);
 routerV2.use("/vod", vodApi);
 
 // @ts-ignore
