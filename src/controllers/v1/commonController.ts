@@ -11,6 +11,7 @@ import * as pathUtils from "../../utils/pathUtils";
 import { minioClient } from "../../utils/objectStorage";
 import { IPackage } from "../../schemas/package";
 import { randomUUID } from "crypto";
+import uploadModel from "../../models/uploadTask";
 
 //pupload file
 export const uploadFile = async (req: Request, res: AuthResponse) => {
@@ -143,6 +144,7 @@ export const createUploadUrl = async (req: Request<{}, {}, {
   name: string;
   size: number;
   type: string;
+  model: string;
 }>, res: AuthResponse) => {
   // check storage
   const sizeInMb = req.body.size / (1024 * 1024);
@@ -155,15 +157,15 @@ export const createUploadUrl = async (req: Request<{}, {}, {
     });
   }
 
-  // const presignedUrl = await minioClient.presignedPutObject(S3_BUCKET_NAME, req.body.type.split('/').at(0) + randomUUID(), 3600 * 24);
   const policy = minioClient.newPostPolicy();
   policy.setBucket(S3_BUCKET_NAME);
-  policy.setContentLengthRange(req.body.size * 0.9, req.body.size * 1.1);
+  policy.setContentLengthRange(req.body.size * 0.99, req.body.size * 1.01);
   policy.setContentType(req.body.type);
   const expiry = new Date();
   expiry.setSeconds(3600 * 24);
   policy.setExpires(expiry);
-  policy.setKey(randomUUID());
+  const key = randomUUID();
+  policy.setKey(key);
   policy.setUserMetaData({
     name: req.body.name,
     user: res.locals.user._id.toJSON(),
@@ -171,10 +173,24 @@ export const createUploadUrl = async (req: Request<{}, {}, {
 
   const presignedUrl = await minioClient.presignedPostPolicy(policy);
 
+  const uploadTask = await uploadModel.create({
+    tenant: res.locals.user.tenantId._id,
+    createdBy: res.locals.user._id,
+    updatedBy: res.locals.user._id,
+    docModel: req.body.model,
+    status: "started",
+    data: {
+      key,
+      size: sizeInMb,
+      type: req.body.type,
+    }
+  });
+
   res.status(201).json({
     status: true,
     message: "created presigned url",
-    data: presignedUrl,
-  })
+    url: presignedUrl,
+    token: uploadTask._id,
+  });
 
 }
