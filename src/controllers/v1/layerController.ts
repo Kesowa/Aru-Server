@@ -243,7 +243,7 @@ export const updateLayer = async (req: Request, res: AuthResponse) => {
               message: "layer type not found",
             });
             return;
-          } else if (currentType !== requestedType) {
+          } else if (featureType[currentType] !== featureType[requestedType]) {
             res.status(400).json({
               status: false,
               message: "geometry of previous type doesn't match new type",
