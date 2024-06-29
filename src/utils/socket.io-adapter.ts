@@ -308,14 +308,14 @@ export class AmqpAdapter extends Adapter {
             except: opts.except && [...opts.except],
         };
         const rooms = opts.rooms && opts.rooms.size ? opts.rooms : nullSet;
-        const nonlocalRooms = [...filterIter(rooms, (room) => !this.localRouting.has(room!))];
+        const nonlocalRooms = [...filterIter(rooms, (room) => !this.localRouting.has(room))];
         await Promise.all([
             ...mapIter(
-                filterIter(rooms, (room) => this.localRouting.has(room!)),
+                filterIter(rooms, (room) => this.localRouting.has(room)),
                 async (room) => {
                     await this.broadcast(packet, {
                         ...opts,
-                        rooms: new Set([room!]),
+                        rooms: new Set([room]),
                         flags: { ...opts.flags, local: true },
                     });
                 },
