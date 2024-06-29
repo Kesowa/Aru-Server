@@ -3,8 +3,8 @@ import cron from "node-cron";
 import User from "./models/user";
 import http from "http";
 import { Server } from "socket.io";
-import { createAdapter } from "@socket.io/redis-adapter";
-import { createClient } from "redis";
+import { createAdapter } from "./utils/socket.io-adapter";
+import { connect } from "amqplib";
 import { ioHandler } from "./socket";
 
 import { deletePublicFileUsingPath } from "./utils/fileDeleteUtils";
@@ -18,7 +18,7 @@ import {
   MONGODB_CONNECTION_STRING,
   PORT,
   PUBLIC_DIR,
-  REDIS_URI,
+  RABBITMQ_CONNECTION_STRING,
 } from "./constants";
 import { IUser } from "./schemas/user";
 import { clientReactivationMail } from "./controllers/v1/clientController";
@@ -59,9 +59,8 @@ const expiredSubs = async () => {
           "Kesowa Infinite Ventures Pvt. Ltd",
           "",
           `               
-                        <p>Your subscription is expiring in ${
-                          30 - diffInDays
-                        } days.</b>
+                        <p>Your subscription is expiring in ${30 - diffInDays
+          } days.</b>
                         <p>Best regards,</p>
                         <p><b>Team Kesowa</b></p>
                         `,
@@ -110,10 +109,8 @@ const worker = async () => {
     },
   });
 
-  const pubClient = createClient({ url: REDIS_URI });
-  const subClient = pubClient.duplicate();
-  await Promise.all([pubClient.connect(), subClient.connect()]);
-  io.adapter(createAdapter(pubClient, subClient));
+  // @ts-ignore
+  io.adapter(createAdapter({ amqpConnection: () => connect(RABBITMQ_CONNECTION_STRING) }));
   //handle socket.io
   ioHandler(io);
 
