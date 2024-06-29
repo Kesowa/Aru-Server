@@ -142,7 +142,11 @@ export const DirPath = (dir: Directory, filename?: string | undefined) =>
 
 export const TITILER_PUBLIC = new EnvVar("TITILER_PUBLIC").isUrl().toString();
 export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();
-export const RABBITMQ_CONNECTION_STRING = new EnvVar("RABBITMQ_CONNECTION_STRING").isUrl().toString();
+export const RABBITMQ_CONNECTION_STRING = new EnvVar(
+  "RABBITMQ_CONNECTION_STRING"
+)
+  .isUrl()
+  .toString();
 export const SEQ_SERVER_URL = new EnvVar("SEQ_URL").isUrl().toString();
 export const SEQ_API_KEY = new EnvVar("SEQ_KEY").toString();
 

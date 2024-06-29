@@ -59,8 +59,9 @@ const expiredSubs = async () => {
           "Kesowa Infinite Ventures Pvt. Ltd",
           "",
           `               
-                        <p>Your subscription is expiring in ${30 - diffInDays
-          } days.</b>
+                        <p>Your subscription is expiring in ${
+                          30 - diffInDays
+                        } days.</b>
                         <p>Best regards,</p>
                         <p><b>Team Kesowa</b></p>
                         `,
@@ -110,7 +111,9 @@ const worker = async () => {
   });
 
   // @ts-ignore
-  io.adapter(createAdapter({ amqpConnection: () => connect(RABBITMQ_CONNECTION_STRING) }));
+  io.adapter(
+    createAdapter({ amqpConnection: () => connect(RABBITMQ_CONNECTION_STRING) })
+  );
   //handle socket.io
   ioHandler(io);
 
