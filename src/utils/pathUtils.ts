@@ -39,6 +39,16 @@ export enum Directory {
   DEFAULT = "",
 }
 
+export const DocToDir = <const> {
+  "VOD": Directory.VOD,
+  "user": Directory.USER_AVATARS,
+  "alert": Directory.ALERT_IMAGES,
+  "vector": Directory.VECTOR,
+  "raster": Directory.RASTER,
+  "document": Directory.DOCUMENTS,
+  "layerFiles": Directory.LAYER_FILES,
+};
+
 /**
  * Get file path for use in MongoDB documents and URL
  */

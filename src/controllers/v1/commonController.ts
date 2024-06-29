@@ -164,11 +164,13 @@ export const createUploadUrl = async (req: Request<{}, {}, {
   const expiry = new Date();
   expiry.setSeconds(3600 * 24);
   policy.setExpires(expiry);
-  const key = randomUUID();
+  const ext = path.extname(req.body.name);
+  const key = path.join(pathUtils.DocToDir[req.body.model], randomUUID() + ext);
   policy.setKey(key);
   policy.setUserMetaData({
     name: req.body.name,
     user: res.locals.user._id.toJSON(),
+    tenant: res.locals.user.tenantId._id.toJSON(),
   });
 
   const presignedUrl = await minioClient.presignedPostPolicy(policy);
@@ -179,18 +181,21 @@ export const createUploadUrl = async (req: Request<{}, {}, {
     updatedBy: res.locals.user._id,
     docModel: req.body.model,
     status: "started",
-    data: {
-      key,
-      size: sizeInMb,
-      type: req.body.type,
-    }
+    metadata: {
+      objectkey: key,
+      filesize: sizeInMb,
+      mimetype: req.body.type,
+    },
+    presigned: {
+      formData: presignedUrl.formData,
+      postURL: "http://localhost:9000/aru" // !REVISIT: Change to public s3 path
+    },
   });
 
   res.status(201).json({
     status: true,
     message: "created presigned url",
-    url: presignedUrl,
-    token: uploadTask._id,
+    data: uploadTask,
   });
 
 }

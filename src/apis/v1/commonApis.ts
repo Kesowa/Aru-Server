@@ -22,6 +22,7 @@ router.post(
   body("name").isString(),
   body("size").isInt({ min: 1 }).withMessage("file size in bytes"),
   body("type").isMimeType(),
+  body("model").isString(),
   validator,
   RobustRunner(createUploadUrl),
 )

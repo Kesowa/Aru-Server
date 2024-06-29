@@ -1,7 +1,9 @@
 import { Schema, Types } from "mongoose";
+import { DocToDir } from "../utils/pathUtils";
+import { PostPolicyResult } from "minio";
 
-const docModels = <const>["vod", "layer", "alert", "document"];
-export type docTypes = typeof docModels[number];
+export type docTypes = keyof typeof DocToDir;
+const docModels = Object.keys(DocToDir);
 
 const status = <const>["started", "completed", "failed"];
 export type statusType = typeof status[number];
@@ -16,16 +18,17 @@ export type UploadTask = {
   updatedAt: Date;
   updatedBy: Types.ObjectId;
   tenant: Types.ObjectId;
-  data: {
-    key: string,
-    type: string,
-    size: number,
-  }
+  metadata: {
+    objectkey: string,
+    mimetype: string,
+    filesize: number,
+  };
+  presigned: PostPolicyResult
 };
 
 export const UploadTaskSchema = new Schema<UploadTask>(
   {
-    doc: { type: Schema.Types.ObjectId, required: true, index: true },
+    doc: { type: Schema.Types.ObjectId, required: false },
     docModel: {
       type: String,
       required: true,
@@ -51,13 +54,17 @@ export const UploadTaskSchema = new Schema<UploadTask>(
       required: true,
       ref: "tenant",
     },
-    data: {
-      type: Schema.Types.Mixed,
-      required: true,
-      default: null,
+    metadata: {
+      objectkey: String,
+      filesize: Number,
+      mimetype: String
     },
+    presigned: {
+      postURL: String,
+      formData: Schema.Types.Map
+    }
   },
   { timestamps: true }
 );
 
-UploadTaskSchema.index({ tenant: 1, doc: 1 }, { unique: true });
+UploadTaskSchema.index({ tenant: 1, docModel: 1, doc: 1 });

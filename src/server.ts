@@ -1,52 +1,19 @@
 import app, { logger } from "./app";
 import cron from "node-cron";
-import User from "./models/user";
 import http from "http";
 import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { createClient } from "redis";
 import { ioHandler } from "./socket";
 
-import { deletePublicFileUsingPath } from "./utils/fileDeleteUtils";
-import { promises as asyncFS } from "fs";
-import path from "path";
 import Tenant from "./models/tenant";
 import { sendMail } from "./utils/emailUtil";
 import mongoose from "mongoose";
 import {
-  DUMMY_TENANT,
   MONGODB_CONNECTION_STRING,
   PORT,
-  PUBLIC_DIR,
   REDIS_URI,
 } from "./constants";
-import { IUser } from "./schemas/user";
-import { clientReactivationMail } from "./controllers/v1/clientController";
-import { minioClient } from "./utils/objectStorage";
-import { S3_BUCKET_NAME } from "./constants";
-
-minioClient.fPutObject(S3_BUCKET_NAME, "server.ts", "./src/server.ts", { 'Content-Type': 'text/plain', 'X-Amz-Meta-Testing': 1234, example: 5678 }).then(console.log).catch(console.error);
-
-const tempCleanup = async () => {
-  logger.info("Running Cron Job");
-  logger.info("Expiry check started for client");
-  const doc = await User.find({
-    userType: "tenant-client",
-    expiryDatee: { $lte: new Date().getTime() },
-    isActive: true,
-  }).populate<{ createdBy: IUser }>("createdBy");
-  for (let i = 0; i < doc.length; i++) {
-    await deletePublicFileUsingPath(doc[i].avatar);
-    doc[i].userType = "standalone-user";
-    doc[i].isActive = false;
-    doc[i].tenantId = DUMMY_TENANT;
-    await doc[i].save();
-    await clientReactivationMail(doc[i].createdBy, doc[i]);
-  }
-  const TMP_IMG = path.join(PUBLIC_DIR, "/images/temp/");
-  const files = await asyncFS.readdir(TMP_IMG);
-  await Promise.all(files.map((file) => asyncFS.rm(path.join(TMP_IMG, file))));
-};
 
 const expiredSubs = async () => {
   const doc = await Tenant.find({});
@@ -126,13 +93,7 @@ worker()
   .then(() => logger.info("Server started"))
   .catch((err) => logger.error(err, "Failed to start server"));
 
-cron.schedule("00 00 * * *", () => {
-  tempCleanup()
-    .then(() => logger.info("Temp files cleanup successful"))
-    .catch((err) => logger.error("Unable to cleanup temp files", err));
-});
-
-cron.schedule("00 00 * * *", () => {
+cron.schedule(`00 00 ${Math.floor(Math.random()*10)} * *`, () => {
   expiredSubs()
     .then(() => logger.info("Expired account check ran successfully"))
     .catch((err) => logger.error("Failed to run expired account check", err));
