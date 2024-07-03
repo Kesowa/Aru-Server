@@ -90,7 +90,7 @@ export const saveVectorLayer = async (
   );
   let flagColor = "multiColor";
   try {
-    if (ext == ".geojson") {
+    if (ext == ".geojson" && geojsonData == undefined) {
       geojsonData = JSON.parse(await fs.readFile(absLayerPath, "utf8"));
     }
     if (ext == ".kml") {
