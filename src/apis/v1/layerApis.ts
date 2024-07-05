@@ -87,8 +87,16 @@ router.post(
     .trim()
     .matches(/(Vector|Raster)/),
   oneOf([
-    body("vector").notEmpty().custom(value => Object.values(vectorProps).includes(value as vectorProps)),
-    body("raster").notEmpty().custom(value => Object.values(rasterProps).includes(value as rasterProps)),
+    body("vector")
+      .notEmpty()
+      .custom((value) =>
+        Object.values(vectorProps).includes(value as vectorProps)
+      ),
+    body("raster")
+      .notEmpty()
+      .custom((value) =>
+        Object.values(rasterProps).includes(value as rasterProps)
+      ),
   ]),
   //adding date format
   body("captureDate").exists().isISO8601().toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm
@@ -137,8 +145,18 @@ router.patch(
   //adding date format
   body("captureDate").exists().isISO8601().toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm
   oneOf([
-    body("layerType").optional().notEmpty().custom(value => Object.values(vectorProps).includes(value as vectorProps)),
-    body("layerType").optional().notEmpty().custom(value => Object.values(rasterProps).includes(value as rasterProps)),
+    body("layerType")
+      .optional()
+      .notEmpty()
+      .custom((value) =>
+        Object.values(vectorProps).includes(value as vectorProps)
+      ),
+    body("layerType")
+      .optional()
+      .notEmpty()
+      .custom((value) =>
+        Object.values(rasterProps).includes(value as rasterProps)
+      ),
   ]),
   validator,
   canEditLayer,
@@ -283,7 +301,11 @@ router.post(
   isAuthenticated,
   body("name").notEmpty().trim(),
   body("missionId").notEmpty().isMongoId(),
-  body("vectorType").notEmpty().custom(value => Object.values(vectorProps).includes(value as vectorProps)),
+  body("vectorType")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   body("geoJSON").exists().isObject(), // use sample geojson made in baselayer tests for testing this too
   validator,
   canCreateVectorLayer,
@@ -438,7 +460,11 @@ router.post(
   isAuthenticated,
   upload.array("file", 50),
   body("name").trim(),
-  body("vectorType").notEmpty().custom(value => Object.values(vectorProps).includes(value as vectorProps)),
+  body("vectorType")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   // optional
   body("color").optional().trim(),
   body("icon").optional().trim(),

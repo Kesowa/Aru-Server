@@ -205,7 +205,12 @@ export const deliverableTypes: { [key: string]: string[] } = {
     vectorProps.SEWERAGE_NETWORK,
     vectorProps.WATER_BODY,
   ],
-  "GREENERY DETAILS": [vectorProps.PLAYGROUND, vectorProps.PARK, vectorProps.GREEN_VERGE, vectorProps.JUNGLE],
+  "GREENERY DETAILS": [
+    vectorProps.PLAYGROUND,
+    vectorProps.PARK,
+    vectorProps.GREEN_VERGE,
+    vectorProps.JUNGLE,
+  ],
   "WATER TANK": [],
   "STREET-LIGHT DETAILS": [],
 };

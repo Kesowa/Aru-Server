@@ -65,7 +65,11 @@ router.post(
   isAuthenticated,
   uploadVector.single("file"),
   body("name").notEmpty().trim(),
-  body("vector").notEmpty().custom(value => Object.values(vectorProps).includes(value as vectorProps)),
+  body("vector")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   //adding date format
   body("captureDate").exists().isISO8601().toDate(),
   body("color").trim().default("#000000"),
@@ -105,7 +109,11 @@ router.post(
   body("name").notEmpty().trim(),
   body("pattr").optional().isArray(),
   body("layers").notEmpty().isArray({ min: 1 }),
-  body("vectorType").notEmpty().custom(value => Object.values(vectorProps).includes(value as vectorProps)),
+  body("vectorType")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   validator,
   canCreateBaseLayer,
   RobustRunner(createBaseLayerByAttr)
@@ -183,7 +191,11 @@ router.post(
   isAuthenticated,
   uploadRaster.single("file"),
   body("name").notEmpty().trim(),
-  body("raster").notEmpty().custom(value => Object.values(rasterProps).includes(value as rasterProps)),
+  body("raster")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(rasterProps).includes(value as rasterProps)
+    ),
   body("captureDate").exists().isISO8601().toDate(),
   validator,
   canCreateBaseLayer,
@@ -221,7 +233,11 @@ router.post(
   "/create-base-vector-layer",
   isAuthenticated,
   body("name").notEmpty().trim(),
-  body("vectorType").notEmpty().custom(value => Object.values(vectorProps).includes(value as vectorProps)),
+  body("vectorType")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   body("geoJSON").exists().isObject(),
   validator,
   //not added validation for geoJSON

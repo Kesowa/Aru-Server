@@ -208,10 +208,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           { $inc: { actualLayerCount: 1 } }
         );
       }
-      const layers = await Layer.findOne({ _id: savedDoc._id })
-        .populate<{
-          tenantId: ITenant;
-        }>("tenantId", "name");
+      const layers = await Layer.findOne({ _id: savedDoc._id }).populate<{
+        tenantId: ITenant;
+      }>("tenantId", "name");
       res.status(201).json({
         status: true,
         message: "New Layer Created",
@@ -1097,8 +1096,7 @@ export const filterLayer = async (
               $gte: startTime,
               $lte: endTime,
             },
-          })
-            .sort(sort);
+          }).sort(sort);
           if (!result.length)
             return res.json({
               status: false,
@@ -1118,8 +1116,7 @@ export const filterLayer = async (
                 $gte: startTime,
                 $lte: endTime,
               },
-            })
-              .sort(sort);
+            }).sort(sort);
             if (!result.length)
               return res.json({
                 status: false,
@@ -1168,8 +1165,7 @@ export const filterLayer = async (
           $gte: startTime,
           $lte: endTime,
         },
-      })
-        .sort(sort);
+      }).sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match3.type.length; j++) {
           if (result[i].vector) {
@@ -1188,8 +1184,7 @@ export const filterLayer = async (
           $gte: startTime,
           $lte: endTime,
         },
-      })
-        .sort(sort);
+      }).sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match2.name.length; j++) {
           if (result[i].vector) {
@@ -1208,8 +1203,7 @@ export const filterLayer = async (
           $gte: startTime,
           $lte: endTime,
         },
-      })
-        .sort(sort);
+      }).sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match.name.length; j++) {
           if (result[i].raster) {
@@ -2584,10 +2578,9 @@ export const publicLayerByMissionId = async (
     return;
   }
 
-  const layers = await Layer.find({ missionId: publicMission._id })
-    .populate<{
-      tenantId: ITenant;
-    }>("tenantId", "name");
+  const layers = await Layer.find({ missionId: publicMission._id }).populate<{
+    tenantId: ITenant;
+  }>("tenantId", "name");
   const flight = await Flight.findOne<{
     centerPoints: {
       lat: number;

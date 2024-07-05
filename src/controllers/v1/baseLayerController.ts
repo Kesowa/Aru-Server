@@ -461,8 +461,7 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
           $lte: endTime,
         },
         vector: { $exists: true },
-      })
-        .sort(sort);
+      }).sort(sort);
       // Scope for optimization:
       // The below for loop could be completely removed and lesser docs would be read if we could use { vector: { $in: match3.type } },
       // but we can't as initially vector is just an id before populate() is done
@@ -483,8 +482,7 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
           $lte: endTime,
         },
         vector: { $exists: true },
-      })
-        .sort(sort);
+      }).sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match2.name.length; j++) {
           if (result[i].vector == match2.name[j]) {
@@ -502,8 +500,7 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
           $lte: endTime,
         },
         raster: { $exists: true },
-      })
-        .sort(sort);
+      }).sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match.name.length; j++) {
           if (result[i].raster == match.name[j]) {
@@ -543,8 +540,7 @@ export const getMetadataForUpdatingBaseLayer = async (
         missionId: 1,
         vector: 1,
       }
-    )
-      .populate<{ missionId: IMission }>("missionId");
+    ).populate<{ missionId: IMission }>("missionId");
 
     const baseLayerData = await Layer.findOne(
       {
@@ -733,8 +729,7 @@ export const updateBaseLayerByAttr = async (
         layerpath: 1,
         vector: 1,
       }
-    )
-      .populate<{ missionId: IMission }>("missionId");
+    ).populate<{ missionId: IMission }>("missionId");
 
     for (const d of layerData) {
       if (featureType[d.vector] !== featureType[baseLayer.vector]) {
@@ -1709,8 +1704,9 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
       } else {
         await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
       }
-      const getDoc = await Layer.findOne({ _id: req.body.layerId })
-        .populate<{ tenantId: ITenant }>("tenantId");
+      const getDoc = await Layer.findOne({ _id: req.body.layerId }).populate<{
+        tenantId: ITenant;
+      }>("tenantId");
       if (getDoc) {
         res.status(200).json({
           status: true,
@@ -1747,8 +1743,10 @@ export const getallpublicbaselayer = async (
         _id: 1,
       }
     );
-    const docs = await Layer.find({ tenantId: tenant._id, isPublic: true })
-      .populate<{ tenantId: ITenant }>("tenantId", "name");
+    const docs = await Layer.find({
+      tenantId: tenant._id,
+      isPublic: true,
+    }).populate<{ tenantId: ITenant }>("tenantId", "name");
     if (req.query.mapRef) {
       if (docs.length) {
         res.status(200).json({

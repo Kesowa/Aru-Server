@@ -85,11 +85,11 @@ const layerSchema = new mongoose.Schema<ILayer>(
     },
     raster: {
       type: String,
-      enum: Object.values(rasterProps)
+      enum: Object.values(rasterProps),
     },
     vector: {
       type: String,
-      enum: Object.values(vectorProps)
+      enum: Object.values(vectorProps),
     },
     layerpath: {
       type: String,
