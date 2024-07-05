@@ -28,8 +28,6 @@ import modelApis from "./apis/v1/modelApis";
 import manufacturerApis from "./apis/v1/manufacturerApis";
 import locationApis from "./apis/v1/locationApis";
 import flightLogApis from "./apis/v1/flightLogApis";
-import rasterPropsApis from "./apis/v1/rasterPropsApis";
-import vectorPropsApis from "./apis/v1/vectorPropsApis";
 import layerApis from "./apis/v1/layerApis";
 import documentApis from "./apis/v1/documentApis";
 import webrtcApis from "./apis/v1/webrtcApis";

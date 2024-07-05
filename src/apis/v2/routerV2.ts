@@ -25,14 +25,12 @@ import packageApi from "./packageApis";
 import paymentApi from "./paymentApis";
 import permissionApi from "./permissionApis";
 import pilotApi from "./pilotApis";
-import rasterApi from "./rasterPropsApis";
 import settingApi from "./settingApis";
 import streamKeyApi from "./streamTokenApis";
 import tenantApi from "./tenantApis";
 import threadApi from "./threadApis";
 import userApi from "./userApis";
 import userGroupApi from "./userGroupApis";
-import vectorApi from "./vectorPropsApis";
 import vodApi from "./vodApis";
 
 const routerV2 = Router();
