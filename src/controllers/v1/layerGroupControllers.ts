@@ -32,7 +32,7 @@ export const createLayerGroup = async (req: Request, res: AuthResponse) => {
     );
     const data = await LayerGroup.find({ _id: saveDoc._id }).populate<{
       layer: ILayer;
-    }>({ path: "layers", populate: { path: "vector raster layerGroupId" } });
+    }>({ path: "layers", populate: { path: "layerGroupId" } });
 
     res.status(201).json({
       status: true,

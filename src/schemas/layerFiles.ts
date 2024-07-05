@@ -10,7 +10,7 @@ export interface ILayerFile {
   layers: mongoose.Types.ObjectId[]; // index // REVISIT
   sys_Id?: string; // index
   featureLabel?: string;
-  centerPoints?: { lat: number; lng: number };
+  centerPoints?: { lng: number; lat: number };
   coverPhoto: boolean;
   filePath: string;
   fileType: string;
@@ -32,7 +32,7 @@ export const LayerFileType = {
   sys_Id: Types.String(), // index
   featureLabel: Types.String(),
   centerPoints: Types.Object({
-    properties: { lat: Types.Number(), lng: Types.Number() },
+    properties: { lng: Types.Number(), lat: Types.Number() },
   }),
   coverPhoto: Types.Boolean(),
   filePath: Types.String(),
@@ -73,8 +73,8 @@ const layerFilesSchema = new mongoose.Schema<ILayerFile>(
       type: Number,
     },
     centerPoints: {
-      lat: Number,
       lng: Number,
+      lat: Number,
       required: false,
     },
     filePath: {

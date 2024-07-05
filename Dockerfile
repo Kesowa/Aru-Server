@@ -15,7 +15,7 @@ RUN git clone https://github.com/mfbonfigli/gocesiumtiler.git . && git checkout 
 ENV CGO_LDFLAGS="-g -O2 -lm"
 RUN go build
 
-FROM node:18-bookworm-slim@sha256:e01db0ed571851e2a67b11624abb90992af585db0afaff451972e64c604dffa1
+FROM node:18.20-bookworm-slim@sha256:cbfb3c9830932b7b1c2738abf47c66568fc7b06cf782d803e7ddff52b2fc835d
 WORKDIR /app
 RUN apt-get update && apt-get install -y git gcc-multilib curl gnupg \
   && curl --location --silent https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
@@ -38,9 +38,8 @@ RUN cp /bin/liblaszip.so /usr/lib/liblaszip.so
 COPY package*.json ./
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 RUN npm ci
-COPY ./tsconfig.json ./
-
+COPY . /app/
 RUN npm run build
 WORKDIR /app/src
-ENV NODE_ENV=production
 CMD ["node", "server.js"]
+

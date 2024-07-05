@@ -6,13 +6,16 @@ services:
     volumes:
       - ./src:/app/src
       - ./public:/app/public:rw
+      - ./adapter:/app/adapter:ro
     environment:
       - TZ="Asia/Kolkata"
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
+      - RABBITMQ_CONNECTION_STRING=amqp://rabbitmq
     env_file:
       - ./server.env
     depends_on:
       - mongodb
+      - rabbitmq
     ports:
       - 5011:5011
     extra_hosts:
@@ -44,7 +47,7 @@ services:
     memswap_limit: 256m
     cpus: 0.5
 
-  redis:
-    image: redis@sha256:aeed51f49a6331df0cb2c1039ae3d1d70d882be3f48bde75cd240452a2348e88
-    mem_limit: 128m
-    memswap_limit: 128m
+  rabbitmq:
+    image: rabbitmq@sha256:473953b02b8346091f0b3a6819e017618cbe95cb568bca2fecf00966a20ccf2a
+    # mem_limit: 128m
+    # memswap_limit: 128m

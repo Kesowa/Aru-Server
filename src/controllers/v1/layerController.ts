@@ -3,7 +3,6 @@ import type { Request } from "express";
 import type { AuthResponse } from "../../utils/interfaceUtils";
 import fetch from "node-fetch";
 import Layer from "../../models/layer";
-import Raster from "../../models/rasterprops";
 import layerFiles from "../../models/layerFiles";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
@@ -33,8 +32,8 @@ import Flight from "../../models/flight";
 import archiver from "archiver";
 import { isSizeVector } from "../../utils/sizePermission";
 import LayerGroup from "../../models/layerGroup";
-import type { IVector } from "../../schemas/vectorprops";
-import type { IRaster } from "../../schemas/rasterprops";
+import { featureType, vectorProps } from "../../schemas/vectorprops";
+import { rasterProps } from "../../schemas/rasterprops";
 import type { IPackage } from "../../schemas/package";
 import type { ILayerGroup } from "../../schemas/layerGroup";
 import {
@@ -53,8 +52,6 @@ import {
 } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
-import vector from "../../models/vectorprops";
-import raster from "../../models/rasterprops";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
@@ -126,8 +123,8 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       const { name, raster, captureDate, missionId, layerGroupId } = req.body;
-      const rasterType = await Raster.findOne({ _id: raster });
-      if (!rasterType) {
+      const rasterType = raster as rasterProps;
+      if (!Object.values(rasterProps).includes(rasterType)) {
         res.status(404).json({
           status: false,
           message: "raster type not found",
@@ -136,12 +133,12 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       }
       let minP = 0;
       let maxP = 1;
-      let center = { lat: 0, lng: 0 };
+      let center = { lng: 0, lat: 0 };
       let metadata = {};
       const size: number = Number(
         (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
       );
-      if (rasterType.name == "DEM") {
+      if (rasterType == rasterProps.DEM) {
         let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${file_loc}`;
         //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
         req.log.info("fetching metadata from titiler");
@@ -160,10 +157,10 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         });
         metadata = await response.json();
         center = {
-          lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
           lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+          lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
         };
-      } else if (rasterType.name == "POINT_CLOUD") {
+      } else if (rasterType == rasterProps.POINT_CLOUD) {
         const POINTCLOUD_LIMIT = 1e3;
         if (size > POINTCLOUD_LIMIT) {
           req.log.error(
@@ -173,14 +170,14 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         } else {
           metadata = await LazToTiles3D(file_loc);
         }
-      } else if (rasterType.name == "CESIUM_3D") {
+      } else if (rasterType == rasterProps.CESIUM_3D) {
         // Extract zip, locate tileset, move to correct location
         metadata = await ZipToTiles3D(file_loc);
       }
       layer = new Layer({
         name,
         type: "Raster",
-        raster,
+        raster: rasterType,
         layerpath: file_loc,
         fileSize: size,
         minp: minP,
@@ -211,12 +208,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           { $inc: { actualLayerCount: 1 } }
         );
       }
-      const layers = await Layer.findOne({ _id: savedDoc._id })
-        .populate<{
-          tenantId: ITenant;
-        }>("tenantId", "name")
-        .populate<{ raster: IRaster }>({ path: "raster" })
-        .populate<{ vector: IVector }>({ path: "vector" });
+      const layers = await Layer.findOne({ _id: savedDoc._id }).populate<{
+        tenantId: ITenant;
+      }>("tenantId", "name");
       res.status(201).json({
         status: true,
         message: "New Layer Created",
@@ -240,34 +234,34 @@ export const updateLayer = async (req: Request, res: AuthResponse) => {
         if (doc.type === "Vector") {
           // for Vector: geometry must match
           // edit layer type
-          const currentType = await vector.findById(doc.vector);
-          const requestedType = await vector.findById(req.body.layerType);
-          if (!requestedType) {
+          const currentType = doc.vector;
+          const requestedType = String(req.body.layerType) as vectorProps;
+          if (!Object.values(vectorProps).includes(requestedType)) {
             res.status(404).json({
               status: false,
               message: "layer type not found",
             });
             return;
-          } else if (currentType.type !== requestedType.type) {
+          } else if (featureType[currentType] !== featureType[requestedType]) {
             res.status(400).json({
               status: false,
               message: "geometry of previous type doesn't match new type",
             });
             return;
           } else {
-            doc.vector = req.body.layerType;
+            doc.vector = requestedType;
           }
         } else {
           // for Raster
-          const requestedType = await raster.findById(req.body.layerType);
-          if (!requestedType) {
+          const requestedType = String(req.body.layerType) as rasterProps;
+          if (!Object.values(rasterProps).includes(requestedType)) {
             res.status(404).json({
               status: false,
               message: "layer type not found",
             });
             return;
           }
-          doc.raster = req.body.layerType;
+          doc.raster = requestedType;
         }
       }
 
@@ -474,7 +468,7 @@ export const addFeature = async (req: Request, res: AuthResponse) => {
           const updatedLayer = await Layer.findOne({
             _id: req.body.id,
             tenantId: res.locals.user.tenantId._id,
-          }).populate<{ vector: IVector }>("vector");
+          });
           return res.status(200).json({
             status: true,
             data: updatedLayer,
@@ -528,7 +522,7 @@ export const editGeoJson = async (
                 new: true,
                 upsert: true,
               }
-            ).populate<{ vector: IVector }>("vector");
+            );
             return res.status(200).json({
               status: true,
               message: "Successfully edited GEOJSON And multiColor exist!",
@@ -634,7 +628,10 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
       fileSize: thumbs.size,
       isReview: true,
       featureLabel: req.body.featureLabel,
-      centerPoints: req.body.centerPoints,
+      centerPoints: {
+        lng: req.body.centerPoints.lng,
+        lat: req.body.centerPoints.lat,
+      },
       fileType: req.body.type,
       sys_Id: sys_Id,
       tenantId: res.locals.user.tenantId,
@@ -687,10 +684,7 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
     const doc = await Layer.find({
       missionId: id,
       tenantId: res.locals.user.tenantId._id,
-    })
-      .populate<{ vector: IVector }>("vector")
-      .populate<{ raster: IRaster }>("raster")
-      .populate<{ layerGroupId: ILayerGroup }>("layerGroupId");
+    }).populate<{ layerGroupId: ILayerGroup }>("layerGroupId");
     if (doc.length) {
       if (doc) {
         res.status(200).json({
@@ -796,7 +790,7 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
     const updatedLayer = await Layer.findById({
       _id: id,
       tenantId: res.locals.user.tenantId._id,
-    }).populate<{ vector: IVector }>("vector");
+    });
     if (modCheck == 1) {
       res.json({
         status: true,
@@ -844,7 +838,7 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
     const layer = await Layer.create({
       name: req.body.name,
       type: "Vector",
-      vector: req.body.vectorId,
+      vector: req.body.vectorType,
       missionId: req.body.missionId,
       tenantId: res.locals.user.tenantId._id,
       createdBy: res.locals.user._id,
@@ -860,7 +854,6 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
       const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,
       });
-      await layer.populate("vector");
       if (layer && tenant.actualLayerCount >= 0) {
         await Tenant.updateOne(
           { _id: res.locals.user.tenantId },
@@ -1083,8 +1076,6 @@ export const filterLayer = async (
           },
         })
           .sort(sort)
-          .populate<{ raster: IRaster }>({ path: "raster" })
-          .populate<{ vector: IVector }>({ path: "vector" })
           .exec();
         if (!result.length)
           return res.json({
@@ -1105,9 +1096,7 @@ export const filterLayer = async (
               $gte: startTime,
               $lte: endTime,
             },
-          })
-            .sort(sort)
-            .populate<{ raster: IRaster }>({ path: "raster" });
+          }).sort(sort);
           if (!result.length)
             return res.json({
               status: false,
@@ -1127,9 +1116,7 @@ export const filterLayer = async (
                 $gte: startTime,
                 $lte: endTime,
               },
-            })
-              .sort(sort)
-              .populate<{ vector: IVector }>({ path: "vector" });
+            }).sort(sort);
             if (!result.length)
               return res.json({
                 status: false,
@@ -1158,8 +1145,6 @@ export const filterLayer = async (
         },
       })
         .sort(sort)
-        .populate<{ raster: IRaster }>({ path: "raster" })
-        .populate<{ vector: IVector }>({ path: "vector" })
         .exec();
       if (!result.length)
         return res.json({
@@ -1180,13 +1165,11 @@ export const filterLayer = async (
           $gte: startTime,
           $lte: endTime,
         },
-      })
-        .sort(sort)
-        .populate<{ vector: IVector }>({ path: "vector" });
+      }).sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match3.type.length; j++) {
           if (result[i].vector) {
-            if (result[i].vector.type == match3.type[j]) {
+            if (featureType[result[i].vector] == match3.type[j]) {
               d.set(result[i]._id.toHexString(), result[i]);
             }
           }
@@ -1201,13 +1184,11 @@ export const filterLayer = async (
           $gte: startTime,
           $lte: endTime,
         },
-      })
-        .sort(sort)
-        .populate<{ vector: IVector }>({ path: "vector" });
+      }).sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match2.name.length; j++) {
           if (result[i].vector) {
-            if (result[i].vector.name == match2.name[j]) {
+            if (result[i].vector == match2.name[j]) {
               d.set(result[i]._id.toHexString(), result[i]);
             }
           }
@@ -1222,13 +1203,11 @@ export const filterLayer = async (
           $gte: startTime,
           $lte: endTime,
         },
-      })
-        .sort(sort)
-        .populate<{ raster: IRaster }>({ path: "raster" });
+      }).sort(sort);
       for (let i = 0; i < result.length; i++) {
         for (let j = 0; j < match.name.length; j++) {
           if (result[i].raster) {
-            if (result[i].raster.name == match.name[j]) {
+            if (result[i].raster == match.name[j]) {
               d.set(result[i]._id.toHexString(), result[i]);
             }
           }
@@ -1703,8 +1682,8 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
 
         const layerId = req.body.Id;
         const centerPoints2 = {
-          lat: String(closestPoint.geometry.coordinates[1]),
           lng: String(closestPoint.geometry.coordinates[0]),
+          lat: String(closestPoint.geometry.coordinates[1]),
         };
         const fpath = "/images/geojson/" + files[j].filename;
         req.log.info("file path:", fpath);
@@ -1762,8 +1741,8 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         const matchedFeature = geojson.features[matchedFeatureIndex];
         const centroid = turf.centroid(matchedFeature.geometry);
         const centerPoints = {
-          lat: centroid.geometry.coordinates[1],
           lng: centroid.geometry.coordinates[0],
+          lat: centroid.geometry.coordinates[1],
         };
         const fpath = "/images/geojson/" + uploadFile.filename;
         req.log.info("file path:", fpath);
@@ -1840,10 +1819,7 @@ export const assignlayerLabel = async (req: Request, res: AuthResponse) => {
           tenantId: res.locals.user.tenantId._id
             ? res.locals.user.tenantId._id
             : res.locals.user.tenantId,
-        })
-          .populate<{ vector: IVector }>("vector")
-          .populate<{ raster: IRaster }>("raster")
-          .populate<{ layerGroupId: ILayerGroup }>("layerGroupId");
+        }).populate<{ layerGroupId: ILayerGroup }>("layerGroupId");
 
         await layerFiles.updateMany(
           {
@@ -2256,7 +2232,7 @@ export const picktoMapUseForLayerCreate = async (
           vectorLayer = new Layer({
             name: "base- " + req.body.name,
             type: "Vector",
-            vector: req.body.vectorId,
+            vector: req.body.vectorType,
             tenantId: res.locals.user.tenantId._id,
             createdBy: res.locals.user._id,
             updatedBy: res.locals.user._id,
@@ -2271,7 +2247,7 @@ export const picktoMapUseForLayerCreate = async (
           vectorLayer = new Layer({
             name: req.body.name,
             type: "Vector",
-            vector: req.body.vectorId,
+            vector: req.body.vectorType,
             missionId: req.body.missionId,
             tenantId: res.locals.user.tenantId._id,
             createdBy: res.locals.user._id,
@@ -2306,9 +2282,10 @@ export const picktoMapUseForLayerCreate = async (
             const size: number = Number(
               (Number(files[i]?.size) / (1024 * 1024)).toFixed(5)
             );
-            const centerPoints2: any = {};
-            centerPoints2["lng"] = allImageData[i].coordinates[0];
-            centerPoints2["lat"] = allImageData[i].coordinates[1];
+            const centerPoints2 = {
+              lng: allImageData[i].coordinates[0],
+              lat: allImageData[i].coordinates[1],
+            };
             const featureFile = new layerFiles({
               name: allImageData[i].originalname,
               layerId: savedDoc1._id,
@@ -2601,12 +2578,9 @@ export const publicLayerByMissionId = async (
     return;
   }
 
-  const layers = await Layer.find({ missionId: publicMission._id })
-    .populate<{
-      tenantId: ITenant;
-    }>("tenantId", "name")
-    .populate<{ raster: IRaster }>({ path: "raster" })
-    .populate<{ vector: IVector }>({ path: "vector" });
+  const layers = await Layer.find({ missionId: publicMission._id }).populate<{
+    tenantId: ITenant;
+  }>("tenantId", "name");
   const flight = await Flight.findOne<{
     centerPoints: {
       lat: number;

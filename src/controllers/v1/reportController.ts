@@ -4,7 +4,7 @@ import { Request } from "express";
 import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
-import { IVector, VectorName } from "../../schemas/vectorprops";
+import { vectorProps } from "../../schemas/vectorprops";
 import {
   DirPath,
   Directory,
@@ -40,15 +40,16 @@ import {
   IBuildingProperties,
   IPlotProperties,
   IPlotReportData,
+  IPlotReportError,
 } from "../../utils/reportUtils/plot-report/types";
 import { generatePlotReportDocument } from "../../utils/reportUtils/plot-report/report";
-import vector from "../../models/vectorprops";
-import raster from "../../models/rasterprops";
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
 import { readFile, saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
+import ObjectsToCsv from "objects-to-csv";
+import { rasterProps } from "../../schemas/rasterprops";
 
 export function findArea(features: Feature<turf.Geometry, turf.Properties>[]) {
   try {
@@ -295,7 +296,7 @@ export const generateReport = async (
       const vectorLayers = await Layer.find({
         missionId: missionId,
         type: "Vector",
-      }).populate<{ vector: IVector }>("vector");
+      });
 
       for (const layer of vectorLayers) {
         const gjson = await readGeoJson<
@@ -305,33 +306,33 @@ export const generateReport = async (
         const currLayerLength = findLength(gjson.features);
         data.area.total += currLayerArea;
         // check the layer type and accordingly add area to respective type
-        if (privateCommercialLayerTypes.includes(layer.vector.name)) {
+        if (privateCommercialLayerTypes.includes(layer.vector)) {
           data.area.privateSpaces[0].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 0, data);
-        } else if (residentialLayerTypes.includes(layer.vector.name)) {
+          assignOccupancy(layer.vector, 0, data);
+        } else if (residentialLayerTypes.includes(layer.vector)) {
           data.area.privateSpaces[1].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 1, data);
-        } else if (govtCommercialLayerTypes.includes(layer.vector.name)) {
+          assignOccupancy(layer.vector, 1, data);
+        } else if (govtCommercialLayerTypes.includes(layer.vector)) {
           data.area.privateSpaces[2].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 2, data);
-        } else if (housingComplexLayerTypes.includes(layer.vector.name)) {
+          assignOccupancy(layer.vector, 2, data);
+        } else if (housingComplexLayerTypes.includes(layer.vector)) {
           data.area.privateSpaces[3].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 3, data);
-        } else if (govtLayerTypes.includes(layer.vector.name)) {
+          assignOccupancy(layer.vector, 3, data);
+        } else if (govtLayerTypes.includes(layer.vector)) {
           data.area.publicSpaces[0].value += currLayerArea;
-          assignOccupancy(layer.vector.name, 4, data);
-        } else if (motorableRoadsLayerTypes.includes(layer.vector.name)) {
+          assignOccupancy(layer.vector, 4, data);
+        } else if (motorableRoadsLayerTypes.includes(layer.vector)) {
           data.area.publicSpaces[1].value += currLayerArea;
           data.roadCount++;
           data.roadLength += currLayerLength;
-        } else if (footpathLayerTypes.includes(layer.vector.name)) {
+        } else if (footpathLayerTypes.includes(layer.vector)) {
           data.area.publicSpaces[2].value += currLayerArea;
-        } else if (cycleTrackLayerTypes.includes(layer.vector.name)) {
+        } else if (cycleTrackLayerTypes.includes(layer.vector)) {
           data.area.publicSpaces[3].value += currLayerArea;
           data.cycleTrackLength += currLayerLength;
-        } else if (greeneryLayerTypes.includes(layer.vector.name)) {
+        } else if (greeneryLayerTypes.includes(layer.vector)) {
           data.area.publicSpaces[4].value += currLayerArea;
-        } else if (waterBodyLayerTypes.includes(layer.vector.name)) {
+        } else if (waterBodyLayerTypes.includes(layer.vector)) {
           data.area.publicSpaces[5].value += currLayerArea;
         } else {
           data.area.other += currLayerArea;
@@ -341,7 +342,7 @@ export const generateReport = async (
       // categorizing the geojson for map and capturing images
       for (const d in deliverableTypes) {
         const deliverableLayers = vectorLayers.filter((layer) =>
-          deliverableTypes[d].includes(layer.vector.name)
+          deliverableTypes[d].includes(layer.vector)
         );
         const deliverableFeatures: Feature<turf.Geometry, turf.Properties>[] =
           [];
@@ -420,26 +421,40 @@ export const generatePlotReport = async (
 ) => {
   {
     const { missionId } = req.body;
+    const errors: IPlotReportError = {
+      layers: [],
+      plots: {
+        plotNo: [],
+        premiseNo: [],
+        buildingAvailable: [],
+        pincode: [],
+        category: [],
+        shopFloor: [],
+        buildingStatus: [],
+        blockName: [],
+        sys_id: [],
+        sanctionedBuildingNo: [],
+        infraction: [],
+        isIncentiveEligible: [],
+        isGreenTopEligible: [],
+        isSolarPlantEligible: [],
+        hasTradeLicense: [],
+        tax: [],
+      },
+      blocks: {
+        blockName: [],
+        averageBlockHeight: [],
+        averageIncentives: [],
+      },
+      buildings: {
+        premiseNo: [],
+        height: [],
+        sys_id: [],
+        blockName: [],
+      },
+    };
+
     try {
-      const [
-        blockBoundaryType,
-        plotType,
-        buildingFootprintType,
-        waterbodyType,
-        orthoType,
-        treeCoverType,
-        greeneryType,
-        garbageCollectionType,
-      ] = await Promise.all([
-        vector.findOne({ name: VectorName.Block_Boundary }),
-        vector.findOne({ name: VectorName.Plot }),
-        vector.findOne({ name: VectorName.Building_Footprint }), // there's a type with name "Building footprint" as well, be warned
-        vector.findOne({ name: VectorName.Water_Body }), // there's a type with name "Water Body" as well, be warned
-        raster.findOne({ name: "ORTHO" }),
-        vector.findOne({ name: VectorName.Jungle }),
-        vector.findOne({ name: VectorName.Green_Verge }),
-        vector.findOne({ name: VectorName.Garbage_Collection_Point }),
-      ]);
       const [
         actionAreaLayer,
         plotLayer,
@@ -453,44 +468,64 @@ export const generatePlotReport = async (
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          vector: blockBoundaryType._id,
+          vector: vectorProps.BLOCK_BOUNDARY,
         }),
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          vector: plotType._id,
+          vector: vectorProps.PLOT,
         }),
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          vector: buildingFootprintType._id,
+          vector: vectorProps.BUILDING_FOOTPRINT,
         }),
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          vector: waterbodyType._id,
+          vector: vectorProps.WATER_BODY,
         }),
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          raster: orthoType._id,
+          raster: rasterProps.ORTHO,
         }),
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          vector: treeCoverType._id,
+          vector: vectorProps.JUNGLE,
         }),
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          vector: greeneryType._id,
+          vector: vectorProps.GREEN_VERGE,
         }),
         Layer.findOne({
           tenantId: res.locals.user.tenantId._id,
           missionId: req.body.missionId,
-          vector: garbageCollectionType._id,
+          vector: vectorProps.GARBAGE_COLLECTION_POINT,
         }),
       ]);
+
+      if (!actionAreaLayer) errors.layers.push(vectorProps.BLOCK_BOUNDARY);
+      if (!plotLayer) errors.layers.push(vectorProps.PLOT);
+      if (!buildingFootprintLayer)
+        errors.layers.push(vectorProps.BUILDING_FOOTPRINT);
+      if (!waterbodyLayer) errors.layers.push(vectorProps.WATER_BODY);
+      if (!rasterLayer) errors.layers.push(rasterProps.ORTHO);
+      if (!treeCoverLayer) errors.layers.push(vectorProps.JUNGLE);
+      if (!greeneryLayer) errors.layers.push(vectorProps.GREEN_VERGE);
+      if (!garbageCollectionLayer)
+        errors.layers.push(vectorProps.GARBAGE_COLLECTION_POINT);
+
+      if (errors.layers.length > 0) {
+        return res.status(400).json({
+          status: false,
+          message: "Some layers are missing in the mission",
+          errors,
+        });
+      }
+
       const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;
       const plotGeojson = await readGeoJson<
         Feature<turf.MultiPolygon, IPlotProperties>
@@ -511,6 +546,82 @@ export const generatePlotReport = async (
       const flaggedPlotGeojson = plotGeojson.features.filter((_, index) =>
         plotLayer.flaggedFeatures.includes(index)
       );
+
+      let foundError = false;
+
+      plotGeojson.features.forEach((plot, index) => {
+        for (const key of Object.keys(errors.plots)) {
+          if (!plot.properties[key]) {
+            foundError = true;
+            errors.plots[key].push(index);
+          }
+        }
+      });
+      actionAreaGeojson.features.forEach((block, index) => {
+        for (const key of Object.keys(errors.blocks)) {
+          if (!block.properties[key]) {
+            foundError = true;
+            errors.blocks[key].push(index);
+          }
+        }
+      });
+      buildingsGeojson.features.forEach((building, index) => {
+        for (const key of Object.keys(errors.buildings)) {
+          if (!building.properties[key]) {
+            foundError = true;
+            errors.buildings[key].push(index);
+          }
+        }
+      });
+
+      if (foundError) {
+        // generate error csv
+        const rows = [];
+        errors.layers.forEach((layerType) => {
+          rows.push({
+            "Error Location": "Mission",
+            "Invalid / Missing Property": `Layer of type ${layerType}`,
+            "Feature Indices": "N/A",
+          });
+        });
+        Object.keys(errors.plots).map((key) => {
+          if (errors.plots[key].length > 0) {
+            rows.push({
+              "Error Location": "Plot Layer",
+              "Invalid / Missing Property": `${key} property`,
+              "Feature Indices": errors.plots[key].join(","),
+            });
+          }
+        });
+        Object.keys(errors.blocks).map((key) => {
+          if (errors.blocks[key].length > 0) {
+            rows.push({
+              "Error Location": "Action Area Layer",
+              "Invalid / Missing Property": `${key} property`,
+              "Feature Indices": errors.blocks[key].join(","),
+            });
+          }
+        });
+        Object.keys(errors.buildings).map((key) => {
+          if (errors.buildings[key].length > 0) {
+            rows.push({
+              "Error Location": "Building Footprint Layer",
+              "Invalid / Missing Property": `${key} property`,
+              "Feature Indices": errors.buildings[key].join(","),
+            });
+          }
+        });
+        const csv = new ObjectsToCsv(rows);
+        const filename = Math.floor(Math.random() * 620000);
+        const file = DirPath(Directory.CSV, `${filename}.csv`);
+        await csv.toDisk(file);
+        return res.json({
+          status: false,
+          message: "Missing properties in features",
+          errors,
+          csvPath: `/csv/${filename}.csv`,
+        });
+      }
 
       const PlotsByBlock: Map<
         string,

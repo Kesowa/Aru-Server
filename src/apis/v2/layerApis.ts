@@ -10,6 +10,8 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import Flight from "../../models/flight";
 import { Directory, DirPath } from "../../constants";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
+import { vectorProps } from "../../schemas/vectorprops";
+import { rasterProps } from "../../schemas/rasterprops";
 
 const layerApi = Router();
 
@@ -23,8 +25,8 @@ layerApi.get(
         orderBy: string;
         asc: boolean;
         type?: string;
-        vector?: string;
-        raster?: string;
+        vector?: vectorProps;
+        raster?: rasterProps;
         isPublic?: boolean;
         isBase?: boolean;
         isFlagged?: boolean;
@@ -137,8 +139,8 @@ openApi.addPath(
           orderBy: Types.String({ default: "createdAt", required: true }),
           asc: Types.Boolean({ default: false, required: true }),
           type: Types.String(),
-          vector: Types.String(),
-          raster: Types.String(),
+          vector: Types.StringEnum({ values: Object.values(vectorProps) }),
+          raster: Types.StringEnum({ values: Object.values(rasterProps) }),
           isPublic: Types.Boolean(),
           isBase: Types.Boolean(),
           isFlagged: Types.Boolean(),
