@@ -30,11 +30,13 @@ import Alert from "../../models/alert";
 import VOD from "../../models/vod";
 import { ILayer } from "../../schemas/layer";
 import {
+  saveFeatureSearchIndex,
   saveGeojson,
   saveMultiGeojson,
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
+import Fuse from "fuse.js";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -1735,6 +1737,7 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
         .populate<{ tenantId: ITenant }>("tenantId")
         .populate<{ vector: IVector }>("vector");
       if (getDoc) {
+        await saveFeatureSearchIndex(getDoc.layerpath, req.log);
         res.status(200).json({
           status: true,
           message: `Layer: ${req.body.layerId} has been made public`,
@@ -1856,71 +1859,69 @@ export const isPublicupdateDev = async (req: Request, res: AuthResponse) => {
   }
 };
 
-export const publicbaselayerSearch = async (
-  req: Request,
-  res: AuthResponse
-) => {
-  {
-    const tenant = await Tenant.findOne({ publicMapRef: req.query.mapRef });
-    const key = req.query.key as string;
-    const value = req.query.value;
-    const ar = new Array<Feature & { index: number }>();
-    let flag = 0;
-    if (tenant) {
-      const docs: any = await Layer.find(
-        {
-          tenantId: tenant,
-          isPublic: true,
-        },
-        {
-          layerpath: 1,
-        }
-      );
-      if (docs.length) {
-        for (let i = 0; i < docs.length; i++) {
-          const gjson = await readGeoJson(
-            DirPath(Directory.ROOT, docs[i].layerpath)
-          );
-          for (let j = 0; j < gjson.features.length; j++) {
-            if (gjson.features[j].properties[key]) {
-              const str: any = String(gjson.features[j].properties[key]);
-              if (str.length >= value.length) {
-                if (str.includes(value)) {
-                  ar.push({ ...gjson.features[j], index: j });
-                  flag = 1;
-                }
-              }
-            }
-          }
-          if (flag == 1) {
-            return res.status(200).json({
-              status: true,
-              message: "Match found",
-              layerId: docs[i]._id,
-              data: ar,
-            });
-          }
-        }
-        if (flag != 1) {
-          return res.status(200).json({
-            status: false,
-            message: "No Match found",
-          });
-        }
-      } else {
-        return res.status(200).json({
-          status: false,
-          message: "No public layers found",
-        });
-      }
-    } else {
-      res.status(200).json({
-        status: false,
-        message: "Invalid PublicMapRef",
-      });
-    }
-  }
-};
+// export const publicbaselayerSearch = async (
+//   req: Request,
+//   res: AuthResponse
+// ) => {
+//   {
+//     const tenant = await Tenant.findOne({ publicMapRef: req.query.mapRef });
+//     const key = req.query.key as string;
+//     const value = req.query.value;
+//     const ar = new Array<Feature & { index: number }>();
+//     let flag = 0;
+//     if (tenant) {
+//       const docs = await Layer.find(
+//         {
+//           tenantId: tenant,
+//           isPublic: true,
+//         },
+//         {
+//           layerpath: 1,
+//         }
+//       );
+//       if (docs.length) {
+//         for (let i = 0; i < docs.length; i++) {
+//           const gjson = await readGeoJson(
+//             DirPath(Directory.ROOT, docs[i].layerpath)
+//           );
+//           const searchIndexPath = pathUtils.docPath(
+//             pathUtils.Directory.VECTOR,
+//             "search-" + path.parse(docs[i].layerpath).name + ".json"
+//           );
+//           const searchIndex = Fuse.parseIndex(await readFile(searchIndexPath));
+//           const fuse = new Fuse(gjson.features, {
+//             threshold: 0
+//           }, searchIndex);
+//           const features = fuse.search(key);
+//           if (features.length > 0) {
+//             return res.status(200).json({
+//               status: true,
+//               message: "Match found",
+//               layerId: docs[i]._id,
+//               data: features[0],
+//             });
+//           }
+//         }
+//         if (flag != 1) {
+//           return res.status(200).json({
+//             status: false,
+//             message: "No Match found",
+//           });
+//         }
+//       } else {
+//         return res.status(200).json({
+//           status: false,
+//           message: "No public layers found",
+//         });
+//       }
+//     } else {
+//       res.status(200).json({
+//         status: false,
+//         message: "Invalid PublicMapRef",
+//       });
+//     }
+//   }
+// };
 
 const getAlertLocationGeojson = async (
   tenantId: mongoose.Types.ObjectId,

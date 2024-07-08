@@ -6,7 +6,7 @@ import { Logger } from "pino";
 import fs from "fs/promises";
 import tokml from "tokml";
 import shp2json from "shpjs";
-import { GeoJson } from "./geojsonUtils";
+import { GeoJson, readGeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
 import { DirPath, Directory } from "../constants";
 import archiver from "archiver";
@@ -15,6 +15,7 @@ import { Stream } from "stream";
 import { DOMParser } from "xmldom";
 import togeojson from "@mapbox/togeojson";
 import { ObjectId } from "bson";
+import Fuse from "fuse.js";
 
 const asyncExec = promisify(exec);
 
@@ -342,3 +343,15 @@ export const saveFile = async (
 export const readFile = async (fullpath: string) => {
   return await fs.readFile(fullpath);
 };
+
+export const saveFeatureSearchIndex = async (layerPath: string, log: Logger) => {
+  try {
+    const searchIndexPath = DirPath(Directory.VECTOR, "public-" + path.parse(layerPath).name + ".json");
+    const geojsonData = await readGeoJson(DirPath(Directory.ROOT, layerPath));
+    const searchIndex = Fuse.createIndex(['properties.premiseNo'], geojsonData.features);
+    await fs.writeFile(searchIndexPath, JSON.stringify(searchIndex));
+  } catch (error) {
+    log.error("Couldn't save publicMap search index");
+    log.error(error);
+  }
+}
