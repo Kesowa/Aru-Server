@@ -344,14 +344,12 @@ export const readFile = async (fullpath: string) => {
   return await fs.readFile(fullpath);
 };
 
-export const saveFeatureSearchIndex = async (layerPath: string, log: Logger) => {
-  try {
-    const searchIndexPath = DirPath(Directory.VECTOR, "public-" + path.parse(layerPath).name + ".json");
-    const geojsonData = await readGeoJson(DirPath(Directory.ROOT, layerPath));
-    const searchIndex = Fuse.createIndex(['properties.premiseNo'], geojsonData.features);
-    await fs.writeFile(searchIndexPath, JSON.stringify(searchIndex));
-  } catch (error) {
-    log.error("Couldn't save publicMap search index");
-    log.error(error);
-  }
+export const saveFeatureSearchIndex = async (layerPath: string) => {
+  const filename = "index_" + path.parse(layerPath).name + ".json";
+  const searchIndexPath = DirPath(Directory.VECTOR, filename);
+  const geojsonData = await readGeoJson<any>(DirPath(Directory.ROOT, layerPath));
+  const keys = Object.keys(geojsonData.features[0].properties).map(key => `properties.${key}`);
+  const searchIndex = Fuse.createIndex<any>(keys, geojsonData.features);
+  await fs.writeFile(searchIndexPath, JSON.stringify(searchIndex.toJSON()));
+  return pathUtils.docPath(Directory.VECTOR, filename);
 }

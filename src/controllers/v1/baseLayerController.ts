@@ -1711,6 +1711,8 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
       },
       {
         tenantId: 1,
+        layerpath: 1,
+        metadata: 1
       }
     );
     const tenantDoc = await Tenant.findOne(
@@ -1722,6 +1724,8 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
       }
     );
     if (doc) {
+      const searchIndexPath = await saveFeatureSearchIndex(doc.layerpath);
+      const metadata = { ...doc.metadata, searchIndexPath };
       if (tenantDoc.publicMapRef == null) {
         const randomString = new ObjectId();
         const unid = `${doc.tenantId}${randomString}`;
@@ -1729,15 +1733,14 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
           { _id: res.locals.user.tenantId },
           { publicMapRef: unid }
         );
-        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
+        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true, metadata });
       } else {
-        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
+        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true, metadata });
       }
       const getDoc = await Layer.findOne({ _id: req.body.layerId })
         .populate<{ tenantId: ITenant }>("tenantId")
         .populate<{ vector: IVector }>("vector");
       if (getDoc) {
-        await saveFeatureSearchIndex(getDoc.layerpath, req.log);
         res.status(200).json({
           status: true,
           message: `Layer: ${req.body.layerId} has been made public`,
@@ -1858,70 +1861,6 @@ export const isPublicupdateDev = async (req: Request, res: AuthResponse) => {
     }
   }
 };
-
-// export const publicbaselayerSearch = async (
-//   req: Request,
-//   res: AuthResponse
-// ) => {
-//   {
-//     const tenant = await Tenant.findOne({ publicMapRef: req.query.mapRef });
-//     const key = req.query.key as string;
-//     const value = req.query.value;
-//     const ar = new Array<Feature & { index: number }>();
-//     let flag = 0;
-//     if (tenant) {
-//       const docs = await Layer.find(
-//         {
-//           tenantId: tenant,
-//           isPublic: true,
-//         },
-//         {
-//           layerpath: 1,
-//         }
-//       );
-//       if (docs.length) {
-//         for (let i = 0; i < docs.length; i++) {
-//           const gjson = await readGeoJson(
-//             DirPath(Directory.ROOT, docs[i].layerpath)
-//           );
-//           const searchIndexPath = pathUtils.docPath(
-//             pathUtils.Directory.VECTOR,
-//             "search-" + path.parse(docs[i].layerpath).name + ".json"
-//           );
-//           const searchIndex = Fuse.parseIndex(await readFile(searchIndexPath));
-//           const fuse = new Fuse(gjson.features, {
-//             threshold: 0
-//           }, searchIndex);
-//           const features = fuse.search(key);
-//           if (features.length > 0) {
-//             return res.status(200).json({
-//               status: true,
-//               message: "Match found",
-//               layerId: docs[i]._id,
-//               data: features[0],
-//             });
-//           }
-//         }
-//         if (flag != 1) {
-//           return res.status(200).json({
-//             status: false,
-//             message: "No Match found",
-//           });
-//         }
-//       } else {
-//         return res.status(200).json({
-//           status: false,
-//           message: "No public layers found",
-//         });
-//       }
-//     } else {
-//       res.status(200).json({
-//         status: false,
-//         message: "Invalid PublicMapRef",
-//       });
-//     }
-//   }
-// };
 
 const getAlertLocationGeojson = async (
   tenantId: mongoose.Types.ObjectId,
