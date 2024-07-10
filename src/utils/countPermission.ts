@@ -8,10 +8,10 @@ export const isAlertCount = async (
   next: NextFunction
 ) => {
   try {
-    const docCount: any = await Tenant.findOne({
+    const docCount = await Tenant.findOne({
       _id: res.locals.user.tenantId,
     })
-      .populate("activePackage")
+      .populate<{activePackage: IPackage}>("activePackage")
       .lean();
     if (
       Number(docCount.actualAlertCount) <
@@ -38,10 +38,10 @@ export const isUserCount = async (
   next: NextFunction
 ) => {
   try {
-    const docCount: any = await Tenant.findOne({
+    const docCount = await Tenant.findOne({
       _id: res.locals.user.tenantId,
     })
-      .populate("activePackage")
+      .populate<{activePackage: IPackage}>("activePackage")
       .lean();
     if (
       Number(docCount.actualUserCount) <

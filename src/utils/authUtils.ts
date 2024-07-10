@@ -1,7 +1,6 @@
 import { Request, NextFunction, Response } from "express";
 import User from "../models/user";
 import { AuthResponse } from "./interfaceUtils";
-import UserGroup from "../models/usergroup";
 import Tenant from "../models/tenant";
 import { sessionModel } from "../models/session";
 
@@ -183,7 +182,7 @@ function genPermissionGuard(perm: permGuardType) {
     if (perm.perm.length > 0 && !authorized) {
       let anyPerms = false; // we initialize authorized with true and if ANY of the perms is not found in user.customPermissions, we make it false and break the loop
       for (const permission of perm.perm) {
-        const found = res.locals.user.customPermissions.map(p => p.name).includes(permission);
+        const found = res.locals.user.customPermissions.includes(permission);
         if (found) {
           req.log.info("Permission found!", permission);
           anyPerms = true;

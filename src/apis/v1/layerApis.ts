@@ -1,19 +1,5 @@
 import express, { Request } from "express";
-import {
-  canaddFeature,
-  canCreateLayer,
-  canCreateVectorLayer,
-  canDeleteFeature,
-  candeleteFilefromGEOJSON,
-  canDeleteLayer,
-  canDownloadLayer,
-  caneditGEOJSON,
-  canEditLayer,
-  canUploadFiletoGEOJSON,
-  canSetCoverPhoto,
-  isAuthenticated,
-  canAutoAssignImage,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard, } from "../../utils/authUtils";
 const router = express.Router();
 import multer from "multer";
 import {
@@ -60,6 +46,7 @@ import { body, oneOf, query, param } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
+import { PERMS } from "../../schemas/permission";
 
 const upload = multer({
   storage: multerStorage((req: Request): Directory => {
@@ -100,7 +87,7 @@ router.post(
   body("icon").optional().notEmpty().trim(), // example: MarkerIcon
   body("inHeritOriginalColorFromFile").optional().notEmpty().trim().isBoolean(),
   validator,
-  canCreateLayer,
+  PermissionGuard(PERMS.UPLOAD_LAYER),
   isLayerCount,
   isSize,
   RobustRunner(createLayer)
@@ -113,6 +100,7 @@ router.post(
   uploadlayerfile.single("file"),
   body("layerId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.FEATURE_FILE_UPLOAD),
   RobustRunner(uploadfiletoLayer)
 );
 
@@ -122,7 +110,7 @@ router.delete(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  candeleteFilefromGEOJSON,
+  PermissionGuard(PERMS.FEATURE_FILE_DELETE),
   RobustRunner(deleteimagesfromgeojson)
 );
 
@@ -136,7 +124,7 @@ router.patch(
   body("captureDate").exists().isISO8601().toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm
   body("layerType").optional().notEmpty().isMongoId(),
   validator,
-  canEditLayer,
+  PermissionGuard(PERMS.EDIT_LAYER),
   RobustRunner(updateLayer)
 );
 
@@ -148,7 +136,7 @@ router.patch(
   body("featureIndex").exists().isNumeric().toInt(),
   body("feature").exists().isObject(),
   validator,
-  caneditGEOJSON,
+  PermissionGuard(PERMS.EDIT_FEATURE),
   RobustRunner(editGeoJson)
 );
 
@@ -159,7 +147,7 @@ router.patch(
   body("id").notEmpty().isMongoId(),
   body("feature").exists().isObject(),
   validator,
-  canaddFeature,
+  PermissionGuard(PERMS.ADD_FEATURE),
   RobustRunner(addFeature)
 );
 
@@ -179,7 +167,7 @@ router.patch(
     .isObject()
     .custom((val) => val.lat && val.lng),
   validator,
-  canUploadFiletoGEOJSON,
+  PermissionGuard(PERMS.FEATURE_FILE_UPLOAD),
   isSize,
   RobustRunner(uploadmultiplefile)
 );
@@ -193,6 +181,7 @@ router.get(
   // TODO: This might be related to the missing sys_ids
   query("sys_id").optional().notEmpty().isString(), // sys_id is compulsory; and it can be anything (any number or string)
   validator,
+  PermissionGuard(PERMS.FEATURE_LIST),
   RobustRunner(getfilesbylayerIdandfIndex)
 );
 
@@ -202,7 +191,7 @@ router.delete(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  canDeleteLayer,
+  PermissionGuard(PERMS.DELETE_LAYER),
   RobustRunner(deleteLayer)
 );
 
@@ -212,7 +201,7 @@ router.post(
   isAuthenticated,
   body("layers").notEmpty().isArray({ min: 1 }),
   validator,
-  canDeleteLayer,
+  PermissionGuard(PERMS.DELETE_LAYER, PERMS.LAYER_LIST),
   RobustRunner(deleteMultipleLayers)
 );
 
@@ -223,7 +212,7 @@ router.delete(
   body("id").notEmpty().isMongoId(),
   body("featureIndex").exists().isNumeric().toInt(),
   validator,
-  canDeleteFeature,
+  PermissionGuard(PERMS.DELETE_FEATURE, PERMS.FEATURE_FILE_DELETE),
   RobustRunner(deleteGeoJson)
 );
 
@@ -233,6 +222,7 @@ router.get(
   isAuthenticated,
   query("missionId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(getbymissionID)
 );
 
@@ -257,7 +247,7 @@ router.patch(
     .matches(/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/), // hex codes of color, ex: "#FFFFFF" or "#FFF"
   body("icon").optional().notEmpty().trim(), // example: MarkerIcon
   validator,
-  canEditLayer,
+  PermissionGuard(PERMS.EDIT_LAYER),
   RobustRunner(changecolorbyID)
 );
 
@@ -268,7 +258,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  canDownloadLayer,
+  PermissionGuard(PERMS.DOWNLOAD_LAYER),
   RobustRunner(downloadassetbyID)
 );
 
@@ -281,7 +271,7 @@ router.post(
   body("vectorId").notEmpty().isMongoId(),
   body("geoJSON").exists().isObject(), // use sample geojson made in baselayer tests for testing this too
   validator,
-  canCreateVectorLayer,
+  PermissionGuard(PERMS.SAVE_DRAWINGS),
   isLayerCount,
   RobustRunner(createVectorLayer)
 );
@@ -298,6 +288,7 @@ router.get(
   ]),
   query("missionId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(sortallLayer)
 );
 
@@ -319,6 +310,7 @@ router.post(
   body("vectorProps").optional().notEmpty(), // might be boolean, not sure
   body("rasterProps").optional().notEmpty(), // might be boolean, not sure
   validator,
+  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(filterLayer)
 );
 
@@ -336,6 +328,7 @@ router.patch(
   body("range").optional().isArray({ min: 2, max: 2 }),
   body("isFlagged").optional().isBoolean(),
   validator,
+  PermissionGuard(PERMS.FEATURE_LIST),
   RobustRunner(getFeatureByLayerId)
 );
 
@@ -349,7 +342,7 @@ router.post(
   body("sys_id").notEmpty().isMongoId(),
   body("coverPhoto").exists().isBoolean(),
   validator,
-  canSetCoverPhoto,
+  PermissionGuard(PERMS.EDIT_LAYER, PERMS.EDIT_FEATURE),
   RobustRunner(setCoverPhotoByLayerFiles)
 );
 
@@ -360,6 +353,7 @@ router.patch(
   body("featureIndex").notEmpty().isArray({ min: 1 }),
   body("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.FEATURE_LIST, PERMS.LAYER_LIST),
   RobustRunner(getFeatureCsvByLayerIdx)
 );
 
@@ -372,7 +366,7 @@ router.patch(
   body("Id").notEmpty().isMongoId(),
   query("mode").notEmpty().isIn(["LayerLabel", "GeoCoord"]),
   validator,
-  canAutoAssignImage,
+  PermissionGuard(PERMS.UPLOAD_LAYER, PERMS.FEATURE_FILE_UPLOAD, PERMS.ADD_FEATURE),
   isSize,
   RobustRunner(autoAssignImage)
 );
@@ -385,6 +379,7 @@ router.patch(
   body("label").notEmpty().trim(),
   query("popup").optional().trim(),
   validator,
+  PermissionGuard(PERMS.EDIT_LAYER),
   RobustRunner(assignlayerLabel)
 );
 
@@ -394,6 +389,7 @@ router.patch(
   body("layerId").notEmpty().isMongoId(),
   body("check").exists().isArray({ min: 1 }),
   validator,
+  PermissionGuard(PERMS.EDIT_FEATURE, PERMS.FEATURE_FILE_UPLOAD),
   RobustRunner(imageReviewforLayerFileId)
 );
 
@@ -402,6 +398,7 @@ router.get(
   isAuthenticated,
   query("layerId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.FEATURE_LIST, PERMS.FEATURE_FILE_UPLOAD),
   RobustRunner(unreviewedLayerfiles)
 );
 
@@ -410,6 +407,7 @@ router.get(
   isAuthenticated,
   query("missionId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(zipbymissionId)
 );
 
@@ -418,13 +416,15 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.DOWNLOAD_LAYER),
   RobustRunner(downloadassetbyIDtoKml)
 );
 
-router.patch("/gen_2x_layerfiles", isAuthenticated, RobustRunner(gen2x));
+// router.patch("/gen_2x_layerfiles", isAuthenticated, RobustRunner(gen2x));
 router.patch(
   "/add-isReview-to-layerFiles",
   isAuthenticated,
+  PermissionGuard(PERMS.FEATURE_LIST, PERMS.EDIT_FEATURE),
   RobustRunner(addIsReviewToLayerFiles)
 );
 // TODO: How to pass array of files
@@ -440,7 +440,7 @@ router.post(
   body("type").optional().trim(),
   body("missionId").optional().isMongoId(),
   validator,
-  canAutoAssignImage,
+  PermissionGuard(PERMS.UPLOAD_LAYER, PERMS.FEATURE_FILE_UPLOAD, PERMS.ADD_FEATURE),
   RobustRunner(picktoMapUseForLayerCreate)
 );
 
@@ -449,6 +449,7 @@ router.delete(
   isAuthenticated,
   body("layerFileIds").notEmpty().isArray({ min: 1 }),
   validator,
+  PermissionGuard(PERMS.FEATURE_FILE_DELETE, PERMS.FEATURE_LIST),
   RobustRunner(deleteMultipleLayersFiles)
 );
 
@@ -468,6 +469,7 @@ router.patch(
   body("featureIndex").notEmpty().isArray({ min: 1 }),
   body("flag").isBoolean().toBoolean(),
   validator,
+  PermissionGuard(PERMS.EDIT_FEATURE),
   RobustRunner(flagFeature)
 );
 router.patch(
@@ -476,6 +478,7 @@ router.patch(
   param("layerID").isMongoId(),
   body("flag").isBoolean().toBoolean(),
   validator,
+  PermissionGuard(PERMS.EDIT_LAYER),
   RobustRunner(flagLayer)
 );
 router.get(
@@ -483,6 +486,7 @@ router.get(
   param("tenantId").isMongoId(),
   param("missionId").isMongoId(),
   validator,
+  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(publicLayerByMissionId)
 );
 export default router;
