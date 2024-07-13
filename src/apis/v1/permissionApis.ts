@@ -1,43 +1,38 @@
 import express from "express";
-import { body } from "express-validator";
+// import { body } from "express-validator";
 import {
-  createPermission,
-  fetchAllPermissions,
-  fetchTenantPermissions,
+  // createPermission,
+  // fetchAllPermissions,
+  // fetchTenantPermissions,
+  fetchPermissions,
 } from "../../controllers/v1/permissionController";
-import {
-  isAuthenticated,
-  onlySuperAdminAccess,
-  onlyTenantRootAccess,
-} from "../../utils/authUtils";
-import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { isAuthenticated, } from "../../utils/authUtils";
+import { RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();
 
 //++++++++++++++++++++ create permission Api++++++++++++++++++++++++
-router.post(
-  "/create",
-  isAuthenticated,
-  onlySuperAdminAccess,
-  body("name").notEmpty().trim(),
-  validator,
-  RobustRunner(createPermission)
-);
+// router.post(
+//   "/create",
+//   isAuthenticated,
+//   onlySuperAdminAccess,
+//   body("name").notEmpty().trim(),
+//   validator,
+//   RobustRunner(createPermission)
+// );
 
 //++++++++++++++++++++ fetch all Api++++++++++++++++++++++++
 router.get(
   "/admin-permission-list",
   isAuthenticated,
-  onlySuperAdminAccess,
-  RobustRunner(fetchAllPermissions)
+  RobustRunner(fetchPermissions)
 );
 
 //++++++++++++++++++++ fetch tennat Api++++++++++++++++++++++++
 router.get(
   "/tenant-permission-list",
   isAuthenticated,
-  onlyTenantRootAccess,
-  RobustRunner(fetchTenantPermissions)
+  RobustRunner(fetchPermissions)
 );
 
 export default router;

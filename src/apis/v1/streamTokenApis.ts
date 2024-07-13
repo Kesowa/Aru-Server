@@ -1,5 +1,5 @@
 import express from "express";
-import { isAuthenticated, canFly } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import {
   getActiveStreams,
   removeStreamKey,
@@ -9,6 +9,7 @@ import {
 } from "../../controllers/v1/streamTokenController";
 import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.post(
     .notEmpty()
     .isMongoId(),
   validator,
-  canFly,
+  PermissionGuard(PERMS.STREAM_CREATE),
   RobustRunner(streamKeyGen)
 );
 
@@ -41,6 +42,7 @@ router.post(
 router.get(
   "/get-active-streams",
   isAuthenticated,
+  PermissionGuard(PERMS.STREAM_LIST),
   RobustRunner(getActiveStreams)
 );
 
@@ -50,6 +52,7 @@ router.get(
   isAuthenticated,
   query("flightID").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.STREAM_LIST),
   RobustRunner(getActiveStreamByFlightId)
 );
 
@@ -60,6 +63,7 @@ router.post(
   isAuthenticated,
   body("name").notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.STREAM_DELETE),
   RobustRunner(removeStreamKey)
 );
 
