@@ -146,10 +146,12 @@ type permGuardType = {
 
 export function PermissionGuard(...perms: PERMS[]) {
   return (req: Request, res: AuthResponse, next: NextFunction) => {
+    console.log("PERMISSIONS", perms);
     const sufficientPerms = perms.every(perm => res.locals.user.customPermissions.includes(perm));
     if (sufficientPerms) {
       req.log.info("user has sufficient perms");
       next();
+      return;
     }
     const missingPerms = perms.filter(perm => !res.locals.user.customPermissions.includes(perm));
     res.status(403).json({
