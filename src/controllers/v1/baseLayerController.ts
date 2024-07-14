@@ -995,6 +995,11 @@ export const updateBaseLayerByUploadedFile = async (
 
     await featureUpdate(baseLayer.layerpath, newFeatures, bgjson);
 
+    if (baseLayer.isPublic) {
+      // for public layer, re-generate search index after feature editing
+      await saveFeatureSearchIndex(baseLayer.layerpath);
+    }
+
     bgjson.features = [...bgjson.features, ...newFeatures];
 
     const size: number = await getFileSize(baseLayerPath);
