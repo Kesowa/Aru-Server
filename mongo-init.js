@@ -1978,6 +1978,36 @@ db.layers.insertMany([
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
     __v: 0,
   },
+  // Public Layers
+  {
+    _id: ObjectId("6693ac2b07bccc06869febb6"),
+    name: "PUBLIC_PLOT",
+    type: "Vector",
+    vector: ObjectId("60c3a13fca0cbe039fce0d4f"),
+    layerpath: "/vector/Public_Plot.geojson",
+    layerdataArr: [],
+    color: "#f8e71c",
+    layers: [],
+    isPublic: true,
+    isBase: false,
+    center: [],
+    fileSize: 4.8562469482421875,
+    captureDate: ISODate("2022-01-15T00:00:00Z"),
+    tenantId: ObjectId("5f204f03b9445726102781a8"),
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    flaggedFeatures: [],
+    isFlagged: false,
+    isThreadExist: false,
+    commentCount: 0,
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    featureCount: 5211,
+    metadata: {
+      searchIndexPath: "/vector/index_Public_Plot.json"
+    },
+    __v: 0,
+  },
 ]);
 
 db.layerfiles.insertMany([
