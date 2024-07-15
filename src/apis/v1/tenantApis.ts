@@ -182,7 +182,7 @@ router.delete(
   PermissionGuard(PERMS.TENANT_DELETE, PERMS.TENANT_UPDATE),
   RobustRunner(deleteTenantForId)
 );
-router.get("/get-tenant-stats", isAuthenticated, PermissionGuard(PERMS.TENANT_LIST_SELF), RobustRunner(getTenantStats));
+router.get("/get-tenant-stats", isAuthenticated, PermissionGuard(PERMS.MISSION_LIST), RobustRunner(getTenantStats));
 router.patch(
   "/updatepublicMapRef",
   isAuthenticated,
