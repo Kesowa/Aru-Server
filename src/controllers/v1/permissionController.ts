@@ -33,10 +33,10 @@ export const fetchTenantPermissions = async (
 export const fetchPermissions = async (req: Request, res: AuthResponse) => {
   let permissions: PERMS[];
   switch (res.locals.user.userType) {
-    case "super-admin": permissions = [...SUPER_ADMIN_PERMS]; break;
-    case "tenant-root": permissions = [...TENANT_ROOT_PERMS]; break;
-    case "tenant-staff": permissions = [...TENANT_STAFF_PERMS]; break;
-    case "tenant-client": permissions = [...TENANT_CLIENT_PERMS]; break;
+    case "super-admin": permissions = [...TENANT_ROOT_PERMS]; break;
+    case "tenant-root": permissions = [...TENANT_STAFF_PERMS]; break;
+    case "tenant-staff": permissions = [...TENANT_CLIENT_PERMS]; break;
+    // case "tenant-client": permissions = [...TENANT_CLIENT_PERMS]; break;
     default: permissions = [];
   }
   res.json({
