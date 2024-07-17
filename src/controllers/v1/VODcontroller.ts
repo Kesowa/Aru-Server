@@ -17,7 +17,7 @@ import { WiproInterface } from "../../utils/wipro";
 import Flight from "../../models/flight";
 import * as pathUtils from "../../utils/pathUtils";
 import Location from "../../models/location";
-import { randomUUID } from "crypto";
+import UploadTask from "../../models/uploadTask";
 
 export const saveVOD = async (
   req: Request<
@@ -272,63 +272,66 @@ export const testApiinject = async (req: Request, res: AuthResponse) => {
 };
 
 export const saveVODManual = async (req: Request, res: AuthResponse) => {
-  {
-    const tenantId = String(res.locals.user.tenantId._id);
-    let { missionID, flightID, locationID } = req.body;
-    req.log.info({ missionID, flightID }, "VOD Info");
-    const filename = randomUUID();
-    if (locationID == null || locationID == undefined) {
-      const flight = await Flight.findOne(
-        { _id: flightID, tenant: tenantId },
-        { locationID: 1 }
-      );
-      locationID = flight.locationID;
-    }
-    if (req.file) {
-      res.json({
-        status: true,
-        message: "Sucessfully uploaded the video",
-        file: `temp/${filename}.mp4`,
-      });
-      const filepath = pathUtils.relPath(
-        pathUtils.Directory.TEMP,
-        req.file.filename
-      );
-      const telemetryData = await extractTelemetry(filepath);
-      const transcodeData = await transcodeVideo(filepath);
-      if (telemetryData) {
-        const location = await Location.create({
-          properties: {
-            name: req.file.originalname,
-          },
-          tenantId: res.locals.user.tenantId._id,
-          geometry: {
-            type: "Point",
-            coordinates: {
-              lng: telemetryData.metadata.stats.GPS.LONGITUDE.avg,
-              lat: telemetryData.metadata.stats.GPS.LATITUDE.avg,
-            },
-          },
-        });
-        locationID = location._id;
-      }
-      const vod = await VOD.create({
-        videoName: req.file.originalname,
-        missionID: missionID,
-        flightID: flightID,
-        locationID: locationID,
-        videoPath: transcodeData.hlsPath,
-        thumbnail: transcodeData.thumbnailPath,
-        tenantId: res.locals.user.tenantId._id,
-        isSRT: telemetryData ? true : false,
-        fileSize:
-          transcodeData.size + (telemetryData ? telemetryData.geojsonSize : 0),
-      });
-      missionSpecificSocket
-        .to(String(missionID))
-        .emit("PROCESS_VIDEO_FINISHED", vod);
-    }
+
+  const tenantId = String(res.locals.user.tenantId._id);
+  let { missionID, flightID, locationID } = req.body;
+  req.log.info({ missionID, flightID }, "VOD Info");
+  const fileDoc = await UploadTask.findOne({
+    tenant: res.locals.user.tenantId._id,
+    createdBy: res.locals.user._id,
+    _id: req.body.file,
+    status: "started",
+  });
+  if (locationID == null || locationID == undefined) {
+    const flight = await Flight.findOne(
+      { _id: flightID, tenant: tenantId },
+      { locationID: 1 }
+    );
+    locationID = flight.locationID;
   }
+  res.json({
+    status: true,
+    message: "Sucessfully uploaded the video",
+    file: fileDoc.metadata.objectkey,
+  });
+  const filepath = fileDoc.metadata.objectkey;
+  const telemetryData = await extractTelemetry(filepath);
+  const transcodeData = await transcodeVideo(filepath);
+  if (telemetryData) {
+    const location = await Location.create({
+      properties: {
+        name: req.file.originalname,
+      },
+      tenantId: res.locals.user.tenantId._id,
+      geometry: {
+        type: "Point",
+        coordinates: {
+          lng: telemetryData.metadata.stats.GPS.LONGITUDE.avg,
+          lat: telemetryData.metadata.stats.GPS.LATITUDE.avg,
+        },
+      },
+    });
+    locationID = location._id;
+  }
+  const vod = await VOD.create({
+    videoName: req.file.originalname,
+    missionID: missionID,
+    flightID: flightID,
+    locationID: locationID,
+    videoPath: transcodeData.hlsPath,
+    thumbnail: transcodeData.thumbnailPath,
+    tenantId: res.locals.user.tenantId._id,
+    isSRT: telemetryData ? true : false,
+    fileSize:
+      transcodeData.size + (telemetryData ? telemetryData.geojsonSize : 0),
+  });
+  await fileDoc.update({
+    status: "completed"
+  })
+  missionSpecificSocket
+    .to(String(missionID))
+    .emit("PROCESS_VIDEO_FINISHED", vod);
+
 };
 
 //Delete VOD Entry
