@@ -6,20 +6,21 @@ services:
     volumes:
       - ./src:/app/src
       - ./public:/app/public:rw
+      - ./adapter:/app/adapter:ro
     environment:
       - TZ="Asia/Kolkata"
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
-      - REDIS_URI=redis://redis:6379
       - S3_ACCESS_KEY=minioadmin
       - S3_SECRET_KEY=minioadmin
       - S3_BUCKET_NAME=aru
       - S3_ENDPOINT=minio
+      - RABBITMQ_CONNECTION_STRING=amqp://rabbitmq
     env_file:
       - ./server.env
     depends_on:
       - mongodb
-      - redis
       - minio
+      - rabbitmq
     ports:
       - 5011:5011
     extra_hosts:
@@ -50,11 +51,6 @@ services:
     mem_limit: 256m
     memswap_limit: 256m
     cpus: 0.5
-
-  redis:
-    image: redis@sha256:aeed51f49a6331df0cb2c1039ae3d1d70d882be3f48bde75cd240452a2348e88
-    mem_limit: 128m
-    memswap_limit: 128m
 
   minio:
     image: minio/minio@sha256:c7175077d39a8cc10c9fd611cdcc68b6a5b365793e9ac6f4198ffff1ef0fe555
@@ -87,3 +83,7 @@ services:
 
 # volumes:
 #   datastore:
+  rabbitmq:
+    image: rabbitmq@sha256:473953b02b8346091f0b3a6819e017618cbe95cb568bca2fecf00966a20ccf2a
+    # mem_limit: 128m
+    # memswap_limit: 128m

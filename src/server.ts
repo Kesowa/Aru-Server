@@ -2,8 +2,8 @@ import app, { logger } from "./app";
 import cron from "node-cron";
 import http from "http";
 import { Server } from "socket.io";
-import { createAdapter } from "@socket.io/redis-adapter";
-import { createClient } from "redis";
+import { createAdapter } from "./utils/socket.io-adapter";
+import { connect } from "amqplib";
 import { ioHandler } from "./socket";
 
 import Tenant from "./models/tenant";
@@ -12,7 +12,7 @@ import mongoose from "mongoose";
 import {
   MONGODB_CONNECTION_STRING,
   PORT,
-  REDIS_URI,
+  RABBITMQ_CONNECTION_STRING,
 } from "./constants";
 
 const expiredSubs = async () => {
@@ -80,10 +80,10 @@ const worker = async () => {
     },
   });
 
-  const pubClient = createClient({ url: REDIS_URI });
-  const subClient = pubClient.duplicate();
-  await Promise.all([pubClient.connect(), subClient.connect()]);
-  io.adapter(createAdapter(pubClient, subClient));
+  // @ts-ignore
+  io.adapter(
+    createAdapter({ amqpConnection: () => connect(RABBITMQ_CONNECTION_STRING) })
+  );
   //handle socket.io
   ioHandler(io);
 
