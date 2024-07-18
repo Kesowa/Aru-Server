@@ -34,6 +34,7 @@ import {
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
+import UploadTask from "../../models/uploadTask";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -175,9 +176,15 @@ export const createVectorBaseLayer = async (
   let featureCount: number;
   let flagColor: string;
   let properties: Record<string, any>;
+  const fileDoc = await UploadTask.findOne({
+    _id: req.body.file,
+    tenant: res.locals.user.tenantId._id,
+    createdBy: res.locals.user._id,
+    status: "started",
+  });
   try {
     const vectorLayer = await saveVectorLayer(
-      pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
+      fileDoc.metadata.objectkey,
       {
         icon: req.body.icon,
         color: req.body.color,
@@ -816,10 +823,13 @@ export const uploadLayerToUpdateBaseLayer = async (
   res: AuthResponse
 ) => {
   {
-    let layer: any;
-    const dir = DirPath(Directory.VECTOR, req.file?.filename);
-
-    const geojson: any = await readGeoJson(dir);
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      status: "started",
+    });
+    const geojson = await readGeoJson(fileDoc.metadata.objectkey);
 
     if (geojson == null) {
       return res.json({
@@ -838,9 +848,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     );
     if (!baseLayer) throw new Error("BaseLayer not found");
 
-    const baseLayerPath = DirPath(Directory.ROOT, baseLayer.layerpath);
-
-    const bgjson = await readGeoJson(baseLayerPath);
+    const bgjson = await readGeoJson(baseLayer.layerpath);
 
     if (bgjson == null) {
       return res.json({
@@ -852,7 +860,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     if (
       geojson.features[0].geometry.type !== bgjson.features[0].geometry.type
     ) {
-      await deleteDirFileUsingName(Directory.VECTOR, req.file?.filename);
+      await deleteDirFileUsingName(fileDoc.metadata.objectkey);
       return res.status(400).json({
         success: false,
         message: "The file must be of same type as base layer",
@@ -883,7 +891,7 @@ export const uploadLayerToUpdateBaseLayer = async (
       data: {
         primeAttributes: pattr,
         layerAttributes: layerAttr,
-        filePath: DirPath(Directory.VECTOR, req.file?.filename),
+        filePath: fileDoc.metadata.objectkey,
         baseLayer: req.body.baseLayer,
       },
     });
@@ -1254,7 +1262,12 @@ export const createBaseRasterfromUpload = async (
   res: AuthResponse
 ) => {
   {
-    const file_loc = `/raster/${req.file?.filename}`;
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      status: "started",
+    });
     let layer: HydratedDocument<ILayer>;
     const dataArr = [];
 
@@ -1277,7 +1290,7 @@ export const createBaseRasterfromUpload = async (
     let center = { lat: 0, lng: 0 };
     let metadata = {};
     if (rasterType == rasterProps.DEM) {
-      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${file_loc}`;
+      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
       //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       let response = await fetch(metaDataURL, {
         method: "GET",
@@ -1287,7 +1300,7 @@ export const createBaseRasterfromUpload = async (
       minP = metadata["1"]["min"];
       maxP = metadata["1"]["max"];
 
-      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${file_loc}`;
+      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
       response = await fetch(metaDataURL, {
         method: "GET",
       });
@@ -1297,7 +1310,7 @@ export const createBaseRasterfromUpload = async (
         lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
       };
     } else if (rasterType == rasterProps.POINT_CLOUD) {
-      metadata = await LazToTiles3D(file_loc);
+      metadata = await LazToTiles3D(fileDoc.metadata.objectkey);
     }
     // let center = {
     //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
@@ -1308,7 +1321,7 @@ export const createBaseRasterfromUpload = async (
     );
     const layerData = [
       {
-        path: `/raster/${req.file.filename}`,
+        path: fileDoc.metadata.objectkey,
         minP: minP,
         maxP: maxP,
         import: false,
@@ -1366,78 +1379,69 @@ export const updateBaseLayerRasterUpload = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    if (req.file) {
-      const doc = await Layer.findOne(
-        {
-          _id: req.body.layerId,
-          tenantId: res.locals.user.tenantId._id,
-        },
-        {
-          layerdataArr: 1,
-          fileSize: 1,
-        }
-      );
-      if (doc) {
-        const tif_loc = `/raster/${req.file?.filename}`;
-        //----------TITILER API HAS CHANGED-------------------
-        //  Metadata api has been removed
-        // instead there is statistics api and info api
-        // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-        //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-        const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${tif_loc}`;
-        //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-        const response = await fetch(metaDataURL, {
-          method: "GET",
-        });
-        const metadata = await response.json();
-        //-------handle for detail:not found----
-        const minP = metadata["1"]["min"];
-        const maxP = metadata["1"]["max"];
-        // let center = {
-        //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
-        //   lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
-        // };
-        const size: number = Number(
-          (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
+  const fileDoc = await UploadTask.findOne({
+    _id: req.body.file,
+    tenant: res.locals.user.tenantId._id,
+    createdBy: res.locals.user._id,
+    status: "started",
+  });
+  const doc = await Layer.findOne(
+    {
+      _id: req.body.layerId,
+      tenantId: res.locals.user.tenantId._id,
+    },
+    {
+      layerdataArr: 1,
+      fileSize: 1,
+    }
+  );
+  if (doc) {
+    //----------TITILER API HAS CHANGED-------------------
+    //  Metadata api has been removed
+    // instead there is statistics api and info api
+    // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+    //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+    const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
+    //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+    const response = await fetch(metaDataURL, {
+      method: "GET",
+    });
+    const metadata = await response.json();
+    //-------handle for detail:not found----
+    const minP = metadata["1"]["min"];
+    const maxP = metadata["1"]["max"];
+    // let center = {
+    //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
+    //   lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+    // };
+    const size: number = Number(
+      (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
+    );
+    const newSize: any = Number(size + Number(doc.fileSize));
+    const dataArr: any = [];
+    const layerData = {
+      path: fileDoc.metadata.objectkey,
+      minP: minP,
+      maxP: maxP,
+      import: false,
+    };
+    if (layerData) {
+      dataArr.push(layerData);
+      let finalDataArr: any;
+      finalDataArr = doc.layerdataArr;
+      finalDataArr.push(dataArr);
+      if (finalDataArr.length) {
+        const updateLayer = await Layer.updateOne(
+          { _id: req.body.layerId },
+          { fileSize: newSize, layerdataArr: finalDataArr }
         );
-        const newSize: any = Number(size + Number(doc.fileSize));
-        const dataArr: any = [];
-        const layerData = {
-          path: `/raster/${req?.file?.filename}`,
-          minP: minP,
-          maxP: maxP,
-          import: false,
-        };
-        if (layerData) {
-          dataArr.push(layerData);
-          let finalDataArr: any;
-          finalDataArr = doc.layerdataArr;
-          finalDataArr.push(dataArr);
-          if (finalDataArr.length) {
-            const updateLayer = await Layer.updateOne(
-              { _id: req.body.layerId },
-              { fileSize: newSize, layerdataArr: finalDataArr }
-            );
-            const layer: any = await Layer.findOne({ _id: req.body.layerId });
-            if (updateLayer) {
-              res.status(200).json({
-                status: true,
-                message: "Raster layer updated sucessfully",
-                data: layer,
-              });
-            } else {
-              res.status(200).json({
-                status: false,
-                message: "Oops something went wrong",
-              });
-            }
-          } else {
-            res.status(200).json({
-              status: false,
-              message: "Oops something went wrong",
-            });
-          }
+        const layer: any = await Layer.findOne({ _id: req.body.layerId });
+        if (updateLayer) {
+          res.status(200).json({
+            status: true,
+            message: "Raster layer updated sucessfully",
+            data: layer,
+          });
         } else {
           res.status(200).json({
             status: false,
@@ -1447,15 +1451,20 @@ export const updateBaseLayerRasterUpload = async (
       } else {
         res.status(200).json({
           status: false,
-          message: "Layer not found",
+          message: "Oops something went wrong",
         });
       }
     } else {
-      res.json({
+      res.status(200).json({
         status: false,
-        message: "Server error",
+        message: "Oops something went wrong",
       });
     }
+  } else {
+    res.status(200).json({
+      status: false,
+      message: "Layer not found",
+    });
   }
 };
 

@@ -11,20 +11,16 @@ import {
 } from "../../controllers/v1/userController";
 import { uploadFileforUSer } from "../../controllers/v1/commonController";
 import { canListUsers, isAuthenticated } from "../../utils/authUtils";
-import { multerStorage } from "../../utils/fileUploadUtils";
 import { isUserCount } from "../../utils/countPermission";
-import multer from "multer";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
 
-const upload = multer({ storage: multerStorage(Directory.TEMP_IMAGES) });
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
 router.post(
   "/upload-profile-picture",
   isAuthenticated,
-  upload.single("avatar"),
+  body("avatar").notEmpty().isMongoId(),
   RobustRunner(uploadFileforUSer)
 );
 

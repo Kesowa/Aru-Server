@@ -6,20 +6,15 @@ import {
   createFlightLog,
 } from "../../controllers/v1/flightLogController";
 import { isAuthenticated, canListFlightLogs } from "../../utils/authUtils";
-import multer from "multer";
 import { query, body, oneOf } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
-import { multerStorage } from "../../utils/fileUploadUtils";
-
-const upload = multer({ storage: multerStorage(Directory.FLIGHT_LOGS) });
 
 const router = express.Router();
 
 router.post(
   "/create",
   isAuthenticated,
-  upload.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("date").exists().isISO8601().toDate(),
   // REGEX
   body("time")

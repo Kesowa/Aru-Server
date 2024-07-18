@@ -17,24 +17,20 @@ import {
 } from "../../controllers/v1/tenantController";
 import { uploadFile } from "../../controllers/v1/commonController";
 import { isAuthenticated, onlySuperAdminAccess } from "../../utils/authUtils";
-import { multerStorage } from "../../utils/fileUploadUtils";
-import multer from "multer";
 import { fetchActivePackages } from "../../controllers/v1/packageController";
 import {
   validator,
   RobustRunner,
   environmentGuard,
 } from "../../utils/requestHelpers";
-import { Directory, Mode } from "../../constants";
-
-const upload = multer({ storage: multerStorage(Directory.TENANT_LOGOS) });
+import { Mode } from "../../constants";
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
 router.post(
   "/upload-avatar",
   isAuthenticated,
-  upload.single("avatar"),
+  body("avatar").notEmpty().isMongoId(),
   RobustRunner(uploadFile)
 );
 

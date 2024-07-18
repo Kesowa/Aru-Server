@@ -32,24 +32,13 @@ import {
   canUpdateBaseLayer,
   canCreateVectorLayer,
 } from "../../utils/authUtils";
-import multer from "multer";
-import { isSize } from "../../utils/sizePermission";
 import { isLayerCount } from "../../utils/countPermission";
 import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
-import { multerStorage } from "../../utils/fileUploadUtils";
 import { vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
 
 const router = express.Router();
-
-const uploadVector = multer({
-  storage: multerStorage(Directory.VECTOR),
-});
-const uploadRaster = multer({
-  storage: multerStorage(Directory.RASTER),
-});
 
 router.patch(
   "/get-meta-data",
@@ -63,7 +52,7 @@ router.patch(
 router.post(
   "/create/Vector",
   isAuthenticated,
-  uploadVector.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("name").notEmpty().trim(),
   body("vector")
     .notEmpty()
@@ -78,7 +67,6 @@ router.post(
   validator,
   canCreateBaseLayer,
   isLayerCount,
-  isSize,
   RobustRunner(createVectorBaseLayer)
 );
 
@@ -149,7 +137,7 @@ router.get("/fetch/:type", isAuthenticated, RobustRunner(getBaseLayers));
 router.post(
   "/upload-to-update-base-layer/Vector",
   isAuthenticated,
-  uploadVector.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("baseLayer").notEmpty().isMongoId(),
   validator,
   canUpdateBaseLayer,
@@ -189,7 +177,7 @@ router.delete(
 router.post(
   "/create-base-raster-upload/Raster",
   isAuthenticated,
-  uploadRaster.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("name").notEmpty().trim(),
   body("raster")
     .notEmpty()
@@ -200,14 +188,13 @@ router.post(
   validator,
   canCreateBaseLayer,
   isLayerCount,
-  isSize,
   RobustRunner(createBaseRasterfromUpload)
 );
 
 router.patch(
   "/updateRasterLayerUpload/Raster",
   isAuthenticated,
-  uploadRaster.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("layerId").notEmpty().isMongoId(),
   validator,
   canUpdateBaseLayer,

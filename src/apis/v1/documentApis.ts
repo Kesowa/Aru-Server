@@ -5,7 +5,6 @@ import {
   canDeleteDocument,
 } from "../../utils/authUtils";
 const router = express.Router();
-import multer from "multer";
 import {
   createDocument,
   deleteDocument,
@@ -18,26 +17,20 @@ import {
   updateDoc,
   getImagesbymissionID,
 } from "../../controllers/v1/documentController";
-import { isSize } from "../../utils/sizePermission";
 import { body, query } from "express-validator";
 import { validator } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
-import { multerStorage } from "../../utils/fileUploadUtils";
-
-const upload = multer({ storage: multerStorage(Directory.DOCUMENTS) });
 
 // ****************create document**********************
 
 router.post(
   "/create",
   isAuthenticated,
-  upload.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("missionId").notEmpty(),
   body("folderName").notEmpty().trim(),
   body("type").optional().trim(),
   validator,
   canUploadDocument,
-  isSize,
   createDocument
 );
 

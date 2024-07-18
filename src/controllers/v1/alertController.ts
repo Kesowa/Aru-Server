@@ -16,6 +16,7 @@ import path from "path";
 import { WiproInterface } from "../../utils/wipro";
 import { readCoords, saveThumbnails } from "../../utils/imageUtils";
 import * as pathUtils from "../../utils/pathUtils";
+import UploadTask from "../../models/uploadTask";
 
 // Create Alert Controlller
 type CreateAlert = {
@@ -801,12 +802,14 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
 
 export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
-    const img_path = pathUtils.docPath(
-      pathUtils.Directory.ALERT_IMAGES,
-      req.file.filename
-    );
-    const thumbs = await saveThumbnails(img_path);
-    const ff = await readCoords(img_path);
+    const imgDoc = await UploadTask.findOne({
+      _id: req.body.image,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      status: "started",
+    });
+    const thumbs = await saveThumbnails(imgDoc.metadata.objectkey);
+    const ff = await readCoords(imgDoc.metadata.objectkey);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
@@ -826,8 +829,8 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: thumbs.size,
-      image: img_path,
+      fileSize: imgDoc.metadata.filesize,
+      image: imgDoc.metadata.objectkey,
     });
 
     const data = await newAlert.save();
