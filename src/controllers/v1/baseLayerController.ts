@@ -180,7 +180,7 @@ export const createVectorBaseLayer = async (
     _id: req.body.file,
     tenant: res.locals.user.tenantId._id,
     createdBy: res.locals.user._id,
-    status: "started",
+    // status: "started",
   });
   try {
     const vectorLayer = await saveVectorLayer(
@@ -231,7 +231,7 @@ export const createVectorBaseLayer = async (
     createdBy: res.locals.user._id,
     updatedBy: res.locals.user._id,
   });
-
+  await fileDoc.delete();
   if (layer) {
     await Tenant.findOneAndUpdate(
       {
@@ -827,7 +827,7 @@ export const uploadLayerToUpdateBaseLayer = async (
       _id: req.body.file,
       tenant: res.locals.user.tenantId._id,
       createdBy: res.locals.user._id,
-      status: "started",
+      // status: "started",
     });
     const geojson = await readGeoJson(fileDoc.metadata.objectkey);
 
@@ -846,7 +846,14 @@ export const uploadLayerToUpdateBaseLayer = async (
         layerpath: 1,
       }
     );
-    if (!baseLayer) throw new Error("BaseLayer not found");
+
+    if (!baseLayer) {
+      res.status(404).json({
+        status: false,
+        message: "BaseLayer not found" 
+      });
+      return;
+    };
 
     const bgjson = await readGeoJson(baseLayer.layerpath);
 
@@ -860,7 +867,6 @@ export const uploadLayerToUpdateBaseLayer = async (
     if (
       geojson.features[0].geometry.type !== bgjson.features[0].geometry.type
     ) {
-      await deleteDirFileUsingName(fileDoc.metadata.objectkey);
       return res.status(400).json({
         success: false,
         message: "The file must be of same type as base layer",
@@ -904,11 +910,9 @@ export const updateBaseLayerByUploadedFile = async (
   res: AuthResponse
 ) => {
   {
-    // TODO: Is below replacement correct? (does /../../ refer to public folder ?)
-    // const dir = path.join(__dirname, "/../../", `${req.body.filePath}`);
-    const dir = DirPath(Directory.ROOT, req.body.filePath);
+    const objectKey = req.body.filePath;
 
-    const geojson = await readGeoJson(dir);
+    const geojson = await readGeoJson(objectKey);
 
     if (geojson == null) {
       return res.json({
@@ -927,11 +931,15 @@ export const updateBaseLayerByUploadedFile = async (
       }
     );
 
-    if (!baseLayer) throw new Error("baseLayer is null");
+    if (!baseLayer) {
+      res.status(404).json({
+        status: false,
+        message: "baselayer is null"
+      });
+      return;
+    };
 
-    const baseLayerPath = DirPath(Directory.ROOT, baseLayer.layerpath);
-
-    const bgjson = await readGeoJson(baseLayerPath);
+    const bgjson = await readGeoJson(baseLayer.layerpath);
 
     if (bgjson == null) {
       return res.json({
@@ -979,13 +987,11 @@ export const updateBaseLayerByUploadedFile = async (
       newFeatures.push(feature);
     }
 
-    await featureUpdate(baseLayer.layerpath, newFeatures, bgjson);
-
     bgjson.features = [...bgjson.features, ...newFeatures];
 
     const size: number = await getFileSize(baseLayerPath);
 
-    const docCount: any = await Tenant.findById(
+    const docCount = await Tenant.findById(
       res.locals.user.tenantId._id
         ? res.locals.user.tenantId._id
         : res.locals.user.tenantId,
@@ -997,7 +1003,7 @@ export const updateBaseLayerByUploadedFile = async (
       .populate<{ activePackage: IPackage }>("activePackage")
       .lean();
 
-    const ress: any = await isSizeVector(size, docCount, baseLayerPath);
+    const ress = await isSizeVector(size, docCount, baseLayerPath);
 
     const prevSize = Number(docCount.actualSize);
     const newSize = prevSize - Number(baseLayer.fileSize) + size;

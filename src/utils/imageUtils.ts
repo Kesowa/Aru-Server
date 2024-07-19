@@ -1,6 +1,6 @@
 import sharp from "sharp";
 import fs from "fs/promises";
-import { DirPath, Directory, DocPath, absPath, docPath } from "./pathUtils";
+import { KeyPath, Directory, DocPath, absPath, docPath } from "./pathUtils";
 import path from "path";
 import exifr from "exifr";
 import { exec } from "child_process";
@@ -32,7 +32,7 @@ export const createThumbnails = async (img: Buffer, filename: string) => {
 /**
  * Input non-absolute path to image, generate 1x and 2x variants in the same directory
  */
-export const saveThumbnails = async (img: DirPath | DocPath) => {
+export const saveThumbnails = async (img: KeyPath | DocPath) => {
   const imgPath = absPath(Directory.ROOT, img);
   const imgData = await fs.readFile(imgPath);
   const { small, medium } = await createThumbnails(imgData, img);
@@ -56,7 +56,7 @@ export const saveThumbnails = async (img: DirPath | DocPath) => {
 /**
  * Returns path to thermal raw data file if it exists, or undefined
  */
-export const saveThermal = async (img: DirPath | DocPath) => {
+export const saveThermal = async (img: KeyPath | DocPath) => {
   const thermalPath = docPath(Directory.AI_ML, path.parse(img).name + ".raw");
   const absThermalPath = absPath(Directory.ROOT, img);
   const command =
@@ -78,7 +78,7 @@ export const saveThermal = async (img: DirPath | DocPath) => {
 /**
  * Takes image path or buffer, returns coordinates. Default {lat: 0, lng: 0}
  */
-export const readCoords = async (img: DirPath | DocPath | Buffer) => {
+export const readCoords = async (img: KeyPath | DocPath | Buffer) => {
   let metadata: any;
 
   if (typeof img == "string") {

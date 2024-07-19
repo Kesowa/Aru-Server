@@ -14,7 +14,7 @@ const matchExt = /\.\w+$/;
  * DELETES VOD AFTER CONVERSION!!!
  * */
 export const transcodeVideo = async (
-  filePath: pathUtils.DirPath | pathUtils.DocPath
+  filePath: pathUtils.KeyPath | pathUtils.DocPath
 ) => {
   const doc = pathUtils.docPath(pathUtils.Directory.ROOT, filePath);
   const docPath = pathUtils.docPath(
@@ -49,7 +49,7 @@ export const transcodeVideo = async (
  * Returns undefined if no srt found
  */
 export const extractTelemetry = async (
-  filePath: pathUtils.DirPath | pathUtils.DocPath
+  filePath: pathUtils.KeyPath | pathUtils.DocPath
 ) => {
   const geojsonPath = pathUtils.docPath(
     pathUtils.Directory.VOD,
@@ -109,7 +109,7 @@ const getHlsSize = async (indexPath: string) => {
  * Takes non-abs path to video file (hls, flv, mp4, etc), returns approx size of all video files in MegaBytes
  */
 export const getVodSize = async (
-  vodFile: pathUtils.DirPath | pathUtils.DocPath
+  vodFile: pathUtils.KeyPath | pathUtils.DocPath
 ) => {
   const absVodPath = pathUtils
     .absPath(pathUtils.Directory.ROOT, vodFile)
@@ -158,7 +158,7 @@ const deleteHls = async (indexPath: string) => {
  * Takes non-abs path to video file (hls, flv, mp4, etc), and completely erases it
  */
 export const deleteVideo = async (
-  vodFile: pathUtils.DirPath | pathUtils.DocPath
+  vodFile: pathUtils.KeyPath | pathUtils.DocPath
 ) => {
   const absVodPath = pathUtils
     .absPath(pathUtils.Directory.ROOT, vodFile)

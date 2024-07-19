@@ -3,18 +3,18 @@ import { promisify } from "util";
 import * as pathUtils from "./pathUtils";
 import path from "path";
 import { Logger } from "pino";
-import fs from "fs/promises";
 import tokml from "tokml";
 import shp2json from "shpjs";
 import { GeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
-import { DirPath, Directory } from "../constants";
+import { DirPath, Directory, S3_BUCKET_NAME } from "../constants";
 import archiver from "archiver";
 import { createWriteStream } from "fs";
 import { Stream } from "stream";
 import { DOMParser } from "xmldom";
 import togeojson from "@mapbox/togeojson";
 import { ObjectId } from "bson";
+import { archive, minioClient, readToBuffer, readToString, uploadString } from "./objectStorage";
 
 const asyncExec = promisify(exec);
 
@@ -22,7 +22,7 @@ const asyncExec = promisify(exec);
  * Takes pointcloud file path, returns web view index page path or undefined
  */
 export const savePointcloud = async (
-  doc: pathUtils.DirPath | pathUtils.DocPath,
+  doc: pathUtils.KeyPath | pathUtils.DocPath,
   log?: Logger
 ) => {
   const absDocPath = pathUtils.absPath(pathUtils.Directory.ROOT, doc);
@@ -53,10 +53,10 @@ const getFlagColor = (geojson: GeoJson) => {
   return colorSet.values().next().value;
 };
 /**
- * Takes layer path, converts to geojson if necessary, and returns the geojson path. Also cleans up.
+ * Takes layer path, converts to geojson if necessary, and returns the new geojson path. Also cleans up.
  */
 export const saveVectorLayer = async (
-  layer: pathUtils.DocPath | pathUtils.DirPath | GeoJson,
+  layer: pathUtils.DocPath | GeoJson,
   options: {
     icon: string;
     color: string;
@@ -67,79 +67,59 @@ export const saveVectorLayer = async (
     inheritColor: false,
   }
 ) => {
-  let layerPath = "";
+  const targetPath = pathUtils.docPath(
+    pathUtils.Directory.VECTOR,
+    randomUUID() + ".geojson"
+  );
   let geojsonData: GeoJson;
   if (typeof layer == "string") {
-    layerPath = layer;
-  } else {
-    geojsonData = layer;
-    layerPath = pathUtils.docPath(
-      pathUtils.Directory.VECTOR,
-      randomUUID() + ".geojson"
-    );
-  }
-  const ext = path.extname(layerPath).toLowerCase();
-  const absLayerPath = pathUtils.absPath(pathUtils.Directory.ROOT, layerPath);
-  const geojsonPath = pathUtils.docPath(
-    pathUtils.Directory.VECTOR,
-    path.parse(layerPath).name + ".geojson"
-  );
-  const absGeojsonPath = pathUtils.absPath(
-    pathUtils.Directory.ROOT,
-    geojsonPath
-  );
-  let flagColor = "multiColor";
-  try {
-    if (ext == ".geojson" && geojsonData == undefined) {
-      geojsonData = JSON.parse(await fs.readFile(absLayerPath, "utf8"));
+    const ext = path.extname(layer).toLowerCase();
+    if (ext == ".geojson") {
+      geojsonData = JSON.parse(await readToString(layer));
     }
-    if (ext == ".kml") {
-      const fileData = await fs.readFile(absLayerPath, "utf8");
+    else if (ext == ".kml") {
+      const fileData = await readToString(layer);
       const kmlData = new DOMParser().parseFromString(fileData, "text/xml");
       geojsonData = togeojson.kml(kmlData, { styles: true });
     }
-    if (ext == ".zip") {
-      const fileData = await fs.readFile(absLayerPath);
+    else if (ext == ".zip") {
+      const fileData = await readToBuffer(layer);
       geojsonData = await shp2json(fileData);
     }
-    if (geojsonData) {
-      geojsonData.features.forEach(
-        (feature) =>
-          (feature.properties = {
-            ...feature.properties,
-            icon: options.icon,
-            color: options.inheritColor
-              ? feature.properties.color || options.color
-              : options.color,
-          })
-      );
-      if (options.inheritColor == false) {
-        flagColor = options.color;
-      } else {
-        flagColor = getFlagColor(geojsonData);
-      }
-      geojsonData.features.forEach((feature) => {
-        feature.properties.sys_id = new ObjectId().toHexString();
-      });
-      const stringData = JSON.stringify(geojsonData);
-      try {
-        await fs.rm(absLayerPath);
-      } catch (err) {
-        console.error(err);
-      }
-      await fs.writeFile(absGeojsonPath, stringData);
-      return {
-        geojsonPath,
-        size: stringData.length / (1024 * 1024),
-        featureCount: geojsonData.features.length,
-        flagColor,
-        properties: geojsonData.features[0]?.properties,
-      };
-    }
-  } catch (error) {
-    console.error(error);
-    return undefined;
+  } else {
+    geojsonData = layer;
+  } 
+  if (!geojsonData)
+    return null;
+    
+  let flagColor = "multiColor";
+  geojsonData.features.forEach(
+    (feature) =>
+      (feature.properties = {
+        ...feature.properties,
+        icon: options.icon,
+        color: options.inheritColor
+          ? feature.properties.color || options.color
+          : options.color,
+      })
+  );
+  if (options.inheritColor == false) {
+    flagColor = options.color;
+  } else {
+    flagColor = getFlagColor(geojsonData);
   }
+  geojsonData.features.forEach((feature) => {
+    feature.properties.sys_id = new ObjectId().toHexString();
+  });
+  const stringData = JSON.stringify(geojsonData);
+  await uploadString(targetPath, stringData);
+  return {
+    geojsonPath: targetPath,
+    size: stringData.length / (1024 * 1024),
+    featureCount: geojsonData.features.length,
+    flagColor,
+    properties: geojsonData.features[0]?.properties,
+  };
 };
 
 const populateMultiGeojson = async (
@@ -160,12 +140,7 @@ const populateMultiGeojson = async (
   };
   await Promise.allSettled(
     geojsons.map(async (geojsonFile) => {
-      const geojson = JSON.parse(
-        await fs.readFile(
-          pathUtils.absPath(pathUtils.Directory.ROOT, geojsonFile.path),
-          "utf8"
-        )
-      ) as GeoJson;
+      const geojson = JSON.parse(await readToString(geojsonFile.path)) as GeoJson;
       const map = geojsonFile.map;
       if (map || options) {
         geojson.features.forEach((feature) => {
@@ -198,26 +173,14 @@ export const saveGeojson = async (
     name?: string;
     type?: string;
     filter?: string[];
-    inplace?: boolean;
   }
 ) => {
   let geojsonObject: GeoJson;
-  let geojsonPath = "";
-  let absGeojsonPath = "";
   if (typeof geojson == "string") {
-    absGeojsonPath = pathUtils.absPath(pathUtils.Directory.ROOT, geojson);
-    geojsonPath = geojson;
-    const stringData = await fs.readFile(absGeojsonPath, "utf8");
+    const stringData = await readToString(geojson);
     geojsonObject = JSON.parse(stringData) as GeoJson;
   } else {
     geojsonObject = geojson;
-  }
-  if (!options?.inplace) {
-    geojsonPath = pathUtils.docPath(
-      pathUtils.Directory.VECTOR,
-      randomUUID() + ".geojson"
-    );
-    absGeojsonPath = pathUtils.absPath(pathUtils.Directory.ROOT, geojsonPath);
   }
   if (options?.color || options?.filter) {
     geojsonObject.features.forEach((feature) => {
@@ -235,8 +198,11 @@ export const saveGeojson = async (
   }
   if (options?.name) geojsonObject.name = options.name;
   if (options?.type) geojsonObject.type = options.type;
-  await fs.writeFile(absGeojsonPath, JSON.stringify(geojsonObject));
-  return geojsonPath;
+  const geojsonPath = pathUtils.docPath(Directory.VECTOR, randomUUID() + ".geojson");
+  const stringData = JSON.stringify(geojsonObject);
+  const size = stringData.length / (1024*1024);
+  await uploadString(geojsonPath, stringData);
+  return { geojsonPath, size };
 };
 
 /**
@@ -254,14 +220,6 @@ export const saveMultiGeojson = async (
     filter?: string[];
   }
 ) => {
-  const clonedGeojsonPath = pathUtils.docPath(
-    pathUtils.Directory.VECTOR,
-    randomUUID() + ".geojson"
-  );
-  const absClonedPath = pathUtils.absPath(
-    pathUtils.Directory.ROOT,
-    clonedGeojsonPath
-  );
   const geojsonObject = await populateMultiGeojson(geojsons, { color });
   if (filter)
     geojsonObject.features.forEach((feature) => {
@@ -275,52 +233,26 @@ export const saveMultiGeojson = async (
     geojsonObject.name = name;
   }
   const featureCount = geojsonObject.features.length;
-  await fs.writeFile(absClonedPath, JSON.stringify(geojsonObject));
-  const size = (await fs.stat(absClonedPath)).size / (1024 * 1024);
-  return { path: clonedGeojsonPath, size, featureCount };
+  const stringData = JSON.stringify(geojsonObject);
+  const geojsonPath = pathUtils.docPath(Directory.VECTOR, randomUUID() + ".geojson");
+  await uploadString(geojsonPath, stringData);
+  const size = stringData.length / (1024 * 1024);
+  return { path: geojsonPath, size, featureCount };
 };
 
-export const saveAsKML = async (geojson: GeoJson, layerpath: string) => {
-  try {
-    const kmlData = String(tokml(JSON.parse(JSON.stringify(geojson))));
-    const kmlPath = layerpath.replace(".geojson", ".kml");
-    await fs.writeFile(DirPath(Directory.ROOT, kmlPath), kmlData);
-    return kmlPath;
-  } catch (error) {
-    return "";
-  }
+export const saveAsKML = async (geojson: GeoJson) => {
+  const kmlData = String(tokml(geojson));
+  const kmlPath = pathUtils.docPath(Directory.TEMP, randomUUID() + ".kml");
+  await uploadString(kmlPath, kmlData);
+  return kmlPath;
 };
 
 export const saveAIMLFile = async (filename: string, data: string) => {
-  try {
-    await fs.writeFile(DirPath(Directory.AI_ML, filename), data);
-    return true;
-  } catch (error) {
-    return false;
-  }
+  await uploadString(pathUtils.docPath(Directory.AI_ML, filename), data);
 };
 
 export const createArchive = async (files: pathUtils.DocPath[]) => {
-  const archivePath = pathUtils.docPath(
-    pathUtils.Directory.TEMP,
-    randomUUID() + ".zip"
-  );
-  const absArchivePath = pathUtils.absPath(
-    pathUtils.Directory.ROOT,
-    archivePath
-  );
-  const output = createWriteStream(absArchivePath);
-  const archive = archiver("zip", {
-    zlib: { level: 9 }, // Sets the compression level.
-  });
-  files.forEach((file) => {
-    archive.file(pathUtils.absPath(pathUtils.Directory.ROOT, file), {
-      name: file,
-    });
-  });
-  archive.pipe(output);
-  await archive.finalize();
-  return archivePath;
+  return await archive(files);
 };
 
 export const saveFile = async (
