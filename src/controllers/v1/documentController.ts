@@ -4,14 +4,14 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import path from "path";
+import path, { extname } from "path";
 import { missionSpecificSocket } from "../../socket";
 import {
   deleteDirFileUsingName,
   deletePublicFileUsingPath,
   deletePublicFolderUsingPath,
 } from "../../utils/fileDeleteUtils";
-import { Directory, DirPath, PUBLIC_DIR } from "../../constants";
+import { Directory, DirPath } from "../../constants";
 import {
   checkFileExists,
   createDirFileWriteStreamUsingName,
@@ -19,21 +19,31 @@ import {
   getFileSize,
 } from "../../utils/fileUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
-import { createArchive, savePointcloud } from "../../utils/dataUtils";
+import { copyFile, createArchive, savePointcloud } from "../../utils/dataUtils";
+import UploadTask from "../../models/uploadTask";
+import { docPath } from "../../utils/pathUtils";
+import { randomUUID } from "crypto";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
-    if (!req.file) {
-      throw new Error("no file in request");
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started"
+    });
+    if (!fileDoc) {
+      res.status(404).json({
+        status: false,
+        message: "no file in request"
+      });
+      return;
     }
     if (req.body.type === "pointCloud") {
       const { missionId } = req.body;
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
       req.log.info("POINTCLOUD_EXTRACTION_STARTED");
-      const webviewPath = await savePointcloud(
-        path.relative(PUBLIC_DIR, req.file.path),
-        req.log
-      );
+      const webviewPath = await savePointcloud(fileDoc.metadata.objectkey);
       if (webviewPath) {
         const doc = new Document({
           name: req.file.originalname,
@@ -73,13 +83,16 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
         (Number(req.file.size) / (1024 * 1024)).toFixed(5)
       );
 
+      const permPath = docPath(Directory.DOCUMENTS, randomUUID() + extname(fileDoc.metadata.objectkey));
+      await copyFile(fileDoc.metadata.objectkey, permPath);
+
       const doc = new Document({
         name: req.file.originalname,
         modDate: new Date(),
         fileSize: filesize,
         fileType: req.file.mimetype,
         folderName: req.body.folderName,
-        filePath: `/documents/${req.file.filename}`,
+        filePath: permPath,
         missionId,
         tenantId: res.locals.user.tenantId,
         createdBy: res.locals.user._id,

@@ -23,7 +23,14 @@ export type UploadTask = {
     mimetype: string,
     filesize: number,
   };
-  presigned: PostPolicyResult
+  presigned: {
+    formData: {
+      name: string,
+      user: string,
+      tenant: string,
+    },
+    postURL: string
+  },
 };
 
 export const UploadTaskSchema = new Schema<UploadTask>(

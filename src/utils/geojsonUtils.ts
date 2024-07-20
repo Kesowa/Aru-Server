@@ -25,7 +25,7 @@ export interface Feature<Geometry, Property> {
   geometry: Geometry;
 }
 
-type Point = {
+export type Point = {
   type: "Point";
   coordinates: [number, number];
 };
@@ -34,14 +34,7 @@ type Point = {
 export interface GeoJson<FeatureType = Feature<Point, Properties>> {
   type: string;
   name: string;
-  crs: {
-    type: string;
-    properties: {
-      name: string;
-    };
-  };
   features: FeatureType[];
-  errno: number;
 }
 
 export async function readGeoJson<Feature>(fullpath: string) {

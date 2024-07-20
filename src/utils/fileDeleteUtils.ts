@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { Directory, DirPath, PUBLIC_DIR, S3_BUCKET_NAME } from "../constants";
-import { minioClient } from "./objectStorage";
+import { deleteObj, minioClient } from "./objectStorage";
 
 export const deleteDirFileUsingName = async (objectkey: string) => {
   try {
@@ -13,12 +13,7 @@ export const deleteDirFileUsingName = async (objectkey: string) => {
 };
 
 export const deletePublicFileUsingPath = async (filePath: string) => {
-  try {
-    await fs.promises.unlink(path.join(PUBLIC_DIR, filePath));
-    return true;
-  } catch (error) {
-    return false;
-  }
+  await deleteObj(filePath);
 };
 
 export const deletePublicFolderUsingPath = async (folderName: string) => {

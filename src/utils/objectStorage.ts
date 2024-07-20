@@ -3,8 +3,10 @@ import { S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME } from "../co
 import { buffer } from "stream/consumers";
 import { Directory, docPath, keyPath } from "./pathUtils";
 import archiver from "archiver";
-import { PassThrough } from "stream";
 import { randomUUID } from "crypto";
+import { Readable } from "stream";
+import { extname, join, relative } from "path";
+import { readdir, rm } from "fs/promises";
 
 export const minioClient = new Minio.Client({
   endPoint: S3_ENDPOINT,
@@ -28,6 +30,46 @@ export const readToBuffer = async (objKey: string) => {
 
 export const uploadString = async (objKey: string, data: string) => {
   await minioClient.putObject(S3_BUCKET_NAME, keyPath(objKey), data);
+}
+
+export const uploadAnything = async (objKey: string, data: Readable | Buffer | string) => {
+  await minioClient.putObject(S3_BUCKET_NAME, keyPath(objKey), data);
+}
+
+export const stat = async (objKey: string) => {
+  const data = await minioClient.statObject(S3_BUCKET_NAME, keyPath(objKey));
+  return {
+    size: data.size,
+    metadata: data.metaData,
+  }
+}
+
+export const downloadTemp = async (objKey: string) => {
+  const downloadPath = "/tmp/" + randomUUID() + extname(objKey);
+  await minioClient.fGetObject(S3_BUCKET_NAME, keyPath(objKey), downloadPath);
+  setTimeout(() => {
+    rm(downloadPath).then().catch()
+  }, 1000 * 3600 * 2); // erase temp after 2 hours
+  return downloadPath; 
+}
+
+export const uploadDir = async (src: string, dest: string) => {
+  const entries = await readdir(src, { withFileTypes: true, recursive: true });
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    if (entry.isDirectory()) continue;
+    const relativePath = relative(src, entry.parentPath);
+    const objKey = join(dest, relativePath);
+    await minioClient.fPutObject(S3_BUCKET_NAME, objKey, entry.parentPath);
+  }
+}
+
+export const copyObj = async (src: string, dest: string) => {
+  await minioClient.copyObject(S3_BUCKET_NAME, keyPath(src), keyPath(dest));
+}
+
+export const deleteObj = async (objKey: string) => {
+  await minioClient.removeObject(S3_BUCKET_NAME, keyPath(objKey));
 }
 
 export const archive = async (objKeys: string[]) => {

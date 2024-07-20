@@ -21,16 +21,16 @@ import {
   featureAddition,
   GeoJson,
   Feature,
+  Point,
 } from "../../utils/geojsonUtils";
 import * as turf from "@turf/turf";
 import nearestPoint from "@turf/nearest-point";
 import type { NearestPoint } from "@turf/nearest-point";
 import exifr from "exifr";
-import path from "path";
+import path, { basename, extname } from "path";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
 import Flight from "../../models/flight";
 import archiver from "archiver";
-import { isSizeVector } from "../../utils/sizePermission";
 import LayerGroup from "../../models/layerGroup";
 import { featureType, vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
@@ -53,9 +53,12 @@ import {
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import { saveThumbnails } from "../../utils/imageUtils";
-import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import { copyFile, saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
 import { ZipToTiles3D } from "../../utils/cesium";
+import UploadTask from "../../models/uploadTask";
+import { readToBuffer } from "../../utils/objectStorage";
+import { randomUUID } from "crypto";
 
 // ********* create ***********
 
@@ -1307,9 +1310,8 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${
-              ar.length - 1
-            } and data index should start from 0`,
+            message: `Your data must be less than equal to ${ar.length - 1
+              } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -2106,243 +2108,242 @@ export const picktoMapUseForLayerCreate = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const files = req.files as Express.Multer.File[];
-    if (files) {
-      const geojson: GeoJson = {
-        type: "",
-        name: "",
-        crs: {
-          type: "",
-          properties: {
-            name: "",
-          },
+  const fileDocs = await UploadTask.find({
+    _id: { $in: req.body.file },
+    tenant: res.locals.user.tenantId._id,
+    createdBy: res.locals.user._id,
+    // status: "started",
+  });
+  if (!fileDocs) {
+    res.status(404).json({
+      status: false,
+      message: "Oops files not found",
+    });
+    return;
+  }
+  const features: Feature<Point, {
+    id: string
+    filename: string
+    color: string
+    icon: string
+    lat: string
+    long: string
+    date: string
+    time: string
+    sys_id: string    
+  }>[] = [];
+  const allImageData: {
+    originalname: string
+    sys_id: string
+    mimetype: string
+    path: string
+    coordinates: turf.Position
+    size: number
+  }[] = [];
+  const badImages: any = [];
+  const today = new Date();
+  const snapRadius = 60; // meters
+  for (let i = 0; i < fileDocs.length; i++) {
+    const buff = await readToBuffer(fileDocs[i].metadata.objectkey);
+    const ff: any = await exifr.parse(buff);
+    if (ff) {
+      const time: any =
+        today.getHours() +
+        ":" +
+        today.getMinutes() +
+        ":" +
+        today.getSeconds();
+      const date: any =
+        today.getFullYear() +
+        "-" +
+        (today.getMonth() + 1) +
+        "-" +
+        today.getDate();
+      const long: number = ff.longitude ? ff.longitude : 0;
+      const lat: number = ff.latitude ? ff.latitude : 0;
+      let sys_id = (new ObjectId).toString();
+
+      // check if image location already exists
+      const imagePoint = turf.point([long, lat]);
+      let alreadyRegistered = false;
+      for (let j = 0; j < features.length; j++) {
+        const featurePoint = turf.point(features[j].geometry.coordinates);
+        const distance =
+          turf.distance(imagePoint, featurePoint, { units: "kilometers" }) *
+          1000;
+        if (distance < snapRadius) {
+          // if image exists, share sys_id
+          sys_id = features[j].properties.sys_id;
+          alreadyRegistered = true;
+          break;
+        }
+      }
+      allImageData.push({
+        originalname: fileDocs[i].presigned.formData.name,
+        sys_id: sys_id,
+        mimetype: fileDocs[i].metadata.mimetype,
+        path: fileDocs[i].metadata.objectkey,
+        coordinates: [long, lat],
+        size: fileDocs[i].metadata.filesize,
+      });
+      if (alreadyRegistered) {
+        continue;
+      }
+      features.push({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [long, lat]
         },
-        features: [],
-        errno: 0,
-      };
-      const features: Feature[] = [];
-      const allImageData: any = [];
-      const badImages: any = [];
-      const today = new Date();
-      const snapRadius = 60; // meters
-      for (let i = 0; i < files.length; i++) {
-        const img_path = DirPath(Directory.GEOJSON_IMAGES, files[i]?.filename);
-        const ff: any = await exifr.parse(img_path);
-        const temp: any = {};
-        const geometry: any = {};
-        const coordinates: any = [];
-        const properties: any = {};
-        if (ff) {
-          const time: any =
-            today.getHours() +
-            ":" +
-            today.getMinutes() +
-            ":" +
-            today.getSeconds();
-          const date: any =
-            today.getFullYear() +
-            "-" +
-            (today.getMonth() + 1) +
-            "-" +
-            today.getDate();
-          const long: any = ff.longitude ? ff.longitude : 0;
-          const lat: any = ff.latitude ? ff.latitude : 0;
-          let sys_id = new ObjectId();
-
-          // check if image location already exists
-          const imagePoint = turf.point([long, lat]);
-          let alreadyRegistered = false;
-          for (let j = 0; j < features.length; j++) {
-            const featurePoint = turf.point(features[j].geometry.coordinates);
-            const distance =
-              turf.distance(imagePoint, featurePoint, { units: "kilometers" }) *
-              1000;
-            if (distance < snapRadius) {
-              // if image exists, share sys_id
-              sys_id = features[j].properties.sys_id;
-              alreadyRegistered = true;
-              break;
-            }
-          }
-          allImageData.push({
-            filename: files[i]?.filename,
-            originalname: files[i]?.originalname,
-            sys_id: sys_id,
-            mimetype: files[i].mimetype,
-            path: img_path,
-            coordinates: [long, lat],
-          });
-          if (alreadyRegistered) {
-            continue;
-          }
-          coordinates.push(long);
-          coordinates.push(lat);
-          geometry["coordinates"] = coordinates;
-          geometry["type"] = "Point";
-          properties["id"] = String(i + 1);
-          properties["filename"] = files[i]?.filename;
-          properties["color"] = req.body.color ? req.body.color : "green";
-          properties["icon"] = req.body.icon ? req.body.icon : "MarkerIcon";
-          properties["lat"] = String(lat);
-          properties["long"] = String(long);
-          properties["date"] = String(date);
-          properties["time"] = String(time);
-          properties["sys_id"] = sys_id;
-          temp["type"] = "Feature";
-          temp["properties"] = properties;
-          temp["geometry"] = geometry;
-          features.push(temp);
-        } else {
-          await deletePublicFileUsingPath(
-            `/images/geojson/${files[i].filename}`
-          );
-          badImages.push(files[i].filename);
+        properties: {
+          id: String(i + 1),
+          filename: fileDocs[i].presigned.formData.name,
+          color: req.body.color || "green",
+          icon: req.body.icon || "MarkerIcon",
+          lat: String(lat),
+          long: String(long),
+          date: String(date),
+          time: String(time),
+          sys_id: sys_id,
         }
+      });
+    } else {
+      await deletePublicFileUsingPath(fileDocs[i].metadata.objectkey);
+      badImages.push(basename(fileDocs[i].metadata.objectkey));
+    }
+  }
+  if (features.length) {
+    const geojson = {
+      type: req.body.type || "FeatureCollection",
+      name: req.body.name || "PicToMap",
+      features: features,
+    };
+    // @ts-ignore
+    const result = await saveGeojson(geojson);
+    const docCount = await Tenant.findOne({
+      _id: res.locals.user.tenantId,
+    })
+      .populate<{ activePackage: IPackage }>("activePackage")
+      .lean();
+
+    const ress = docCount.activePackage.storage - Number(docCount.actualSize) > result.size;
+    if (ress !== true) {
+      for (let i = 0; i < allImageData.length; i++) {
+        await deletePublicFileUsingPath( allImageData[i].path );
       }
-      if (features.length) {
-        geojson.features = features;
-        geojson.type = req.body.type
-          ? String(req.body.type)
-          : "FeatureCollection";
-        geojson.name = req.body.name ? String(req.body.name) : "";
-        const filepath = await saveGeojson(geojson, { inplace: false });
-        const file = DirPath(Directory.ROOT, filepath);
-        const size1: number = await getFileSize(file);
-        const docCount = await Tenant.findOne({
-          _id: res.locals.user.tenantId,
-        })
-          .populate<{ activePackage: IPackage }>("activePackage")
-          .lean();
+      return res.status(403).json({
+        status: false,
+        message: "Actual storage exceeded the Limit of Set storage!",
+      });
+    }
+    let vectorLayer: HydratedDocument<ILayer>;
+    if (req.body.missionId == null) {
+      vectorLayer = new Layer({
+        name: "base- " + req.body.name,
+        type: "Vector",
+        vector: req.body.vectorType,
+        tenantId: res.locals.user.tenantId._id,
+        createdBy: res.locals.user._id,
+        updatedBy: res.locals.user._id,
+        color: req.body.color,
+        fileSize: result.size,
+        layerpath: result.geojsonPath,
+        layerLabel: "sys_id",
+        captureDate: new Date(),
+        featureCount: features.length,
+      });
+    } else {
+      vectorLayer = new Layer({
+        name: req.body.name,
+        type: "Vector",
+        vector: req.body.vectorType,
+        missionId: req.body.missionId,
+        tenantId: res.locals.user.tenantId._id,
+        createdBy: res.locals.user._id,
+        updatedBy: res.locals.user._id,
+        color: req.body.color,
+        fileSize: result.size,
+        layerpath: result.geojsonPath,
+        layerLabel: "sys_id",
+        captureDate: new Date(),
+        featureCount: features.length,
+      });
+    }
 
-        const ress = await isSizeVector(size1, docCount, file);
-        if (ress !== true) {
-          for (let i = 0; i < files.length; i++) {
-            await deletePublicFileUsingPath(
-              `/images/geojson/${files[i].filename}`
-            );
-          }
-          return res.status(403).json({
-            status: false,
-            message: "Actual storage exceeded the Limit of Set storage!",
-          });
-        }
-        let vectorLayer: HydratedDocument<ILayer>;
-        if (req.body.missionId == null) {
-          vectorLayer = new Layer({
-            name: "base- " + req.body.name,
-            type: "Vector",
-            vector: req.body.vectorType,
-            tenantId: res.locals.user.tenantId._id,
-            createdBy: res.locals.user._id,
-            updatedBy: res.locals.user._id,
-            color: req.body.color,
-            fileSize: size1,
-            layerpath: filepath,
-            layerLabel: "filename",
-            captureDate: new Date(),
-            featureCount: features.length,
-          });
-        } else {
-          vectorLayer = new Layer({
-            name: req.body.name,
-            type: "Vector",
-            vector: req.body.vectorType,
-            missionId: req.body.missionId,
-            tenantId: res.locals.user.tenantId._id,
-            createdBy: res.locals.user._id,
-            updatedBy: res.locals.user._id,
-            color: req.body.color,
-            fileSize: size1,
-            layerpath: filepath,
-            layerLabel: "filename",
-            captureDate: new Date(),
-            featureCount: features.length,
-          });
-        }
+    const savedDoc1 = await vectorLayer.save();
 
-        const savedDoc1 = await vectorLayer.save();
-
-        const tenant = await Tenant.findOne({
-          _id: res.locals.user.tenantId,
+    const tenant = await Tenant.findOne({
+      _id: res.locals.user.tenantId,
+    });
+    if (savedDoc1 && tenant.actualLayerCount >= 0) {
+      await Tenant.updateOne(
+        { _id: res.locals.user.tenantId },
+        { $inc: { actualLayerCount: 1 } }
+      );
+    }
+    if (savedDoc1) {
+      // let dir:any = DirPath(Directory.DEFAULT, savedDoc1.layerpath);
+      // let fc: any = geojson.features.length;
+      let flag = false;
+      for (let i = 0; i < allImageData.length; i++) {
+        // for (let j = 0; j < req.files.length; j++) {
+        // if (String(geojson.features[i].properties.filename) == String(req.files[j].filename)) {
+        const centerPoints2 = {
+          lng: allImageData[i].coordinates[0],
+          lat: allImageData[i].coordinates[1],
+        };
+        const filePath = pathUtils.docPath(Directory.GEOJSON_IMAGES, randomUUID() + extname(allImageData[i].originalname));
+        await copyFile(allImageData[i].path, filePath);
+        const featureFile = new layerFiles({
+          name: allImageData[i].originalname,
+          layerId: savedDoc1._id,
+          filePath: filePath,
+          fileSize: allImageData[i].size,
+          featureLabel: allImageData[i].sys_id,
+          centerPoints: centerPoints2,
+          fileType: allImageData[i].mimetype,
+          sys_Id: allImageData[i].sys_id,
+          isReview: true,
+          tenantId: res.locals.user.tenantId,
+          createdBy: res.locals.user._id,
+          updatedBy: res.locals.user._id,
         });
-        if (savedDoc1 && tenant.actualLayerCount >= 0) {
-          await Tenant.updateOne(
-            { _id: res.locals.user.tenantId },
-            { $inc: { actualLayerCount: 1 } }
-          );
+        try {
+          const thumbs = await saveThumbnails(featureFile.filePath);
+          featureFile.fileSize = thumbs.size;
+        } catch (err) {
+          req.log.error(err);
         }
-        if (savedDoc1) {
-          // let dir:any = DirPath(Directory.DEFAULT, savedDoc1.layerpath);
-          // let fc: any = geojson.features.length;
-          let flag = false;
-          for (let i = 0; i < allImageData.length; i++) {
-            // for (let j = 0; j < req.files.length; j++) {
-            // if (String(geojson.features[i].properties.filename) == String(req.files[j].filename)) {
-            const size: number = Number(
-              (Number(files[i]?.size) / (1024 * 1024)).toFixed(5)
-            );
-            const centerPoints2 = {
-              lng: allImageData[i].coordinates[0],
-              lat: allImageData[i].coordinates[1],
-            };
-            const featureFile = new layerFiles({
-              name: allImageData[i].originalname,
-              layerId: savedDoc1._id,
-              filePath: `/images/geojson/${allImageData[i].filename}`,
-              fileSize: size,
-              featureLabel: allImageData[i].filename,
-              centerPoints: centerPoints2,
-              fileType: allImageData[i].mimetype,
-              sys_Id: allImageData[i].sys_id,
-              isReview: true,
-              tenantId: res.locals.user.tenantId,
-              createdBy: res.locals.user._id,
-              updatedBy: res.locals.user._id,
-            });
-            try {
-              const thumbs = await saveThumbnails(featureFile.filePath);
-              featureFile.fileSize = thumbs.size;
-            } catch (err) {
-              req.log.error(err);
-            }
-            const savedDoc = await featureFile.save();
-            if (savedDoc) flag = true;
-          }
-          if (flag == true) {
-            const data = { badImages, result: savedDoc1 };
-            missionSpecificSocket
-              .to(savedDoc1.missionId.toString())
-              .emit("pic-to-map", data);
-          } else {
-            const data = { badImages };
-            missionSpecificSocket
-              .to(savedDoc1.missionId.toString())
-              .emit("pic-to-map", data);
-          }
-          res.status(201).json({
-            status: true,
-            message: "Sucessfully created the layer!",
-          });
-        } else {
-          return res.status(200).json({
-            status: false,
-            message: "Layer creation failed",
-          });
-        }
+        const savedDoc = await featureFile.save();
+        if (savedDoc) flag = true;
+      }
+      if (flag == true) {
+        const data = { badImages, result: savedDoc1 };
+        missionSpecificSocket
+          .to(savedDoc1.missionId.toString())
+          .emit("pic-to-map", data);
       } else {
-        return res.status(200).json({
-          status: false,
-          message:
-            "Please upload the right files none of the images has geo-coordinates!",
-        });
+        const data = { badImages };
+        missionSpecificSocket
+          .to(savedDoc1.missionId.toString())
+          .emit("pic-to-map", data);
       }
+      res.status(201).json({
+        status: true,
+        message: "Sucessfully created the layer!",
+      });
     } else {
       return res.status(200).json({
         status: false,
-        message: "Oops no images selected",
+        message: "Layer creation failed",
       });
     }
+  } else {
+    return res.status(200).json({
+      status: false,
+      message:
+        "Please upload the right files none of the images has geo-coordinates!",
+    });
   }
 };
 
@@ -2510,9 +2511,8 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${
-        req.body.flag ? "flagged" : "unflagged"
-      } successfully`,
+      message: `feature ${req.body.flag ? "flagged" : "unflagged"
+        } successfully`,
     });
   } else {
     res.status(501).json({

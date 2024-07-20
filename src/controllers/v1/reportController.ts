@@ -829,9 +829,7 @@ export const generatePlotReport = async (
               layerId: plotLayer._id,
               sys_Id: plotFeature.properties.sys_id,
             });
-            const frontViewImageBuffer = await readFile(
-              DirPath(Directory.DEFAULT, plotLayerFile.filePath)
-            );
+            const frontViewImageBuffer = await readFile(plotLayerFile.filePath);
 
             const buildingProperties = plotBuildingFeature.properties;
 

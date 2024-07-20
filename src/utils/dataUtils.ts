@@ -2,45 +2,35 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import * as pathUtils from "./pathUtils";
 import path from "path";
-import { Logger } from "pino";
 import tokml from "tokml";
 import shp2json from "shpjs";
 import { GeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
-import { DirPath, Directory, S3_BUCKET_NAME } from "../constants";
-import archiver from "archiver";
-import { createWriteStream } from "fs";
-import { Stream } from "stream";
+import { Directory } from "../constants";
+import { Readable } from "stream";
 import { DOMParser } from "xmldom";
 import togeojson from "@mapbox/togeojson";
 import { ObjectId } from "bson";
-import { archive, minioClient, readToBuffer, readToString, uploadString } from "./objectStorage";
+import { archive, copyObj, downloadTemp, readToBuffer, readToString, stat, uploadAnything, uploadDir, uploadString } from "./objectStorage";
+import { rm, rmdir } from "fs/promises";
 
 const asyncExec = promisify(exec);
 
 /**
  * Takes pointcloud file path, returns web view index page path or undefined
  */
-export const savePointcloud = async (
-  doc: pathUtils.KeyPath | pathUtils.DocPath,
-  log?: Logger
-) => {
-  const absDocPath = pathUtils.absPath(pathUtils.Directory.ROOT, doc);
+export const savePointcloud = async ( doc: pathUtils.DocPath, ) => {
+  const absDocPath = await downloadTemp(doc);
   const filename = path.parse(doc).name;
-  const outputDirPath = pathUtils.docPath(pathUtils.Directory.DOCUMENTS, "/");
-  const absOutputPath = pathUtils.absPath(
-    pathUtils.Directory.ROOT,
-    outputDirPath
+  const absOutputPath = "/tmp/" + randomUUID();
+  const outputDirPath = pathUtils.docPath(pathUtils.Directory.DOCUMENTS, randomUUID());
+  await asyncExec(
+    `/bin/PotreeConverter ${absDocPath} -o ${absOutputPath} --generate-page ${filename}`
   );
-  try {
-    await asyncExec(
-      `/bin/PotreeConverter ${absDocPath} -o ${absOutputPath} --generate-page ${filename}`
-    );
-    return outputDirPath + ".html";
-  } catch (err) {
-    log && log.error(err);
-    return undefined;
-  }
+  await uploadDir(absOutputPath, outputDirPath);
+  await rm(absDocPath);
+  await rmdir(absOutputPath);
+  return outputDirPath + "filename" + ".html";
 };
 
 const getFlagColor = (geojson: GeoJson) => {
@@ -256,21 +246,22 @@ export const createArchive = async (files: pathUtils.DocPath[]) => {
 };
 
 export const saveFile = async (
-  directory: pathUtils.Directory,
+  dir: Directory,
   filename: string,
   data:
     | string
-    | NodeJS.ArrayBufferView
-    | Iterable<string | NodeJS.ArrayBufferView>
-    | AsyncIterable<string | NodeJS.ArrayBufferView>
-    | Stream,
-  encoding?: BufferEncoding
+    | Buffer
+    | Readable
 ) => {
-  const abspath = pathUtils.absPath(directory, filename);
-  await fs.writeFile(abspath, data, { encoding });
-  return await fs.stat(abspath);
+  const filepath = pathUtils.docPath(dir, filename);
+  await uploadAnything(filepath, data)
+  return stat(filepath);
 };
 
-export const readFile = async (fullpath: string) => {
-  return await fs.readFile(fullpath);
+export const copyFile = async (src: string, dest: string) => {
+  await copyObj(src, dest);
+}
+
+export const readFile = async (filepath: string) => {
+  return await readToBuffer(filepath)
 };
