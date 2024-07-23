@@ -1,6 +1,7 @@
 import * as Minio from "minio";
 import { S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME } from "../constants";
 import { buffer } from "stream/consumers";
+import { finished } from "stream/promises";
 import { Directory, docPath, keyPath } from "./pathUtils";
 import archiver from "archiver";
 import { randomUUID } from "crypto";
@@ -50,7 +51,7 @@ export const downloadTemp = async (objKey: string) => {
   setTimeout(() => {
     rm(downloadPath).then().catch()
   }, 1000 * 3600 * 2); // erase temp after 2 hours
-  return downloadPath; 
+  return downloadPath;
 }
 
 export const uploadDir = async (src: string, dest: string) => {
@@ -72,6 +73,14 @@ export const deleteObj = async (objKey: string) => {
   await minioClient.removeObject(S3_BUCKET_NAME, keyPath(objKey));
 }
 
+export const deleteDir = async (dirKey: string) => {
+  const entries = minioClient.listObjects(S3_BUCKET_NAME, keyPath(dirKey));
+  entries.on("data", async function(obj) {
+    await deleteObj(obj.name);
+  });
+  await finished(entries);
+}
+
 export const archive = async (objKeys: string[]) => {
   const archive = archiver("zip", {
     zlib: { level: 9 }, // Sets the compression level.
@@ -83,7 +92,7 @@ export const archive = async (objKeys: string[]) => {
     });
   });
   const archivePath = keyPath(docPath(Directory.TEMP, randomUUID() + ".zip"));
-  await Promise.all([ 
+  await Promise.all([
     await minioClient.putObject(S3_BUCKET_NAME, archivePath, archive),
     await archive.finalize()
   ])

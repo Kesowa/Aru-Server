@@ -1,15 +1,10 @@
-import fs from "fs";
 import path from "path";
-import { Directory, DirPath, PUBLIC_DIR, S3_BUCKET_NAME } from "../constants";
-import { deleteObj, minioClient } from "./objectStorage";
+import { Directory } from "../constants";
+import { deleteDir, deleteObj, readToString } from "./objectStorage";
+import { docPath } from "./pathUtils";
 
-export const deleteDirFileUsingName = async (objectkey: string) => {
-  try {
-    await minioClient.removeObject(S3_BUCKET_NAME, objectkey);
-    return true;
-  } catch (error) {
-    return false;
-  }
+export const deleteDirFileUsingName = async (dir: Directory, objectkey: string) => {
+  await deleteObj(docPath(dir, objectkey));
 };
 
 export const deletePublicFileUsingPath = async (filePath: string) => {
@@ -17,46 +12,24 @@ export const deletePublicFileUsingPath = async (filePath: string) => {
 };
 
 export const deletePublicFolderUsingPath = async (folderName: string) => {
-  try {
-    if (
-      folderName == "" ||
-      folderName == "/" ||
-      folderName in Object.values(Directory)
-    )
-      return false;
-    await fs.promises.rm(path.join(PUBLIC_DIR, folderName), {
-      recursive: true,
-    });
-  } catch (error) {
+  if (
+    folderName == "" ||
+    folderName == "/" ||
+    folderName in Object.values(Directory)
+  )
     return false;
-  }
-};
-
-export const deleteDirFolderUsingName = async (
-  directory: Directory,
-  folderName: string
-) => {
-  try {
-    if (folderName == "" || folderName == "/") return false;
-    await fs.promises.rm(DirPath(directory, folderName), { recursive: true });
-  } catch (error) {
-    return false;
-  }
+  return deleteDir(folderName);
 };
 
 export const deleteHlsVodUsingIndex = async (indexFile: string) => {
-  const indexPath = DirPath(Directory.VOD, indexFile);
-  try {
-    const index = await fs.promises.readFile(indexPath, "utf8");
-    const vodFiles = index
-      .split("\n")
-      .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
-    vodFiles.push(indexFile);
-    const result = await Promise.allSettled(
-      vodFiles.map((file) => deleteDirFileUsingName(Directory.VOD, file))
-    );
-    return result.every((res) => res);
-  } catch {
-    return false;
-  }
+  const index = await readToString(indexFile);
+  const vodFiles = index
+    .split("\n")
+    .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
+  vodFiles.push(indexFile);
+  const indexDir = path.dirname(indexFile);
+  const result = await Promise.allSettled(
+    vodFiles.map((file) => deleteObj(indexDir + "/" + file))
+  );
+  return result.every((res) => res);
 };

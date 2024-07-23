@@ -352,10 +352,9 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
         for (let i = 0; i < deletedVodData.length; i++) {
           const doc = deletedVodData[i];
           const docpath = doc.videoPath;
-          const indexFile = path.parse(docpath).base;
-          await deleteHlsVodUsingIndex(indexFile);
+          await deleteHlsVodUsingIndex(docpath);
           await deletePublicFileUsingPath(doc.thumbnail);
-          await deletePublicFileUsingPath(path.parse(docpath).name + ".flv");
+          await deletePublicFileUsingPath(docpath.replace(/m3u8$/, "flv"));
         }
       }
       if (deletedDocumetnsData.length) {
