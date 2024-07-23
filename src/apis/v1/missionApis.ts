@@ -76,7 +76,6 @@ router.post(
 );
 
 //++++++++++++++++++++ fetch all mission for the specific user++++++++++++++++++++++++
-// TODO: Duplicate route of /get/user/:id, remove ?
 router.post(
   "/mission-by-userid",
   isAuthenticated,
@@ -107,7 +106,7 @@ router.get(
   RobustRunner(fetchAllMissionsForTenant)
 );
 
-// TODO: The :id parameter is not being used anywhere in the controller, change to /get/user ?
+// TODO: Duplicate Route. Same logic for "/mission-by-userid", and "id" param not even used in controller
 router.get(
   "/get/user/:id",
   isAuthenticated,

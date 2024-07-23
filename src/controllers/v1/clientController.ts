@@ -237,7 +237,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
     let data: any;
     if (req.query.status == "Upcoming" || req.query.status == "Completed") {
       resultt = await Mission.find({
-        clientId: req.query.clientId,
+        clientId: res.locals.user._id, // should work as intended user of the route is a client
         status: match.status,
         tenantId: res.locals.user.tenantId._id,
       })
@@ -259,7 +259,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
       );
     } else if (req.query.status == "All") {
       resultt = await Mission.find({
-        clientId: req.query.clientId,
+        clientId: res.locals.user._id, // should work as intended user of the route is a client
         tenantId: res.locals.user.tenantId._id,
       })
         .populate<{ clientId: IUser }>("clientId")
