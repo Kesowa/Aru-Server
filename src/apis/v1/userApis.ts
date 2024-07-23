@@ -10,7 +10,7 @@ import {
   UserEdit,
 } from "../../controllers/v1/userController";
 import { uploadFileforUSer } from "../../controllers/v1/commonController";
-import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { canListUsers, isAuthenticated, onlyTenantRootAccess, PermissionGuard } from "../../utils/authUtils";
 import { multerStorage } from "../../utils/fileUploadUtils";
 import { isUserCount } from "../../utils/countPermission";
 import multer from "multer";
@@ -47,6 +47,7 @@ router.post(
   body("avatar").optional().notEmpty().trim(),
   validator,
   isAuthenticated,
+  onlyTenantRootAccess,
   isUserCount,
   RobustRunner(createUser)
 );
@@ -55,7 +56,7 @@ router.post(
 router.get(
   "/fetch-all-user",
   isAuthenticated,
-  PermissionGuard(PERMS.USER_LIST),
+  canListUsers,
   RobustRunner(fetchAllUserOfTenant)
 );
 
@@ -63,6 +64,7 @@ router.get(
 router.patch(
   "/edit-user",
   isAuthenticated,
+  onlyTenantRootAccess,
   body("id").notEmpty().isMongoId(),
   body("password").optional().notEmpty().isLength({ min: 6 }),
   body("email").optional().notEmpty().isEmail().withMessage("invalid Email."),

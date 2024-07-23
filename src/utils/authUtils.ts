@@ -331,7 +331,7 @@ export const canListFlightLogs = genPermissionGuard({
 
 //User Management Permission:
 export const canListUsers = genPermissionGuard({
-  userTypes: ["tenant-root"],
+  userTypes: ["tenant-root","tenant-staff"],
   perm: [PERMS.USER_LIST],
 });
 
