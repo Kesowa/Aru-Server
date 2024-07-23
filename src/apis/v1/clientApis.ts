@@ -89,7 +89,7 @@ router.get(
   query("limit").default(10).isInt({ max: 100 }).toInt(),
   query("sort").optional(), // String of format "<field>:<asce or desc>", like "name:desc"
   validator,
-  PermissionGuard(PERMS.MISSION_LIST, PERMS.CLIENT_LIST),
+  PermissionGuard(PERMS.CLIENT_LIST),
   RobustRunner(getListClient)
 );
 router.delete(

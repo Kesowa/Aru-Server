@@ -114,6 +114,7 @@ export const TENANT_CLIENT_PERMS = <const>[
   PERMS.LAYER_LIST,
   PERMS.MISSION_LIST,
   PERMS.VOD_LIST,
+  PERMS.CLIENT_LIST,
 ];
 
 export const TENANT_STAFF_PERMS = <const>[

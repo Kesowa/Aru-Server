@@ -1072,7 +1072,7 @@ db.usergroups.insertMany([
   },
   {
     _id: ObjectId("6116058af270c9142c1588f2"),
-    permissions: ["client_mission_list"],
+    permissions: ["client_mission_list","client_list"],
     isActive: true,
     name: "Client Access",
     tenantId: ObjectId("5f204f03b9445726102781a8"),

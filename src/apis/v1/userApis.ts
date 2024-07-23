@@ -56,7 +56,7 @@ router.post(
 router.get(
   "/fetch-all-user",
   isAuthenticated,
-  canListUsers,
+  PermissionGuard(PERMS.USER_LIST),
   RobustRunner(fetchAllUserOfTenant)
 );
 
