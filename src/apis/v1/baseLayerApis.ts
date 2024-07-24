@@ -21,7 +21,6 @@ import {
   publishBaseLayer,
   getallpublicbaselayer,
   // isPublicupdateDev,
-  publicbaselayerSearch,
   GetAlertLocationGeojson,
   GetVideoLocationGeojson,
   // sys_id_Inject
