@@ -1,8 +1,7 @@
 import express from "express";
 import {
   isAuthenticated,
-  canUploadDocument,
-  canDeleteDocument,
+  PermissionGuard,
 } from "../../utils/authUtils";
 const router = express.Router();
 import multer from "multer";
@@ -12,8 +11,8 @@ import {
   deletemultipleDocument,
   getbymissionID,
   zipbymissionId,
-  gen2x,
-  updateSizeExistDoc,
+  // gen2x,
+  // updateSizeExistDoc,
   updateMultiDoc,
   updateDoc,
   getImagesbymissionID,
@@ -23,6 +22,7 @@ import { body, query } from "express-validator";
 import { validator } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
+import { PERMS } from "../../schemas/permission";
 
 const upload = multer({ storage: multerStorage(Directory.DOCUMENTS) });
 
@@ -36,7 +36,7 @@ router.post(
   body("folderName").notEmpty().trim(),
   body("type").optional().trim(),
   validator,
-  canUploadDocument,
+  PermissionGuard(PERMS.UPLOAD_DOCUMENT),
   isSize,
   createDocument
 );
@@ -47,7 +47,7 @@ router.delete(
   isAuthenticated,
   query("id").notEmpty(),
   validator,
-  canDeleteDocument,
+  PermissionGuard(PERMS.DELETE_DOCUMENT),
   deleteDocument
 );
 
@@ -58,7 +58,7 @@ router.delete(
   isAuthenticated,
   body("id").isArray({ min: 1 }),
   validator,
-  canDeleteDocument,
+  PermissionGuard(PERMS.DELETE_DOCUMENT, PERMS.LIST_DOCUMENT),
   deletemultipleDocument
 );
 
@@ -71,6 +71,7 @@ router.get(
   query("page").optional().isInt().toInt(),
   query("limit").optional().isInt().toInt(),
   validator,
+  PermissionGuard(PERMS.LIST_DOCUMENT),
   getbymissionID
 );
 
@@ -82,6 +83,7 @@ router.get(
   query("page").optional().isInt().toInt(),
   query("limit").optional().isInt().toInt(),
   validator,
+  PermissionGuard(PERMS.LIST_DOCUMENT),
   getImagesbymissionID
 );
 
@@ -91,19 +93,20 @@ router.get(
   query("missionId").notEmpty(),
   query("folderName").trim(),
   validator,
+  PermissionGuard(PERMS.LIST_DOCUMENT),
   zipbymissionId
 );
 
-router.patch(
-  "/gen_2x_documents",
-  isAuthenticated,
-  body("filePath").isString().trim(),
-  body("folderName").isString().trim(),
-  validator,
-  gen2x
-);
+// router.patch(
+//   "/gen_2x_documents",
+//   isAuthenticated,
+//   body("filePath").isString().trim(),
+//   body("folderName").isString().trim(),
+//   validator,
+//   gen2x
+// );
 
-router.patch("/update-size-for-exist-doc", isAuthenticated, updateSizeExistDoc);
+// router.patch("/update-size-for-exist-doc", isAuthenticated, updateSizeExistDoc);
 
 router.patch(
   "/update-doc-by-ID",
@@ -111,6 +114,7 @@ router.patch(
   body("Id").notEmpty().isMongoId(),
   body("update").notEmpty().isObject(),
   validator,
+  PermissionGuard(PERMS.UPDATE_DOCUMENT),
   updateDoc
 );
 
@@ -120,6 +124,7 @@ router.patch(
   body("Id").notEmpty().isArray({ min: 1 }),
   body("update").notEmpty().isObject(),
   validator,
+  PermissionGuard(PERMS.UPDATE_DOCUMENT, PERMS.LIST_DOCUMENT),
   updateMultiDoc
 );
 

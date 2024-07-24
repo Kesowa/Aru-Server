@@ -1,12 +1,13 @@
 import express from "express";
 
-import { isAuthenticated } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import {
   generatePlotReport,
   generateReport,
 } from "../../controllers/v1/reportController";
 import { body } from "express-validator";
 import { validator } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.post(
   isAuthenticated,
   body("missionId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.UPLOAD_DOCUMENT),
   generateReport
 );
 
@@ -23,6 +25,7 @@ router.post(
   isAuthenticated,
   body("missionId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.UPLOAD_DOCUMENT),
   generatePlotReport
 );
 

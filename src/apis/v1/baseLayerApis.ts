@@ -16,22 +16,17 @@ import {
   delete_baseLayer,
   updateBaseLayerRasterUpload,
   updateBaseLayerRasterImport,
-  isBaseupdateDev,
+  // isBaseupdateDev,
   createBaseVectorLayer,
   publishBaseLayer,
   getallpublicbaselayer,
-  isPublicupdateDev,
+  // isPublicupdateDev,
   publicbaselayerSearch,
   GetAlertLocationGeojson,
   GetVideoLocationGeojson,
   // sys_id_Inject
 } from "../../controllers/v1/baseLayerController";
-import {
-  isAuthenticated,
-  canCreateBaseLayer,
-  canUpdateBaseLayer,
-  canCreateVectorLayer,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard, } from "../../utils/authUtils";
 import multer from "multer";
 import { isSize } from "../../utils/sizePermission";
 import { isLayerCount } from "../../utils/countPermission";
@@ -39,6 +34,7 @@ import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
+import { PERMS } from "../../schemas/permission";
 import { vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
 
@@ -56,7 +52,7 @@ router.patch(
   isAuthenticated,
   body("layers").isArray(),
   validator,
-  canCreateBaseLayer,
+  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(getMetadataForBaseLayer)
 );
 
@@ -76,7 +72,7 @@ router.post(
   body("icon").optional().isString(),
   body("inHeritOriginalColorFromFile").notEmpty().trim(),
   validator,
-  canCreateBaseLayer,
+  PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),
   isLayerCount,
   isSize,
   RobustRunner(createVectorBaseLayer)
@@ -88,7 +84,7 @@ router.patch(
   body("layers").notEmpty().isArray({ min: 1 }),
   body("baseLayer").notEmpty().isMongoId(),
   validator,
-  canUpdateBaseLayer,
+  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(getMetadataForUpdatingBaseLayer)
 );
 
@@ -99,7 +95,7 @@ router.put(
   body("pattr").notEmpty().isArray(),
   body("id").notEmpty().isMongoId(),
   validator,
-  canCreateBaseLayer,
+  PermissionGuard(PERMS.CAN_UPDATE_BASE_LAYER),
   RobustRunner(setPrimeAttributes)
 );
 
@@ -115,7 +111,7 @@ router.post(
       Object.values(vectorProps).includes(value as vectorProps)
     ),
   validator,
-  canCreateBaseLayer,
+  PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),
   RobustRunner(createBaseLayerByAttr)
 );
 
@@ -131,20 +127,21 @@ router.post(
   body("vectorProps").optional().isArray({ min: 1 }),
   body("vectorPropsType").optional().isArray({ min: 1 }),
   validator,
+  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(filterBaseLayer)
 );
 
 router.patch(
   "/update-by-layers",
   isAuthenticated,
-  canUpdateBaseLayer,
   body("layers").notEmpty().isArray({ min: 1 }),
   body("baseLayer").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.CAN_UPDATE_BASE_LAYER),
   RobustRunner(updateBaseLayerByAttr)
 );
 
-router.get("/fetch/:type", isAuthenticated, RobustRunner(getBaseLayers));
+router.get("/fetch/:type", isAuthenticated, PermissionGuard(PERMS.LAYER_LIST), RobustRunner(getBaseLayers));
 
 router.post(
   "/upload-to-update-base-layer/Vector",
@@ -152,7 +149,7 @@ router.post(
   uploadVector.single("file"),
   body("baseLayer").notEmpty().isMongoId(),
   validator,
-  canUpdateBaseLayer,
+  PermissionGuard(PERMS.CAN_UPLOAD_TO_BASE_LAYER, PERMS.CAN_UPDATE_BASE_LAYER),
   RobustRunner(uploadLayerToUpdateBaseLayer)
 );
 
@@ -163,18 +160,18 @@ router.patch(
   body("baseLayer").notEmpty().isMongoId(),
   body("attrMapping").exists().isObject(),
   validator,
-  canUpdateBaseLayer,
+  PermissionGuard(PERMS.CAN_UPLOAD_TO_BASE_LAYER, PERMS.CAN_UPDATE_BASE_LAYER),
   RobustRunner(updateBaseLayerByUploadedFile)
 );
 
 router.post(
-  "/create-base-raster-import-mission",
+  "/create-base-raster-import-mission", 
   isAuthenticated,
   body("name").notEmpty().trim(),
   body("layers").notEmpty().isArray({ min: 1 }),
   body("captureDate").exists().isISO8601().toDate(),
   validator,
-  canCreateBaseLayer,
+  PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),
   RobustRunner(createBaseRasterfromMission)
 );
 
@@ -183,6 +180,7 @@ router.delete(
   isAuthenticated,
   body("layers").notEmpty().isArray({ min: 1 }),
   validator,
+  PermissionGuard(PERMS.CAN_DELETE_BASE_LAYER),
   RobustRunner(delete_baseLayer)
 );
 
@@ -198,11 +196,12 @@ router.post(
     ),
   body("captureDate").exists().isISO8601().toDate(),
   validator,
-  canCreateBaseLayer,
+  PermissionGuard(PERMS.CAN_UPLOAD_TO_BASE_LAYER, PERMS.CAN_UPDATE_BASE_LAYER),
   isLayerCount,
   isSize,
   RobustRunner(createBaseRasterfromUpload)
 );
+
 
 router.patch(
   "/updateRasterLayerUpload/Raster",
@@ -210,21 +209,21 @@ router.patch(
   uploadRaster.single("file"),
   body("layerId").notEmpty().isMongoId(),
   validator,
-  canUpdateBaseLayer,
+  PermissionGuard(PERMS.CAN_UPDATE_BASE_LAYER),
   RobustRunner(updateBaseLayerRasterUpload)
 );
 
 router.patch(
   "/updateRasterLayerImport",
   isAuthenticated,
-  canUpdateBaseLayer,
   body("layerId").notEmpty().isMongoId(),
   body("layers").notEmpty().isArray({ min: 1 }),
   validator,
+  PermissionGuard(PERMS.CAN_UPDATE_BASE_LAYER),
   RobustRunner(updateBaseLayerRasterImport)
 );
 
-router.patch("/updateisBase", isAuthenticated, RobustRunner(isBaseupdateDev));
+// router.patch("/updateisBase", isAuthenticated, RobustRunner(isBaseupdateDev));
 
 // router.patch('/inject_sysId',isAuthenticated,sys_id_Inject)
 
@@ -241,7 +240,7 @@ router.post(
   body("geoJSON").exists().isObject(),
   validator,
   //not added validation for geoJSON
-  canCreateVectorLayer,
+  PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),
   isLayerCount,
   RobustRunner(createBaseVectorLayer)
 );
@@ -251,6 +250,7 @@ router.patch(
   isAuthenticated,
   body("layerId").isMongoId(),
   validator,
+  PermissionGuard(PERMS.CAN_UPDATE_BASE_LAYER, PERMS.PUBLIC_MAP_CREATE),
   RobustRunner(publishBaseLayer)
 );
 
@@ -261,11 +261,11 @@ router.get(
   RobustRunner(getallpublicbaselayer)
 );
 
-router.patch(
-  "/updateisPublic",
-  isAuthenticated,
-  RobustRunner(isPublicupdateDev)
-);
+// router.patch(
+//   "/updateisPublic",
+//   isAuthenticated,
+//   RobustRunner(isPublicupdateDev)
+// );
 
 router.get(
   "/searchPublicLayer",
@@ -282,6 +282,7 @@ router.get(
   query("startDate").notEmpty().isISO8601().toDate(),
   query("endDate").notEmpty().isISO8601().toDate(),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST, PERMS.MISSION_LIST),
   RobustRunner(GetAlertLocationGeojson)
 );
 router.get(
@@ -290,6 +291,7 @@ router.get(
   query("startDate").notEmpty().isISO8601().toDate(),
   query("endDate").notEmpty().isISO8601().toDate(),
   validator,
+  PermissionGuard(PERMS.VOD_LIST, PERMS.MISSION_LIST),
   RobustRunner(GetVideoLocationGeojson)
 );
 

@@ -7,8 +7,9 @@ import {
   updateOrganisationEmailResendOTP,
   validateOTPForEmail,
 } from "../../controllers/v1/organisationController";
-import { isAuthenticated, onlyTenantRootAccess } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ const router = express.Router();
 router.get(
   "/fetch-organisation-details",
   isAuthenticated,
-  onlyTenantRootAccess,
+  PermissionGuard(PERMS.TENANT_LIST_SELF),
   RobustRunner(getOrganisationInfo)
 );
 
@@ -24,7 +25,6 @@ router.get(
 router.post(
   "/update-organisation-details",
   isAuthenticated,
-  onlyTenantRootAccess,
   body("name").notEmpty().trim(),
   body("contactPerson").notEmpty().trim(),
   body("registrationNumber").notEmpty().isNumeric(),
@@ -38,6 +38,7 @@ router.post(
   body("billingPin").notEmpty().isPostalCode("IN"),
   body("avatar").optional().notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.TENANT_UPDATE_SELF),
   RobustRunner(updateOrganisationInfo)
 );
 
@@ -45,9 +46,9 @@ router.post(
 router.post(
   "/request-otp-for-email-change",
   isAuthenticated,
-  onlyTenantRootAccess,
   body("email").isEmail().withMessage("invalid Email."),
   validator,
+  PermissionGuard(PERMS.TENANT_UPDATE_SELF),
   RobustRunner(updateOrganisationEmailGetOTP)
 );
 
@@ -55,7 +56,7 @@ router.post(
 router.post(
   "/resend-otp-for-email-change",
   isAuthenticated,
-  onlyTenantRootAccess,
+  PermissionGuard(PERMS.TENANT_UPDATE_SELF),
   RobustRunner(updateOrganisationEmailResendOTP)
 );
 
@@ -63,8 +64,8 @@ router.post(
 router.post(
   "/validate-otp-update-email",
   isAuthenticated,
-  onlyTenantRootAccess,
   body("otp").notEmpty().isNumeric(),
+  PermissionGuard(PERMS.TENANT_UPDATE_SELF),
   RobustRunner(validateOTPForEmail)
 );
 
