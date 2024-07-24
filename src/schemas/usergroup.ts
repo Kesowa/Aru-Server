@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
+import { PERMS } from "./permission";
 
 export interface IUserGroup {
   _id: mongoose.Types.ObjectId;
   name: string; // index
-  permissions: mongoose.Types.ObjectId[];
+  permissions: PERMS[];
   tenantId: mongoose.Types.ObjectId; // index
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
@@ -31,8 +32,8 @@ const usergroupschema = new mongoose.Schema<IUserGroup>(
     },
     permissions: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "permission",
+        type: String,
+        enum: PERMS,
       },
     ],
     tenantId: {

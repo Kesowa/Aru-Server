@@ -1,12 +1,21 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
 import bcrypt from "bcrypt";
+import { PERMS } from "./permission";
 
 interface IUserMethods {
   comparePassword(password: string): Promise<boolean>;
 }
 
 export type UserModel = mongoose.Model<IUser, {}, IUserMethods>;
+
+export enum UserTypes {
+  SUPER_ADMIN = "super-admin",
+  TENANT_ROOT = "tenant-root",
+  TENANT_STAFF = "tenant-staff",
+  TENANT_CLIENT = "tenant-client",
+  STANDALONE = "standalone-user"
+}
 
 //This interface just fights the type system
 export interface IUser {
@@ -19,8 +28,7 @@ export interface IUser {
   password: string;
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
-  userType: string; // index
-  customPermissions: mongoose.Types.ObjectId[];
+  userType: UserTypes; // index
   dob: Date;
   aadhaarNo: string;
   pilotLicenceNo: string;
@@ -46,8 +54,8 @@ export const UserType = {
   password: Types.String(),
   createdBy: Types.String(),
   updatedBy: Types.String(),
-  userType: Types.String(), // index
-  customPermissions: Types.Array({ arrayType: Types.String() }),
+  userType: Types.StringEnum({values: Object.values(UserTypes)}), // index
+  customPermissions: Types.Array({ arrayType: Types.StringEnum({values: Object.values(PERMS)}) }),
   dob: Types.DateTime(),
   aadhaarNo: Types.String(),
   pilotLicenceNo: Types.String(),
@@ -99,13 +107,9 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     },
     userType: {
       type: String,
+      enum: Object.values(UserTypes),
       required: true,
     },
-    customPermissions: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-      },
-    ],
     dob: {
       type: Date,
     },

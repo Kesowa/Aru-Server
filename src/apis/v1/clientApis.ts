@@ -8,19 +8,14 @@ import {
   getListClient,
   removeClientfromMission,
   clientCsv,
-  devApiClientArr,
+  // devApiClientArr,
   getClientByEmail,
   reactivateClient,
 } from "../../controllers/v1/clientController";
 import { fetchMissionById } from "../../controllers/v1/missionController";
 import {
   isAuthenticated,
-  canClient,
-  canEditClient,
-  canDeleteClient,
-  canCreateClient,
-  canManageClient,
-  canListMission,
+  PermissionGuard,
 } from "../../utils/authUtils";
 
 import { isClientCount } from "../../utils/countPermission";
@@ -30,6 +25,7 @@ import {
 } from "../../controllers/v1/clientInviteController";
 import { body, param, query, oneOf } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 const router = express.Router();
 
 router.post(
@@ -46,7 +42,7 @@ router.post(
   body("expiryDate").exists().isISO8601().toDate(),
   body("avatar").optional().isString().trim(),
   validator,
-  canCreateClient,
+  PermissionGuard(PERMS.CREATE_CLIENT),
   isClientCount,
   RobustRunner(createClientformissionGroup)
 );
@@ -62,7 +58,7 @@ router.get(
   query("clientId").notEmpty(),
   query("createdAt").optional().notEmpty().isString(), // asce or desc, sorting order, optional
   validator,
-  canClient,
+  PermissionGuard(PERMS.CLIENT_MISSION_LIST),
   RobustRunner(getMissionById)
 );
 router.patch(
@@ -83,7 +79,7 @@ router.patch(
     [body("id").notEmpty(), body("password").isLength({ min: 6 })],
   ]),
   validator,
-  canEditClient,
+  PermissionGuard(PERMS.EDIT_CLIENT),
   RobustRunner(editClientDetails)
 );
 router.get(
@@ -93,7 +89,7 @@ router.get(
   query("limit").default(10).isInt({ max: 100 }).toInt(),
   query("sort").optional(), // String of format "<field>:<asce or desc>", like "name:desc"
   validator,
-  canListMission,
+  PermissionGuard(PERMS.CLIENT_LIST),
   RobustRunner(getListClient)
 );
 router.delete(
@@ -101,7 +97,7 @@ router.delete(
   isAuthenticated,
   body("id").notEmpty(),
   validator,
-  canDeleteClient,
+  PermissionGuard(PERMS.DELETE_CLIENT),
   RobustRunner(deleteCientforTenant)
 );
 router.get(
@@ -116,7 +112,7 @@ router.patch(
   body("missionId").notEmpty(),
   body("clientId").isArray({ min: 1 }),
   validator,
-  canManageClient,
+  PermissionGuard(PERMS.MISSION_UPDATE, PERMS.EDIT_CLIENT, PERMS.CREATE_CLIENT),
   RobustRunner(insertClientforMission)
 );
 router.patch(
@@ -125,29 +121,29 @@ router.patch(
   query("id").notEmpty(),
   query("clientId").notEmpty(),
   validator,
-  canManageClient,
+  PermissionGuard(PERMS.MISSION_UPDATE, PERMS.EDIT_CLIENT, PERMS.CREATE_CLIENT),
   RobustRunner(removeClientfromMission)
 );
 router.get(
   "/geneate-client-csv",
   isAuthenticated,
-  canManageClient,
+  PermissionGuard(PERMS.CLIENT_LIST),
   RobustRunner(clientCsv)
 );
 
-router.patch(
-  "/patch-api-clientarr",
-  body("tenantId").notEmpty(),
-  validator,
-  RobustRunner(devApiClientArr)
-);
+// router.patch(
+//   "/patch-api-clientarr",
+//   body("tenantId").notEmpty(),
+//   validator,
+//   RobustRunner(devApiClientArr)
+// );
 
 router.get(
   "/get-client-mission-details/:id",
   isAuthenticated,
   param("id").notEmpty(),
   validator,
-  canClient,
+  PermissionGuard(PERMS.CLIENT_MISSION_LIST),
   RobustRunner(fetchMissionById)
 );
 
@@ -156,7 +152,7 @@ router.get(
   isAuthenticated,
   query("email").isEmail().withMessage("invalid Email."),
   validator,
-  canClient,
+  PermissionGuard(PERMS.CLIENT_LIST),
   RobustRunner(getClientByEmail)
 );
 
@@ -166,7 +162,7 @@ router.post(
   body("missionID").notEmpty(),
   body("emailID").isEmail().withMessage("invalid Email."),
   validator,
-  canManageClient,
+  PermissionGuard(PERMS.MISSION_UPDATE, PERMS.EDIT_CLIENT, PERMS.CREATE_CLIENT),
   RobustRunner(inviteClient)
 );
 
