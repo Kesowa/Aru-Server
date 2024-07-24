@@ -29,11 +29,13 @@ import Alert from "../../models/alert";
 import VOD from "../../models/vod";
 import { ILayer } from "../../schemas/layer";
 import {
+  saveFeatureSearchIndex,
   saveGeojson,
   saveMultiGeojson,
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
+import Fuse from "fuse.js";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -973,6 +975,11 @@ export const updateBaseLayerByUploadedFile = async (
 
     await featureUpdate(baseLayer.layerpath, newFeatures, bgjson);
 
+    if (baseLayer.isPublic) {
+      // for public layer, re-generate search index after feature editing
+      await saveFeatureSearchIndex(baseLayer.layerpath);
+    }
+
     bgjson.features = [...bgjson.features, ...newFeatures];
 
     const size: number = await getFileSize(baseLayerPath);
@@ -1682,6 +1689,8 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
       },
       {
         tenantId: 1,
+        layerpath: 1,
+        metadata: 1
       }
     );
     const tenantDoc = await Tenant.findOne(
@@ -1693,6 +1702,8 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
       }
     );
     if (doc) {
+      const searchIndexPath = await saveFeatureSearchIndex(doc.layerpath);
+      const metadata = { ...doc.metadata, searchIndexPath };
       if (tenantDoc.publicMapRef == null) {
         const randomString = new ObjectId();
         const unid = `${doc.tenantId}${randomString}`;
@@ -1700,9 +1711,9 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
           { _id: res.locals.user.tenantId },
           { publicMapRef: unid }
         );
-        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
+        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true, metadata });
       } else {
-        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
+        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true, metadata });
       }
       const getDoc = await Layer.findOne({ _id: req.body.layerId }).populate<{
         tenantId: ITenant;
@@ -1825,72 +1836,6 @@ export const isPublicupdateDev = async (req: Request, res: AuthResponse) => {
       res.status(200).json({
         status: false,
         message: "No layer documents found",
-      });
-    }
-  }
-};
-
-export const publicbaselayerSearch = async (
-  req: Request,
-  res: AuthResponse
-) => {
-  {
-    const tenant = await Tenant.findOne({ publicMapRef: req.query.mapRef });
-    const key = req.query.key as string;
-    const value = req.query.value;
-    const ar = new Array<Feature & { index: number }>();
-    let flag = 0;
-    if (tenant) {
-      const docs: any = await Layer.find(
-        {
-          tenantId: tenant,
-          isPublic: true,
-        },
-        {
-          layerpath: 1,
-        }
-      );
-      if (docs.length) {
-        for (let i = 0; i < docs.length; i++) {
-          const gjson = await readGeoJson(
-            DirPath(Directory.ROOT, docs[i].layerpath)
-          );
-          for (let j = 0; j < gjson.features.length; j++) {
-            if (gjson.features[j].properties[key]) {
-              const str: any = String(gjson.features[j].properties[key]);
-              if (str.length >= value.length) {
-                if (str.includes(value)) {
-                  ar.push({ ...gjson.features[j], index: j });
-                  flag = 1;
-                }
-              }
-            }
-          }
-          if (flag == 1) {
-            return res.status(200).json({
-              status: true,
-              message: "Match found",
-              layerId: docs[i]._id,
-              data: ar,
-            });
-          }
-        }
-        if (flag != 1) {
-          return res.status(200).json({
-            status: false,
-            message: "No Match found",
-          });
-        }
-      } else {
-        return res.status(200).json({
-          status: false,
-          message: "No public layers found",
-        });
-      }
-    } else {
-      res.status(200).json({
-        status: false,
-        message: "Invalid PublicMapRef",
       });
     }
   }

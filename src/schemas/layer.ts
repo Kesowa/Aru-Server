@@ -37,7 +37,7 @@ export interface ILayer {
   commentCount: number;
   createdAt: Date; // index
   updatedAt: Date;
-  metadata?: string | Object;
+  metadata?: { [key:string]: any };
 }
 export const LayerType = {
   _id: Types.String(),

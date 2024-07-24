@@ -21,7 +21,6 @@ import {
   publishBaseLayer,
   getallpublicbaselayer,
   // isPublicupdateDev,
-  publicbaselayerSearch,
   GetAlertLocationGeojson,
   GetVideoLocationGeojson,
   // sys_id_Inject
@@ -266,15 +265,6 @@ router.get(
 //   isAuthenticated,
 //   RobustRunner(isPublicupdateDev)
 // );
-
-router.get(
-  "/searchPublicLayer",
-  query("mapRef").notEmpty().trim(),
-  query("value").notEmpty().trim(),
-  query("key").notEmpty().trim(),
-  validator,
-  RobustRunner(publicbaselayerSearch)
-);
 
 router.get(
   "/alerts",

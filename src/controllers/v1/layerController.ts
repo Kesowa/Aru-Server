@@ -53,7 +53,7 @@ import {
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import { saveThumbnails } from "../../utils/imageUtils";
-import { saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import { saveAsKML, saveFeatureSearchIndex, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
 import { ZipToTiles3D } from "../../utils/cesium";
 
@@ -459,6 +459,10 @@ export const addFeature = async (req: Request, res: AuthResponse) => {
             });
           }
           await featureAddition(docpath, req.body, geojson);
+          if (data.isPublic) {
+            // for public layer, re-generate search index after feature editing
+            await saveFeatureSearchIndex(data.layerpath);
+          }
           if (data.color != req.body.feature.properties.color) {
             await Layer.updateOne(
               { _id: req.body.id },
@@ -513,6 +517,10 @@ export const editGeoJson = async (
           });
         }
         await editGeoJsonForAll(docpath, req.body, geojson);
+        if (data.isPublic) {
+          // for public layer, re-generate search index after feature editing
+          await saveFeatureSearchIndex(data.layerpath);
+        }
         for (let i = 0; i < geojson.features.length; i++) {
           if (geojson.features[i].properties.color != data.color) {
             const savedDoc = await Layer.findByIdAndUpdate(
@@ -595,6 +603,10 @@ export const deleteGeoJson = async (
         });
       }
       await deleteGeoJsonFeature(docpath, req.body, geojson);
+      if (data.isPublic) {
+        // for public layer, re-generate search index after feature editing
+        await saveFeatureSearchIndex(data.layerpath);
+      }
       return res.status(200).json({
         status: true,
         message: "Feature Deleted successfully",
@@ -782,6 +794,10 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
     }
     let modCheck: any;
     modCheck = await modGeoJson(icon, color, geojson, docpath);
+    if (doc.isPublic) {
+      // for public layer, re-generate search index after feature editing
+      await saveFeatureSearchIndex(doc.layerpath);
+    } 
     await Layer.updateOne(
       { _id: id },
       { color: req.body.color },
@@ -2349,13 +2365,14 @@ export const picktoMapUseForLayerCreate = async (
 // what is this even for?
 export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
   {
-    const docs = await Layer.find<{ layerpath: string }>(
+    const docs = await Layer.find<{ layerpath: string, isPublic: boolean }>(
       {
         type: "Vector",
         tenantId: res.locals.user.tenantId,
       },
       {
         layerpath: 1,
+        isPublic: 1,
       },
       {
         lean: true,
@@ -2367,6 +2384,10 @@ export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
         const geoJSON = await readGeoJson(docpath);
         if (geoJSON) {
           const modCheck = await modGeoJson(null, null, geoJSON, docpath);
+          if (docs[i].isPublic) {
+            // for public layer, re-generate search index after feature editing
+            await saveFeatureSearchIndex(docs[i].layerpath);
+          }
         } else {
           req.log.warn("Geojson Not found");
         }
@@ -2400,6 +2421,7 @@ export const sys_id_Inject_to_layerfiles = async (
       layerpath: string;
       layerLabel: string;
       missionId: ObjectId;
+      isPublic: boolean;
     }>(
       {
         _id: req.query.layerId,
@@ -2410,6 +2432,7 @@ export const sys_id_Inject_to_layerfiles = async (
         layerpath: 1,
         layerLabel: 1,
         missionId: 1,
+        isPublic: 1,
       }
     );
     if (docs) {
@@ -2425,6 +2448,11 @@ export const sys_id_Inject_to_layerfiles = async (
         }
 
         const modCheck = await modGeoJson(null, null, gjson, p); // add sys_ids to geojson
+
+        if (docs.isPublic) {
+          // for public layer, re-generate search index after feature editing
+          await saveFeatureSearchIndex(docs.layerpath);
+        }
 
         if (modCheck === 1) {
           // update new sys_ids in layerfiles

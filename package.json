@@ -86,6 +86,7 @@
     "express-async-errors": "^3.1.1",
     "express-openapi-validator": "^5.0.4",
     "express-validator": "^6.6.0",
+    "fuse.js": "^7.0.0",
     "helmet": "^3.23.3",
     "jsdom": "^22.1.0",
     "moment": "^2.29.4",
