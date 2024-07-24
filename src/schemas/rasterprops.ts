@@ -1,79 +1,41 @@
-import mongoose from "mongoose";
-import { Types } from "ts-openapi";
-
-const NAMES = <const>[
-  "ORTHO",
-  "DEM",
-  "NDVI",
-  "DTM",
-  "NDWI",
-  "POINT_CLOUD",
-  "CESIUM_3D",
-];
-
-export interface IRaster {
-  _id: mongoose.Types.ObjectId;
-  name: typeof NAMES[number];
-  bidx?: string;
-  bandExp?: string;
-  colorMap?: string;
-  resamplingMethod?: string;
-  createdBy: mongoose.Types.ObjectId;
-  updatedBy: mongoose.Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
+export enum rasterProps {
+  POINT_CLOUD = "POINT_CLOUD",
+  CESIUM_3D = "CESIUM_3D",
+  ORTHO = "ORTHO",
+  DEM = "DEM",
+  NDWI = "NDWI",
+  NDVI = "NDVI",
 }
 
-export const RasterType = {
-  _id: Types.String(),
-  name: Types.StringEnum({ values: [...NAMES] }),
-  bidx: Types.String(),
-  bandExp: Types.String(),
-  colorMap: Types.String(),
-  resamplingMethod: Types.String(),
-  createdBy: Types.String(),
-  updatedBy: Types.String(),
-  createdAt: Types.DateTime(),
-  updatedAt: Types.DateTime(),
-};
-
-const rasterSchema = new mongoose.Schema<IRaster>(
-  {
-    name: {
-      type: String,
-      enum: NAMES,
-    },
-    bidx: {
-      type: String,
-      required: false,
-    },
-    bandExp: {
-      type: String,
-      required: false,
-    },
-    colorMap: {
-      type: String,
-      required: false,
-    },
-    resamplingMethod: {
-      type: String,
-      required: false,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
-    updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
-    createdAt: {
-      type: Date,
-    },
-    updatedAt: {
-      type: Date,
-    },
+export const defaultRasterSettings = {
+  [rasterProps.POINT_CLOUD]: {
+    bidx: null,
+    bandExp: null,
+    colorMap: null,
+    resamplingMethod: null,
   },
-  {
-    timestamps: true,
-  }
-);
-export default rasterSchema;
+  [rasterProps.CESIUM_3D]: {
+    bidx: null,
+    bandExp: null,
+    colorMap: null,
+    resamplingMethod: null,
+  },
+  [rasterProps.ORTHO]: {
+    bidx: null,
+    bandExp: null,
+    colorMap: null,
+    resamplingMethod: null,
+  },
+  [rasterProps.DEM]: {
+    bidx: "1",
+    bandExp: null,
+    colorMap: "plasma",
+    resamplingMethod: "nearest",
+  },
+  [rasterProps.NDWI]: {
+    bidx: "1%2C2%2C4",
+    bandExp: null,
+    colorMap: null,
+    resamplingMethod: "nearest",
+  },
+};

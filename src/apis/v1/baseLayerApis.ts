@@ -35,6 +35,8 @@ import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
 import { PERMS } from "../../schemas/permission";
+import { vectorProps } from "../../schemas/vectorprops";
+import { rasterProps } from "../../schemas/rasterprops";
 
 const router = express.Router();
 
@@ -59,7 +61,11 @@ router.post(
   isAuthenticated,
   uploadVector.single("file"),
   body("name").notEmpty().trim(),
-  body("vector").notEmpty().isMongoId(),
+  body("vector")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   //adding date format
   body("captureDate").exists().isISO8601().toDate(),
   body("color").trim().default("#000000"),
@@ -99,7 +105,11 @@ router.post(
   body("name").notEmpty().trim(),
   body("pattr").optional().isArray(),
   body("layers").notEmpty().isArray({ min: 1 }),
-  body("vectorTypeId").notEmpty().isMongoId(),
+  body("vectorType")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   validator,
   PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),
   RobustRunner(createBaseLayerByAttr)
@@ -179,7 +189,11 @@ router.post(
   isAuthenticated,
   uploadRaster.single("file"),
   body("name").notEmpty().trim(),
-  body("raster").notEmpty().isMongoId(),
+  body("raster")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(rasterProps).includes(value as rasterProps)
+    ),
   body("captureDate").exists().isISO8601().toDate(),
   validator,
   PermissionGuard(PERMS.CAN_UPLOAD_TO_BASE_LAYER, PERMS.CAN_UPDATE_BASE_LAYER),
@@ -218,7 +232,11 @@ router.post(
   "/create-base-vector-layer",
   isAuthenticated,
   body("name").notEmpty().trim(),
-  body("vectorId").notEmpty().isMongoId(),
+  body("vectorType")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   body("geoJSON").exists().isObject(),
   validator,
   //not added validation for geoJSON

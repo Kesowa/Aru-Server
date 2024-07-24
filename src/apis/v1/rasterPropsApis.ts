@@ -1,13 +1,13 @@
-import express from "express";
-import { isAuthenticated } from "../../utils/authUtils";
-const router = express.Router();
-import {
-  // createRasterProps,
-  getRasterPropsById,
-  getAllRasterProps,
-} from "../../controllers/v1/rasterPropsController";
-import { query } from "express-validator";
-import { validator } from "../../utils/requestHelpers";
+// import express from "express";
+// import { isAuthenticated } from "../../utils/authUtils";
+// const router = express.Router();
+// import {
+//   createRasterProps,
+//   getRasterPropsById,
+//   getAllRasterProps,
+// } from "../../controllers/v1/rasterPropsController";
+// import { body, query } from "express-validator";
+// import { validator } from "../../utils/requestHelpers";
 
 // router.post(
 //   "/create",
@@ -21,13 +21,13 @@ import { validator } from "../../utils/requestHelpers";
 //   createRasterProps
 // );
 
-// ************** get method *************
-router.get(
-  "/get-by-ID",
-  isAuthenticated,
-  query("id").optional().notEmpty().isMongoId(),
-  validator,
-  getRasterPropsById
-);
-router.get("/get-all-rasterProps", isAuthenticated, getAllRasterProps);
-export default router;
+// // ************** get method *************
+// router.get(
+//   "/get-by-ID",
+//   isAuthenticated,
+//   query("id").optional().notEmpty().isMongoId(),
+//   validator,
+//   getRasterPropsById
+// );
+// router.get("/get-all-rasterProps", isAuthenticated, getAllRasterProps);
+// export default router;

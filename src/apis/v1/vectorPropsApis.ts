@@ -1,12 +1,12 @@
-import express from "express";
-import { isAuthenticated } from "../../utils/authUtils";
-const router = express.Router();
-import {
-  // createVectorProps,
-  getAllVectorProps,
-} from "../../controllers/v1/vectorPropsController";
+// import express from "express";
+// import { isAuthenticated } from "../../utils/authUtils";
+// const router = express.Router();
+// import {
+//   createVectorProps,
+//   getAllVectorProps,
+// } from "../../controllers/v1/vectorPropsController";
 // import { body } from "express-validator";
-import { RobustRunner } from "../../utils/requestHelpers";
+// import { validator, RobustRunner } from "../../utils/requestHelpers";
 
 // router.post(
 //   "/create",
@@ -21,7 +21,7 @@ import { RobustRunner } from "../../utils/requestHelpers";
 //   RobustRunner(createVectorProps)
 // );
 
-// *************get ***********
-router.get("/get", isAuthenticated, RobustRunner(getAllVectorProps));
+// // *************get ***********
+// router.get("/get", isAuthenticated, RobustRunner(getAllVectorProps));
 
-export default router;
+// export default router;

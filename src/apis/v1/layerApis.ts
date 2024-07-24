@@ -47,6 +47,8 @@ import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
 import { multerStorage } from "../../utils/fileUploadUtils";
 import { PERMS } from "../../schemas/permission";
+import { vectorProps } from "../../schemas/vectorprops";
+import { rasterProps } from "../../schemas/rasterprops";
 
 const upload = multer({
   storage: multerStorage((req: Request): Directory => {
@@ -72,8 +74,16 @@ router.post(
     .trim()
     .matches(/(Vector|Raster)/),
   oneOf([
-    body("vector").notEmpty().isMongoId(),
-    body("raster").notEmpty().isMongoId(),
+    body("vector")
+      .notEmpty()
+      .custom((value) =>
+        Object.values(vectorProps).includes(value as vectorProps)
+      ),
+    body("raster")
+      .notEmpty()
+      .custom((value) =>
+        Object.values(rasterProps).includes(value as rasterProps)
+      ),
   ]),
   //adding date format
   body("captureDate").exists().isISO8601().toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm
@@ -122,7 +132,20 @@ router.patch(
   body("name").notEmpty().trim(),
   //adding date format
   body("captureDate").exists().isISO8601().toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm
-  body("layerType").optional().notEmpty().isMongoId(),
+  oneOf([
+    body("layerType")
+      .optional()
+      .notEmpty()
+      .custom((value) =>
+        Object.values(vectorProps).includes(value as vectorProps)
+      ),
+    body("layerType")
+      .optional()
+      .notEmpty()
+      .custom((value) =>
+        Object.values(rasterProps).includes(value as rasterProps)
+      ),
+  ]),
   validator,
   PermissionGuard(PERMS.EDIT_LAYER),
   RobustRunner(updateLayer)
@@ -268,7 +291,11 @@ router.post(
   isAuthenticated,
   body("name").notEmpty().trim(),
   body("missionId").notEmpty().isMongoId(),
-  body("vectorId").notEmpty().isMongoId(),
+  body("vectorType")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   body("geoJSON").exists().isObject(), // use sample geojson made in baselayer tests for testing this too
   validator,
   PermissionGuard(PERMS.SAVE_DRAWINGS),
@@ -433,7 +460,11 @@ router.post(
   isAuthenticated,
   upload.array("file", 50),
   body("name").trim(),
-  body("vectorId").isMongoId(),
+  body("vectorType")
+    .notEmpty()
+    .custom((value) =>
+      Object.values(vectorProps).includes(value as vectorProps)
+    ),
   // optional
   body("color").optional().trim(),
   body("icon").optional().trim(),
