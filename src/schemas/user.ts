@@ -14,7 +14,7 @@ export enum UserTypes {
   TENANT_ROOT = "tenant-root",
   TENANT_STAFF = "tenant-staff",
   TENANT_CLIENT = "tenant-client",
-  STANDALONE = "standalone-user"
+  STANDALONE = "standalone-user",
 }
 
 //This interface just fights the type system
@@ -54,8 +54,10 @@ export const UserType = {
   password: Types.String(),
   createdBy: Types.String(),
   updatedBy: Types.String(),
-  userType: Types.StringEnum({values: Object.values(UserTypes)}), // index
-  customPermissions: Types.Array({ arrayType: Types.StringEnum({values: Object.values(PERMS)}) }),
+  userType: Types.StringEnum({ values: Object.values(UserTypes) }), // index
+  customPermissions: Types.Array({
+    arrayType: Types.StringEnum({ values: Object.values(PERMS) }),
+  }),
   dob: Types.DateTime(),
   aadhaarNo: Types.String(),
   pilotLicenceNo: Types.String(),

@@ -14,10 +14,7 @@ import {
   getCountByMissionID,
   getVODByID,
 } from "../../controllers/v1/VODcontroller";
-import {
-  isAuthenticated,
-  PermissionGuard,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isVodCount } from "../../utils/countPermission";
 import multer from "multer";
 import { isSize } from "../../utils/sizePermission";

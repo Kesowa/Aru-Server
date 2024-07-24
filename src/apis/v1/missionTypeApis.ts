@@ -51,6 +51,11 @@ router.post(
 );
 
 //++++++++++++++++++++ fetch all mission type Api++++++++++++++++++++++++
-router.get("/getall", isAuthenticated, PermissionGuard(PERMS.MISSION_TYPE_LIST), RobustRunner(fetchAllMissionTypes));
+router.get(
+  "/getall",
+  isAuthenticated,
+  PermissionGuard(PERMS.MISSION_TYPE_LIST),
+  RobustRunner(fetchAllMissionTypes)
+);
 
 export default router;

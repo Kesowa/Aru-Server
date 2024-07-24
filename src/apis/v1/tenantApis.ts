@@ -106,7 +106,11 @@ router.post(
   RobustRunner(resendVerificationCode)
 );
 
-router.get("/fetch-active-package-public", PermissionGuard(PERMS.PACKAGE_LIST), RobustRunner(fetchActivePackages));
+router.get(
+  "/fetch-active-package-public",
+  PermissionGuard(PERMS.PACKAGE_LIST),
+  RobustRunner(fetchActivePackages)
+);
 
 //+++++++++++++++++++++++++ fetch all tenants+++++++++++++++++++++++
 router.get(
@@ -182,7 +186,12 @@ router.delete(
   PermissionGuard(PERMS.TENANT_DELETE, PERMS.TENANT_UPDATE),
   RobustRunner(deleteTenantForId)
 );
-router.get("/get-tenant-stats", isAuthenticated, PermissionGuard(PERMS.MISSION_LIST), RobustRunner(getTenantStats));
+router.get(
+  "/get-tenant-stats",
+  isAuthenticated,
+  PermissionGuard(PERMS.MISSION_LIST),
+  RobustRunner(getTenantStats)
+);
 router.patch(
   "/updatepublicMapRef",
   isAuthenticated,

@@ -1,6 +1,11 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { PERMS, TENANT_CLIENT_PERMS, TENANT_ROOT_PERMS, TENANT_STAFF_PERMS } from "../../schemas/permission";
+import {
+  PERMS,
+  TENANT_CLIENT_PERMS,
+  TENANT_ROOT_PERMS,
+  TENANT_STAFF_PERMS,
+} from "../../schemas/permission";
 
 //create new  permission
 export const createPermission = async (_req: Request, res: AuthResponse) => {
@@ -33,15 +38,22 @@ export const fetchTenantPermissions = async (
 export const fetchPermissions = async (req: Request, res: AuthResponse) => {
   let permissions: PERMS[];
   switch (res.locals.user.userType) {
-    case "super-admin": permissions = [...TENANT_ROOT_PERMS]; break;
-    case "tenant-root": permissions = [...TENANT_STAFF_PERMS]; break;
-    case "tenant-staff": permissions = [...TENANT_CLIENT_PERMS]; break;
+    case "super-admin":
+      permissions = [...TENANT_ROOT_PERMS];
+      break;
+    case "tenant-root":
+      permissions = [...TENANT_STAFF_PERMS];
+      break;
+    case "tenant-staff":
+      permissions = [...TENANT_CLIENT_PERMS];
+      break;
     // case "tenant-client": permissions = [...TENANT_CLIENT_PERMS]; break;
-    default: permissions = [];
+    default:
+      permissions = [];
   }
   res.json({
-    status: true, 
+    status: true,
     message: "Permissions fetched successfully.",
-    data: Object.values(permissions)
-  })
-}
+    data: Object.values(permissions),
+  });
+};

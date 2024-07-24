@@ -347,9 +347,13 @@ export const readFile = async (fullpath: string) => {
 export const saveFeatureSearchIndex = async (layerPath: string) => {
   const filename = "index_" + path.parse(layerPath).name + ".json";
   const searchIndexPath = DirPath(Directory.VECTOR, filename);
-  const geojsonData = await readGeoJson<any>(DirPath(Directory.ROOT, layerPath));
-  const keys = Object.keys(geojsonData.features[0].properties).map(key => `properties.${key}`);
+  const geojsonData = await readGeoJson<any>(
+    DirPath(Directory.ROOT, layerPath)
+  );
+  const keys = Object.keys(geojsonData.features[0].properties).map(
+    (key) => `properties.${key}`
+  );
   const searchIndex = Fuse.createIndex<any>(keys, geojsonData.features);
   await fs.writeFile(searchIndexPath, JSON.stringify(searchIndex.toJSON()));
   return pathUtils.docPath(Directory.VECTOR, filename);
-}
+};

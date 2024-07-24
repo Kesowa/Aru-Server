@@ -1,8 +1,5 @@
 import express from "express";
-import {
-  isAuthenticated,
-  PermissionGuard,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 const router = express.Router();
 import multer from "multer";
 import {

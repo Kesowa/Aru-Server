@@ -6,7 +6,7 @@ import {
   // fetchTenantPermissions,
   fetchPermissions,
 } from "../../controllers/v1/permissionController";
-import { isAuthenticated, } from "../../utils/authUtils";
+import { isAuthenticated } from "../../utils/authUtils";
 import { RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();

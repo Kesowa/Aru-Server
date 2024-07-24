@@ -200,7 +200,7 @@ export const TENANT_ROOT_PERMS = <const>[
   PERMS.USER_GROUP_CREATE,
   PERMS.USER_GROUP_DELETE,
   PERMS.USER_GROUP_UPDATE,
-  ...TENANT_STAFF_PERMS
+  ...TENANT_STAFF_PERMS,
 ];
 export const SUPER_ADMIN_PERMS = <const>[
   PERMS.ASSET_CLASS_CREATE,
@@ -211,21 +211,23 @@ export const SUPER_ADMIN_PERMS = <const>[
   PERMS.MISSION_TYPE_UPDATE,
   PERMS.TENANT_CREATE,
   PERMS.TENANT_DELETE,
-  ...TENANT_ROOT_PERMS
+  ...TENANT_ROOT_PERMS,
 ];
 
-export const GetPermissions = async (userGroupId: mongoose.Types.ObjectId, userType: UserTypes, tenantId: mongoose.Types.ObjectId) => {
+export const GetPermissions = async (
+  userGroupId: mongoose.Types.ObjectId,
+  userType: UserTypes,
+  tenantId: mongoose.Types.ObjectId
+) => {
   let customPermissions: PERMS[] = [];
   if (userType == "tenant-staff" || userType == "tenant-client") {
     const usergroup = await UserGroup.findOne({ _id: userGroupId, tenantId });
     customPermissions = usergroup.permissions;
-  }
-  else if (userType == "tenant-root") {
-    customPermissions = [...TENANT_ROOT_PERMS]
-  }
-  else if (userType == "super-admin") {
-    customPermissions = [...SUPER_ADMIN_PERMS]
+  } else if (userType == "tenant-root") {
+    customPermissions = [...TENANT_ROOT_PERMS];
+  } else if (userType == "super-admin") {
+    customPermissions = [...SUPER_ADMIN_PERMS];
   }
 
   return customPermissions;
-}
+};

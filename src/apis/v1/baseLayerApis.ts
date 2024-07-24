@@ -25,7 +25,7 @@ import {
   GetVideoLocationGeojson,
   // sys_id_Inject
 } from "../../controllers/v1/baseLayerController";
-import { isAuthenticated, PermissionGuard, } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import multer from "multer";
 import { isSize } from "../../utils/sizePermission";
 import { isLayerCount } from "../../utils/countPermission";
@@ -140,7 +140,12 @@ router.patch(
   RobustRunner(updateBaseLayerByAttr)
 );
 
-router.get("/fetch/:type", isAuthenticated, PermissionGuard(PERMS.LAYER_LIST), RobustRunner(getBaseLayers));
+router.get(
+  "/fetch/:type",
+  isAuthenticated,
+  PermissionGuard(PERMS.LAYER_LIST),
+  RobustRunner(getBaseLayers)
+);
 
 router.post(
   "/upload-to-update-base-layer/Vector",
@@ -164,7 +169,7 @@ router.patch(
 );
 
 router.post(
-  "/create-base-raster-import-mission", 
+  "/create-base-raster-import-mission",
   isAuthenticated,
   body("name").notEmpty().trim(),
   body("layers").notEmpty().isArray({ min: 1 }),
@@ -200,7 +205,6 @@ router.post(
   isSize,
   RobustRunner(createBaseRasterfromUpload)
 );
-
 
 router.patch(
   "/updateRasterLayerUpload/Raster",

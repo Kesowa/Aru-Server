@@ -7,10 +7,7 @@ import {
   removeModel,
   updateModel,
 } from "../../controllers/v1/modelController";
-import {
-  PermissionGuard,
-  isAuthenticated,
-} from "../../utils/authUtils";
+import { PermissionGuard, isAuthenticated } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
 
@@ -33,8 +30,8 @@ router.post(
 );
 
 router.get(
-  "/get", 
-  isAuthenticated, 
+  "/get",
+  isAuthenticated,
   PermissionGuard(PERMS.MODEL_LIST),
   RobustRunner(getModel)
 );

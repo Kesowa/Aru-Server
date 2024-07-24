@@ -7,7 +7,7 @@ import {
   removeAssetClass,
   updateAssetClass,
 } from "../../controllers/v1/assetClassController";
-import { isAuthenticated, PermissionGuard, } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
 

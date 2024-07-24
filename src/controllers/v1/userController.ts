@@ -207,7 +207,7 @@ export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
         d.expiryDatee = null;
         d.avatar = null;
         d.passwordResetToken = null;
-      })
+      });
     }
     if (doc.length) {
       res.json({

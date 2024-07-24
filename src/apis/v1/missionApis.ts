@@ -22,7 +22,7 @@ import {
   GetAlertLocationGeojson,
   GetVideoLocationGeojson,
 } from "../../controllers/v1/missionController";
-import { isAuthenticated, PermissionGuard, } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isMissionCount } from "../../utils/countPermission";
 import { getMemoryUsage } from "../../controllers/v1/missionDataController";
 import { validator, RobustRunner } from "../../utils/requestHelpers";

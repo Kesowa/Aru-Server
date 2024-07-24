@@ -74,7 +74,8 @@ const commonProps = {
   },
   flights: {
     date: "2023-12-17",
-    geoLocation: "HFFC+G3V, Major Arterial Road (South East Extension), DC Block(Newtown), Action Area I, Newtown, New Town, Koch Pukur, West Bengal 700156, India",
+    geoLocation:
+      "HFFC+G3V, Major Arterial Road (South East Extension), DC Block(Newtown), Action Area I, Newtown, New Town, Koch Pukur, West Bengal 700156, India",
     centerPoints: {
       lng: 88.47035320408446,
       lat: 22.573772651224107,
@@ -99,8 +100,8 @@ const commonProps = {
     client: TENANT_ROOT,
     tenant: TENANT,
     pilotID: FIRST_USER,
-  }
-}
+  },
+};
 
 db.locations.insertOne({
   _id: ObjectId("5f202f03b9225726102721b8"),
@@ -274,15 +275,17 @@ db.users.insertMany([
   },
 ]);
 
-db.users.insertMany("0123456789".split("").map((i) => ({
-  name: `TestClient${i}`,
-  email: `client${i}@kesowa.com`,
-  phoneNo: "9" + Math.random().toString().substring(2, 11),
-  userType: "tenant-client",
-  userGroupId: ObjectId("6116058af270c9142c1588f2"),
-  ...commonProps.users,
-  ...commonProps.all,
-})));
+db.users.insertMany(
+  "0123456789".split("").map((i) => ({
+    name: `TestClient${i}`,
+    email: `client${i}@kesowa.com`,
+    phoneNo: "9" + Math.random().toString().substring(2, 11),
+    userType: "tenant-client",
+    userGroupId: ObjectId("6116058af270c9142c1588f2"),
+    ...commonProps.users,
+    ...commonProps.all,
+  }))
+);
 
 db.packages.insertMany([
   {
@@ -328,28 +331,77 @@ db.packages.insertMany([
 ]);
 
 const missionTypes = [
-  { _id: ObjectId("60cc7d408fb1793e8c76d4a3"), name: "Mapping", description: "Request a drone mapping mission" },
-  { _id: ObjectId("5f4771e3976282570dbfffc8"), name: "Surveillance", description: "Request a live video surveillance from a device" },
-]
+  {
+    _id: ObjectId("60cc7d408fb1793e8c76d4a3"),
+    name: "Mapping",
+    description: "Request a drone mapping mission",
+  },
+  {
+    _id: ObjectId("5f4771e3976282570dbfffc8"),
+    name: "Surveillance",
+    description: "Request a live video surveillance from a device",
+  },
+];
 
-db.missiontypes.insertMany(missionTypes.map(missionType => ({ ...commonProps.all, ...missionType, isActive: true, createdBy: SUPER_ADMIN, updatedBy: SUPER_ADMIN })));
+db.missiontypes.insertMany(
+  missionTypes.map((missionType) => ({
+    ...commonProps.all,
+    ...missionType,
+    isActive: true,
+    createdBy: SUPER_ADMIN,
+    updatedBy: SUPER_ADMIN,
+  }))
+);
 
 const missions = [
   { _id: ObjectId("61f3b1e65f915a05cb8885ec"), name: "Mapping mission sample" },
-  { _id: ObjectId("61fbccecb0f5f70beda4cd11"), name: "Survillance mission sample", status: "Live", missionType: ObjectId("5f4771e3976282570dbfffc8") },
+  {
+    _id: ObjectId("61fbccecb0f5f70beda4cd11"),
+    name: "Survillance mission sample",
+    status: "Live",
+    missionType: ObjectId("5f4771e3976282570dbfffc8"),
+  },
   { _id: ObjectId("657ed3d3b7e5f1af532b9f6e"), name: "PlotReportDemo" },
 ];
 
-db.missions.insertMany(missions.map(mission => ({ ...commonProps.all, ...commonProps.missions, ...mission })));
+db.missions.insertMany(
+  missions.map((mission) => ({
+    ...commonProps.all,
+    ...commonProps.missions,
+    ...mission,
+  }))
+);
 
 const flights = [
-  { _id: ObjectId("5f202f03b9225726102721a2"), name: "Live streaming flight test", mission: ObjectId("61fbccecb0f5f70beda4cd11") },
-  { _id: ObjectId("6267dd4b2a2d394080a20849"), name: "Surveillance mission sample flight", mission: ObjectId("61fbccecb0f5f70beda4cd11") },
-  { _id: ObjectId("6267dd4b2a2d394080a20869"), name: "Mapping mission sample flight", mission: ObjectId("61f3b1e65f915a05cb8885ec") },
-  { _id: ObjectId("657ed3d3b7e5f1af532b9f72"), name: "PlotDemoFlight", mission: ObjectId("657ed3d3b7e5f1af532b9f6e") },
+  {
+    _id: ObjectId("5f202f03b9225726102721a2"),
+    name: "Live streaming flight test",
+    mission: ObjectId("61fbccecb0f5f70beda4cd11"),
+  },
+  {
+    _id: ObjectId("6267dd4b2a2d394080a20849"),
+    name: "Surveillance mission sample flight",
+    mission: ObjectId("61fbccecb0f5f70beda4cd11"),
+  },
+  {
+    _id: ObjectId("6267dd4b2a2d394080a20869"),
+    name: "Mapping mission sample flight",
+    mission: ObjectId("61f3b1e65f915a05cb8885ec"),
+  },
+  {
+    _id: ObjectId("657ed3d3b7e5f1af532b9f72"),
+    name: "PlotDemoFlight",
+    mission: ObjectId("657ed3d3b7e5f1af532b9f6e"),
+  },
 ];
 
-db.flights.insertMany(flights.map(flight => ({ ...commonProps.all, ...commonProps.flights, ...flight })));
+db.flights.insertMany(
+  flights.map((flight) => ({
+    ...commonProps.all,
+    ...commonProps.flights,
+    ...flight,
+  }))
+);
 
 const layers = [
   // "Mapping mission sample" Mission Layers
@@ -546,13 +598,19 @@ const layers = [
     updatedAt: ISODate("2022-01-15T00:00:00Z"),
     featureCount: 5211,
     metadata: {
-      searchIndexPath: "/vector/index_Public_Plot.json"
+      searchIndexPath: "/vector/index_Public_Plot.json",
     },
     __v: 0,
   },
 ];
 
-db.layers.insertMany(layers.map(layer => ({ ...commonProps.all, ...commonProps.layers, ...layer })));
+db.layers.insertMany(
+  layers.map((layer) => ({
+    ...commonProps.all,
+    ...commonProps.layers,
+    ...layer,
+  }))
+);
 
 db.layerfiles.insertMany([
   {
@@ -590,11 +648,18 @@ const usergroups = [
   },
   {
     _id: ObjectId("6116058af270c9142c1588f2"),
-    permissions: ["client_mission_list","client_list"],
+    permissions: ["client_mission_list", "client_list"],
     isActive: true,
     name: "Client Access",
   },
-
 ];
 
-db.usergroups.insertMany(usergroups.map(usergroup => ({ ...commonProps.all, ...commonProps.usergroups, ...usergroup, createdBy: TENANT_ROOT, updatedBy: TENANT_ROOT })));
+db.usergroups.insertMany(
+  usergroups.map((usergroup) => ({
+    ...commonProps.all,
+    ...commonProps.usergroups,
+    ...usergroup,
+    createdBy: TENANT_ROOT,
+    updatedBy: TENANT_ROOT,
+  }))
+);

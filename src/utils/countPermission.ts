@@ -11,7 +11,7 @@ export const isAlertCount = async (
     const docCount = await Tenant.findOne({
       _id: res.locals.user.tenantId,
     })
-      .populate<{activePackage: IPackage}>("activePackage")
+      .populate<{ activePackage: IPackage }>("activePackage")
       .lean();
     if (
       Number(docCount.actualAlertCount) <
@@ -41,7 +41,7 @@ export const isUserCount = async (
     const docCount = await Tenant.findOne({
       _id: res.locals.user.tenantId,
     })
-      .populate<{activePackage: IPackage}>("activePackage")
+      .populate<{ activePackage: IPackage }>("activePackage")
       .lean();
     if (
       Number(docCount.actualUserCount) <

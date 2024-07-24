@@ -13,10 +13,7 @@ import {
   reactivateClient,
 } from "../../controllers/v1/clientController";
 import { fetchMissionById } from "../../controllers/v1/missionController";
-import {
-  isAuthenticated,
-  PermissionGuard,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 
 import { isClientCount } from "../../utils/countPermission";
 import {

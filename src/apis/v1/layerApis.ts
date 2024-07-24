@@ -1,5 +1,5 @@
 import express, { Request } from "express";
-import { isAuthenticated, PermissionGuard, } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 const router = express.Router();
 import multer from "multer";
 import {
@@ -392,7 +392,11 @@ router.patch(
   body("Id").notEmpty().isMongoId(),
   query("mode").notEmpty().isIn(["LayerLabel", "GeoCoord"]),
   validator,
-  PermissionGuard(PERMS.UPLOAD_LAYER, PERMS.FEATURE_FILE_UPLOAD, PERMS.ADD_FEATURE),
+  PermissionGuard(
+    PERMS.UPLOAD_LAYER,
+    PERMS.FEATURE_FILE_UPLOAD,
+    PERMS.ADD_FEATURE
+  ),
   isSize,
   RobustRunner(autoAssignImage)
 );
@@ -470,7 +474,11 @@ router.post(
   body("type").optional().trim(),
   body("missionId").optional().isMongoId(),
   validator,
-  PermissionGuard(PERMS.UPLOAD_LAYER, PERMS.FEATURE_FILE_UPLOAD, PERMS.ADD_FEATURE),
+  PermissionGuard(
+    PERMS.UPLOAD_LAYER,
+    PERMS.FEATURE_FILE_UPLOAD,
+    PERMS.ADD_FEATURE
+  ),
   RobustRunner(picktoMapUseForLayerCreate)
 );
 

@@ -34,18 +34,23 @@ export const createClientformissionGroup = async (
   res: AuthResponse
 ) => {
   {
-    const result = await Usergroup.findOne(
-      {
-        _id: req.body.userGroupId,
-        tenantId: res.locals.user.tenantId._id
-      },
+    const result = await Usergroup.findOne({
+      _id: req.body.userGroupId,
+      tenantId: res.locals.user.tenantId._id,
+    });
+    const onlyClientPerms = result.permissions.every((perm) =>
+      [
+        PERMS.CLIENT_DATA,
+        PERMS.CLIENT_LIST,
+        PERMS.CLIENT_MISSION_LIST,
+      ].includes(perm)
     );
-    const onlyClientPerms = result.permissions.every(perm => [PERMS.CLIENT_DATA, PERMS.CLIENT_LIST, PERMS.CLIENT_MISSION_LIST].includes(perm))
     if (result) {
       if (onlyClientPerms) {
-        const existingClient = await User.findOne(
-          { email: req.body.email, tenantId: res.locals.user.tenantId._id },
-        );
+        const existingClient = await User.findOne({
+          email: req.body.email,
+          tenantId: res.locals.user.tenantId._id,
+        });
 
         if (existingClient) {
           const temppass = crypto.randomBytes(10).toString("hex");

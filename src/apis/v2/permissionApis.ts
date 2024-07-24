@@ -67,7 +67,9 @@ openApi.addPath(
           Types.Object({
             description: "Successful Operation",
             properties: {
-              data: Types.Array({ arrayType: Types.StringEnum({values: Object.values(PERMS)}) }),
+              data: Types.Array({
+                arrayType: Types.StringEnum({ values: Object.values(PERMS) }),
+              }),
               pagination: Types.Object({
                 description: "pagination information for data",
                 properties: {

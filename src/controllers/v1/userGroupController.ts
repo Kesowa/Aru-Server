@@ -12,8 +12,13 @@ export const createUserGroupforTenant = async (
   res: AuthResponse
 ) => {
   {
-    const existing_group = await UserGroup.findOne({ name: req.body.name, tenantId: res.locals.user.tenantId._id, });
-    const permissions = Object.values(TENANT_STAFF_PERMS).filter(perm => req.body.permissions.includes(perm));
+    const existing_group = await UserGroup.findOne({
+      name: req.body.name,
+      tenantId: res.locals.user.tenantId._id,
+    });
+    const permissions = Object.values(TENANT_STAFF_PERMS).filter((perm) =>
+      req.body.permissions.includes(perm)
+    );
     if (existing_group) {
       res.json({
         status: false,
@@ -53,7 +58,11 @@ export const listUserGroupforTenant = async (
 ) => {
   {
     const [sortBy, order] = (req.query.sort || "name:desc").split(":");
-    const user_groups = await UserGroup.find({ tenantId: res.locals.user.tenantId._id, }).collation({ locale: "en" }).sort({ [sortBy]: sanitizeSort(order) });
+    const user_groups = await UserGroup.find({
+      tenantId: res.locals.user.tenantId._id,
+    })
+      .collation({ locale: "en" })
+      .sort({ [sortBy]: sanitizeSort(order) });
     return res.json({
       status: true,
       message: "user groups fetched",
@@ -79,19 +88,19 @@ export const getUserGroupbyID = async (req: Request, res: AuthResponse) => {
 };
 
 export const UserGroupforEdit = async (req: Request, res: AuthResponse) => {
-
   const data = await UserGroup.findOne({
     _id: req.body.id,
     tenantId: res.locals.user.tenantId,
   });
-  const permissions = Object.values(TENANT_STAFF_PERMS).filter(perm => req.body.permissions.includes(perm));
+  const permissions = Object.values(TENANT_STAFF_PERMS).filter((perm) =>
+    req.body.permissions.includes(perm)
+  );
   if (data) {
     const doc = await UserGroup.findOneAndUpdate(
       { _id: req.body.id, tenantId: res.locals.user.tenantId },
       {
         name: req.body.name,
         permissions: permissions,
-
       },
       {
         new: true,
@@ -109,11 +118,9 @@ export const UserGroupforEdit = async (req: Request, res: AuthResponse) => {
       status: false,
       message: "User group does not match!",
     });
-
 };
 
 export const UserGroupDelete = async (req: Request, res: AuthResponse) => {
-
   const users = await User.exists({
     userGroupId: req.query.id,
     tenantId: res.locals.user.tenantId._id,

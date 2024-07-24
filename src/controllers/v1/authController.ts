@@ -51,7 +51,11 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
           data.password = "secret";
 
           Object.assign(data, {
-            customPermissions: await GetPermissions(user.userGroupId, user.userType, user.tenantId),
+            customPermissions: await GetPermissions(
+              user.userGroupId,
+              user.userType,
+              user.tenantId
+            ),
             password: undefined,
           });
           if (user.userType == "tenant-client") {
@@ -103,7 +107,11 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
 
 //++++++++++++++++++++++++++++++++ get user details +++++++++++++++++++++++++++++++++++++++
 export const getUserDetails = async (req: Request, res: AuthResponse) => {
-  const customPermissions = await GetPermissions(res.locals.user.userGroupId, res.locals.user.userType, res.locals.user.tenantId._id);
+  const customPermissions = await GetPermissions(
+    res.locals.user.userGroupId,
+    res.locals.user.userType,
+    res.locals.user.tenantId._id
+  );
   if (customPermissions.length == 0) {
     return res.status(404).json({
       status: false,

@@ -1689,7 +1689,7 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
       {
         tenantId: 1,
         layerpath: 1,
-        metadata: 1
+        metadata: 1,
       }
     );
     const tenantDoc = await Tenant.findOne(
@@ -1710,9 +1710,15 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
           { _id: res.locals.user.tenantId },
           { publicMapRef: unid }
         );
-        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true, metadata });
+        await Layer.updateOne(
+          { _id: req.body.layerId },
+          { isPublic: true, metadata }
+        );
       } else {
-        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true, metadata });
+        await Layer.updateOne(
+          { _id: req.body.layerId },
+          { isPublic: true, metadata }
+        );
       }
       const getDoc = await Layer.findOne({ _id: req.body.layerId }).populate<{
         tenantId: ITenant;

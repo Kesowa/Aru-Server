@@ -1,8 +1,5 @@
 import express from "express";
-import {
-  isAuthenticated,
-  PermissionGuard,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import {
   createLocation,
   deleteLocation,
@@ -30,7 +27,12 @@ router.post(
   RobustRunner(createLocation)
 );
 
-router.get("/get", isAuthenticated, PermissionGuard(PERMS.LOCATION_LIST), RobustRunner(getLocation));
+router.get(
+  "/get",
+  isAuthenticated,
+  PermissionGuard(PERMS.LOCATION_LIST),
+  RobustRunner(getLocation)
+);
 
 // Route not used in client, and inconsistent
 router.get(

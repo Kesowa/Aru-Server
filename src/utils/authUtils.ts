@@ -65,7 +65,11 @@ const Authenticator = async (token: string, ip: string, agent: string) => {
   const user = await User.findById(session?.owner).populate("tenantId").lean();
 
   if (user && session) {
-    user["customPermissions"] = await GetPermissions(user.userGroupId, user.userType, user.tenantId);
+    user["customPermissions"] = await GetPermissions(
+      user.userGroupId,
+      user.userType,
+      user.tenantId
+    );
     if (user.userType == "super-admin") return user;
     const doc = await Tenant.findOne({ _id: user.tenantId }).populate<{
       activePackage: IPackage;
@@ -147,19 +151,23 @@ type permGuardType = {
 export function PermissionGuard(...perms: PERMS[]) {
   return (req: Request, res: AuthResponse, next: NextFunction) => {
     console.log("PERMISSIONS", perms);
-    const sufficientPerms = perms.every(perm => res.locals.user.customPermissions.includes(perm));
+    const sufficientPerms = perms.every((perm) =>
+      res.locals.user.customPermissions.includes(perm)
+    );
     if (sufficientPerms) {
       req.log.info("user has sufficient perms");
       next();
       return;
     }
-    const missingPerms = perms.filter(perm => !res.locals.user.customPermissions.includes(perm));
+    const missingPerms = perms.filter(
+      (perm) => !res.locals.user.customPermissions.includes(perm)
+    );
     res.status(403).json({
       status: false,
       message: "Permission denied",
       data: missingPerms,
-    })
-  }
+    });
+  };
 }
 
 function genPermissionGuard(perm: permGuardType) {
@@ -331,7 +339,7 @@ export const canListFlightLogs = genPermissionGuard({
 
 //User Management Permission:
 export const canListUsers = genPermissionGuard({
-  userTypes: ["tenant-root","tenant-staff"],
+  userTypes: ["tenant-root", "tenant-staff"],
   perm: [PERMS.USER_LIST],
 });
 
@@ -441,11 +449,7 @@ export const canDeleteAlert = genPermissionGuard({
 });
 export const canListAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    PERMS.ALERT_LIST,
-    PERMS.MISSION_LIST,
-    PERMS.DATA_PAGE,
-  ],
+  perm: [PERMS.ALERT_LIST, PERMS.MISSION_LIST, PERMS.DATA_PAGE],
 });
 
 //Pilot Management Permissions
@@ -591,10 +595,7 @@ export const canClient = genPermissionGuard({
 
 export const canCreateClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    PERMS.CREATE_CLIENT,
-    PERMS.CLIENT_LIST,
-  ],
+  perm: [PERMS.CREATE_CLIENT, PERMS.CLIENT_LIST],
 });
 
 export const canEditClient = genPermissionGuard({
@@ -614,17 +615,10 @@ export const canListClient = genPermissionGuard({
 
 export const canManageClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    PERMS.CREATE_CLIENT,
-    PERMS.EDIT_CLIENT,
-    PERMS.DELETE_CLIENT,
-  ],
+  perm: [PERMS.CREATE_CLIENT, PERMS.EDIT_CLIENT, PERMS.DELETE_CLIENT],
 });
 
 export const canViewRTCstream = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    PERMS.WEBRTC_VIEW,
-    PERMS.MISSION_LIST,
-  ],
+  perm: [PERMS.WEBRTC_VIEW, PERMS.MISSION_LIST],
 });
