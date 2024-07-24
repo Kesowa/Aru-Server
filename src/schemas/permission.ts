@@ -1,119 +1,233 @@
 import mongoose from "mongoose";
-import { Types } from "ts-openapi";
+import { UserTypes } from "./user";
+import UserGroup from "../models/usergroup";
 
-export interface IPermission {
-  name: string; // index
-  isSideNavOption: boolean;
-  isFrontendRoute: boolean;
-  isPilot: boolean;
-  isClient: boolean; // index
-  frontendRoute: string;
-  isVisibleToTenant: boolean; // index
-  isVisibleToSuperAdmin: boolean;
-  sideNavOptionLabel: string;
-  sideNavOptionIcon: string;
-  description: string;
-  createdBy: mongoose.Types.ObjectId;
-  updatedBy: mongoose.Types.ObjectId;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+export enum PERMS {
+  ADD_FEATURE = "add_feature",
+  ALERT_CREATE = "alert_create",
+  ALERT_DELETE = "alert_delete",
+  ALERT_LIST = "alert_list",
+  ALERT_UPDATE = "alert_update",
+  ASSET_CLASS_CREATE = "asset_class_create",
+  ASSET_CLASS_DELETE = "asset_class_delete",
+  ASSET_CLASS_LIST = "asset_class_list",
+  ASSET_CLASS_UPDATE = "asset_class_update",
+  ASSET_CREATE = "asset_create",
+  ASSET_DELETE = "asset_delete",
+  ASSET_LIST = "asset_list",
+  ASSET_UPDATE = "asset_update",
+  CAN_CREATE_BASE_LAYER = "can_create_base_layer",
+  CAN_DELETE_BASE_LAYER = "can_delete_base_layer",
+  CAN_EDIT_BASE_LAYER = "can_edit_base_layer",
+  CAN_UPDATE_BASE_LAYER = "can_update_base_layer",
+  CAN_UPLOAD_TO_BASE_LAYER = "can_upload_to_base_layer",
+  CLIENT_DATA = "client_data",
+  CLIENT_LIST = "client_list",
+  CLIENT_MISSION_LIST = "client_mission_list",
+  COMMENT_DELETE = "comment_delete",
+  CREATE_CLIENT = "create_client",
+  DASHBOARD = "dashboard",
+  DATA_PAGE = "data_page",
+  DELETE_CLIENT = "delete_client",
+  DELETE_DOCUMENT = "delete_document",
+  DELETE_FEATURE = "delete_feature",
+  DELETE_LAYER = "delete_layer",
+  DOWNLOAD_LAYER = "download_layer",
+  EDIT_CLIENT = "edit_client",
+  EDIT_FEATURE = "edit_feature",
+  EDIT_LAYER = "edit_layer",
+  FEATURE_FILE_DELETE = "feature_file_delete",
+  FEATURE_FILE_UPLOAD = "feature_file_upload",
+  FEATURE_LIST = "feature_list",
+  FLIGHT_CREATE = "flight_create",
+  FLIGHT_DELETE = "flight_delete",
+  FLIGHT_LIST = "flight_list",
+  FLIGHT_LOG_CREATE = "flight_log_create",
+  FLIGHT_LOG_DELETE = "flight_log_delete",
+  FLIGHT_LOG_LIST = "flight_log_list",
+  FLIGHT_LOG_UPDATE = "flight_log_update",
+  FLIGHT_UPDATE = "flight_update",
+  LAYER_LIST = "layer_list",
+  LIST_DOCUMENT = "list_document",
+  LOCATION_CREATE = "location_create",
+  LOCATION_DELETE = "location_delete",
+  LOCATION_LIST = "location_list",
+  LOCATION_UPDATE = "location_update",
+  MANUFACTURER_CREATE = "manufacturer_create",
+  MANUFACTURER_DELETE = "manufacturer_delete",
+  MANUFACTURER_LIST = "manufacturer_list",
+  MANUFACTURER_UPDATE = "manufacturer_update",
+  MISSION_CREATE = "mission_create",
+  MISSION_DELETE = "mission_delete",
+  MISSION_LIST = "mission_list",
+  MISSION_TYPE_CREATE = "mission_type_create",
+  MISSION_TYPE_DELETE = "mission_type_delete",
+  MISSION_TYPE_LIST = "mission_type_list",
+  MISSION_TYPE_UPDATE = "mission_type_update",
+  MISSION_UPDATE = "mission_update",
+  MODEL_CREATE = "model_create",
+  MODEL_DELETE = "model_delete",
+  MODEL_LIST = "model_list",
+  MODEL_UPDATE = "model_update",
+  OTP_EMAIL_SEND = "otp_email_send",
+  PACKAGE_CREATE = "package_create",
+  PACKAGE_DELETE = "package_create",
+  PACKAGE_LIST = "package_create",
+  PACKAGE_UPDATE = "package_create",
+  PUBLIC_MAP_CREATE = "public_map_create",
+  SAVE_DRAWINGS = "save_drawings",
+  SET_COVER_PHOTO = "set_cover_photo",
+  STREAM_CREATE = "stream_create",
+  STREAM_DELETE = "stream_delete",
+  STREAM_LIST = "stream_list",
+  TENANT_CREATE = "tenant_create",
+  TENANT_DELETE = "tenant_delete",
+  TENANT_LIST_SELF = "tenant_list_self",
+  TENANT_LIST = "tenant_list",
+  TENANT_UPDATE_SELF = "tenant_update_self",
+  TENANT_UPDATE = "tenant_update",
+  THREAD_CREATE = "thread_create",
+  THREAD_LIST = "thread_list",
+  THREAD_UPDATE = "thread_update",
+  UPDATE_DOCUMENT = "update_document",
+  UPLOAD_DOCUMENT = "upload_document",
+  UPLOAD_LAYER = "upload_layer",
+  USER_CREATE = "user_create",
+  USER_DELETE = "user_delete",
+  USER_GROUP_CREATE = "user_group_create",
+  USER_GROUP_DELETE = "user_group_delete",
+  USER_GROUP_LIST = "user_group_list",
+  USER_GROUP_UPDATE = "user_group_update",
+  USER_LIST = "user_list",
+  USER_UPDATE = "user_update",
+  VOD_CREATE = "vod_create",
+  VOD_DELETE = "vod_delete",
+  VOD_LIST = "vod_list",
+  VOD_UPDATE = "vod_update",
+  WEBRTC_VIEW = "webrtc_view",
 }
 
-export const PermissionType = {
-  name: Types.String(), // index
-  isSideNavOption: Types.Boolean(),
-  isFrontendRoute: Types.Boolean(),
-  isPilot: Types.Boolean(),
-  isClient: Types.Boolean(), // index
-  frontendRoute: Types.String(),
-  isVisibleToTenant: Types.Boolean(), // index
-  isVisibleToSuperAdmin: Types.Boolean(),
-  sideNavOptionLabel: Types.String(),
-  sideNavOptionIcon: Types.String(),
-  description: Types.String(),
-  createdBy: Types.String(),
-  updatedBy: Types.String(),
-  isActive: Types.Boolean(),
-  createdAt: Types.DateTime(),
-  updatedAt: Types.DateTime(),
-};
+export const TENANT_CLIENT_PERMS = <const>[
+  PERMS.ASSET_LIST,
+  PERMS.CLIENT_MISSION_LIST,
+  PERMS.DASHBOARD,
+  PERMS.LAYER_LIST,
+  PERMS.MISSION_LIST,
+  PERMS.VOD_LIST,
+  PERMS.CLIENT_LIST,
+];
 
-const permissionschema = new mongoose.Schema<IPermission>(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    isFrontendRoute: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    isSideNavOption: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    isPilot: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    isClient: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    frontendRoute: {
-      type: String,
-    },
-    sideNavOptionIcon: {
-      type: String,
-    },
-    sideNavOptionLabel: {
-      type: String,
-    },
-    isVisibleToTenant: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    isVisibleToSuperAdmin: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
-    },
-    updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-      required: true,
-    },
-    description: {
-      type: String,
-    },
-    createdAt: {
-      type: Date,
-    },
-    updatedAt: {
-      type: Date,
-    },
-  },
-  {
-    timestamps: true,
+export const TENANT_STAFF_PERMS = <const>[
+  PERMS.ADD_FEATURE,
+  PERMS.ALERT_CREATE,
+  PERMS.ALERT_DELETE,
+  PERMS.ALERT_LIST,
+  PERMS.ALERT_UPDATE,
+  PERMS.ASSET_CREATE,
+  PERMS.ASSET_DELETE,
+  PERMS.ASSET_UPDATE,
+  PERMS.CAN_CREATE_BASE_LAYER,
+  PERMS.CAN_DELETE_BASE_LAYER,
+  PERMS.CAN_EDIT_BASE_LAYER,
+  PERMS.CAN_UPDATE_BASE_LAYER,
+  PERMS.CAN_UPLOAD_TO_BASE_LAYER,
+  PERMS.CLIENT_DATA,
+  PERMS.CLIENT_LIST,
+  PERMS.COMMENT_DELETE,
+  PERMS.CREATE_CLIENT,
+  PERMS.DATA_PAGE,
+  PERMS.DELETE_CLIENT,
+  PERMS.DELETE_DOCUMENT,
+  PERMS.DELETE_FEATURE,
+  PERMS.DELETE_LAYER,
+  PERMS.EDIT_CLIENT,
+  PERMS.EDIT_FEATURE,
+  PERMS.EDIT_LAYER,
+  PERMS.FEATURE_FILE_DELETE,
+  PERMS.FEATURE_FILE_UPLOAD,
+  PERMS.FEATURE_LIST,
+  PERMS.FLIGHT_CREATE,
+  PERMS.FLIGHT_DELETE,
+  PERMS.FLIGHT_LIST,
+  PERMS.FLIGHT_LOG_CREATE,
+  PERMS.FLIGHT_LOG_DELETE,
+  PERMS.FLIGHT_LOG_LIST,
+  PERMS.FLIGHT_LOG_UPDATE,
+  PERMS.FLIGHT_UPDATE,
+  PERMS.LIST_DOCUMENT,
+  PERMS.LOCATION_CREATE,
+  PERMS.LOCATION_DELETE,
+  PERMS.LOCATION_LIST,
+  PERMS.LOCATION_UPDATE,
+  PERMS.MANUFACTURER_CREATE,
+  PERMS.MANUFACTURER_DELETE,
+  PERMS.MANUFACTURER_LIST,
+  PERMS.MANUFACTURER_UPDATE,
+  PERMS.MISSION_CREATE,
+  PERMS.MISSION_DELETE,
+  PERMS.MISSION_TYPE_LIST,
+  PERMS.MODEL_CREATE,
+  PERMS.MODEL_DELETE,
+  PERMS.MODEL_LIST,
+  PERMS.MODEL_UPDATE,
+  PERMS.OTP_EMAIL_SEND,
+  PERMS.SET_COVER_PHOTO,
+  PERMS.STREAM_CREATE,
+  PERMS.STREAM_DELETE,
+  PERMS.STREAM_LIST,
+  PERMS.THREAD_CREATE,
+  PERMS.THREAD_LIST,
+  PERMS.THREAD_UPDATE,
+  PERMS.UPDATE_DOCUMENT,
+  PERMS.UPLOAD_LAYER,
+  PERMS.USER_CREATE,
+  PERMS.USER_GROUP_LIST,
+  PERMS.USER_LIST,
+  PERMS.USER_UPDATE,
+  PERMS.VOD_CREATE,
+  PERMS.VOD_DELETE,
+  PERMS.VOD_UPDATE,
+  PERMS.WEBRTC_VIEW,
+  ...TENANT_CLIENT_PERMS,
+];
+
+export const TENANT_ROOT_PERMS = <const>[
+  PERMS.PUBLIC_MAP_CREATE,
+  PERMS.TENANT_LIST_SELF,
+  PERMS.TENANT_UPDATE_SELF,
+  PERMS.USER_CREATE,
+  PERMS.USER_DELETE,
+  PERMS.USER_GROUP_CREATE,
+  PERMS.USER_GROUP_DELETE,
+  PERMS.USER_GROUP_UPDATE,
+  ...TENANT_STAFF_PERMS,
+];
+export const SUPER_ADMIN_PERMS = <const>[
+  PERMS.ASSET_CLASS_CREATE,
+  PERMS.ASSET_CLASS_DELETE,
+  PERMS.ASSET_CLASS_UPDATE,
+  PERMS.MISSION_TYPE_CREATE,
+  PERMS.MISSION_TYPE_DELETE,
+  PERMS.MISSION_TYPE_UPDATE,
+  PERMS.TENANT_CREATE,
+  PERMS.TENANT_DELETE,
+  ...TENANT_ROOT_PERMS,
+];
+
+export const GetPermissions = async (
+  userGroupId: mongoose.Types.ObjectId,
+  userType: UserTypes,
+  tenantId: mongoose.Types.ObjectId
+) => {
+  let customPermissions: PERMS[] = [];
+  if (userType == "tenant-staff" || userType == "tenant-client") {
+    const usergroup = await UserGroup.findOne({ _id: userGroupId, tenantId });
+    customPermissions = usergroup.permissions;
+  } else if (userType == "tenant-root") {
+    customPermissions = [...TENANT_ROOT_PERMS];
+  } else if (userType == "super-admin") {
+    customPermissions = [...SUPER_ADMIN_PERMS];
   }
-);
-permissionschema.index({
-  name: 1,
-  isClient: 1,
-  isVisibleToTenant: 1,
-});
-export default permissionschema;
+
+  return customPermissions;
+};

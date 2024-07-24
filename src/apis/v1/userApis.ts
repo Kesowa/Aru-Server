@@ -10,12 +10,17 @@ import {
   UserEdit,
 } from "../../controllers/v1/userController";
 import { uploadFileforUSer } from "../../controllers/v1/commonController";
-import { canListUsers, isAuthenticated } from "../../utils/authUtils";
+import {
+  isAuthenticated,
+  onlyTenantRootAccess,
+  PermissionGuard,
+} from "../../utils/authUtils";
 import { multerStorage } from "../../utils/fileUploadUtils";
 import { isUserCount } from "../../utils/countPermission";
 import multer from "multer";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
+import { PERMS } from "../../schemas/permission";
 
 const upload = multer({ storage: multerStorage(Directory.TEMP_IMAGES) });
 const router = express.Router();
@@ -46,6 +51,7 @@ router.post(
   body("avatar").optional().notEmpty().trim(),
   validator,
   isAuthenticated,
+  onlyTenantRootAccess,
   isUserCount,
   RobustRunner(createUser)
 );
@@ -54,7 +60,7 @@ router.post(
 router.get(
   "/fetch-all-user",
   isAuthenticated,
-  canListUsers,
+  PermissionGuard(PERMS.USER_LIST),
   RobustRunner(fetchAllUserOfTenant)
 );
 
@@ -62,6 +68,7 @@ router.get(
 router.patch(
   "/edit-user",
   isAuthenticated,
+  onlyTenantRootAccess,
   body("id").notEmpty().isMongoId(),
   body("password").optional().notEmpty().isLength({ min: 6 }),
   body("email").optional().notEmpty().isEmail().withMessage("invalid Email."),
@@ -74,6 +81,7 @@ router.patch(
   body("pilotLicenceNo").optional().notEmpty().isNumeric(),
   body("avatar").optional().notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.USER_UPDATE),
   RobustRunner(UserEdit)
 );
 
@@ -82,6 +90,7 @@ router.delete(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.USER_DELETE),
   RobustRunner(UserDelete)
 );
 

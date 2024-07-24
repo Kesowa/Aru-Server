@@ -1,7 +1,6 @@
 import { Request, NextFunction, Response } from "express";
 import User from "../models/user";
 import { AuthResponse } from "./interfaceUtils";
-import UserGroup from "../models/usergroup";
 import Tenant from "../models/tenant";
 import { sessionModel } from "../models/session";
 
@@ -10,6 +9,7 @@ import PassReset from "../models/passwordReset";
 import crypto from "crypto";
 import { MODE, Mode, SECRET_KEY } from "../constants";
 import { ObjectId } from "mongodb";
+import { GetPermissions, PERMS } from "../schemas/permission";
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,
@@ -65,12 +65,11 @@ const Authenticator = async (token: string, ip: string, agent: string) => {
   const user = await User.findById(session?.owner).populate("tenantId").lean();
 
   if (user && session) {
-    if (user.userGroupId) {
-      const userGroup = await UserGroup.findById(user.userGroupId).populate(
-        "permissions"
-      );
-      user.customPermissions = Array.from(userGroup?.permissions || []);
-    }
+    user["customPermissions"] = await GetPermissions(
+      user.userGroupId,
+      user.userType,
+      user.tenantId
+    );
     if (user.userType == "super-admin") return user;
     const doc = await Tenant.findOne({ _id: user.tenantId }).populate<{
       activePackage: IPackage;
@@ -145,17 +144,31 @@ export const isAuthenticated = (
 
 type permGuardType = {
   userTypes: Array<string>;
-  perm: Array<
-    | {
-        permName: "name";
-        value: string;
-      }
-    | {
-        permName: string;
-        value: boolean;
-      }
-  >;
+  userGroups?: Array<string>;
+  perm: Array<PERMS>;
 };
+
+export function PermissionGuard(...perms: PERMS[]) {
+  return (req: Request, res: AuthResponse, next: NextFunction) => {
+    console.log("PERMISSIONS", perms);
+    const sufficientPerms = perms.every((perm) =>
+      res.locals.user.customPermissions.includes(perm)
+    );
+    if (sufficientPerms) {
+      req.log.info("user has sufficient perms");
+      next();
+      return;
+    }
+    const missingPerms = perms.filter(
+      (perm) => !res.locals.user.customPermissions.includes(perm)
+    );
+    res.status(403).json({
+      status: false,
+      message: "Permission denied",
+      data: missingPerms,
+    });
+  };
+}
 
 function genPermissionGuard(perm: permGuardType) {
   return (req: Request, res: AuthResponse, next: NextFunction) => {
@@ -168,18 +181,19 @@ function genPermissionGuard(perm: permGuardType) {
         authorized = false;
       }
     }
+    if (perm.userGroups && perm.userGroups.length > 0 && !authorized) {
+      if (perm.userGroups.includes(res.locals.user.userGroupId.toString())) {
+        authorized = true;
+        req.log.info("User group authorized!");
+      } else {
+        authorized = false;
+      }
+    }
     if (perm.perm.length > 0 && !authorized) {
       let anyPerms = false; // we initialize authorized with true and if ANY of the perms is not found in user.customPermissions, we make it false and break the loop
       for (const permission of perm.perm) {
-        const found = res.locals.user.customPermissions.findIndex(
-          (userPerm) => {
-            if (userPerm[permission.permName] === permission.value) {
-              return true;
-            }
-            return false;
-          }
-        );
-        if (found !== -1) {
+        const found = res.locals.user.customPermissions.includes(permission);
+        if (found) {
           req.log.info("Permission found!", permission);
           anyPerms = true;
           break;
@@ -226,7 +240,8 @@ export const shouldLinkSend = async (
 
 export const canFly = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "isPilot", value: true }],
+  userGroups: ["6034c331a2f9c7554b1d42e0"],
+  perm: [],
 });
 
 export const onlySuperAdminAccess = genPermissionGuard({
@@ -240,32 +255,25 @@ export const onlyTenantRootAccess = genPermissionGuard({
 
 export const canListUserGroup = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "edit_client" }],
+  perm: [PERMS.EDIT_CLIENT],
 });
 // Mission Management Permissions:
 export const canCreateMission = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "mission_create" },
-    { permName: "isPilot", value: true },
-  ],
+  userGroups: ["6034c331a2f9c7554b1d42e0"],
+  perm: [PERMS.MISSION_CREATE],
 });
 export const canUpdateMission = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "mission_update" }],
+  perm: [PERMS.MISSION_UPDATE],
 });
 export const canDeleteMission = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "mission_delete" }],
+  perm: [PERMS.MISSION_DELETE],
 });
 export const canListMission = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "mission_list" },
-    // { permName: "name", value: "mission_create" },
-    // { permName: "name", value: "data_page" },
-    // { permName: "name", value: "client_data" },
-  ],
+  perm: [PERMS.MISSION_LIST],
 });
 
 // Flight Management Permissions:
@@ -289,23 +297,19 @@ export const canListMission = genPermissionGuard({
 //Asset Management Permissions :
 export const canCreateAsset = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "asset_create" }],
+  perm: [PERMS.ASSET_CREATE],
 });
 export const canUpdateAsset = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "asset_update" }],
+  perm: [PERMS.ASSET_UPDATE],
 });
 export const canDeleteAsset = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "asset_delete" }],
+  perm: [PERMS.ASSET_DELETE],
 });
 export const canListAsset = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "asset_list" },
-    // { permName: "name", value: "mission_create" },
-    // { permName: "name", value: "asset_create" },
-  ],
+  perm: [PERMS.ASSET_LIST],
 });
 
 //Asset Class Management Permissions :
@@ -324,161 +328,135 @@ export const canListAsset = genPermissionGuard({
 
 export const canListAssetClass = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "asset_class_list" }],
+  perm: [PERMS.ASSET_CLASS_LIST],
 });
 
 //FlightLog Apis
 export const canListFlightLogs = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "flight_log_list" }],
+  perm: [PERMS.FLIGHT_LOG_LIST],
 });
 
 //User Management Permission:
 export const canListUsers = genPermissionGuard({
-  userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "user_list" },
-    // { permName: "name", value: "asset_create" },
-  ],
+  userTypes: ["tenant-root", "tenant-staff"],
+  perm: [PERMS.USER_LIST],
 });
 
 //Location Management Permissions :
 export const canCreateLocation = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "location_create" }],
+  perm: [PERMS.LOCATION_CREATE],
 });
 export const canUpdateLocation = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "location_update" }],
+  perm: [PERMS.LOCATION_UPDATE],
 });
 export const canDeleteLocation = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "location_delete" }],
+  perm: [PERMS.LOCATION_DELETE],
 });
 export const canListLocation = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "location_list" },
-    // { permName: "name", value: "mission_create" },
-    // { permName: "name", value: "data_page" },
-  ],
+  perm: [PERMS.LOCATION_LIST],
 });
 
 //Manufacturer Management Permissions :
 export const canCreateManufacturer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "manufacturer_create" }],
+  perm: [PERMS.MANUFACTURER_CREATE],
 });
 export const canUpdateManufacturer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "manufacturer_update" }],
+  perm: [PERMS.MANUFACTURER_UPDATE],
 });
 export const canDeleteManufacturer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "manufacturer_delete" }],
+  perm: [PERMS.MANUFACTURER_DELETE],
 });
 export const canListManufacturer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "manufacturer_list" },
-    // { permName: "name", value: "model_create" },
-    // { permName: "name", value: "asset_create" },
-  ],
+  perm: [PERMS.MANUFACTURER_LIST],
 });
 
 //Model Management Permissions :
 export const canCreateModel = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "model_create" }],
+  perm: [PERMS.MODEL_CREATE],
 });
 export const canUpdateModel = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "model_update" }],
+  perm: [PERMS.MODEL_UPDATE],
 });
 export const canDeleteModel = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "model_delete" }],
+  perm: [PERMS.MODEL_DELETE],
 });
 export const canListModel = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "model_list" },
-    // { permName: "name", value: "asset_create" },
-  ],
+  perm: [PERMS.MODEL_LIST],
 });
 
 //Thread Management Permissions :
 export const canCreateThread = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "thread_create" }],
+  perm: [PERMS.THREAD_CREATE],
 });
 export const canUpdateThread = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "thread_update" }],
+  perm: [PERMS.THREAD_UPDATE],
 });
 export const canDeleteComment = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "comment_delete" }],
+  perm: [PERMS.COMMENT_DELETE],
 });
 export const canListThread = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "thread_list" }],
+  perm: [PERMS.THREAD_LIST],
 });
 
 //VOD Management Permissions :
 export const canCreateVOD = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "vod_create" }],
+  perm: [PERMS.VOD_CREATE],
 });
 export const canUpdateVOD = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "vod_update" }],
+  perm: [PERMS.VOD_UPDATE],
 });
 export const canDeleteVOD = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "vod_delete" }],
+  perm: [PERMS.VOD_DELETE],
 });
 export const canListVOD = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "vod_list" },
-    // { permName: "name", value: "mission_list" },
-    // { permName: "name", value: "data_page" },
-    // { permName: "name", value: "client_data" },
-    // { permName: "isClient", value: true },
-  ],
+  perm: [PERMS.VOD_LIST],
 });
 
 //Alert Management Permissions :
 export const canCreateAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "alert_create" },
-    { permName: "isPilot", value: true },
-  ],
+  userGroups: ["6034c331a2f9c7554b1d42e0"],
+  perm: [PERMS.ALERT_CREATE],
 });
 export const canUpdateAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "alert_update" }],
+  perm: [PERMS.ALERT_UPDATE],
 });
 export const canDeleteAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "alert_delete" }],
+  perm: [PERMS.ALERT_DELETE],
 });
 export const canListAlert = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "alert_list" },
-    { permName: "name", value: "mission_list" },
-    { permName: "name", value: "data_page" },
-  ],
+  perm: [PERMS.ALERT_LIST, PERMS.MISSION_LIST, PERMS.DATA_PAGE],
 });
 
 //Pilot Management Permissions
 
 export const canListPilots = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "mission_list" }],
+  perm: [PERMS.MISSION_LIST],
 });
 
 //Mapping Management Permissions
@@ -519,163 +497,128 @@ export const canListPilots = genPermissionGuard({
 //---------------------Feature File upload perms----------
 export const canUploadFiletoGEOJSON = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "Feature_File_upload" }],
+  perm: [PERMS.FEATURE_FILE_UPLOAD],
 });
 export const candeleteFilefromGEOJSON = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "Feature_File_Delete" }],
+  perm: [PERMS.FEATURE_FILE_DELETE],
 });
 export const canSetCoverPhoto = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "set_cover_photo" }],
+  perm: [PERMS.SET_COVER_PHOTO],
 });
 
 export const canAutoAssignImage = genPermissionGuard({
-  userTypes: ["tenant-root"],
-  perm: [{ permName: "isClient", value: true }],
+  userTypes: ["tenant-root", "tenant-client"],
+  perm: [],
 });
 
 //------------Feature related perms--------------------------------
 export const caneditGEOJSON = genPermissionGuard({
   //Change color is also included in this, because change feature color is the same as edit feature
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "edit_feature" }],
+  perm: [PERMS.EDIT_FEATURE],
 });
 export const canDeleteFeature = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "delete_feature" }],
+  perm: [PERMS.DELETE_FEATURE],
 });
 export const canaddFeature = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "add_feature" }],
+  perm: [PERMS.ADD_FEATURE],
 });
 
 //--------------Layer Related---------------------------
 export const canCreateLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "upload_layer" }],
+  perm: [PERMS.UPLOAD_LAYER],
 });
 export const canDeleteLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "delete_layer" }],
+  perm: [PERMS.DELETE_LAYER],
 });
 export const canEditLayer = genPermissionGuard({
   //perm gaurd to be used in both edit layer and change color of layer api
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "edit_layer" }],
+  perm: [PERMS.EDIT_LAYER],
 });
 export const canCreateVectorLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "save_drawings" }],
+  perm: [PERMS.SAVE_DRAWINGS],
 });
 export const canDownloadLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "download_layer" }],
+  perm: [PERMS.DOWNLOAD_LAYER],
 });
 
 // ----------------BaseMap Permissions-----------------------------
 export const canCreateBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    {
-      permName: "name",
-      value: "canCreateBaseLayer",
-    },
-  ],
+  perm: [PERMS.CAN_CREATE_BASE_LAYER],
 });
 
 export const canUpdateBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    {
-      permName: "name",
-      value: "canUpdateBaseLayer",
-    },
-  ],
+  perm: [PERMS.CAN_UPDATE_BASE_LAYER],
 });
 
 export const canDeleteBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    {
-      permName: "name",
-      value: "canDeleteBaseLayer",
-    },
-  ],
+  perm: [PERMS.CAN_DELETE_BASE_LAYER],
 });
 
 export const canEditBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    {
-      permName: "name",
-      value: "canEditBaseLayer",
-    },
-  ],
+  perm: [PERMS.CAN_EDIT_BASE_LAYER],
 });
 
 export const canUploadToBaseLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    {
-      permName: "name",
-      value: "canUploadToBaseLayer",
-    },
-  ],
+  perm: [PERMS.CAN_UPLOAD_TO_BASE_LAYER],
 });
 
 //-----------------Document permissions----------------------------
 export const canUploadDocument = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "upload_document" }],
+  perm: [PERMS.UPLOAD_DOCUMENT],
 });
 export const canDeleteDocument = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "delete_document" }],
+  perm: [PERMS.DELETE_DOCUMENT],
 });
 
 //---------Client Perms----------------------
 export const canClient = genPermissionGuard({
-  userTypes: ["tenant-root"],
-  perm: [{ permName: "isClient", value: true }],
+  userTypes: ["tenant-root", "tenant-client"],
+  perm: [],
 });
 
 export const canCreateClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "create_client" },
-    { permName: "name", value: "client_list" },
-  ],
+  perm: [PERMS.CREATE_CLIENT, PERMS.CLIENT_LIST],
 });
 
 export const canEditClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "edit_client" }],
+  perm: [PERMS.EDIT_CLIENT],
 });
 
 export const canDeleteClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "delete_client" }],
+  perm: [PERMS.DELETE_CLIENT],
 });
 
 export const canListClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [{ permName: "name", value: "client_list" }],
+  perm: [PERMS.CLIENT_LIST],
 });
 
 export const canManageClient = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "create_client" },
-    { permName: "name", value: "edit_client" },
-    { permName: "name", value: "delete_client" },
-  ],
+  perm: [PERMS.CREATE_CLIENT, PERMS.EDIT_CLIENT, PERMS.DELETE_CLIENT],
 });
 
 export const canViewRTCstream = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [
-    { permName: "name", value: "webrtc_view" },
-    { permName: "name", value: "mission_list" },
-  ],
+  perm: [PERMS.WEBRTC_VIEW, PERMS.MISSION_LIST],
 });

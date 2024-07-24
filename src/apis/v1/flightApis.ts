@@ -5,21 +5,19 @@ import {
   fetchAllFlightByMissionId,
   editFlight,
   deleteFlight,
-  fetchAllFlights,
   assignPilot,
   assignPilotSelf,
   fetchAllFlightdataByLocationId,
-  fetchFlightsWithoutMission,
 } from "../../controllers/v1/flightController";
 import {
   isAuthenticated,
   canCreateMission,
   canUpdateMission,
   canDeleteMission,
-  canFly,
-  canListMission,
+  PermissionGuard,
 } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 const router = express.Router();
 
 //++++++++++++++++++++ create new flight ++++++++++++++++++++++++
@@ -39,6 +37,7 @@ router.post(
   body("duration").notEmpty().isString().trim(),
   body("geoFence").optional().isObject(),
   validator,
+  PermissionGuard(PERMS.FLIGHT_CREATE),
   RobustRunner(createFlight)
 );
 
@@ -63,6 +62,7 @@ router.post(
   body("geoFence").optional().isObject(),
   body("geoLocation").optional().notEmpty().isString().trim(),
   validator,
+  PermissionGuard(PERMS.FLIGHT_UPDATE),
   RobustRunner(editFlight)
 );
 
@@ -73,6 +73,7 @@ router.post(
   canDeleteMission,
   body("_id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.FLIGHT_DELETE),
   RobustRunner(deleteFlight)
 );
 
@@ -82,28 +83,30 @@ router.post(
   isAuthenticated,
   body("missionID").notEmpty().isMongoId(),
   validator,
-  canFly,
+  PermissionGuard(PERMS.FLIGHT_LIST),
   RobustRunner(fetchAllFlightByMissionId)
 );
 
 //++++++++++++++++++++ fetch all mission (Development purpose only) ++++++++++++++++++++++++
-router.get(
-  "/all-flights",
-  isAuthenticated,
-  canListMission,
-  RobustRunner(fetchAllFlights)
-);
+// router.get(
+//   "/all-flights",
+//   isAuthenticated,
+//   canListMission,
+//   RobustRunner(fetchAllFlights)
+// );
 
-router.get(
-  "/flightswithoutmission",
-  isAuthenticated,
-  RobustRunner(fetchFlightsWithoutMission)
-);
+// router.get(
+//   "/flightswithoutmission",
+//   isAuthenticated,
+//   RobustRunner(fetchFlightsWithoutMission)
+// );
+
 router.get(
   "/get-flight-by-location-ID",
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.FLIGHT_LIST),
   RobustRunner(fetchAllFlightdataByLocationId)
 );
 
@@ -114,7 +117,7 @@ router.patch(
   isAuthenticated,
   body("flightID").notEmpty().isMongoId(),
   validator,
-  canFly,
+  PermissionGuard(PERMS.FLIGHT_UPDATE),
   RobustRunner(assignPilotSelf)
 );
 
@@ -124,7 +127,7 @@ router.patch(
   body("flightID").notEmpty().isMongoId(),
   body("pilotID").notEmpty().isMongoId(),
   validator,
-  canUpdateMission,
+  PermissionGuard(PERMS.MISSION_UPDATE, PERMS.FLIGHT_UPDATE),
   RobustRunner(assignPilot)
 );
 

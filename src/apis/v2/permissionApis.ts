@@ -2,9 +2,8 @@
 import { Request, Router } from "express";
 import openApi from "./openApi";
 import { Types } from "ts-openapi";
-import Permission from "../../models/permission";
-import { PermissionType } from "../../schemas/permission";
 import { AuthResponse } from "../../utils/interfaceUtils";
+import { PERMS } from "../../schemas/permission";
 
 const permissionApi = Router();
 
@@ -25,21 +24,7 @@ permissionApi.get(
     const { limit, offset, orderBy, asc, populate } = req.query;
     if (["super-admin", "tenant-root"].includes(res.locals.user.userType)) {
       const isTenant = res.locals.user.userType === "tenant-root";
-      const data = await Permission.find(
-        {
-          [isTenant && "isVisibleToTenant"]: isTenant,
-        },
-        {},
-        {
-          sort: {
-            [orderBy]: asc ? "asc" : "desc",
-          },
-        }
-      )
-        .skip(offset)
-        .limit(limit)
-        .populate(populate)
-        .lean();
+      const data = Object.values(PERMS);
       res.json({
         data,
         pagination: {
@@ -82,7 +67,9 @@ openApi.addPath(
           Types.Object({
             description: "Successful Operation",
             properties: {
-              data: Types.Array({ arrayType: PermissionType }),
+              data: Types.Array({
+                arrayType: Types.StringEnum({ values: Object.values(PERMS) }),
+              }),
               pagination: Types.Object({
                 description: "pagination information for data",
                 properties: {

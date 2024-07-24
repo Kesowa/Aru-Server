@@ -8,11 +8,12 @@ import {
   deletePackageForId,
 } from "../../controllers/v1/packageController";
 import { uploadFileforUSer } from "../../controllers/v1/commonController";
-import { isAuthenticated, onlySuperAdminAccess } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import multer from "multer";
 import { multerStorage } from "../../utils/fileUploadUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { Directory } from "../../constants";
+import { PERMS } from "../../schemas/permission";
 const upload = multer({ storage: multerStorage(Directory.TEMP_IMAGES) });
 const router = express.Router();
 
@@ -28,7 +29,6 @@ router.post(
 router.post(
   "/create",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("name").notEmpty().trim(),
   body("bandwidth").notEmpty().isNumeric().toInt(),
   body("storage").notEmpty().isNumeric().toInt(),
@@ -43,6 +43,7 @@ router.post(
   body("userGroupCount").notEmpty().isNumeric().toInt(),
   body("poster").optional().notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.PACKAGE_CREATE),
   RobustRunner(createPackage)
 );
 
@@ -50,7 +51,7 @@ router.post(
 router.get(
   "/fetchall",
   isAuthenticated,
-  onlySuperAdminAccess,
+  PermissionGuard(PERMS.PACKAGE_LIST),
   RobustRunner(fetchAllPackages)
 );
 
@@ -58,7 +59,7 @@ router.get(
 router.get(
   "/fetchactive",
   isAuthenticated,
-  onlySuperAdminAccess,
+  PermissionGuard(PERMS.PACKAGE_LIST),
   RobustRunner(fetchActivePackages)
 );
 
@@ -80,6 +81,7 @@ router.patch(
   body("userGroupCount").notEmpty().isNumeric().toInt(),
   body("poster").optional().notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.PACKAGE_UPDATE),
   RobustRunner(editPackageForId)
 );
 
@@ -87,6 +89,7 @@ router.delete(
   "/delete-package-for-Id",
   isAuthenticated,
   body("_id").notEmpty().isMongoId(),
+  PermissionGuard(PERMS.PACKAGE_DELETE),
   RobustRunner(deletePackageForId)
 );
 export default router;

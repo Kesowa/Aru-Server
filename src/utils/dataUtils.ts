@@ -6,7 +6,7 @@ import { Logger } from "pino";
 import fs from "fs/promises";
 import tokml from "tokml";
 import shp2json from "shpjs";
-import { GeoJson } from "./geojsonUtils";
+import { GeoJson, readGeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
 import { DirPath, Directory } from "../constants";
 import archiver from "archiver";
@@ -15,6 +15,7 @@ import { Stream } from "stream";
 import { DOMParser } from "xmldom";
 import togeojson from "@mapbox/togeojson";
 import { ObjectId } from "bson";
+import Fuse from "fuse.js";
 
 const asyncExec = promisify(exec);
 
@@ -341,4 +342,18 @@ export const saveFile = async (
 
 export const readFile = async (fullpath: string) => {
   return await fs.readFile(fullpath);
+};
+
+export const saveFeatureSearchIndex = async (layerPath: string) => {
+  const filename = "index_" + path.parse(layerPath).name + ".json";
+  const searchIndexPath = DirPath(Directory.VECTOR, filename);
+  const geojsonData = await readGeoJson<any>(
+    DirPath(Directory.ROOT, layerPath)
+  );
+  const keys = Object.keys(geojsonData.features[0].properties).map(
+    (key) => `properties.${key}`
+  );
+  const searchIndex = Fuse.createIndex<any>(keys, geojsonData.features);
+  await fs.writeFile(searchIndexPath, JSON.stringify(searchIndex.toJSON()));
+  return pathUtils.docPath(Directory.VECTOR, filename);
 };

@@ -7,14 +7,9 @@ import {
   removeModel,
   updateModel,
 } from "../../controllers/v1/modelController";
-import {
-  canCreateModel,
-  canDeleteModel,
-  canListModel,
-  canUpdateModel,
-  isAuthenticated,
-} from "../../utils/authUtils";
+import { PermissionGuard, isAuthenticated } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -30,18 +25,23 @@ router.post(
   header("userid").notEmpty().isMongoId(),
   body("props").exists({ checkFalsy: true }).isObject(),
   validator,
-  canCreateModel,
+  PermissionGuard(PERMS.MODEL_CREATE),
   RobustRunner(createModel)
 );
 
-router.get("/get", isAuthenticated, canListModel, RobustRunner(getModel));
+router.get(
+  "/get",
+  isAuthenticated,
+  PermissionGuard(PERMS.MODEL_LIST),
+  RobustRunner(getModel)
+);
 
 router.get(
   "/get-by-id",
   isAuthenticated,
   query("_id").notEmpty().isMongoId(),
   validator,
-  canListModel,
+  PermissionGuard(PERMS.MODEL_LIST),
   RobustRunner(fetchModelbyId)
 );
 
@@ -51,7 +51,7 @@ router.patch(
   body("id").notEmpty().isMongoId(),
   body("update").exists({ checkFalsy: true }).isObject(),
   validator,
-  canUpdateModel,
+  PermissionGuard(PERMS.MODEL_UPDATE),
   RobustRunner(updateModel)
 );
 
@@ -60,7 +60,7 @@ router.delete(
   isAuthenticated,
   body("id").notEmpty().isMongoId(),
   validator,
-  canDeleteModel,
+  PermissionGuard(PERMS.MODEL_DELETE),
   RobustRunner(removeModel)
 );
 

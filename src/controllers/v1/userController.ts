@@ -193,6 +193,22 @@ export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
     }).populate<{
       createdBy: IUser;
     }>("createdBy", "name");
+    if (res.locals.user.userType !== "tenant-root") {
+      doc.forEach((d) => {
+        // hide personal details
+        d.phoneNo = null;
+        d.email = null;
+        d.password = null;
+        d.dob = null;
+        d.aadhaarNo = null;
+        d.pilotLicenceNo = null;
+        d.city = null;
+        d.country = null;
+        d.expiryDatee = null;
+        d.avatar = null;
+        d.passwordResetToken = null;
+      });
+    }
     if (doc.length) {
       res.json({
         status: true,

@@ -2,7 +2,6 @@ import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Usergroup from "../../models/usergroup";
 import Mission from "../../models/mission";
-import Permission from "../../models/permission";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import Flight from "../../models/flight";
@@ -28,41 +27,32 @@ import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
+import { PERMS } from "../../schemas/permission";
 
 export const createClientformissionGroup = async (
   req: Request,
   res: AuthResponse
 ) => {
   {
-    const result = await Usergroup.findOne(
-      {
-        _id: req.body.userGroupId,
-      },
-      {
-        permissions: 1,
-      }
+    const result = await Usergroup.findOne({
+      _id: req.body.userGroupId,
+      tenantId: res.locals.user.tenantId._id,
+    });
+    const onlyClientPerms = result.permissions.every((perm) =>
+      [
+        PERMS.CLIENT_DATA,
+        PERMS.CLIENT_LIST,
+        PERMS.CLIENT_MISSION_LIST,
+      ].includes(perm)
     );
     if (result) {
-      let cflag = 0;
-      let cId;
-      const permission = await Permission.findOne(
-        {
-          _id: { $in: result.permissions },
-          isClient: true,
-        },
-        { _id: 1 }
-      );
-      if (permission) {
-        const existingClient = await User.findOne(
-          { email: req.body.email },
-          { _id: 1 }
-        );
-        if (existingClient) {
-          cflag = 1;
-          cId = existingClient._id;
-        }
+      if (onlyClientPerms) {
+        const existingClient = await User.findOne({
+          email: req.body.email,
+          tenantId: res.locals.user.tenantId._id,
+        });
 
-        if (cflag == 1) {
+        if (existingClient) {
           const temppass = crypto.randomBytes(10).toString("hex");
           const date2 = new Date(req.body.expiryDate);
           // let docPath = DirPath(Directory.DEFAULT, req.body.avatar);
@@ -87,11 +77,11 @@ export const createClientformissionGroup = async (
             city,
             country,
           };
-          await User.findOneAndUpdate({ _id: cId }, modClient, {
+          await User.findOneAndUpdate({ _id: existingClient._id }, modClient, {
             upsert: true,
             useFindAndModify: false,
           });
-          const modDoc = await User.findOne({ _id: cId });
+          const modDoc = await User.findOne({ _id: existingClient._id });
           if (req.body.avatar && modDoc) {
             copyFiled(
               req.body.avatar,
@@ -252,7 +242,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
     let data: any;
     if (req.query.status == "Upcoming" || req.query.status == "Completed") {
       resultt = await Mission.find({
-        clientId: req.query.clientId,
+        clientId: res.locals.user._id, // should work as intended user of the route is a client
         status: match.status,
         tenantId: res.locals.user.tenantId._id,
       })
@@ -274,7 +264,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
       );
     } else if (req.query.status == "All") {
       resultt = await Mission.find({
-        clientId: req.query.clientId,
+        clientId: res.locals.user._id, // should work as intended user of the route is a client
         tenantId: res.locals.user.tenantId._id,
       })
         .populate<{ clientId: IUser }>("clientId")

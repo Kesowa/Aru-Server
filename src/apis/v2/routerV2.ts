@@ -25,14 +25,12 @@ import packageApi from "./packageApis";
 import paymentApi from "./paymentApis";
 import permissionApi from "./permissionApis";
 import pilotApi from "./pilotApis";
-import rasterApi from "./rasterPropsApis";
 import settingApi from "./settingApis";
 import streamKeyApi from "./streamTokenApis";
 import tenantApi from "./tenantApis";
 import threadApi from "./threadApis";
 import userApi from "./userApis";
 import userGroupApi from "./userGroupApis";
-import vectorApi from "./vectorPropsApis";
 import vodApi from "./vodApis";
 
 const routerV2 = Router();
@@ -77,14 +75,14 @@ routerV2.use("/package", packageApi);
 routerV2.use("/payment", paymentApi);
 routerV2.use("/permission", permissionApi);
 routerV2.use("/pilot", pilotApi);
-routerV2.use("/rasterProp", rasterApi);
+// routerV2.use("/rasterProp", rasterApi);
 routerV2.use("/setting", settingApi);
 routerV2.use("/streamtoken", streamKeyApi);
 routerV2.use("/tenant", tenantApi);
 routerV2.use("/thread", threadApi);
 routerV2.use("/user", userApi);
 routerV2.use("/usergroup", userGroupApi);
-routerV2.use("/vectorProp", vectorApi);
+// routerV2.use("/vectorProp", vectorApi);
 routerV2.use("/vod", vodApi);
 
 // @ts-ignore

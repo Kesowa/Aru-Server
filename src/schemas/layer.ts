@@ -2,11 +2,13 @@ import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
+import { rasterProps } from "./rasterprops";
+import { vectorProps } from "./vectorprops";
 export interface ILayer {
   _id: mongoose.Types.ObjectId;
   type: "Vector" | "Raster"; // index
-  raster: mongoose.Types.ObjectId;
-  vector: mongoose.Types.ObjectId;
+  raster: rasterProps;
+  vector: vectorProps;
   missionId: mongoose.Types.ObjectId; // index
   tenantId: mongoose.Types.ObjectId; // index
   createdBy: mongoose.Types.ObjectId;
@@ -35,13 +37,13 @@ export interface ILayer {
   commentCount: number;
   createdAt: Date; // index
   updatedAt: Date;
-  metadata?: string | Object;
+  metadata?: { [key: string]: any };
 }
 export const LayerType = {
   _id: Types.String(),
   type: Types.StringEnum({ values: ["Vector", "Raster"] }), // index
-  raster: Types.String(),
-  vector: Types.String(),
+  raster: Types.StringEnum({ values: Object.values(rasterProps) }),
+  vector: Types.StringEnum({ values: Object.values(vectorProps) }),
   missionId: Types.String(), // index
   tenantId: Types.String(), // index
   createdBy: Types.String(),
@@ -82,12 +84,12 @@ const layerSchema = new mongoose.Schema<ILayer>(
       enum: ["Vector", "Raster"],
     },
     raster: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "raster",
+      type: String,
+      enum: Object.values(rasterProps),
     },
     vector: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "vector",
+      type: String,
+      enum: Object.values(vectorProps),
     },
     layerpath: {
       type: String,
