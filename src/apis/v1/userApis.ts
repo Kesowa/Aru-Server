@@ -10,7 +10,7 @@ import {
   UserEdit,
 } from "../../controllers/v1/userController";
 import { uploadFileforUSer } from "../../controllers/v1/commonController";
-import { canListUsers, isAuthenticated, onlyTenantRootAccess, PermissionGuard } from "../../utils/authUtils";
+import { isAuthenticated, onlyTenantRootAccess, PermissionGuard } from "../../utils/authUtils";
 import { multerStorage } from "../../utils/fileUploadUtils";
 import { isUserCount } from "../../utils/countPermission";
 import multer from "multer";

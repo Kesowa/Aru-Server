@@ -5,19 +5,15 @@ import {
   fetchAllFlightByMissionId,
   editFlight,
   deleteFlight,
-  fetchAllFlights,
   assignPilot,
   assignPilotSelf,
   fetchAllFlightdataByLocationId,
-  fetchFlightsWithoutMission,
 } from "../../controllers/v1/flightController";
 import {
   isAuthenticated,
   canCreateMission,
   canUpdateMission,
   canDeleteMission,
-  canFly,
-  canListMission,
   PermissionGuard,
 } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";

@@ -35,7 +35,6 @@ import {
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
-import Fuse from "fuse.js";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;

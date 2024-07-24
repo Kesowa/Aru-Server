@@ -30,7 +30,6 @@ import {
   unreviewedLayerfiles,
   downloadassetbyIDtoKml,
   deleteMultipleLayers,
-  gen2x,
   addIsReviewToLayerFiles,
   picktoMapUseForLayerCreate,
   deleteMultipleLayersFiles,

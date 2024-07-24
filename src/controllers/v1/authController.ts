@@ -1,7 +1,6 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import User from "../../models/user";
-import UserGroup from "../../models/usergroup";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import bcrypt from "bcrypt";
@@ -12,8 +11,7 @@ import PassReset from "../../models/passwordReset";
 import { tokenEncoder } from "../../utils/authUtils";
 import ejs from "ejs";
 import path from "path";
-import { GetPermissions, PERMS, SUPER_ADMIN_PERMS, TENANT_ROOT_PERMS } from "../../schemas/permission";
-import { UserTypes } from "../../schemas/user";
+import { GetPermissions } from "../../schemas/permission";
 
 //++++++++++++++++++++++++++ user login +++++++++++++++++++++++++++++++++++++++
 
