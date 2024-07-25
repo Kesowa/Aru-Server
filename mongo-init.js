@@ -273,6 +273,17 @@ db.users.insertMany([
     createdBy: TENANT_ROOT,
     updatedBy: FIRST_USER,
   },
+  {
+    name: "TestStaff1",
+    email: "staff1@kesowa.com",
+    phoneNo: "9903032573",
+    userType: "tenant-staff",
+    userGroupId: ObjectId("66a1e5ddf317d282f50f9f47"),
+    ...commonProps.users,
+    ...commonProps.all,
+    createdBy: TENANT_ROOT,
+    updatedBy: TENANT_ROOT,
+  },
 ]);
 
 db.users.insertMany(
@@ -642,13 +653,27 @@ db.layerfiles.insertMany([
 const usergroups = [
   {
     _id: ObjectId("6034c331a2f9c7554b1d42e0"),
-    permissions: ["mission_create"],
+    permissions: [
+      "mission_create", // usergroup specific
+      "mission_type_list","location_list", // related necessary permissions
+      "user_list","mission_list" // common for all tenant-staff
+    ],
     isActive: true,
     name: "pilot",
   },
   {
+    _id: ObjectId("66a1e5ddf317d282f50f9f47"),
+    permissions: [
+      "create_client","client_list","edit_client","delete_client", // usergroup specific
+      "user_group_list","client_data","client_mission_list", // related necessary permissions
+      "user_list","mission_list" // common for all tenant-staff
+    ],
+    isActive: true,
+    name: "Client Management",
+  },
+  {
     _id: ObjectId("6116058af270c9142c1588f2"),
-    permissions: ["client_mission_list", "client_list"],
+    permissions: ["client_mission_list","client_list","mission_list"], // common for all tenant-client
     isActive: true,
     name: "Client Access",
   },
