@@ -1,10 +1,11 @@
 import sharp from "sharp";
-import fs from "fs/promises";
-import { KeyPath, Directory, DocPath, absPath, docPath } from "./pathUtils";
+import { KeyPath, Directory, DocPath, docPath } from "./pathUtils";
 import path from "path";
 import exifr from "exifr";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { downloadTemp, readToBuffer, stat, uploadAnything, uploadFile } from "./objectStorage";
+import { randomUUID } from "crypto";
 const asyncExec = promisify(exec);
 
 /**
@@ -33,8 +34,7 @@ export const createThumbnails = async (img: Buffer, filename: string) => {
  * Input non-absolute path to image, generate 1x and 2x variants in the same directory
  */
 export const saveThumbnails = async (img: KeyPath | DocPath) => {
-  const imgPath = absPath(Directory.ROOT, img);
-  const imgData = await fs.readFile(imgPath);
+  const imgData = await readToBuffer(img);
   const { small, medium } = await createThumbnails(imgData, img);
   const pathData = path.parse(img);
   const paths: { small: DocPath; medium: DocPath } = {
@@ -42,8 +42,8 @@ export const saveThumbnails = async (img: KeyPath | DocPath) => {
     medium: path.join("/", pathData.dir, "2x_" + pathData.base),
   };
   await Promise.all([
-    fs.writeFile(absPath(Directory.ROOT, paths.small), small),
-    fs.writeFile(absPath(Directory.ROOT, paths.medium), medium),
+    uploadAnything(paths.small, small),
+    uploadAnything(paths.medium, medium),
   ]);
   return {
     ...paths,
@@ -57,22 +57,23 @@ export const saveThumbnails = async (img: KeyPath | DocPath) => {
  * Returns path to thermal raw data file if it exists, or undefined
  */
 export const saveThermal = async (img: KeyPath | DocPath) => {
-  const thermalPath = docPath(Directory.AI_ML, path.parse(img).name + ".raw");
-  const absThermalPath = absPath(Directory.ROOT, img);
+  // const thermalPath = docPath(Directory.AI_ML, path.parse(img).name + ".raw");
+  // const absThermalPath = absPath(Directory.ROOT, img);
+  const tmpThermalImg = await downloadTemp(img);
+  const tmpThermalPath = "/tmp/" + randomUUID() + ".raw";
   const command =
     "dji_irp -s " +
-    absThermalPath +
+    tmpThermalImg +
     " -a measure --measurefmt float32 -o " +
-    absPath(Directory.ROOT, thermalPath);
-  try {
-    await asyncExec(command);
-    return {
-      thermalPath,
-      size: (await fs.stat(absThermalPath)).size / (1024 * 1024),
-    };
-  } catch (error) {
-    return undefined;
-  }
+    tmpThermalPath;
+  await asyncExec(command);
+  const thermalPath = docPath(Directory.AI_ML, randomUUID() + ".raw");
+  await uploadFile(tmpThermalPath, thermalPath);
+  const { size } = await stat(thermalPath);
+  return {
+    thermalPath,
+    size: size / (1024 * 1024),
+  };
 };
 
 /**
@@ -82,8 +83,8 @@ export const readCoords = async (img: KeyPath | DocPath | Buffer) => {
   let metadata: any;
 
   if (typeof img == "string") {
-    const absImgPath = absPath(Directory.ROOT, img);
-    metadata = await exifr.parse(absImgPath);
+    const imgBuf = await readToBuffer(img);
+    metadata = await exifr.parse(imgBuf);
   } else {
     metadata = await exifr.parse(img);
   }

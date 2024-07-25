@@ -9,7 +9,7 @@ import Flight from "../../models/flight";
 import Tenant from "../../models/tenant";
 import path from "path";
 import ObjectsToCsv from "objects-to-csv";
-import crypto from "crypto";
+import crypto, { randomUUID } from "crypto";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
@@ -25,9 +25,10 @@ import {
   SECRET_KEY,
 } from "../../constants";
 import { SortOrder } from "mongoose";
-import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
+import { getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
+import { saveFile } from "../../utils/dataUtils";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -685,8 +686,6 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       .lean();
     const savedResult: any = [];
     if (result.length) {
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
       for (let i = 0; i < result.length; i++) {
         const d = {
           name: result[i].name,
@@ -697,17 +696,12 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       }
 
       const csv = new ObjectsToCsv(savedResult);
-      const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
-      await csv.toDisk(file);
+      const csvData = await csv.toString();
+      const { filepath } = await saveFile(Directory.TEMP, randomUUID() + ".csv", csvData);
       return res.status(200).json({
         status: true,
         message: "Client CSV generated successfully!",
-        pathh:
-          "/" +
-          file
-            .split(/[\\\/]/)
-            .slice(8)
-            .join("/"),
+        pathh: filepath
       });
     } else
       return res.status(400).json({

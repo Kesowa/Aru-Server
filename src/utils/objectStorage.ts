@@ -81,6 +81,10 @@ export const deleteDir = async (dirKey: string) => {
   await finished(entries);
 }
 
+export const uploadFile = async (src: string, dest: string) => {
+  await minioClient.fPutObject(S3_BUCKET_NAME, dest, src);
+}
+
 export const archive = async (objKeys: string[]) => {
   const archive = archiver("zip", {
     zlib: { level: 9 }, // Sets the compression level.

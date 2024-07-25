@@ -4,12 +4,11 @@ import Layer from "../../models/layer";
 import fetch from "node-fetch";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Feature, featureUpdate, readGeoJson } from "../../utils/geojsonUtils";
+import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import Tenant from "../../models/tenant";
-import { isSizeVector } from "../../utils/sizePermission";
 
 import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
-import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
+import { deleteDirFileUsingName, deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { ObjectId } from "bson";
 import layerFiles from "../../models/layerFiles";
 import { featureType, vectorProps } from "../../schemas/vectorprops";
@@ -24,17 +23,18 @@ import {
   TITILER_SERVER,
   TITILER_STATIC,
 } from "../../constants";
-import { getFileSize } from "../../utils/fileUtils";
 import Alert from "../../models/alert";
 import VOD from "../../models/vod";
 import { ILayer } from "../../schemas/layer";
 import {
+    saveFile,
   saveGeojson,
   saveMultiGeojson,
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
 import UploadTask from "../../models/uploadTask";
+import { randomUUID } from "crypto";
 
 interface missionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -989,7 +989,9 @@ export const updateBaseLayerByUploadedFile = async (
 
     bgjson.features = [...bgjson.features, ...newFeatures];
 
-    const size: number = await getFileSize(baseLayerPath);
+    const dataString = JSON.stringify(bgjson);
+    const layername = randomUUID() + ".geojson";
+    const { size } = await saveFile(Directory.VECTOR, layername, dataString);
 
     const docCount = await Tenant.findById(
       res.locals.user.tenantId._id
@@ -1003,12 +1005,10 @@ export const updateBaseLayerByUploadedFile = async (
       .populate<{ activePackage: IPackage }>("activePackage")
       .lean();
 
-    const ress = await isSizeVector(size, docCount, baseLayerPath);
-
     const prevSize = Number(docCount.actualSize);
     const newSize = prevSize - Number(baseLayer.fileSize) + size;
 
-    if (ress !== true) {
+    if (docCount.storageUsed + newSize > docCount.activePackage.storage) {
       return res.status(403).json({
         status: false,
         message: "Actual storage exceeded the Limit of Set storage!",
@@ -1017,8 +1017,9 @@ export const updateBaseLayerByUploadedFile = async (
 
     await Layer.updateOne(
       { _id: baseLayer._id },
-      { featureCount: bgjson.features.length, fileSize: size }
+      { featureCount: bgjson.features.length, fileSize: size, layerpath: pathUtils.docPath(Directory.VECTOR, layername) }
     );
+    await deletePublicFileUsingPath(baseLayer.layerpath);
     await Tenant.updateOne(
       {
         _id: res.locals.user.tenantId._id

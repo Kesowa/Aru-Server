@@ -14,8 +14,6 @@ import {
 import { Directory, DirPath } from "../../constants";
 import {
   checkFileExists,
-  createDirFileWriteStreamUsingName,
-  createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
@@ -381,30 +379,11 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, req.log);
-
-        const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = createDirFileWriteStreamUsingName(Directory.ZIP, fname);
-        const archive = archiver("zip", {
-          zlib: { level: 9 }, // Sets the compression level.
-        });
-        // output.on('close', function () {
-        //     req.log.info(archive.pointer() + ' total bytes');
-        //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
-        // });
-        archive.pipe(output);
-        for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.ROOT, d[i].filePath), {
-            name: d[i].filePath.split("/")[2],
-          });
-        }
+        const archive = await createArchive(d.map(layer => layer.filePath));
         try {
-          const _archiveFinalized = await archive.finalize();
-          const link = `/zip/${fname}`;
           missionSpecificSocket
             .to(missionId)
-            .emit("DOCUMENT_ZIP_COMPLETED", link);
+            .emit("DOCUMENT_ZIP_COMPLETED", archive);
         } catch (error) {
           req.log.error(error);
           missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_FAILED");

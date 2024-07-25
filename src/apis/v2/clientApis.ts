@@ -8,10 +8,6 @@ import { UserType } from "../../schemas/user";
 import Mission from "../../models/mission";
 import { MissionType } from "../../schemas/mission";
 import Tenant from "../../models/tenant";
-import ObjectsToCsv from "objects-to-csv";
-import path from "path";
-import { Directory, DirPath } from "../../constants";
-import { createDirIfNotExists } from "../../utils/fileUtils";
 
 const clientApi = Router();
 
@@ -87,26 +83,7 @@ clientApi.get(
     }
 
     if (generateCSV) {
-      const savedResult: any = [];
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
-      for (let i = 0; i < data.length; i++) {
-        const d = {
-          name: data[i].name,
-          email: data[i].email,
-          phoneNumber: data[i].phoneNo,
-        };
-        savedResult.push(d);
-      }
-      const csv = new ObjectsToCsv(savedResult);
-      const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
-      await csv.toDisk(file);
-      resp.csvPath =
-        "/" +
-        file
-          .split(/[\\\/]/)
-          .slice(8)
-          .join("/");
+      res.json({message: "not supported"});
     }
 
     res.json(resp);

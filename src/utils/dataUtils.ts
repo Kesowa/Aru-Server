@@ -255,7 +255,7 @@ export const saveFile = async (
 ) => {
   const filepath = pathUtils.docPath(dir, filename);
   await uploadAnything(filepath, data)
-  return stat(filepath);
+  return {filepath, ...(await stat(filepath)) };
 };
 
 export const copyFile = async (src: string, dest: string) => {

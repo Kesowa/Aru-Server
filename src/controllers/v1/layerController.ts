@@ -19,7 +19,6 @@ import {
   editGeoJsonForAll,
   deleteGeoJsonFeature,
   featureAddition,
-  GeoJson,
   Feature,
   Point,
 } from "../../utils/geojsonUtils";
@@ -30,7 +29,6 @@ import exifr from "exifr";
 import path, { basename, extname } from "path";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
 import Flight from "../../models/flight";
-import archiver from "archiver";
 import LayerGroup from "../../models/layerGroup";
 import { featureType, vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
@@ -46,14 +44,12 @@ import { type HydratedDocument, Types } from "mongoose";
 import type { ILayerFile } from "../../schemas/layerFiles";
 import {
   checkFileExists,
-  createDirFileWriteStreamUsingName,
-  createDirIfNotExists,
   getFileSize,
 } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import { saveThumbnails } from "../../utils/imageUtils";
-import { copyFile, saveAsKML, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import { copyFile, createArchive, saveAsKML, saveFile, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
 import { ZipToTiles3D } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
@@ -1361,8 +1357,6 @@ export const getFeatureCsvByLayerIdx = async (
           message: "file path not exist!",
         });
       }
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
       const geoArray: any = [];
       const clone: any = [];
       if (req.body.featureIndex) {
@@ -1389,13 +1383,12 @@ export const getFeatureCsvByLayerIdx = async (
         }
       }
       const csv = new ObjectsToCsv(clone);
-      const filename = Math.floor(Math.random() * 620000);
-      const file = path.join(ws, `${filename}.csv`);
-      await csv.toDisk(file);
+      const csvData = await csv.toString();
+      const { filepath } = await saveFile(Directory.TEMP, randomUUID() + ".csv", csvData);
       res.json({
         status: true,
         message: "csv file created successfully!",
-        pathh: `/csv/${filename}.csv`,
+        pathh: filepath,
       });
     } else
       return res.status(400).json({
@@ -1953,34 +1946,9 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         message: "Zipping Started",
       });
       missionSpecificSocket.to(missionId).emit("LAYER_ZIP_START");
-      const dir = DirPath(Directory.TEMP);
-      await createDirIfNotExists(dir, req.log);
-      const fname = `${req.query.missionId}_layers_${Date.now()}.zip`;
-      const output = createDirFileWriteStreamUsingName(Directory.TEMP, fname);
-      const archive = archiver("zip", {
-        zlib: { level: 9 }, // Sets the compression level.
-      });
-
-      archive.pipe(output);
-
-      for (let i = 0; i < d.length; i++) {
-        archive.file(DirPath(Directory.ROOT, d[i].layerpath), {
-          //#typeError
-          name: d[i].layerpath.split("/")[2],
-        });
-      }
-
-      // output.on("close", function () {
-      //   req.log.info(archive.pointer() + " total bytes");
-      //   req.log.info(
-      //     "archiver has been finalized and the output file descriptor has closed.",
-      //   );
-      // });
-      // Error
       try {
-        await archive.finalize();
-        const link = `temp/${fname}`;
-        missionSpecificSocket.to(missionId).emit("LAYER_ZIP_COMPLETED", link);
+        const archive = await createArchive(d.map(layer => layer.layerpath));
+        missionSpecificSocket.to(missionId).emit("LAYER_ZIP_COMPLETED", archive);
       } catch (error) {
         req.log.error(error);
         missionSpecificSocket.to(missionId).emit("LAYER_ZIP_FAILED");

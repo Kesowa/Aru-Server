@@ -29,9 +29,10 @@ import { IInvite } from "../../schemas/invite";
 import { ILocation } from "../../schemas/location";
 import MissionType from "../../models/missionType";
 import Location from "../../models/location";
-import { Directory, DirPath } from "../../constants";
-import { createDirIfNotExists } from "../../utils/fileUtils";
+import { Directory } from "../../constants";
 import moment from "moment";
+import { saveFile } from "../../utils/dataUtils";
+import { randomUUID } from "crypto";
 
 //create flight controller
 type CreateMission = {
@@ -1143,20 +1144,13 @@ export const getMissionCsvForTenantOrUser = async (
       })
       .lean();
     if (result.length) {
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
       const csv = new ObjectsToCsv(result);
-      const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
-      await csv.toDisk(file);
+      const csvData = await csv.toString();
+      const { filepath } = await saveFile(Directory.TEMP, randomUUID() + ".csv", csvData);
       return res.status(200).json({
         status: true,
         message: "Successfully csv file created!",
-        pathh:
-          "/" +
-          file
-            .split(/[\\\/]/)
-            .slice(7)
-            .join("/"),
+        pathh: filepath,
       });
     } else
       return res.status(404).json({
