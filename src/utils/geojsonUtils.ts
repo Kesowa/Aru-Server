@@ -1,8 +1,9 @@
-import { promises as fs } from "fs";
 import Layer from "../models/layer";
 
 import { ObjectId } from "bson";
 import { DirPath, Directory } from "../constants";
+import { readToString } from "./objectStorage";
+import { saveFile } from "./dataUtils";
 
 type Properties = {
   SL_NO: number;
@@ -39,7 +40,7 @@ export interface GeoJson<FeatureType = Feature<Point, Properties>> {
 
 export async function readGeoJson<Feature>(fullpath: string) {
   try {
-    const data = await fs.readFile(fullpath, "utf-8");
+    const data = await readToString(fullpath);
     const geojson = JSON.parse(data) as GeoJson<Feature>;
     return geojson;
   } catch (error) {
@@ -88,7 +89,7 @@ export async function modGeoJson(
     }
   }
   try {
-    await fs.writeFile(pathh, JSON.stringify(geojson));
+    await saveFile(Directory.ROOT, pathh, JSON.stringify(geojson));
     return 1;
   } catch (error) {
     console.error(error);
@@ -112,7 +113,7 @@ export async function featureAddition(
     Object.assign(editObject.feature.properties, { sys_id: sys_id });
     geojson.features.push(editObject.feature);
 
-    await fs.writeFile(pathh, JSON.stringify(geojson));
+    await saveFile(Directory.ROOT, pathh, JSON.stringify(geojson));
     await Layer.updateOne(
       { _id: editObject.id },
       { featureCount: geojson.features.length }
@@ -122,18 +123,6 @@ export async function featureAddition(
     console.error(error);
     return 0;
   }
-}
-
-export async function featureUpdate(
-  layerpath: string,
-  updatedFeatures: Feature[],
-  geojson: GeoJson
-) {
-  geojson.features = [...geojson.features, ...updatedFeatures];
-  await fs.writeFile(
-    DirPath(Directory.ROOT, layerpath),
-    JSON.stringify(geojson)
-  );
 }
 
 export async function editGeoJsonForAll(
@@ -148,7 +137,7 @@ export async function editGeoJsonForAll(
       geojson.features[editObject.featureIndex].properties,
       editObject.feature.properties
     );
-    await fs.writeFile(pathh, JSON.stringify(geojson));
+    await saveFile(Directory.ROOT, pathh, JSON.stringify(geojson));
     return true;
   } catch (error) {
     console.error(error);
@@ -162,7 +151,7 @@ export async function deleteGeoJsonFeature(
 ) {
   try {
     geojson.features.splice(deleteObject.featureIndex, 1);
-    await fs.writeFile(pathh, JSON.stringify(geojson));
+    await saveFile(Directory.ROOT, pathh, JSON.stringify(geojson));
     await Layer.updateOne(
       { _id: deleteObject.id },
       { featureCount: geojson.features.length }
@@ -170,5 +159,6 @@ export async function deleteGeoJsonFeature(
     return true;
   } catch (error) {
     console.error(error);
+    return false;
   }
 }
