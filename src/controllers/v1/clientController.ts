@@ -38,7 +38,9 @@ export const createClientformissionGroup = async (
       _id: req.body.userGroupId,
       tenantId: res.locals.user.tenantId._id,
     });
-    const onlyClientPerms = result.permissions.every((perm) => TENANT_CLIENT_PERMS.includes(perm));
+    const onlyClientPerms = result.permissions.every((perm) =>
+      TENANT_CLIENT_PERMS.includes(perm)
+    );
     if (result) {
       if (onlyClientPerms) {
         const existingClient = await User.findOne({
