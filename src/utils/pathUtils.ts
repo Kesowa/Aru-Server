@@ -1,5 +1,6 @@
 import path from "path";
-import { PUBLIC_DIR } from "../constants";
+
+export const absPath = (_dir: Directory, _filename: string) => "";
 
 /**
  * Object key (no / at start)

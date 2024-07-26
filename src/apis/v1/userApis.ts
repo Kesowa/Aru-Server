@@ -9,7 +9,7 @@ import {
   UserDelete,
   UserEdit,
 } from "../../controllers/v1/userController";
-import { uploadFileforUSer } from "../../controllers/v1/commonController";
+// import { uploadFileforUSer } from "../../controllers/v1/commonController";
 import { canListUsers, isAuthenticated } from "../../utils/authUtils";
 import { isUserCount } from "../../utils/countPermission";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
@@ -17,12 +17,12 @@ import { RobustRunner, validator } from "../../utils/requestHelpers";
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-router.post(
-  "/upload-profile-picture",
-  isAuthenticated,
-  body("avatar").notEmpty().isMongoId(),
-  RobustRunner(uploadFileforUSer)
-);
+// router.post(
+//   "/upload-profile-picture",
+//   isAuthenticated,
+//   body("avatar").notEmpty().isMongoId(),
+//   RobustRunner(uploadFileforUSer)
+// );
 
 //++++++++++++++++++++ create user++++++++++++++++++++++++++++++++++
 router.post(
@@ -39,7 +39,7 @@ router.post(
     .toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm //REVISIT
   body("aadhaarNo").optional().notEmpty().isNumeric(), // aadharNo is optional in user creation form on frontend
   body("pilotLicenceNo").optional().notEmpty().isNumeric(), // pilotLicenceNo is optional in user creation form on frontend
-  body("avatar").optional().notEmpty().trim(),
+  body("avatar").optional().notEmpty().isMongoId(),
   validator,
   isAuthenticated,
   isUserCount,

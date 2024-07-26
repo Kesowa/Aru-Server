@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import * as pathUtils from "./pathUtils";
-import path from "path";
+import path, { extname } from "path";
 import tokml from "tokml";
 import shp2json from "shpjs";
 import { GeoJson } from "./geojsonUtils";
@@ -11,7 +11,7 @@ import { Readable } from "stream";
 import { DOMParser } from "xmldom";
 import togeojson from "@mapbox/togeojson";
 import { ObjectId } from "bson";
-import { archive, copyObj, downloadTemp, readToBuffer, readToString, stat, uploadAnything, uploadDir, uploadString } from "./objectStorage";
+import { archive, copyObj, deleteObj, downloadTemp, readToBuffer, readToString, stat, uploadAnything, uploadDir, uploadString } from "./objectStorage";
 import { rm, rmdir } from "fs/promises";
 
 const asyncExec = promisify(exec);
@@ -265,3 +265,10 @@ export const copyFile = async (src: string, dest: string) => {
 export const readFile = async (filepath: string) => {
   return await readToBuffer(filepath)
 };
+
+export const permPath = async (dir: Directory, src: string) => {
+  const fullPath = pathUtils.docPath(dir, randomUUID() + extname(src))
+  await copyObj(src, fullPath);
+  await deleteObj(src);
+  return fullPath;
+}

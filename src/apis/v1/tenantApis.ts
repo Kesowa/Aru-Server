@@ -15,7 +15,7 @@ import {
   resendVerificationCode,
   tenantpublicmaprefupdate,
 } from "../../controllers/v1/tenantController";
-import { uploadFile } from "../../controllers/v1/commonController";
+// import { uploadFile } from "../../controllers/v1/commonController";
 import { isAuthenticated, onlySuperAdminAccess } from "../../utils/authUtils";
 import { fetchActivePackages } from "../../controllers/v1/packageController";
 import {
@@ -27,12 +27,12 @@ import { Mode } from "../../constants";
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-router.post(
-  "/upload-avatar",
-  isAuthenticated,
-  body("avatar").notEmpty().isMongoId(),
-  RobustRunner(uploadFile)
-);
+// router.post(
+//   "/upload-avatar",
+//   isAuthenticated,
+//   body("avatar").notEmpty().isMongoId(),
+//   RobustRunner(uploadFile)
+// );
 
 //++++++++++++++++++++ Tenant creation Api +++++++++++++++++++++++++++++
 router.post(

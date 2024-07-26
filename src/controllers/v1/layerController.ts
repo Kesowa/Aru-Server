@@ -48,8 +48,8 @@ import {
 } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
-import { saveThumbnails } from "../../utils/imageUtils";
-import { copyFile, createArchive, saveAsKML, saveFile, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
+import { copyFile, createArchive, permPath, saveAsKML, saveFile, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
 import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
 import { ZipToTiles3D } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
@@ -60,6 +60,12 @@ import { randomUUID } from "crypto";
 
 export const createLayer = async (req: Request, res: AuthResponse) => {
   {
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
     let layer: HydratedDocument<ILayer>;
     if (req.params.type == "Vector") {
       let geojsonPath = "";
@@ -68,7 +74,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let flagColor = "";
       try {
         const vectorLayer = await saveVectorLayer(
-          pathUtils.docPath(pathUtils.Directory.VECTOR, req.file.filename),
+          fileDoc.metadata.objectkey,
           {
             icon: req.body.icon,
             color: req.body.color,
@@ -114,8 +120,6 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         updatedBy: res.locals.user._id,
       });
     } else if (req.params.type == "Raster") {
-      const file_loc = `/raster/${req.file?.filename}`;
-
       //----------TITILER API HAS CHANGED-------------------
       //  Metadata api has been removed
       // instead there is statistics api and info api
@@ -134,11 +138,8 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let maxP = 1;
       let center = { lng: 0, lat: 0 };
       let metadata = {};
-      const size: number = Number(
-        (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-      );
       if (rasterType == rasterProps.DEM) {
-        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${file_loc}`;
+        let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}/${fileDoc.metadata.objectkey}`;
         //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
         req.log.info("fetching metadata from titiler");
         let response = await fetch(metaDataURL, {
@@ -150,7 +151,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         //-------handle for detail:not found----
         minP = metadata["1"]["min"];
         maxP = metadata["1"]["max"];
-        metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${file_loc}`;
+        metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}/${fileDoc.metadata.objectkey}`;
         response = await fetch(metaDataURL, {
           method: "GET",
         });
@@ -161,24 +162,25 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         };
       } else if (rasterType == rasterProps.POINT_CLOUD) {
         const POINTCLOUD_LIMIT = 1e3;
-        if (size > POINTCLOUD_LIMIT) {
+        if (fileDoc.metadata.filesize > POINTCLOUD_LIMIT) {
           req.log.error(
-            { POINTCLOUD_LIMIT, file_loc },
+            { POINTCLOUD_LIMIT, file: fileDoc.metadata.objectkey },
             "pointcloud too large, not converting"
           );
         } else {
-          metadata = await LazToTiles3D(file_loc);
+          metadata = await LazToTiles3D(fileDoc.metadata.objectkey);
         }
       } else if (rasterType == rasterProps.CESIUM_3D) {
         // Extract zip, locate tileset, move to correct location
-        metadata = await ZipToTiles3D(file_loc);
+        metadata = await ZipToTiles3D(fileDoc.metadata.objectkey);
       }
+      const fullPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
       layer = new Layer({
         name,
         type: "Raster",
         raster: rasterType,
-        layerpath: file_loc,
-        fileSize: size,
+        layerpath: fullPath,
+        fileSize: fileDoc.metadata.filesize,
         minp: minP,
         maxp: maxP,
         layerGroupId,
@@ -609,22 +611,27 @@ export const deleteGeoJson = async (
 
 export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
   {
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
     const layerId = req.body.layerId;
     const sys_Id = req.body.sys_Id;
-    if (!req.file) {
+    if (!fileDoc) {
       throw new Error("no file in request");
     }
     if (!(req.body.type == "image/jpeg" || req.body.type == "image/png")) {
       throw new Error("invalid file format");
     }
-    const thumbs = await saveThumbnails(
-      pathUtils.docPath(pathUtils.Directory.GEOJSON_IMAGES, req.file.filename)
-    );
+    const fullPath = await permPath(Directory.GEOJSON_IMAGES, fileDoc.metadata.objectkey);
+    const thumbs = await saveThumbnails(fullPath);
     const featureFile = new layerFiles({
-      name: req.file.originalname,
+      name: fileDoc.presigned.formData.name,
       layerId: layerId,
-      filePath: "/images/geojson/" + req.file.filename,
-      fileSize: thumbs.size,
+      filePath: fullPath,
+      fileSize: thumbs.size + fileDoc.metadata.filesize,
       isReview: true,
       featureLabel: req.body.featureLabel,
       centerPoints: {
@@ -1399,23 +1406,26 @@ export const getFeatureCsvByLayerIdx = async (
 };
 export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
   {
-    const fname = req.file?.originalname;
-    const fpath = "/layerFiles/" + req.file?.filename;
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
     const layerId = req.body.layerId;
-    let size: number = Number(
-      (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-    );
+    const fullPath = await permPath(Directory.GEOJSON_IMAGES, fileDoc.metadata.objectkey);
+    let size = fileDoc.metadata.filesize;
     if (
-      req.file?.mimetype == "image/jpeg" ||
-      req.file?.mimetype == "image/png"
+      fileDoc.metadata.mimetype == "image/jpeg" ||
+      fileDoc.metadata.mimetype == "image/png"
     ) {
-      const thumbs = await saveThumbnails(fpath);
-      size = thumbs.size;
+      const thumbs = await saveThumbnails(fullPath);
+      size += thumbs.size;
     }
     const layerfile = new layerFiles({
-      name: fname,
+      name: fileDoc.presigned.formData.name,
       layerId: layerId,
-      filePath: fpath,
+      filePath: fullPath,
       fileSize: size,
       tenantId: res.locals.user.tenantId,
       createdBy: res.locals.user._id,
@@ -1630,6 +1640,14 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
       data: [],
       badImages: [],
     };
+
+    const fileDocs = await UploadTask.find({
+      _id: {$in: req.body.file},
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
+
     if (req.query.mode == "GeoCoord") {
       let snapRadius: number = 120; // meters
       if (req.body.radius) {
@@ -1646,13 +1664,12 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
             turf.point(feature.geometry.coordinates)
         )
       );
-      const files = req.files as Express.Multer.File[];
-      for (let j = 0; j < files.length; j++) {
+      for (let j = 0; j < fileDocs.length; j++) {
         req.log.info("file number", j);
         let closestPoint: NearestPoint;
         // catch bad image
         try {
-          const { latitude, longitude } = await exifr.gps(files[j].path);
+          const { latitude, longitude } = await exifr.gps(fileDocs[j].metadata.objectkey);
           if (latitude == null || longitude == null) {
             throw new Error("invalid coordinates!");
           }
@@ -1666,11 +1683,11 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           }
         } catch (err) {
           req.log.error(err);
-          message.badImages.push(files[j].originalname);
-          req.log.error("bad image", files[j].originalname);
+          message.badImages.push(fileDocs[j].metadata.objectkey);
+          req.log.error("bad image", fileDocs[j].metadata.objectkey);
           continue;
         }
-        req.log.info("good image", files[j].originalname);
+        req.log.info("good image", fileDocs[j].metadata.objectkey);
 
         // this is the original closest point
         const findex = geojson.features[closestPoint.properties.featureIndex];
@@ -1680,23 +1697,20 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           lng: String(closestPoint.geometry.coordinates[0]),
           lat: String(closestPoint.geometry.coordinates[1]),
         };
-        const fpath = "/images/geojson/" + files[j].filename;
-        req.log.info("file path:", fpath);
-        let size: number = Number(
-          (Number(files[j].size) / (1024 * 1024)).toFixed(5)
-        );
+        const fullPath = await permPath(Directory.GEOJSON_IMAGES, fileDocs[j].metadata.objectkey);
+        let size = fileDocs[j].metadata.filesize;
         if (
-          files[j].mimetype == "image/jpeg" ||
-          files[j].mimetype == "image/png"
+          fileDocs[j].metadata.mimetype == "image/jpeg" ||
+          fileDocs[j].metadata.mimetype == "image/png"
         ) {
-          const thumbs = await saveThumbnails(fpath);
-          size = thumbs.size;
+          const thumbs = await saveThumbnails(fullPath);
+          size += thumbs.size;
         }
         req.log.info("file size", size);
         const featureFile = new layerFiles({
-          name: files[j].originalname,
+          name: fileDocs[j].presigned.formData.name,
           layerId: layerId,
-          filePath: fpath,
+          filePath: fullPath,
           fileSize: size,
           //! too complex
           featureLabel: layerDoc.layerLabel
@@ -1705,7 +1719,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
               : null
             : null,
           centerPoints: centerPoints2,
-          fileType: files[j].mimetype,
+          fileType: fileDocs[j].metadata.mimetype,
           sys_Id: findex.properties.sys_id,
           tenantId: res.locals.user.tenantId,
           createdBy: res.locals.user._id,
@@ -1725,12 +1739,12 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           index,
         ])
       );
-      for (const uploadFile of req.files as Express.Multer.File[]) {
-        req.log.info(uploadFile.originalname, "Processing file name");
-        const fileLabel = path.parse(uploadFile.originalname).name;
+      for (const uploadFile of fileDocs) {
+        req.log.info(uploadFile.presigned.formData.name, "Processing file name");
+        const fileLabel = path.parse(uploadFile.presigned.formData.name).name;
         const matchedFeatureIndex = labelLookupMap.get(fileLabel);
         if (matchedFeatureIndex == undefined) {
-          message.badImages.push(uploadFile.originalname);
+          message.badImages.push(uploadFile.metadata.objectkey);
           continue;
         }
         const matchedFeature = geojson.features[matchedFeatureIndex];
@@ -1739,28 +1753,25 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           lng: centroid.geometry.coordinates[0],
           lat: centroid.geometry.coordinates[1],
         };
-        const fpath = "/images/geojson/" + uploadFile.filename;
-        req.log.info("file path:", fpath);
-        let size: number = Number(
-          (Number(uploadFile.size) / (1024 * 1024)).toFixed(5)
-        );
+        const fullPath = await permPath(Directory.GEOJSON_IMAGES, uploadFile.metadata.objectkey);
+        let size = uploadFile.metadata.filesize;
         if (
-          uploadFile.mimetype == "image/jpeg" ||
-          uploadFile.mimetype == "image/png"
+          uploadFile.metadata.mimetype == "image/jpeg" ||
+          uploadFile.metadata.mimetype == "image/png"
         ) {
-          const thumbs = await saveThumbnails(fpath);
-          size = thumbs.size;
+          const thumbs = await saveThumbnails(fullPath);
+          size += thumbs.size;
         }
         req.log.info("file size", size);
         const featureFile = new layerFiles({
-          name: uploadFile.originalname,
+          name: uploadFile.presigned.formData.name,
           layerId: layerDoc._id,
-          filePath: fpath,
+          filePath: fullPath,
           fileSize: size,
           //! too complex
           featureLabel: fileLabel,
           centerPoints: centerPoints,
-          fileType: uploadFile.mimetype,
+          fileType: uploadFile.metadata.mimetype,
           sys_Id: matchedFeature.properties.sys_id,
           tenantId: res.locals.user.tenantId,
           createdBy: res.locals.user._id,
@@ -1809,7 +1820,7 @@ export const assignlayerLabel = async (req: Request, res: AuthResponse) => {
       }
 
       if (savedDoc) {
-        const d: any = await Layer.findOne({
+        const d = await Layer.findOne({
           _id: req.body.layerId,
           tenantId: res.locals.user.tenantId._id
             ? res.locals.user.tenantId._id
@@ -1860,15 +1871,15 @@ export const imageReviewforLayerFileId = async (
   res: AuthResponse
 ) => {
   {
-    const layerDoc: any = await Layer.findOne({
+    const layerDoc = await Layer.findOne({
       _id: req.body.layerId,
       tenantId: res.locals.user.tenantId,
     });
     if (layerDoc) {
-      const docpath: any = DirPath(Directory.ROOT, layerDoc.layerpath);
-      const geojson: any = await readGeoJson(docpath);
+      const docpath = DirPath(Directory.ROOT, layerDoc.layerpath);
+      const geojson = await readGeoJson(docpath);
       for (let i = 0; i < req.body.check.length; i++) {
-        const doc: any = await layerFiles.findOne({
+        const doc = await layerFiles.findOne({
           _id: req.body.check[i]._id,
           tenantId: res.locals.user.tenantId,
         });
@@ -1973,7 +1984,7 @@ export const downloadassetbyIDtoKml = async (
       tenantId: res.locals.user.tenantId._id,
     });
     const geojson = await readGeoJson(DirPath(Directory.ROOT, doc.layerpath));
-    const downloadlink = await saveAsKML(geojson, doc.layerpath);
+    const downloadlink = await saveAsKML(geojson);
     res.json({
       status: true,
       message: `Download Link generated for LayerID: ${id}`,
@@ -2044,30 +2055,24 @@ export const deleteMultipleLayersFiles = async (
   res: AuthResponse
 ) => {
   {
-    const layerFilesQuery = req.body.layerFileIds as string[];
-    for (let i = 0; i < layerFilesQuery.length; i++) {
-      const layerFileData = await layerFiles.findOne({
-        _id: layerFilesQuery[i],
-        tenantId: res.locals.user.tenantId,
-      });
+    const layerFileDocs = await layerFiles.find({
+      tenantId: res.locals.user.tenantId._id,
+      _id: { $in: req.body.layerFileIds }
+    })
+    for (let i = 0; i < layerFileDocs.length; i++) {
+      const layerFileData = layerFileDocs[i];
       if (layerFileData) {
         await deletePublicFileUsingPath(layerFileData.filePath);
-        const fileName = path.parse(layerFileData.filePath).base;
-        await deleteDirFileUsingName(
-          Directory.GEOJSON_IMAGES,
-          "1x_" + fileName
-        );
-        await deleteDirFileUsingName(
-          Directory.GEOJSON_IMAGES,
-          "2x_" + fileName
-        );
+        if (layerFileData.fileType.startsWith("image/")) {
+          await deleteThumbnails(layerFileData.filePath);
+        }
         await layerFileData.delete();
       }
     }
     res.status(200).json({
       status: true,
       message: "LayerFiles successfully deleted",
-      data: layerFilesQuery,
+      data: layerFileDocs,
     });
   }
 };
@@ -2250,18 +2255,13 @@ export const picktoMapUseForLayerCreate = async (
       );
     }
     if (savedDoc1) {
-      // let dir:any = DirPath(Directory.DEFAULT, savedDoc1.layerpath);
-      // let fc: any = geojson.features.length;
       let flag = false;
       for (let i = 0; i < allImageData.length; i++) {
-        // for (let j = 0; j < req.files.length; j++) {
-        // if (String(geojson.features[i].properties.filename) == String(req.files[j].filename)) {
         const centerPoints2 = {
           lng: allImageData[i].coordinates[0],
           lat: allImageData[i].coordinates[1],
         };
-        const filePath = pathUtils.docPath(Directory.GEOJSON_IMAGES, randomUUID() + extname(allImageData[i].originalname));
-        await copyFile(allImageData[i].path, filePath);
+        const filePath = await permPath(Directory.GEOJSON_IMAGES, allImageData[i].path);
         const featureFile = new layerFiles({
           name: allImageData[i].originalname,
           layerId: savedDoc1._id,
@@ -2278,7 +2278,7 @@ export const picktoMapUseForLayerCreate = async (
         });
         try {
           const thumbs = await saveThumbnails(featureFile.filePath);
-          featureFile.fileSize = thumbs.size;
+          featureFile.fileSize += thumbs.size;
         } catch (err) {
           req.log.error(err);
         }

@@ -8,24 +8,27 @@ import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import crypto from "crypto";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
-import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
 import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
 import { getFileSize } from "../../utils/fileUtils";
-// let saltRound = 10;
+import UploadTask from "../../models/uploadTask";
+import { permPath } from "../../utils/dataUtils";
+import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
+
 //create user account
 export const createUser = async (req: Request, res: AuthResponse) => {
   {
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.avatar,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
     const [existingUsertWithEmail] = await Promise.all([
       User.findOne({
         $or: [{ email: req.body.email }, { phoneNo: req.body.phoneNo }],
       }),
     ]);
-    const docPath = DirPath(
-      Directory.ROOT,
-      req.body.avatar ? req.body.avatar : ""
-    );
-    const size: any = await getFileSize(docPath);
 
     if (!existingUsertWithEmail) {
       const temppass = crypto.randomBytes(10).toString("hex");
@@ -42,25 +45,17 @@ export const createUser = async (req: Request, res: AuthResponse) => {
         dob: req.body.dob,
         aadhaarNo: req.body.aadhaarNo,
         pilotLicenceNo: req.body.pilotLicenceNo,
-        avatar: req.body.avatar ? req.body.avatar : null,
+        avatar: null,
         isBanned: false,
         isActive: true,
       });
-      const dd: any = await userr.save();
-      if (req.body.avatar && dd) {
-        copyFiled(
-          req.body.avatar,
-          `/images/userAvatars/${req.body.avatar.split(/[\\\/]/)[3]}`
-        );
+      if (fileDoc) {
+        const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+        await saveThumbnails(fullPath);
+        userr.avatar = fullPath;
       }
-      if (req.body.avatar && dd) {
-        dd.avatar = `/images/userAvatars/${req.body.avatar.split(/[\\\/]/)[3]}`;
-        await dd.save();
-      }
-      if (req.body.avatar && dd) {
-        await deletePublicFileUsingPath(req.body.avatar);
-      }
-      const tenant: any = await Tenant.findOne({
+      const dd = await userr.save();
+      const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,
       });
       if (dd && tenant.actualUserCount >= 0) {
@@ -68,8 +63,6 @@ export const createUser = async (req: Request, res: AuthResponse) => {
           { _id: res.locals.user.tenantId },
           { $inc: { actualUserCount: 1 } }
         );
-        // tenant.actualUserCount = Number(tenant.actualUserCount) + 1;
-        // await tenant.save();
       }
 
       const email = req.body.email;
@@ -117,11 +110,16 @@ export const createUser = async (req: Request, res: AuthResponse) => {
         dob: req.body.dob,
         aadhaarNo: req.body.aadhaarNo,
         pilotLicenceNo: req.body.pilotLicenceNo,
-        avatar: req.body.avatar ? req.body.avatar : undefined,
+        avatar: null,
         isBanned: false,
         isActive: true,
       };
-      const dd: any = await User.findOneAndUpdate(
+      if (fileDoc) {
+        const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+        await saveThumbnails(fullPath);
+        user.avatar = fullPath;
+      }
+      const dd = await User.findOneAndUpdate(
         { _id: existingUsertWithEmail._id },
         user,
         {
@@ -129,25 +127,6 @@ export const createUser = async (req: Request, res: AuthResponse) => {
           useFindAndModify: false,
         }
       );
-      if (req.body.avatar && dd) {
-        copyFiled(
-          req.body.avatar,
-          `/images/userAvatars/${req.body.avatar.split(/[\\\/]/)[3]}`
-        );
-      }
-      if (req.body.avatar && dd) {
-        dd.avatar = `/images/userAvatars/${req.body.avatar.split(/[\\\/]/)[3]}`;
-        await dd.save();
-      }
-      if (req.body.avatar && dd) {
-        await deletePublicFileUsingPath(req.body.avatar);
-      }
-      // let tenant:any = await Tenant.findOne({_id:res.locals.user.tenantId});
-      // if(dd && tenant.actualUserCount>=0){
-      //     await Tenant.updateOne({ _id: res.locals.user.tenantId},{ $inc: { actualUserCount: 1 } })
-      //     // tenant.actualUserCount = Number(tenant.actualUserCount) + 1;
-      //     // await tenant.save();
-      // }
       const email = req.body.email;
 
       const token = await generateResetPasswordToken(email);
@@ -173,7 +152,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
       res.json({
         status: true,
         message: "User created! Check email to change password",
-        data: user,
+        data: dd,
       });
     } else {
       res.json({
@@ -268,20 +247,18 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
       });
       if (req.body.avatar && dd && doc) {
-        const a = new String(String(req.body.avatar)).valueOf();
-        const b = new String(String(bSavePath)).valueOf();
-        if (a !== b) {
-          copyFiled(
-            req.body.avatar,
-            `/images/userAvatars/${req.body.avatar.split(/[\\\/]/)[3]}`
-          );
-          dd.avatar = `/images/userAvatars/${
-            req.body.avatar.split(/[\\\/]/)[3]
-          }`;
-          await dd.save();
-          await deletePublicFileUsingPath(req.body.avatar);
-          await deletePublicFileUsingPath(bSavePath);
+        const fileDoc = await UploadTask.findOne({
+          _id: req.body.avatar,
+          tenant: res.locals.user.tenantId._id,
+          createdBy: res.locals.user._id,
+          // status: "started",
+        });
+        if (fileDoc) {
+          const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+          await saveThumbnails(fullPath);
+          doc.avatar = fullPath;
         }
+        await dd.save();
       }
 
       return res.status(200).json({
@@ -309,6 +286,7 @@ export const UserDelete = async (req: Request, res: AuthResponse) => {
         const docPath = DirPath(Directory.ROOT, doc.avatar);
         size = await getFileSize(docPath);
         await deletePublicFileUsingPath(doc.avatar);
+        await deleteThumbnails(doc.avatar);
       } catch (error) {
         req.log.error("failed to delete user avatar");
       }

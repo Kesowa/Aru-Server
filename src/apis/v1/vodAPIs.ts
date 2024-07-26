@@ -36,7 +36,7 @@ router.post(
 router.post(
   "/save-vod-manual",
   isAuthenticated,
-  body("video").notEmpty().isMongoId(),
+  body("file").notEmpty().isMongoId(),
   body("locationID").default("5f202f03b9225726102721b8").notEmpty().isMongoId(),
   body("missionID").notEmpty().isMongoId(),
   body("flightID").notEmpty().isMongoId(),

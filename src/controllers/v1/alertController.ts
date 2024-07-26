@@ -17,6 +17,7 @@ import { WiproInterface } from "../../utils/wipro";
 import { readCoords, saveThumbnails } from "../../utils/imageUtils";
 import * as pathUtils from "../../utils/pathUtils";
 import UploadTask from "../../models/uploadTask";
+import { permPath } from "../../utils/dataUtils";
 
 // Create Alert Controlller
 type CreateAlert = {
@@ -803,13 +804,15 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
 export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
     const imgDoc = await UploadTask.findOne({
-      _id: req.body.image,
+      _id: req.body.file,
       tenant: res.locals.user.tenantId._id,
       createdBy: res.locals.user._id,
       status: "started",
     });
     const thumbs = await saveThumbnails(imgDoc.metadata.objectkey);
     const ff = await readCoords(imgDoc.metadata.objectkey);
+
+    const fullPath = await permPath(Directory.ALERT_IMAGES, imgDoc.metadata.objectkey);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
@@ -829,8 +832,8 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: imgDoc.metadata.filesize,
-      image: imgDoc.metadata.objectkey,
+      fileSize: imgDoc.metadata.filesize + thumbs.size,
+      image: fullPath,
     });
 
     const data = await newAlert.save();

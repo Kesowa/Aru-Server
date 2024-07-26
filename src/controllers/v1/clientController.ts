@@ -13,7 +13,6 @@ import crypto, { randomUUID } from "crypto";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
-import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
 import { IMission } from "../../schemas/mission";
 import { ILocation } from "../../schemas/location";
@@ -28,13 +27,21 @@ import { SortOrder } from "mongoose";
 import { getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
-import { saveFile } from "../../utils/dataUtils";
+import { permPath, saveFile } from "../../utils/dataUtils";
+import { saveThumbnails } from "../../utils/imageUtils";
+import UploadTask from "../../models/uploadTask";
 
 export const createClientformissionGroup = async (
   req: Request,
   res: AuthResponse
 ) => {
   {
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.avatar,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
     const result = await Usergroup.findOne(
       {
         _id: req.body.userGroupId,
@@ -82,32 +89,22 @@ export const createClientformissionGroup = async (
             tenantId: res.locals.user.tenantId,
             createdBy: res.locals.user._id,
             updatedBy: res.locals.user._id,
-            avatar: req.body.avatar ? req.body.avatar : undefined,
+            avatar: null,
             isBanned: false,
             isActive: true,
             city,
             country,
           };
+          if (fileDoc) {
+            const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+            await saveThumbnails(fullPath);
+            modClient.avatar = fullPath;
+          }
           await User.findOneAndUpdate({ _id: cId }, modClient, {
             upsert: true,
             useFindAndModify: false,
           });
           const modDoc = await User.findOne({ _id: cId });
-          if (req.body.avatar && modDoc) {
-            copyFiled(
-              req.body.avatar,
-              `/images/client/${req.body.avatar.split(/[\\\/]/)[3]}`
-            );
-          }
-          if (req.body.avatar && modDoc) {
-            modDoc.avatar = `/images/client/${
-              req.body.avatar.split(/[\\\/]/)[3]
-            }`;
-            await modDoc.save();
-          }
-          if (req.body.avatar && modDoc) {
-            await deletePublicFileUsingPath(req.body.avatar);
-          }
           // let tenant: any = await Tenant.findOne({ _id: res.locals.user.tenantId });
           // if (modDoc && tenant.actualClientCount >= 0) {
           //   await Tenant.updateOne({ _id: res.locals.user.tenantId},{ $inc: { actualClientCount: 1 } })
@@ -162,25 +159,13 @@ export const createClientformissionGroup = async (
             city,
             country,
           });
+          if (fileDoc) {
+            const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+            await saveThumbnails(fullPath);
+            newClient.avatar = fullPath;
+          }
           const createDoc = await newClient.save();
-          const docPath = DirPath(Directory.ROOT, req.body.avatar);
-          const size: number = await getFileSize(docPath);
-          if (req.body.avatar && createDoc) {
-            copyFiled(
-              req.body.avatar,
-              `/images/client/${req.body.avatar.split(/[\\\/]/)[3]}`
-            );
-          }
-          if (req.body.avatar && createDoc) {
-            createDoc.avatar = `/images/client/${
-              req.body.avatar.split(/[\\\/]/)[3]
-            }`;
-            await createDoc.save();
-          }
-          if (req.body.avatar && createDoc) {
-            await deletePublicFileUsingPath(req.body.avatar);
-          }
-          const tenant: any = await Tenant.findOne(
+          const tenant = await Tenant.findOne(
             {
               _id: res.locals.user.tenantId,
             },
@@ -334,7 +319,13 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
 
 export const editClientDetails = async (req: Request, res: AuthResponse) => {
   {
-    const result: any = await User.findOne(
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.avatar,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
+    const result = await User.findOne(
       {
         _id: req.body.id,
         tenantId: res.locals.user.tenantId,
@@ -351,7 +342,7 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
       if (req.body.avatar) {
         bSavePath = result.avatar;
       }
-      const doc: Array<any> = await User.findOneAndUpdate(
+      const doc = await User.findOneAndUpdate(
         { _id: req.body.id, tenantId: res.locals.user.tenantId },
         req.body,
         {
@@ -360,25 +351,17 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
           useFindAndModify: false,
         }
       );
-      const modDoc: any = await User.findOne({
+      const modDoc = await User.findOne({
         _id: req.body.id,
         tenantId: res.locals.user.tenantId,
       });
       if (req.body.avatar && modDoc && doc) {
-        const a = new String(String(req.body.avatar)).valueOf();
-        const b = new String(String(bSavePath)).valueOf();
-        if (a !== b) {
-          copyFiled(
-            req.body.avatar,
-            `/images/client/${req.body.avatar.split(/[\\\/]/)[3]}`
-          );
-          modDoc.avatar = `/images/client/${
-            req.body.avatar.split(/[\\\/]/)[3]
-          }`;
-          await modDoc.save();
-          await deletePublicFileUsingPath(req.body.avatar);
-          await deletePublicFileUsingPath(bSavePath);
+        if (fileDoc) {
+          const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+          await saveThumbnails(fullPath);
+          modDoc.avatar = fullPath;
         }
+          await modDoc.save();
       }
 
       return res.status(200).json({

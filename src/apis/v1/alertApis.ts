@@ -1,6 +1,6 @@
 import express from "express";
 import { body, check, oneOf, query } from "express-validator";
-import { uploadFile } from "../../controllers/v1/commonController";
+// import { uploadFile } from "../../controllers/v1/commonController";
 
 import {
   createAlert,
@@ -28,13 +28,13 @@ import { validator, RobustRunner } from "../../utils/requestHelpers";
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-router.post(
-  "/upload-alert-image",
-  isAuthenticated,
-  canCreateAlert,
-  body("image").notEmpty().isMongoId(),
-  RobustRunner(uploadFile)
-);
+// router.post(
+//   "/upload-alert-image",
+//   isAuthenticated,
+//   canCreateAlert,
+//   body("image").notEmpty().isMongoId(),
+//   RobustRunner(uploadFile)
+// );
 
 //++++++++++++++++++++ create alert++++++++++++++++++++++++++++++++++
 router.post(
@@ -60,7 +60,7 @@ router.post(
 router.post(
   "/manual-upload-alert",
   isAuthenticated,
-  body("image").notEmpty().isMongoId(),
+  body("file").notEmpty().isMongoId(),
   body("missionId").notEmpty().isMongoId(),
   body("flightId").notEmpty().isMongoId(),
   body("locationName").notEmpty().isString(),

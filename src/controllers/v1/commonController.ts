@@ -2,61 +2,13 @@ import { Request } from "express";
 import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import path from "path";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { checkFileExists } from "../../utils/fileUtils";
-import { Directory, DirPath, S3_BUCKET_NAME } from "../../constants";
-import { saveThumbnails } from "../../utils/imageUtils";
-import * as pathUtils from "../../utils/pathUtils";
+import { S3_BUCKET_NAME } from "../../constants";
+import { Directory } from "../../utils/pathUtils";
 import { minioClient } from "../../utils/objectStorage";
 import { IPackage } from "../../schemas/package";
 import { randomUUID } from "crypto";
 import uploadModel from "../../models/uploadTask";
-
-//pupload file
-export const uploadFile = async (req: Request, res: AuthResponse) => {
-  {
-    if (req.file?.fieldname == "image") {
-      if (
-        req.file?.mimetype === "image/jpeg" ||
-        req.file?.mimetype === "image/png"
-      ) {
-        await saveThumbnails(
-          pathUtils.docPath(pathUtils.Directory.ALERT_IMAGES, req.file.filename)
-        );
-      }
-      if (req.file) {
-        res.status(201).json({
-          status: true,
-          message: "file uploaded sucessfully",
-          file: `/images/alertImages/${req.file?.filename}`,
-        });
-      } else {
-        res.json({
-          status: false,
-          message: "Invalid file.",
-        });
-      }
-    } else {
-      const img_path = path.relative(
-        DirPath(Directory.ROOT),
-        String(req?.file?.path)
-      );
-      if (req.file) {
-        res.status(201).json({
-          status: true,
-          message: "file uploaded sucessfully",
-          file: `/${img_path}`,
-        });
-      } else {
-        res.json({
-          status: false,
-          message: "Invalid file.",
-        });
-      }
-    }
-  }
-};
 
 //check if email is available for registration
 export const checkIfEmailIdIsAvailable = async (
@@ -97,49 +49,6 @@ export const checkIfEmailIdIsAvailable = async (
   }
 };
 
-export const uploadFileforUSer = async (req: Request, res: AuthResponse) => {
-  {
-    const img_path = DirPath(Directory.TEMP_IMAGES, req.file?.filename);
-    if (
-      req.file?.mimetype === "image/jpeg" ||
-      req.file?.mimetype === "image/png"
-    ) {
-      if (await checkFileExists(img_path)) {
-        try {
-          await saveThumbnails(
-            pathUtils.docPath(
-              pathUtils.Directory.TEMP_IMAGES,
-              req.file.filename
-            )
-          );
-        } catch (err) {
-          req.log.error(err);
-        }
-      }
-    }
-    if (
-      await checkFileExists(
-        DirPath(Directory.TEMP_IMAGES, `2x_${req.file?.filename}`)
-      )
-    ) {
-      await deletePublicFileUsingPath(`/images/temp/${req.file?.filename}`);
-    }
-    if (req.file) {
-      res.status(201).json({
-        status: true,
-        message: "file uploaded sucessfully",
-        file: `/images/temp/2x_${req.file?.filename}`,
-      });
-    } else {
-      res.json({
-        status: false,
-        message: "Invalid file.",
-      });
-    }
-  }
-};
-
-
 export const createUploadUrl = async (req: Request<{}, {}, {
   name: string;
   size: number;
@@ -164,8 +73,10 @@ export const createUploadUrl = async (req: Request<{}, {}, {
   const expiry = new Date();
   expiry.setSeconds(3600 * 24);
   policy.setExpires(expiry);
+  const safeName = encodeURIComponent(req.body.name);
+  policy.setContentDisposition(`attachment; filename="${safeName}"; filename*="${safeName}"`);
   const ext = path.extname(req.body.name);
-  const key = path.join(pathUtils.DocToDir[req.body.model], randomUUID() + ext);
+  const key = path.join(Directory.TEMP, randomUUID() + ext);
   policy.setKey(key);
   policy.setUserMetaData({
     name: req.body.name,

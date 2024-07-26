@@ -27,6 +27,7 @@ import Alert from "../../models/alert";
 import VOD from "../../models/vod";
 import { ILayer } from "../../schemas/layer";
 import {
+    permPath,
     saveFile,
   saveGeojson,
   saveMultiGeojson,
@@ -277,7 +278,6 @@ export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
     }
     const clonedGeojson = await saveGeojson(req.body.path, {
       filter: [...req.body.pattr, "color", "icon", "sys_id"],
-      inplace: true,
     });
 
     res.json({
@@ -1319,16 +1319,10 @@ export const createBaseRasterfromUpload = async (
     } else if (rasterType == rasterProps.POINT_CLOUD) {
       metadata = await LazToTiles3D(fileDoc.metadata.objectkey);
     }
-    // let center = {
-    //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
-    //   lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
-    // };
-    const size: number = Number(
-      (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-    );
+    const newPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
     const layerData = [
       {
-        path: fileDoc.metadata.objectkey,
+        path: newPath,
         minP: minP,
         maxP: maxP,
         import: false,
@@ -1346,7 +1340,7 @@ export const createBaseRasterfromUpload = async (
       center,
       minp: minP,
       maxp: maxP,
-      fileSize: size,
+      fileSize: fileDoc.metadata.filesize,
       tenantId: res.locals.user.tenantId,
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
@@ -1421,13 +1415,12 @@ export const updateBaseLayerRasterUpload = async (
     //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
     //   lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
     // };
-    const size: number = Number(
-      (Number(req.file?.size) / (1024 * 1024)).toFixed(5)
-    );
+    const fullPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
+    const size = fileDoc.metadata.filesize;
     const newSize: any = Number(size + Number(doc.fileSize));
     const dataArr: any = [];
     const layerData = {
-      path: fileDoc.metadata.objectkey,
+      path: fullPath,
       minP: minP,
       maxP: maxP,
       import: false,

@@ -19,6 +19,7 @@ import { getFileSize } from "../../utils/fileUtils";
 import { logger } from "../../app";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveFile } from "../../utils/dataUtils";
+import { randomUUID } from "crypto";
 const geoMapApi = "https://maps.googleapis.com/maps/api/geocode/json";
 
 /*
@@ -70,18 +71,11 @@ const alertSocketController = (alertSocket: Namespace) => {
      */
 
     socket.on("ALERT", async (data: any) => {
-      const converted = Buffer.from(data.image, "base64").toString("binary");
-      const file = `${data.flightId}-${String(data.timeStamp).replace(
-        /:|\./gi,
-        "-"
-      )}`;
-      const filename = DirPath(Directory.ALERT_IMAGES, `${file}.png`);
-      const filePath = `/${Directory.ALERT_IMAGES}/${file}.png`;
-
+      const converted = Buffer.from(data.image, "base64");
       try {
-        await saveFile(Directory.ALERT_IMAGES, filename, converted, "base64");
+        const name = randomUUID() + ".png";
+        const details = await saveFile(Directory.ALERT_IMAGES, name, converted);
 
-        const size: number = await getFileSize(filename);
         const docCount = await Tenant.findOne({ _id: data.tenantId })
           .populate<{ activePackage: IPackage }>("activePackage")
           .lean();
@@ -93,11 +87,11 @@ const alertSocketController = (alertSocket: Namespace) => {
           },
         });
         data.location = { long: stat.location.long, lat: stat.location.lat };
-        data.image = filePath;
+        data.image = details.filepath;
         data.locationName = mapResponse?.data?.results[0]?.formatted_address;
         data.createdBy = new Types.ObjectId("6099204ee930187488a1487b");
         const thumbs = await saveThumbnails(data.image);
-        data.fileSize = thumbs.size;
+        data.fileSize += thumbs.size;
         data.onSite = true;
         data.note = "Alert captured using net!";
         const alert = new Alert({ ...data });
@@ -106,7 +100,7 @@ const alertSocketController = (alertSocket: Namespace) => {
           Number(docCount.activePackage.alertCount)
         ) {
           if (
-            Number(docCount.actualSize) + Number(size) <=
+            Number(docCount.actualSize) + Number(details.size / (1024 * 1024)) <=
             Number(docCount.activePackage.storage)
           ) {
             alert
@@ -135,8 +129,6 @@ const alertSocketController = (alertSocket: Namespace) => {
                 { _id: data.tenantId },
                 { $inc: { actualAlertCount: 1 } }
               );
-              // tenant.actualAlertCount = Number(tenant.actualAlertCount) + 1;
-              //  await tenant.save()
             }
           } else {
             notificationSocket.to(data.tenantId).emit("ALERT_CREATED", {

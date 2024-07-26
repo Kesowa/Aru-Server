@@ -7,18 +7,18 @@ import {
   editPackageForId,
   deletePackageForId,
 } from "../../controllers/v1/packageController";
-import { uploadFileforUSer } from "../../controllers/v1/commonController";
+// import { uploadFileforUSer } from "../../controllers/v1/commonController";
 import { isAuthenticated, onlySuperAdminAccess } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-router.post(
-  "/upload-poster",
-  isAuthenticated,
-  body("poster").notEmpty().isMongoId(),
-  RobustRunner(uploadFileforUSer)
-);
+// router.post(
+//   "/upload-poster",
+//   isAuthenticated,
+//   body("poster").notEmpty().isMongoId(),
+//   RobustRunner(uploadFileforUSer)
+// );
 
 //++++++++++++++++++++ package creation Api +++++++++++++++++++++++++++++
 router.post(

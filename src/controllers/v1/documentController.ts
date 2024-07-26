@@ -16,8 +16,8 @@ import {
   checkFileExists,
   getFileSize,
 } from "../../utils/fileUtils";
-import { saveThumbnails } from "../../utils/imageUtils";
-import { copyFile, createArchive, savePointcloud } from "../../utils/dataUtils";
+import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
+import { copyFile, createArchive, permPath, savePointcloud } from "../../utils/dataUtils";
 import UploadTask from "../../models/uploadTask";
 import { docPath } from "../../utils/pathUtils";
 import { randomUUID } from "crypto";
@@ -44,9 +44,9 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       const webviewPath = await savePointcloud(fileDoc.metadata.objectkey);
       if (webviewPath) {
         const doc = new Document({
-          name: req.file.originalname,
+          name: fileDoc.presigned.formData.name,
           modDate: new Date(),
-          fileSize: req.file.size / (1024 * 1024),
+          fileSize: fileDoc.metadata.filesize,
           folderName: req.body.folderName,
           fileType: req.body.type,
           filePath: webviewPath,
@@ -77,20 +77,15 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       }
     } else {
       const missionId = req.body.missionId;
-      const filesize: number = Number(
-        (Number(req.file.size) / (1024 * 1024)).toFixed(5)
-      );
-
-      const permPath = docPath(Directory.DOCUMENTS, randomUUID() + extname(fileDoc.metadata.objectkey));
-      await copyFile(fileDoc.metadata.objectkey, permPath);
+      const fullPath = await permPath(Directory.DOCUMENTS, fileDoc.metadata.objectkey);
 
       const doc = new Document({
-        name: req.file.originalname,
+        name: fileDoc.presigned.formData.name,
         modDate: new Date(),
-        fileSize: filesize,
-        fileType: req.file.mimetype,
+        fileSize: fileDoc.metadata.filesize,
+        fileType: fileDoc.metadata.mimetype,
         folderName: req.body.folderName,
-        filePath: permPath,
+        filePath: fullPath,
         missionId,
         tenantId: res.locals.user.tenantId,
         createdBy: res.locals.user._id,
@@ -99,7 +94,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       if (
         (req.body.folderName == "rawPhotos" ||
           req.body.folderName == "photos") &&
-        (req.file.mimetype == "image/jpeg" || req.file.mimetype == "image/png")
+        (fileDoc.metadata.mimetype == "image/jpeg" || fileDoc.metadata.mimetype == "image/png")
       ) {
         req.log.debug("Uploading Thumbnails");
         const thumbs = await saveThumbnails(doc.filePath);
@@ -151,21 +146,11 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
         });
       }
     } else if (data) {
-      const pathObj = path.parse(data.filePath);
-      const fname = pathObj.base;
       if (data.folderName == "rawPhotos" || data.folderName == "photos") {
-        const newFilename1 = `1x_${fname}`;
-        const newFilename2 = `2x_${fname}`;
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename1);
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename2);
+        await deleteThumbnails(data.filePath);
       }
 
-      const conf = await deletePublicFileUsingPath(data.filePath);
-      if (conf) {
-        req.log.info("Files deleted");
-      } else {
-        req.log.info("Files does not exist");
-      }
+      await deletePublicFileUsingPath(data.filePath);
       if (data) {
         res.status(200).json({
           status: true,
@@ -209,18 +194,11 @@ export const deletemultipleDocument = async (
     );
     for (let i = 0; i < documents.length; i++) {
       const d = documents[i];
-      const fname = path.parse(d.filePath).base;
       if (d.folderName == "rawPhotos" || d.folderName == "photos") {
-        const newFilename1 = `1x_${fname}`;
-        const newFilename2 = `2x_${fname}`;
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename1);
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename2);
+        await deleteThumbnails(d.filePath);
       }
 
-      const conf = await deletePublicFileUsingPath(d.filePath);
-      if (conf) {
-        req.log.info("Files Deleted");
-      }
+      await deletePublicFileUsingPath(d.filePath);
       const doc = await d.delete();
       if (doc) {
         flag = 1;

@@ -6,6 +6,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { downloadTemp, readToBuffer, stat, uploadAnything, uploadFile } from "./objectStorage";
 import { randomUUID } from "crypto";
+import { deletePublicFileUsingPath } from "./fileDeleteUtils";
 const asyncExec = promisify(exec);
 
 /**
@@ -38,8 +39,8 @@ export const saveThumbnails = async (img: KeyPath | DocPath) => {
   const { small, medium } = await createThumbnails(imgData, img);
   const pathData = path.parse(img);
   const paths: { small: DocPath; medium: DocPath } = {
-    small: path.join("/", pathData.dir, "1x_" + pathData.base),
-    medium: path.join("/", pathData.dir, "2x_" + pathData.base),
+    small: path.join(pathData.dir, "1x_" + pathData.base),
+    medium: path.join(pathData.dir, "2x_" + pathData.base),
   };
   await Promise.all([
     uploadAnything(paths.small, small),
@@ -48,17 +49,27 @@ export const saveThumbnails = async (img: KeyPath | DocPath) => {
   return {
     ...paths,
     size:
-      (imgData.byteLength + small.byteLength + medium.byteLength) /
+      (small.byteLength + medium.byteLength) /
       (1024 * 1024),
   };
 };
+
+export const deleteThumbnails = async (img: KeyPath | DocPath) => {
+  const pathData = path.parse(img);
+  const paths: { small: DocPath; medium: DocPath } = {
+    small: path.join(pathData.dir, "1x_" + pathData.base),
+    medium: path.join(pathData.dir, "2x_" + pathData.base),
+  };
+  await Promise.all([
+    deletePublicFileUsingPath(paths.small),
+    deletePublicFileUsingPath(paths.medium),
+  ]);
+}
 
 /**
  * Returns path to thermal raw data file if it exists, or undefined
  */
 export const saveThermal = async (img: KeyPath | DocPath) => {
-  // const thermalPath = docPath(Directory.AI_ML, path.parse(img).name + ".raw");
-  // const absThermalPath = absPath(Directory.ROOT, img);
   const tmpThermalImg = await downloadTemp(img);
   const tmpThermalPath = "/tmp/" + randomUUID() + ".raw";
   const command =
