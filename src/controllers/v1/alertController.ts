@@ -10,8 +10,7 @@ import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IFlight } from "../../schemas/flight";
-import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
-import { getFileSize } from "../../utils/fileUtils";
+import { ARU_INSTANCE, Directory, Instance } from "../../constants";
 import path from "path";
 import { WiproInterface } from "../../utils/wipro";
 import { readCoords, saveThumbnails } from "../../utils/imageUtils";
@@ -37,6 +36,12 @@ export const createAlert = async (
   res: AuthResponse
 ) => {
   {
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.image,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
     if (req.body.location) {
@@ -45,8 +50,8 @@ export const createAlert = async (
         long: req.body.location.long ? req.body.location.long : 0,
       };
     }
-    const docPath: string = DirPath(Directory.ROOT, req.body.image);
-    const size1: number = await getFileSize(docPath);
+    const fullPath = await permPath(Directory.ALERT_IMAGES, fileDoc.metadata.objectkey);
+    const thumbs = await saveThumbnails(fullPath);
     const newAlert = new Alert({
       locationName,
       location: {
@@ -62,8 +67,8 @@ export const createAlert = async (
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: size1,
-      image: req.body.image ? req.body.image : undefined,
+      fileSize: fileDoc.metadata.filesize + thumbs.size,
+      image: fullPath,
     });
 
     const data = await newAlert.save();
