@@ -55,7 +55,7 @@ router.get(
   query("clientId").notEmpty(),
   query("createdAt").optional().notEmpty().isString(), // asce or desc, sorting order, optional
   validator,
-  PermissionGuard(PERMS.CLIENT_MISSION_LIST),
+  PermissionGuard(PERMS.MISSION_LIST),
   RobustRunner(getMissionById)
 );
 router.patch(
@@ -140,7 +140,7 @@ router.get(
   isAuthenticated,
   param("id").notEmpty(),
   validator,
-  PermissionGuard(PERMS.CLIENT_MISSION_LIST),
+  PermissionGuard(PERMS.MISSION_LIST),
   RobustRunner(fetchMissionById)
 );
 

@@ -27,7 +27,7 @@ import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
-import { PERMS } from "../../schemas/permission";
+import { TENANT_CLIENT_PERMS } from "../../schemas/permission";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -38,13 +38,7 @@ export const createClientformissionGroup = async (
       _id: req.body.userGroupId,
       tenantId: res.locals.user.tenantId._id,
     });
-    const onlyClientPerms = result.permissions.every((perm) =>
-      [
-        PERMS.CLIENT_DATA,
-        PERMS.CLIENT_LIST,
-        PERMS.CLIENT_MISSION_LIST,
-      ].includes(perm)
-    );
+    const onlyClientPerms = result.permissions.every((perm) => TENANT_CLIENT_PERMS.includes(perm));
     if (result) {
       if (onlyClientPerms) {
         const existingClient = await User.findOne({
