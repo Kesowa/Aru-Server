@@ -675,15 +675,23 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
 export const getbymissionID = async (req: Request, res: AuthResponse) => {
   {
     const id = req.query.missionId as string;
-    const mission = await Mission.findOne<{ name: string }>(
+    const isClient = res.locals.user.userType === "tenant-client";
+    const mission = await Mission.findOne<{ name: string, clientId: Types.ObjectId[] }>(
       {
         _id: id,
         tenantId: res.locals.user.tenantId._id,
       },
       {
         name: 1,
+        clientId: 1,
       }
     );
+    if (isClient && (!mission.clientId.includes(res.locals.user._id))) {
+      return res.status(403).json({
+        status: false,
+        message: `Client does not have access to the mission`,
+      });
+    }
     const flight = await Flight.findOne<{
       centerPoints: {
         lat: number;
