@@ -659,6 +659,8 @@ const usergroups = [
       "location_list", // related necessary permissions
       "user_list",
       "mission_list", // common for all tenant-staff
+      "client_list",
+      "layer_list",
     ],
     isActive: true,
     name: "pilot",
