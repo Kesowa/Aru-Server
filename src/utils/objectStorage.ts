@@ -13,6 +13,7 @@ export const minioClient = new Minio.Client({
   endPoint: S3_ENDPOINT,
   port: 9000,
   useSSL: false,
+  region: "ap-south-1",
   accessKey: S3_ACCESS_KEY,
   secretKey: S3_SECRET_KEY,
 })

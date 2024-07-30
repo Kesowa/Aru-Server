@@ -99,7 +99,7 @@ export const createUploadUrl = async (req: Request<{}, {}, {
     },
     presigned: {
       formData: presignedUrl.formData,
-      postURL: "http://localhost:9000/aru" // !REVISIT: Change to public s3 path
+      postURL: presignedUrl.postURL.replace("minio", "localhost"), // !REVISIT: Change to public s3 path
     },
   });
 
