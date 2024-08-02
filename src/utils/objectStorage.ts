@@ -67,7 +67,7 @@ export const uploadDir = async (src: string, dest: string) => {
 }
 
 export const copyObj = async (src: string, dest: string) => {
-  await minioClient.copyObject(S3_BUCKET_NAME, keyPath(src), keyPath(dest));
+  await minioClient.copyObject(S3_BUCKET_NAME, keyPath(dest), "/" + S3_BUCKET_NAME + "/" + keyPath(src));
 }
 
 export const deleteObj = async (objKey: string) => {
