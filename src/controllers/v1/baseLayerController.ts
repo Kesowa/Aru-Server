@@ -1120,104 +1120,70 @@ export const createBaseRasterfromMission = async (
 };
 
 export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
-  {
-    let layerArray: any = [];
-    layerArray = req.body.layers;
-    if (layerArray.length) {
-      for (let i = 0; i < layerArray.length; i++) {
-        const docs = await Layer.findOne(
-          {
-            _id: layerArray[i],
-            tenantId: res.locals.user.tenantId._id,
-          },
-          {
-            layerpath: 1,
-            type: 1,
-            layerdataArr: 1,
-          }
-        );
-        if (docs) {
-          if (docs.type == "Vector") {
-            const fileName = path.parse(docs.layerpath).base;
-            await deleteDirFileUsingName(Directory.VECTOR, fileName);
+  const layers = await Layer.find({
+    _id: { $in: req.body.layers },
+    tenantId: res.locals.user.tenantId._id,
+    isBase: true,
+    isPublic: false,
+  });
 
-            const files = await layerFiles.find(
-              {
-                layerId: layerArray[i],
-              },
-              {
-                filePath: 1,
-              }
-            );
-
-            for (const f of files) {
-              const fileName = path.parse(f.filePath).base;
-              await deleteDirFileUsingName(Directory.GEOJSON_IMAGES, fileName);
-            }
-
-            await layerFiles.deleteMany({ layerId: layerArray[i] });
-
-            await layerFiles.updateMany(
-              { layers: { $in: [layerArray[i]] } },
-              { $pull: { layers: layerArray[i] } }
-            );
-
-            const data = await Layer.deleteOne({
-              _id: layerArray[i],
-              tenantId: res.locals.user.tenantId._id,
-            });
-            if (data) {
-              return res.status(200).json({
-                status: true,
-                message: "Base successfully deleted",
-              });
-            } else {
-              return res.status(200).json({
-                status: false,
-                message: "Base could not be deleted",
-              });
-            }
-          } else {
-            for (let i = 0; i < docs.layerdataArr.length; i++) {
-              if (docs.layerdataArr[i][0].import == false) {
-                const fileName = path.parse(docs.layerdataArr[i][0].path).base;
-                await deleteDirFileUsingName(Directory.RASTER, fileName);
-              }
-            }
-            const data = await Layer.deleteOne({
-              _id: layerArray[i],
-              tenantId: res.locals.user.tenantId._id,
-            });
-
-            if (typeof layerArray[i].metadata?.id == "string") {
-              await delete3DTiles(layerArray[i].metadata);
-            }
-            if (data) {
-              return res.status(200).json({
-                status: true,
-                message: "Base successfully deleted",
-              });
-            } else {
-              return res.status(200).json({
-                status: false,
-                message: "Base could not be deleted",
-              });
-            }
-          }
-        } else {
-          return res.status(200).json({
-            status: false,
-            message: "Base could not be found",
-          });
-        }
-      }
-    } else {
-      return res.status(200).json({
-        status: false,
-        message: "Layer array empty",
-      });
-    }
+  if (layers.length == 0) {
+    res.status(404).json({
+      success: false,
+      message: "no layers found",
+    });
+    return
   }
+
+  const results = await Promise.allSettled(layers.map(async (layer) => {
+    if (layer.missionId !== null) {
+      await layer.update({ isBase: false });
+      return layer;
+    }
+    if (layer.type == "Vector") {
+      const files = await layerFiles.find(
+        {
+          layerId: layer._id,
+        }
+      );
+
+      for (const f of files) {
+        await deletePublicFileUsingPath(f.filePath);
+      }
+
+      await layerFiles.deleteMany({ layerId: layer._id });
+
+      await layerFiles.updateMany(
+        { layers: layer._id },
+        { $pull: { layers: layer._id } }
+      );
+
+      await deletePublicFileUsingPath(layer.layerpath);
+
+    } else {
+      if (layer.raster == rasterProps.CESIUM_3D) {
+        await delete3DTiles(layer.layerpath);
+      } else {
+        await deletePublicFileUsingPath(layer.layerpath);
+      }
+    }
+    await Layer.deleteOne({
+      _id: layer._id,
+      tenantId: res.locals.user.tenantId._id,
+    });
+    await Tenant.updateOne({
+      tenantId: res.locals.user.tenantId._id,
+    },
+      { actualSize: { $inc: -layer.fileSize } }
+    );
+    return layer;
+  }));
+
+  res.json({
+    success: true,
+    message: "layers deleted",
+    data: results
+  });
 };
 
 export const createBaseRasterfromUpload = async (
