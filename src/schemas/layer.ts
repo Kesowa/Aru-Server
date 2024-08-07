@@ -18,7 +18,7 @@ export interface ILayer {
   color: string;
   layerpath: string;
   name: string;
-  layerdataArr: [{}]; // stored minp/maxp for baselayers and being used on frontend
+  // layerdataArr: [{}]; // stored minp/maxp for baselayers and being used on frontend
   //here why arent we creating an array
   center: [{}];
   minp: number;
@@ -53,7 +53,7 @@ export const LayerType = {
   color: Types.String(),
   layerpath: Types.String(),
   name: Types.String(),
-  layerdataArr: Types.Array({ arrayType: Types.Object({ properties: {} }) }),
+  // layerdataArr: Types.Array({ arrayType: Types.Object({ properties: {} }) }),
   center: Types.Object({
     properties: { lng: Types.Number(), lat: Types.Number() },
   }),
@@ -94,9 +94,9 @@ const layerSchema = new mongoose.Schema<ILayer>(
     layerpath: {
       type: String,
     },
-    layerdataArr: {
-      type: [{}],
-    },
+    // layerdataArr: {
+    //   type: [{}],
+    // },
     color: {
       type: String,
     },

@@ -27,8 +27,9 @@ import Alert from "../../models/alert";
 import VOD from "../../models/vod";
 import { ILayer } from "../../schemas/layer";
 import {
-    permPath,
-    saveFile,
+  copyFile,
+  permPath,
+  saveFile,
   saveGeojson,
   saveMultiGeojson,
   saveVectorLayer,
@@ -642,8 +643,8 @@ export const getMetadataForUpdatingBaseLayer = async (
           missionMap
             .get(layer.missionId.toString())
             .layers[
-              missionMap.get(layer.missionId.toString()).layers.length - 1
-            ].fields.push(p[0]);
+            missionMap.get(layer.missionId.toString()).layers.length - 1
+          ].fields.push(p[0]);
           if (attrMap.get(p[0])) {
             attrMap.get(p[0]).layerMatches.push({
               layerId: layer._id,
@@ -686,8 +687,8 @@ export const getMetadataForUpdatingBaseLayer = async (
                     lm.length === 0
                       ? "No Other Mathces"
                       : lm.length === layerData.length - 1
-                      ? "Matches With All"
-                      : lm,
+                        ? "Matches With All"
+                        : lm,
                 };
               }),
             };
@@ -791,22 +792,13 @@ export const getBaseLayers = async (req: Request, res: AuthResponse) => {
     if ((type !== "Vector" && type !== "Raster" && type !== "All") || !type) {
       return res.json({
         success: false,
-        message: "Please provide a valid size",
+        message: "Please provide a valid type",
       });
     }
     const data = await Layer.find({
       [type !== "All" && "type"]: type,
-      $and: [
-        {
-          $or: [{ missionId: { $exists: false } }, { missionId: null }],
-        },
-        {
-          $or: [
-            { tenantId: res.locals.user.tenantId._id },
-            { createdBy: res.locals.user._id },
-          ],
-        },
-      ],
+      isBase: true,
+      tenantId: res.locals.user.tenantId._id,
     });
 
     res.status(200).json({
@@ -850,7 +842,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     if (!baseLayer) {
       res.status(404).json({
         status: false,
-        message: "BaseLayer not found" 
+        message: "BaseLayer not found"
       });
       return;
     };
@@ -1074,92 +1066,56 @@ export const createBaseRasterfromMission = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const name = req.body.name;
-    let baseRasterLayer: any;
-    const data = await Layer.find(
+  const layer = await Layer.findOne(
+    {
+      _id: req.body.layers[0],
+      tenantId: res.locals.user.tenantId._id,
+      raster: { $exists: true },
+    },
+  ).populate<{ missionId: IMission }>("missionId");
+
+  if (layer) {
+    res.status(404).json({
+      status: false,
+      message: "layer not found",
+    })
+    return;
+  }
+  const baseRasterLayer = await layer.update({ isBase: true });
+  if (baseRasterLayer) {
+    await Layer.updateMany(
+      { _id: { $in: req.body.layers } },
+      { $set: { isBase: true } }
+    );
+    const savedDoc = await baseRasterLayer.save();
+    await Layer.updateOne(
+      { _id: savedDoc._id },
+      { $push: { layers: { $each: req.body.layers } } }
+    );
+    const tenant = await Tenant.findOne(
       {
-        _id: { $in: req.body.layers },
-        tenantId: res.locals.user.tenantId._id,
-        raster: { $exists: true },
+        _id: res.locals.user.tenantId,
       },
       {
-        raster: 1,
-        missionId: 1,
-        layerpath: 1,
-        minp: 1,
-        maxp: 1,
-        type: 1,
+        actualLayerCount: 1,
       }
-    ).populate<{ missionId: IMission }>("missionId");
-    const type = data[0].raster;
-    if (data.length) {
-      const dataArr: any = [];
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].raster === type) {
-          const layerdata: any = [
-            {
-              path: data[i].layerpath,
-              minp: data[i].minp,
-              maxp: data[i].maxp,
-              import: true,
-            },
-          ];
-          dataArr.push(layerdata);
-        } else {
-          res.status(201).json({
-            status: false,
-            message: "Incompatible layer types",
-          });
-        }
-      }
-      baseRasterLayer = new Layer({
-        name: name,
-        type: data[0].type,
-        raster: data[0].raster,
-        layerdataArr: dataArr,
-        fileSize: 0,
-        captureDate: req.body.captureDate,
-        tenantId: res.locals.user.tenantId,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
-      });
+    );
+    if (savedDoc && tenant.actualLayerCount >= 0) {
+      await Tenant.updateOne(
+        { _id: res.locals.user.tenantId },
+        { $inc: { actualLayerCount: 1 } }
+      );
     }
-    if (baseRasterLayer) {
-      await Layer.updateMany(
-        { _id: { $in: req.body.layers } },
-        { $set: { isBase: true } }
-      );
-      const savedDoc = await baseRasterLayer.save();
-      await Layer.updateOne(
-        { _id: savedDoc._id },
-        { $push: { layers: { $each: req.body.layers } } }
-      );
-      const tenant: any = await Tenant.findOne(
-        {
-          _id: res.locals.user.tenantId,
-        },
-        {
-          actualLayerCount: 1,
-        }
-      );
-      if (savedDoc && tenant.actualLayerCount >= 0) {
-        await Tenant.update(
-          { _id: res.locals.user.tenantId },
-          { $inc: { actualLayerCount: 1 } }
-        );
-      }
-      res.status(201).json({
-        status: true,
-        message: "New Base Layer Created Successfully",
-        data: savedDoc,
-      });
-    } else {
-      res.status(201).json({
-        status: false,
-        message: "Failed to create base layer",
-      });
-    }
+    res.status(201).json({
+      status: true,
+      message: "New Base Layer Created Successfully",
+      data: savedDoc,
+    });
+  } else {
+    res.status(201).json({
+      status: false,
+      message: "Failed to create base layer",
+    });
   }
 };
 
