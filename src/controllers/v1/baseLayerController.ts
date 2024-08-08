@@ -232,6 +232,7 @@ export const createVectorBaseLayer = async (
     tenantId: res.locals.user.tenantId,
     createdBy: res.locals.user._id,
     updatedBy: res.locals.user._id,
+    isBase: true,
   });
   await fileDoc.delete();
   if (layer) {
@@ -281,10 +282,12 @@ export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
       filter: [...req.body.pattr, "color", "icon", "sys_id"],
     });
 
+    const newDoc = await doc.update({ layerpath: clonedGeojson.geojsonPath, fileSize: clonedGeojson.size });
+
     res.json({
       success: true,
       message: "Prime attributes added successfully",
-      data: doc,
+      data: newDoc,
     });
   }
 };
@@ -318,9 +321,6 @@ export const createBaseLayerByAttr = async (
         _id: { $in: ids },
         tenantId: res.locals.user.tenantId._id,
       },
-      {
-        layerpath: 1,
-      }
     ).populate<{ missionId: IMission }>("missionId");
 
     const color =
@@ -357,10 +357,10 @@ export const createBaseLayerByAttr = async (
       layerpath: clonedGeojson.path,
       captureDate: new Date(),
       featureCount: clonedGeojson.featureCount,
+      isBase: true,
     });
 
     if (vectorLayer) {
-      await Layer.updateMany({ _id: { $in: ids } }, { $set: { isBase: true } });
       const savedDoc = await vectorLayer.save();
       await layerFiles.updateMany(
         { layerId: { $in: ids } },
@@ -759,16 +759,13 @@ export const updateBaseLayerByAttr = async (
     });
 
     const layerIds = layerData.map((layer) => layer._id);
-    await Layer.updateMany(
-      { _id: { $in: layerIds } },
-      { $set: { isBase: true } }
-    );
     const data = await Layer.updateOne(
       { _id: baseLayer._id },
       {
         featureCount: clonedGeojson.featureCount,
         $push: { layers: { $each: layerIds } },
         fileSize: clonedGeojson.size,
+        layerpath: clonedGeojson.path,
       },
       { new: true }
     );
