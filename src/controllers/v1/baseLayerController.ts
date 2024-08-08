@@ -282,12 +282,12 @@ export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
       filter: [...req.body.pattr, "color", "icon", "sys_id"],
     });
 
-    const newDoc = await doc.update({ layerpath: clonedGeojson.geojsonPath, fileSize: clonedGeojson.size });
+    await doc.updateOne({ layerpath: clonedGeojson.geojsonPath, fileSize: clonedGeojson.size }, { new: true });
 
     res.json({
       success: true,
       message: "Prime attributes added successfully",
-      data: newDoc,
+      data: doc,
     });
   }
 };
@@ -759,7 +759,7 @@ export const updateBaseLayerByAttr = async (
     });
 
     const layerIds = layerData.map((layer) => layer._id);
-    const data = await Layer.updateOne(
+    await Layer.updateOne(
       { _id: baseLayer._id },
       {
         featureCount: clonedGeojson.featureCount,
@@ -778,7 +778,7 @@ export const updateBaseLayerByAttr = async (
     res.json({
       success: true,
       message: "Layer updated successfully",
-      data,
+      data: baseLayer,
     });
   }
 };
@@ -1071,49 +1071,28 @@ export const createBaseRasterfromMission = async (
     },
   ).populate<{ missionId: IMission }>("missionId");
 
-  if (layer) {
+  if (!layer) {
     res.status(404).json({
       status: false,
       message: "layer not found",
     })
     return;
   }
-  const baseRasterLayer = await layer.update({ isBase: true });
-  if (baseRasterLayer) {
-    await Layer.updateMany(
-      { _id: { $in: req.body.layers } },
-      { $set: { isBase: true } }
-    );
-    const savedDoc = await baseRasterLayer.save();
-    await Layer.updateOne(
-      { _id: savedDoc._id },
-      { $push: { layers: { $each: req.body.layers } } }
-    );
-    const tenant = await Tenant.findOne(
-      {
-        _id: res.locals.user.tenantId,
-      },
-      {
-        actualLayerCount: 1,
-      }
-    );
-    if (savedDoc && tenant.actualLayerCount >= 0) {
-      await Tenant.updateOne(
-        { _id: res.locals.user.tenantId },
-        { $inc: { actualLayerCount: 1 } }
-      );
+  await layer.updateOne({ isBase: true, name: "Base - " + layer.name });
+
+  await Tenant.findOne(
+    {
+      _id: res.locals.user.tenantId,
+    },
+    {
+      actualLayerCount: 1,
     }
-    res.status(201).json({
-      status: true,
-      message: "New Base Layer Created Successfully",
-      data: savedDoc,
-    });
-  } else {
-    res.status(201).json({
-      status: false,
-      message: "Failed to create base layer",
-    });
-  }
+  );
+  res.status(201).json({
+    status: true,
+    message: "New Base Layer Created Successfully",
+    data: layer,
+  });
 };
 
 export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
@@ -1133,8 +1112,8 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
   }
 
   const results = await Promise.allSettled(layers.map(async (layer) => {
-    if (layer.missionId !== null) {
-      await layer.update({ isBase: false });
+    if (layer.missionId) {
+      await layer.updateOne({ isBase: false , name: layer.name.replace(/"Base - "/, "")});
       return layer;
     }
     if (layer.type == "Vector") {
@@ -1179,7 +1158,7 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
   res.json({
     success: true,
     message: "layers deleted",
-    data: results
+    data: layers.map((layer, i) => ({ _id: layer._id, deleted: results[i].status == "fulfilled" }))
   });
 };
 
@@ -1319,7 +1298,7 @@ export const updateBaseLayerRasterUpload = async (
   // };
   const fullPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
   const size = fileDoc.metadata.filesize;
-  const newDoc = await doc.update({ layerpath: fullPath, fileSize: size, minp: minP, maxp: maxP });
+  const newDoc = await doc.updateOne({ layerpath: fullPath, fileSize: size, minp: minP, maxp: maxP });
   if (newDoc) {
     await deletePublicFileUsingPath(doc.layerpath);
     res.status(200).json({
@@ -1367,12 +1346,12 @@ export const updateBaseLayerRasterImport = async (
     });
     return;
   }
-  const newLayer = await data.update({ isBase: true, name: "Base - " + data.name });
+  const newLayer = await data.updateOne({ isBase: true, name: "Base - " + data.name });
   if (doc.missionId == null) {
     await doc.delete();
     await deletePublicFileUsingPath(doc.layerpath);
   } else {
-    await doc.update({ isBase: false, name: doc.name.replace(/"Base - "/, "") });
+    await doc.updateOne({ isBase: false, name: doc.name.replace(/"Base - "/, "") });
   }
 
   res.status(200).json({
@@ -1517,7 +1496,7 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
           { _id: res.locals.user.tenantId },
           { publicMapRef: unid }
         );
-      } 
+      }
       await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
       const getDoc = await Layer.findOne({ _id: req.body.layerId }).populate<{
         tenantId: ITenant;

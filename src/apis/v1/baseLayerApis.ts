@@ -84,7 +84,7 @@ router.put(
   "/set-prime-attr",
   isAuthenticated,
   body("path").notEmpty(),
-  body("pattr").notEmpty().isArray(),
+  body("pattr").isArray({ min: 0 }),
   body("id").notEmpty().isMongoId(),
   validator,
   canCreateBaseLayer,
