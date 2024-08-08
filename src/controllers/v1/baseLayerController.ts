@@ -1174,7 +1174,7 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
     await Tenant.updateOne({
       tenantId: res.locals.user.tenantId._id,
     },
-      { actualSize: { $inc: -layer.fileSize } }
+      { $inc: { actualLayerCount: -1 } }
     );
     return layer;
   }));
@@ -1197,8 +1197,6 @@ export const createBaseRasterfromUpload = async (
       createdBy: res.locals.user._id,
       status: "started",
     });
-    let layer: HydratedDocument<ILayer>;
-    const dataArr = [];
 
     //----------TITILER API HAS CHANGED-------------------
     //  Metadata api has been removed
@@ -1242,22 +1240,10 @@ export const createBaseRasterfromUpload = async (
       metadata = await LazToTiles3D(fileDoc.metadata.objectkey);
     }
     const newPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
-    const layerData = [
-      {
-        path: newPath,
-        minP: minP,
-        maxP: maxP,
-        import: false,
-      },
-    ];
-    if (layerData) {
-      dataArr.push(layerData);
-    }
-    layer = new Layer({
+    const layer = await Layer.create({
       name: `base - ${name}`,
       type: "Raster",
       raster: rasterType,
-      layerdataArr: dataArr,
       captureDate,
       center,
       minp: minP,
@@ -1267,27 +1253,18 @@ export const createBaseRasterfromUpload = async (
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
       metadata,
+      isBase: true,
+      layerpath: newPath,
     });
     if (layer) {
-      const savedDoc = await layer.save();
-      const tenant = await Tenant.findOne(
-        {
-          _id: res.locals.user.tenantId,
-        },
-        {
-          actualLayerCount: 1,
-        }
+      await Tenant.updateOne(
+        { _id: res.locals.user.tenantId },
+        { $inc: { actualLayerCount: 1 } }
       );
-      if (savedDoc && tenant.actualLayerCount >= 0) {
-        await Tenant.updateOne(
-          { _id: res.locals.user.tenantId },
-          { $inc: { actualLayerCount: 1 } }
-        );
-      }
       res.status(201).json({
         status: true,
         message: "New Base Layer Created Successfully",
-        data: savedDoc,
+        data: layer,
       });
     } else {
       res.status(500).json({
