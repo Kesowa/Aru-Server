@@ -1289,80 +1289,51 @@ export const updateBaseLayerRasterUpload = async (
     {
       _id: req.body.layerId,
       tenantId: res.locals.user.tenantId._id,
+      isBase: true,
+      type: "Raster",
+      raster: rasterProps.ORTHO,
     },
-    {
-      layerdataArr: 1,
-      fileSize: 1,
-    }
   );
-  if (doc) {
-    //----------TITILER API HAS CHANGED-------------------
-    //  Metadata api has been removed
-    // instead there is statistics api and info api
-    // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-    //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-    const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
-    //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-    const response = await fetch(metaDataURL, {
-      method: "GET",
+  if (!doc) {
+    res.status(404).json({
+      success: false,
+      message: "compatible baselayer not found",
     });
-    const metadata = await response.json();
-    //-------handle for detail:not found----
-    const minP = metadata["1"]["min"];
-    const maxP = metadata["1"]["max"];
-    // let center = {
-    //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
-    //   lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
-    // };
-    const fullPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
-    const size = fileDoc.metadata.filesize;
-    const newSize: any = Number(size + Number(doc.fileSize));
-    const dataArr: any = [];
-    const layerData = {
-      path: fullPath,
-      minP: minP,
-      maxP: maxP,
-      import: false,
-    };
-    if (layerData) {
-      dataArr.push(layerData);
-      let finalDataArr: any;
-      finalDataArr = doc.layerdataArr;
-      finalDataArr.push(dataArr);
-      if (finalDataArr.length) {
-        const updateLayer = await Layer.updateOne(
-          { _id: req.body.layerId },
-          { fileSize: newSize, layerdataArr: finalDataArr }
-        );
-        const layer: any = await Layer.findOne({ _id: req.body.layerId });
-        if (updateLayer) {
-          res.status(200).json({
-            status: true,
-            message: "Raster layer updated sucessfully",
-            data: layer,
-          });
-        } else {
-          res.status(200).json({
-            status: false,
-            message: "Oops something went wrong",
-          });
-        }
-      } else {
-        res.status(200).json({
-          status: false,
-          message: "Oops something went wrong",
-        });
-      }
-    } else {
-      res.status(200).json({
-        status: false,
-        message: "Oops something went wrong",
-      });
-    }
+    return;
+  }
+
+  //----------TITILER API HAS CHANGED-------------------
+  //  Metadata api has been removed
+  // instead there is statistics api and info api
+  // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+  //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+  const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
+  //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
+  const response = await fetch(metaDataURL, {
+    method: "GET",
+  });
+  const metadata = await response.json();
+  //-------handle for detail:not found----
+  const minP = metadata["1"]["min"];
+  const maxP = metadata["1"]["max"];
+  // let center = {
+  //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
+  //   lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
+  // };
+  const fullPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
+  const size = fileDoc.metadata.filesize;
+  const newDoc = await doc.update({ layerpath: fullPath, fileSize: size, minp: minP, maxp: maxP });
+  if (newDoc) {
+    await deletePublicFileUsingPath(doc.layerpath);
+    res.status(200).json({
+      status: true,
+      message: "Raster layer updated sucessfully",
+      data: newDoc,
+    });
   } else {
     res.status(200).json({
       status: false,
-      message: "Layer not found",
+      message: "Oops something went wrong",
     });
   }
 };
