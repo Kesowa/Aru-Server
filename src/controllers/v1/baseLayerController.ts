@@ -1342,107 +1342,47 @@ export const updateBaseLayerRasterImport = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const doc = await Layer.findOne(
-      {
-        _id: req.body.layerId,
-        tenantId: res.locals.user.tenantId._id,
-        raster: { $exists: true },
-      },
-      {
-        raster: 1,
-        layerdataArr: 1,
-      }
-    );
-    if (doc) {
-      const data = await Layer.find(
-        {
-          _id: { $in: req.body.layers },
-          tenantId: res.locals.user.tenantId._id,
-          raster: { $exists: true },
-        },
-        {
-          raster: 1,
-          layerpath: 1,
-          minp: 1,
-          maxp: 1,
-        }
-      );
-      const type = doc.raster;
-      if (data.length) {
-        const dataArr: any = [];
-        for (let i = 0; i < data.length; i++) {
-          if (data[i].raster === type) {
-            const layerdata: any = {
-              path: data[i].layerpath,
-              minp: data[i].minp,
-              maxp: data[i].maxp,
-              import: true,
-            };
-            dataArr.push(layerdata);
-          } else {
-            res.status(201).json({
-              status: false,
-              message: "Incompatible layer types",
-            });
-          }
-        }
-        if (dataArr.length) {
-          let finaldataArr: any;
-          finaldataArr = doc.layerdataArr;
-          finaldataArr.push(dataArr);
-          if (finaldataArr.length) {
-            const updateLayer: any = await Layer.findByIdAndUpdate(
-              { _id: req.body.layerId },
-              {
-                layerdataArr: finaldataArr,
-                $push: { layers: { $each: req.body.layers } },
-              },
-              { new: true }
-            );
-            if (updateLayer) {
-              await Layer.updateMany(
-                { _id: { $in: req.body.layers } },
-                { $set: { isBase: true } }
-              );
-
-              //let doc2:any = await Layer.findOne({_id:req.body.layerId,tenantId:res.locals.user.tenantId});
-              res.status(200).json({
-                status: true,
-                message: "Raster layer updated sucessfully",
-                data: updateLayer,
-              });
-            } else {
-              res.status(200).json({
-                status: false,
-                message: "Oops something went wrong",
-              });
-            }
-          } else {
-            res.status(200).json({
-              status: false,
-              message: "Oops something went wrong",
-            });
-          }
-        } else {
-          res.status(200).json({
-            status: false,
-            message: "Oops something went wrong",
-          });
-        }
-      } else {
-        res.status(200).json({
-          status: false,
-          message: "Oops something went wrong",
-        });
-      }
-    } else {
-      res.status(200).json({
-        status: false,
-        message: "Layer not found",
-      });
-    }
+  const doc = await Layer.findOne(
+    {
+      _id: req.body.layerId,
+      tenantId: res.locals.user.tenantId._id,
+      raster: { $exists: true },
+    },
+  );
+  if (!doc) {
+    res.status(404).json({
+      success: false,
+      message: "baselayer not found",
+    });
+    return;
   }
+  const data = await Layer.findOne({
+    _id: req.body.layers[0],
+    tenantId: res.locals.user.tenantId._id,
+    raster: { $exists: true },
+    type: "Raster",
+    isBase: false,
+  });
+  if (!data) {
+    res.status(404).json({
+      success: false,
+      message: "mission layer not found or already baselayer",
+    });
+    return;
+  }
+  const newLayer = await data.update({ isBase: true, name: "Base - " + data.name });
+  if (doc.missionId == null) {
+    await doc.delete();
+    await deletePublicFileUsingPath(doc.layerpath);
+  } else {
+    await doc.update({ isBase: false, name: doc.name.replace(/"Base - "/, "") });
+  }
+
+  res.status(200).json({
+    status: true,
+    message: "Raster layer updated sucessfully",
+    data: newLayer,
+  });
 };
 
 export const isBaseupdateDev = async (req: Request, res: AuthResponse) => {
