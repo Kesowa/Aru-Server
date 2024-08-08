@@ -297,7 +297,7 @@ router.post(
     ),
   body("geoJSON").exists().isObject(), // use sample geojson made in baselayer tests for testing this too
   validator,
-  PermissionGuard(PERMS.SAVE_DRAWINGS),
+  PermissionGuard(PERMS.UPLOAD_LAYER),
   isLayerCount,
   RobustRunner(createVectorLayer)
 );

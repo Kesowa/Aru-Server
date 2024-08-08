@@ -59,9 +59,9 @@ const getFlagColor = (geojson: GeoJson) => {
 export const saveVectorLayer = async (
   layer: pathUtils.DocPath | pathUtils.DirPath | GeoJson,
   options: {
-    icon: string;
-    color: string;
-    inheritColor: boolean;
+    icon?: string;
+    color?: string;
+    inheritColor?: boolean;
   } = {
     icon: "Marker",
     color: "#666",

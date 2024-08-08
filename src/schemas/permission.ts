@@ -74,7 +74,6 @@ export enum PERMS {
   PACKAGE_LIST = "package_create",
   PACKAGE_UPDATE = "package_create",
   PUBLIC_MAP_CREATE = "public_map_create",
-  SAVE_DRAWINGS = "save_drawings",
   SET_COVER_PHOTO = "set_cover_photo",
   STREAM_CREATE = "stream_create",
   STREAM_DELETE = "stream_delete",

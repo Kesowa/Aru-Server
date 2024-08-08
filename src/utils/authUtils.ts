@@ -544,7 +544,7 @@ export const canEditLayer = genPermissionGuard({
 });
 export const canCreateVectorLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
-  perm: [PERMS.SAVE_DRAWINGS],
+  perm: [PERMS.UPLOAD_LAYER],
 });
 export const canDownloadLayer = genPermissionGuard({
   userTypes: ["tenant-root"],
