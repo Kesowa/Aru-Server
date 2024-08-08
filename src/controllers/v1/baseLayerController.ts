@@ -1458,6 +1458,7 @@ export const createBaseVectorLayer = async (
       layerpath: vectorLayer.geojsonPath,
       featureCount: vectorLayer.featureCount,
       captureDate: new Date(),
+      isBase: true,
     });
 
     if (layer) {
@@ -1516,10 +1517,8 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
           { _id: res.locals.user.tenantId },
           { publicMapRef: unid }
         );
-        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
-      } else {
-        await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
-      }
+      } 
+      await Layer.updateOne({ _id: req.body.layerId }, { isPublic: true });
       const getDoc = await Layer.findOne({ _id: req.body.layerId }).populate<{
         tenantId: ITenant;
       }>("tenantId");
@@ -1562,6 +1561,7 @@ export const getallpublicbaselayer = async (
     const docs = await Layer.find({
       tenantId: tenant._id,
       isPublic: true,
+      isBase: true,
     }).populate<{ tenantId: ITenant }>("tenantId", "name");
     if (req.query.mapRef) {
       if (docs.length) {
