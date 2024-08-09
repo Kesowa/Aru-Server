@@ -282,7 +282,7 @@ export const setPrimeAttributes = async (req: Request, res: AuthResponse) => {
       filter: [...req.body.pattr, "color", "icon", "sys_id"],
     });
 
-    await doc.updateOne({ layerpath: clonedGeojson.geojsonPath, fileSize: clonedGeojson.size }, { new: true });
+    await doc.updateOne({ layerpath: clonedGeojson.geojsonPath, fileSize: clonedGeojson.size });
 
     res.json({
       success: true,
@@ -767,7 +767,6 @@ export const updateBaseLayerByAttr = async (
         fileSize: clonedGeojson.size,
         layerpath: clonedGeojson.path,
       },
-      { new: true }
     );
     await Tenant.updateOne({
       _id: res.locals.user.tenantId._id
@@ -1298,9 +1297,9 @@ export const updateBaseLayerRasterUpload = async (
   // };
   const fullPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
   const size = fileDoc.metadata.filesize;
+  await deletePublicFileUsingPath(doc.layerpath);
   const newDoc = await doc.updateOne({ layerpath: fullPath, fileSize: size, minp: minP, maxp: maxP });
   if (newDoc) {
-    await deletePublicFileUsingPath(doc.layerpath);
     res.status(200).json({
       status: true,
       message: "Raster layer updated sucessfully",
@@ -1346,7 +1345,7 @@ export const updateBaseLayerRasterImport = async (
     });
     return;
   }
-  const newLayer = await data.updateOne({ isBase: true, name: "Base - " + data.name });
+  await data.updateOne({ isBase: true, name: "Base - " + data.name });
   if (doc.missionId == null) {
     await doc.delete();
     await deletePublicFileUsingPath(doc.layerpath);
@@ -1357,7 +1356,7 @@ export const updateBaseLayerRasterImport = async (
   res.status(200).json({
     status: true,
     message: "Raster layer updated sucessfully",
-    data: newLayer,
+    data: data,
   });
 };
 
