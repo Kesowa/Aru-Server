@@ -4,6 +4,8 @@ import { ObjectId } from "bson";
 import { DirPath, Directory } from "../constants";
 import { readToString } from "./objectStorage";
 import { saveFile } from "./dataUtils";
+import { parse } from "path";
+import { randomUUID } from "crypto";
 
 type Properties = {
   SL_NO: number;
@@ -88,13 +90,9 @@ export async function modGeoJson(
       });
     }
   }
-  try {
-    await saveFile(Directory.ROOT, pathh, JSON.stringify(geojson));
-    return 1;
-  } catch (error) {
-    console.error(error);
-    return 0;
-  }
+  const newPath = parse(pathh).dir + randomUUID() + ".geojson";
+  await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
+  return newPath;
 }
 
 export async function featureAddition(
@@ -102,27 +100,22 @@ export async function featureAddition(
   editObject: any,
   geojson: GeoJson
 ) {
-  try {
-    const sys_id = new ObjectId();
-    for (const key of Object.keys(editObject.feature.properties)) {
-      const floated = parseFloat(editObject.feature.properties[key]);
-      if (!isNaN(floated)) {
-        editObject.feature.properties[key] = floated;
-      }
+  const sys_id = new ObjectId();
+  for (const key of Object.keys(editObject.feature.properties)) {
+    const floated = parseFloat(editObject.feature.properties[key]);
+    if (!isNaN(floated)) {
+      editObject.feature.properties[key] = floated;
     }
-    Object.assign(editObject.feature.properties, { sys_id: sys_id });
-    geojson.features.push(editObject.feature);
-
-    await saveFile(Directory.ROOT, pathh, JSON.stringify(geojson));
-    await Layer.updateOne(
-      { _id: editObject.id },
-      { featureCount: geojson.features.length }
-    );
-    return 1;
-  } catch (error) {
-    console.error(error);
-    return 0;
   }
+  Object.assign(editObject.feature.properties, { sys_id: sys_id });
+  geojson.features.push(editObject.feature);
+  const newPath = parse(pathh).dir + randomUUID() + ".geojson";
+  await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
+  await Layer.updateOne(
+    { _id: editObject.id },
+    { featureCount: geojson.features.length }
+  );
+  return newPath;
 }
 
 export async function editGeoJsonForAll(
@@ -130,18 +123,15 @@ export async function editGeoJsonForAll(
   editObject: any,
   geojson: GeoJson
 ) {
-  try {
-    delete editObject.feature.geometry;
-    delete editObject.feature.properties.Id;
-    Object.assign(
-      geojson.features[editObject.featureIndex].properties,
-      editObject.feature.properties
-    );
-    await saveFile(Directory.ROOT, pathh, JSON.stringify(geojson));
-    return true;
-  } catch (error) {
-    console.error(error);
-  }
+  delete editObject.feature.geometry;
+  delete editObject.feature.properties.Id;
+  Object.assign(
+    geojson.features[editObject.featureIndex].properties,
+    editObject.feature.properties
+  );
+  const newPath = parse(pathh).dir + randomUUID() + ".geojson";
+  await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
+  return newPath;
 }
 
 export async function deleteGeoJsonFeature(
@@ -149,16 +139,12 @@ export async function deleteGeoJsonFeature(
   deleteObject: any,
   geojson: GeoJson
 ) {
-  try {
-    geojson.features.splice(deleteObject.featureIndex, 1);
-    await saveFile(Directory.ROOT, pathh, JSON.stringify(geojson));
-    await Layer.updateOne(
-      { _id: deleteObject.id },
-      { featureCount: geojson.features.length }
-    );
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
+  geojson.features.splice(deleteObject.featureIndex, 1);
+  const newPath = parse(pathh).dir + randomUUID() + ".geojson";
+  await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
+  await Layer.updateOne(
+    { _id: deleteObject.id },
+    { featureCount: geojson.features.length }
+  );
+  return newPath;
 }

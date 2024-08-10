@@ -35,6 +35,7 @@ import { rasterProps } from "../../schemas/rasterprops";
 import type { IPackage } from "../../schemas/package";
 import type { ILayerGroup } from "../../schemas/layerGroup";
 import {
+  CDN_URL,
   Directory,
   DirPath,
   TITILER_SERVER,
@@ -303,14 +304,9 @@ export const deleteLayer = async (req: Request, res: AuthResponse) => {
           message: "Cannot delete layer which is being used by Base Layer",
         });
       } else {
-        const conf = await deletePublicFileUsingPath(d.layerpath);
+        await deletePublicFileUsingPath(d.layerpath);
         if (typeof d.metadata == "string") {
           await delete3DTiles(d.metadata);
-        }
-        if (conf) {
-          req.log.info("Files deleted");
-        } else {
-          req.log.warn("Files does not exist");
         }
         const data = await d.delete();
         const tenant = await Tenant.findOne({
@@ -381,12 +377,7 @@ export const deleteMultipleLayers = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId._id,
       });
       if (d) {
-        const conf = await deletePublicFileUsingPath(d.layerpath);
-        if (conf) {
-          req.log.info("Files deleted");
-        } else {
-          req.log.warn("Files does not exist");
-        }
+        await deletePublicFileUsingPath(d.layerpath);
         const data = await d.delete();
         const tenant = await Tenant.findOne({
           _id: res.locals.user.tenantId,
@@ -459,17 +450,23 @@ export const addFeature = async (req: Request, res: AuthResponse) => {
               message: "file path not exist! ",
             });
           }
-          await featureAddition(docpath, req.body, geojson);
+          const newPath = await featureAddition(docpath, req.body, geojson);
           if (data.color != req.body.feature.properties.color) {
             await Layer.updateOne(
               { _id: req.body.id },
               { color: "multiColor" }
             );
           }
-          const updatedLayer = await Layer.findOne({
+          const updatedLayer = await Layer.findOneAndUpdate({
             _id: req.body.id,
             tenantId: res.locals.user.tenantId._id,
+          }, {
+            color: data.color != req.body.feature.properties.color ? "multicolor" : undefined,
+            layerpath: newPath,
+          }, {
+            new: true
           });
+          await deletePublicFileUsingPath(docpath);
           return res.status(200).json({
             status: true,
             data: updatedLayer,
@@ -513,17 +510,17 @@ export const editGeoJson = async (
             message: "file path not exist! ",
           });
         }
-        await editGeoJsonForAll(docpath, req.body, geojson);
+        const newPath = await editGeoJsonForAll(docpath, req.body, geojson);
         for (let i = 0; i < geojson.features.length; i++) {
           if (geojson.features[i].properties.color != data.color) {
             const savedDoc = await Layer.findByIdAndUpdate(
               { _id: req.body.id },
-              { color: "multiColor" },
               {
-                new: true,
-                upsert: true,
-              }
+                color: data.color != req.body.feature[i].properties.color ? "multicolor" : undefined,
+                layerpath: newPath,
+              }, { new: true, }
             );
+            await deletePublicFileUsingPath(docpath);
             return res.status(200).json({
               status: true,
               message: "Successfully edited GEOJSON And multiColor exist!",
@@ -595,10 +592,16 @@ export const deleteGeoJson = async (
           message: "file path not exist! ",
         });
       }
-      await deleteGeoJsonFeature(docpath, req.body, geojson);
+      const newPath = await deleteGeoJsonFeature(docpath, req.body, geojson);
+      const savedDoc = await Layer.findByIdAndUpdate(
+        { _id: req.body.id },
+        { layerpath: newPath, }, { new: true, }
+      );
+      await deletePublicFileUsingPath(docpath);
       return res.status(200).json({
         status: true,
         message: "Feature Deleted successfully",
+        data: savedDoc,
       });
     } else {
       res.json({
@@ -721,7 +724,7 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
 
 export const getrasterdetailsbyID = async (req: Request, res: AuthResponse) => {
   {
-    const id: any = req.query.id;
+    const id = req.query.id;
     const result = [];
     const doc = await Layer.findOne({
       _id: id,
@@ -730,15 +733,14 @@ export const getrasterdetailsbyID = async (req: Request, res: AuthResponse) => {
     if (doc.type == "Raster") {
       const docpath = DirPath(Directory.ROOT, doc.layerpath);
       const fname = doc.layerpath.split(/[\\\/]/)[2];
-      const size: number = await getFileSize(docpath);
-      if (size) {
+      if (fname) {
         result.push({
           _id: doc._id,
           createdBy: doc.createdBy,
           createdAt: doc.createdAt,
           captureDate: doc.captureDate,
           fileName: fname,
-          fileSize: size,
+          fileSize: doc.fileSize,
         });
       } else {
         res.json({
@@ -786,18 +788,13 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
         message: "file path not exist! ",
       });
     }
-    let modCheck: any;
-    modCheck = await modGeoJson(icon, color, geojson, docpath);
-    await Layer.updateOne(
-      { _id: id },
-      { color: req.body.color },
+    const newPath = await modGeoJson(icon, color, geojson, docpath);
+    const updatedLayer = await Layer.findOneAndUpdate(
+      { _id: id, tenantId: res.locals.user.tenantId._id },
+      { color: req.body.color, layerpath: newPath },
       { new: true }
     );
-    const updatedLayer = await Layer.findById({
-      _id: id,
-      tenantId: res.locals.user.tenantId._id,
-    });
-    if (modCheck == 1) {
+    if (updatedLayer) {
       res.json({
         status: true,
         data: updatedLayer,
@@ -820,14 +817,10 @@ export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
     });
     const dir = DirPath(Directory.ROOT, doc.layerpath);
     if (await checkFileExists(dir)) {
-      const downloadlink = dir
-        .split(/[\\\/]/)
-        .slice(8)
-        .join("/");
       res.json({
         status: true,
         message: `Download Link generated for LayerID: ${id}`,
-        link: downloadlink,
+        link: CDN_URL + doc.layerpath,
       });
     } else {
       res.json({
@@ -1642,7 +1635,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
     };
 
     const fileDocs = await UploadTask.find({
-      _id: {$in: req.body.file},
+      _id: { $in: req.body.file },
       tenant: res.locals.user.tenantId._id,
       createdBy: res.locals.user._id,
       // status: "started",
@@ -2103,7 +2096,7 @@ export const picktoMapUseForLayerCreate = async (
     long: string
     date: string
     time: string
-    sys_id: string    
+    sys_id: string
   }>[] = [];
   const allImageData: {
     originalname: string
@@ -2202,7 +2195,7 @@ export const picktoMapUseForLayerCreate = async (
     const ress = docCount.activePackage.storage - Number(docCount.actualSize) > result.size;
     if (ress !== true) {
       for (let i = 0; i < allImageData.length; i++) {
-        await deletePublicFileUsingPath( allImageData[i].path );
+        await deletePublicFileUsingPath(allImageData[i].path);
       }
       return res.status(403).json({
         status: false,
@@ -2211,7 +2204,7 @@ export const picktoMapUseForLayerCreate = async (
     }
 
     const savedDoc1 = await Layer.create({
-      name: req.body.missionId ? req.body.name: "Base - " + req.body.name,
+      name: req.body.missionId ? req.body.name : "Base - " + req.body.name,
       type: "Vector",
       vector: req.body.vectorType,
       tenantId: res.locals.user.tenantId._id,
