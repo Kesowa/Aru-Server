@@ -820,7 +820,7 @@ export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
       res.json({
         status: true,
         message: `Download Link generated for LayerID: ${id}`,
-        link: CDN_URL + doc.layerpath,
+        link: doc.layerpath,
       });
     } else {
       res.json({
@@ -1662,7 +1662,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         let closestPoint: NearestPoint;
         // catch bad image
         try {
-          const { latitude, longitude } = await exifr.gps(fileDocs[j].metadata.objectkey);
+          const { latitude, longitude } = await exifr.gps(await readToBuffer(fileDocs[j].metadata.objectkey));
           if (latitude == null || longitude == null) {
             throw new Error("invalid coordinates!");
           }
@@ -2372,7 +2372,7 @@ export const sys_id_Inject_to_layerfiles = async (
 
         const modCheck = await modGeoJson(null, null, gjson, p); // add sys_ids to geojson
 
-        if (modCheck === 1) {
+        if (modCheck) {
           // update new sys_ids in layerfiles
           const modifiedGjson = await readGeoJson(p);
           for (let j = 0; j < modifiedGjson.features.length; j++) {
