@@ -2209,41 +2209,23 @@ export const picktoMapUseForLayerCreate = async (
         message: "Actual storage exceeded the Limit of Set storage!",
       });
     }
-    let vectorLayer: HydratedDocument<ILayer>;
-    if (req.body.missionId == null) {
-      vectorLayer = new Layer({
-        name: "base- " + req.body.name,
-        type: "Vector",
-        vector: req.body.vectorType,
-        tenantId: res.locals.user.tenantId._id,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
-        color: req.body.color,
-        fileSize: result.size,
-        layerpath: result.geojsonPath,
-        layerLabel: "sys_id",
-        captureDate: new Date(),
-        featureCount: features.length,
-      });
-    } else {
-      vectorLayer = new Layer({
-        name: req.body.name,
-        type: "Vector",
-        vector: req.body.vectorType,
-        missionId: req.body.missionId,
-        tenantId: res.locals.user.tenantId._id,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
-        color: req.body.color,
-        fileSize: result.size,
-        layerpath: result.geojsonPath,
-        layerLabel: "sys_id",
-        captureDate: new Date(),
-        featureCount: features.length,
-      });
-    }
 
-    const savedDoc1 = await vectorLayer.save();
+    const savedDoc1 = await Layer.create({
+      name: req.body.missionId ? req.body.name: "Base - " + req.body.name,
+      type: "Vector",
+      vector: req.body.vectorType,
+      tenantId: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      updatedBy: res.locals.user._id,
+      color: req.body.color,
+      fileSize: result.size,
+      layerpath: result.geojsonPath,
+      layerLabel: "sys_id",
+      captureDate: new Date(),
+      featureCount: features.length,
+      isBase: req.body.missionId ? false : true,
+      missionId: req.body.missionId ?? null,
+    });
 
     const tenant = await Tenant.findOne({
       _id: res.locals.user.tenantId,
@@ -2286,14 +2268,16 @@ export const picktoMapUseForLayerCreate = async (
         if (savedDoc) flag = true;
       }
       if (flag == true) {
+        req.log.info("successfully created layer from images:", savedDoc1.name);
         const data = { badImages, result: savedDoc1 };
         missionSpecificSocket
-          .to(savedDoc1.missionId.toString())
+          .to(String(savedDoc1.missionId))
           .emit("pic-to-map", data);
       } else {
+        req.log.info("failed to create layer from images:", savedDoc1.name);
         const data = { badImages };
         missionSpecificSocket
-          .to(savedDoc1.missionId.toString())
+          .to(String(savedDoc1.missionId))
           .emit("pic-to-map", data);
       }
       res.status(201).json({
