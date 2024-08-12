@@ -96,6 +96,7 @@ export const createUploadUrl = async (req: Request<{}, {}, {
       objectkey: key,
       filesize: sizeInMb,
       mimetype: req.body.type,
+      originalName: req.body.name,
     },
     presigned: {
       formData: presignedUrl.formData,

@@ -17,10 +17,8 @@ import {
   getFileSize,
 } from "../../utils/fileUtils";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
-import { copyFile, createArchive, permPath, savePointcloud } from "../../utils/dataUtils";
+import { createArchive, permPath, savePointcloud } from "../../utils/dataUtils";
 import UploadTask from "../../models/uploadTask";
-import { docPath } from "../../utils/pathUtils";
-import { randomUUID } from "crypto";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
@@ -44,7 +42,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       const webviewPath = await savePointcloud(fileDoc.metadata.objectkey);
       if (webviewPath) {
         const doc = new Document({
-          name: fileDoc.presigned.formData.name,
+          name: fileDoc.metadata.originalName,
           modDate: new Date(),
           fileSize: fileDoc.metadata.filesize,
           folderName: req.body.folderName,
@@ -80,7 +78,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       const fullPath = await permPath(Directory.DOCUMENTS, fileDoc.metadata.objectkey);
 
       const doc = new Document({
-        name: fileDoc.presigned.formData.name,
+        name: fileDoc.metadata.originalName,
         modDate: new Date(),
         fileSize: fileDoc.metadata.filesize,
         fileType: fileDoc.metadata.mimetype,

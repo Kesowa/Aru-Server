@@ -631,7 +631,7 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
     const fullPath = await permPath(Directory.GEOJSON_IMAGES, fileDoc.metadata.objectkey);
     const thumbs = await saveThumbnails(fullPath);
     const featureFile = new layerFiles({
-      name: fileDoc.presigned.formData.name,
+      name: fileDoc.metadata.originalName,
       layerId: layerId,
       filePath: fullPath,
       fileSize: thumbs.size + fileDoc.metadata.filesize,
@@ -1416,7 +1416,7 @@ export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
       size += thumbs.size;
     }
     const layerfile = new layerFiles({
-      name: fileDoc.presigned.formData.name,
+      name: fileDoc.metadata.originalName,
       layerId: layerId,
       filePath: fullPath,
       fileSize: size,
@@ -1701,7 +1701,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         }
         req.log.info("file size", size);
         const featureFile = new layerFiles({
-          name: fileDocs[j].presigned.formData.name,
+          name: fileDocs[j].metadata.originalName,
           layerId: layerId,
           filePath: fullPath,
           fileSize: size,
@@ -1733,8 +1733,8 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         ])
       );
       for (const uploadFile of fileDocs) {
-        req.log.info(uploadFile.presigned.formData.name, "Processing file name");
-        const fileLabel = path.parse(uploadFile.presigned.formData.name).name;
+        req.log.info(uploadFile.metadata.originalName, "Processing file name");
+        const fileLabel = path.parse(uploadFile.metadata.originalName).name;
         const matchedFeatureIndex = labelLookupMap.get(fileLabel);
         if (matchedFeatureIndex == undefined) {
           message.badImages.push(uploadFile.metadata.objectkey);
@@ -1757,7 +1757,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         }
         req.log.info("file size", size);
         const featureFile = new layerFiles({
-          name: uploadFile.presigned.formData.name,
+          name: uploadFile.metadata.originalName,
           layerId: layerDoc._id,
           filePath: fullPath,
           fileSize: size,
@@ -2145,7 +2145,7 @@ export const picktoMapUseForLayerCreate = async (
         }
       }
       allImageData.push({
-        originalname: fileDocs[i].presigned.formData.name,
+        originalname: fileDocs[i].metadata.originalName,
         sys_id: sys_id,
         mimetype: fileDocs[i].metadata.mimetype,
         path: fileDocs[i].metadata.objectkey,
@@ -2163,7 +2163,7 @@ export const picktoMapUseForLayerCreate = async (
         },
         properties: {
           id: String(i + 1),
-          filename: fileDocs[i].presigned.formData.name,
+          filename: fileDocs[i].metadata.originalName,
           color: req.body.color || "green",
           icon: req.body.icon || "MarkerIcon",
           lat: String(lat),

@@ -1,6 +1,5 @@
 import { Schema, Types } from "mongoose";
 import { DocToDir } from "../utils/pathUtils";
-import { PostPolicyResult } from "minio";
 
 export type docTypes = keyof typeof DocToDir;
 const docModels = Object.keys(DocToDir);
@@ -22,13 +21,10 @@ export type UploadTask = {
     objectkey: string,
     mimetype: string,
     filesize: number,
+    originalName: string
   };
   presigned: {
-    formData: {
-      name: string,
-      user: string,
-      tenant: string,
-    },
+    formData: Record<string, string>,
     postURL: string
   },
 };
@@ -64,7 +60,8 @@ export const UploadTaskSchema = new Schema<UploadTask>(
     metadata: {
       objectkey: String,
       filesize: Number,
-      mimetype: String
+      mimetype: String,
+      originalName: String,
     },
     presigned: {
       postURL: String,
