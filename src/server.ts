@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import { createAdapter } from "./utils/socket.io-adapter";
 import { connect } from "amqplib";
 import { ioHandler } from "./socket";
+import { REQ_QUEUE, RES_QUEUE, VODEvents } from "./utils/videoUtils";
 
 import Tenant from "./models/tenant";
 import { sendMail } from "./utils/emailUtil";
@@ -79,10 +80,33 @@ const worker = async () => {
       credentials: false,
     },
   });
-
-  // @ts-ignore
+  const amqpConnection = await connect(RABBITMQ_CONNECTION_STRING);
+  const reqChannel = await amqpConnection.createChannel();
+  await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
+  const resChannel = await amqpConnection.createChannel();
+  await resChannel.assertQueue(RES_QUEUE, { durable: true });
+  VODEvents.on(
+    REQ_QUEUE,
+    function(req) {
+      reqChannel.sendToQueue(
+        REQ_QUEUE,
+        Buffer.from(JSON.stringify(req)),
+        {
+          persistent: true,
+          contentType: "application/json",
+        }
+      )
+    });
+  resChannel.consume(
+    RES_QUEUE,
+    function(msg) {
+      VODEvents.emit(
+        RES_QUEUE,
+        JSON.parse(msg.content.toString())
+      );
+    });
   io.adapter(
-    createAdapter({ amqpConnection: () => connect(RABBITMQ_CONNECTION_STRING) })
+    createAdapter({ amqpConnection: () => amqpConnection })
   );
   //handle socket.io
   ioHandler(io);
@@ -93,8 +117,3 @@ worker()
   .then(() => logger.info("Server started"))
   .catch((err) => logger.error(err, "Failed to start server"));
 
-cron.schedule(`00 00 ${Math.floor(Math.random()*10)} * *`, () => {
-  expiredSubs()
-    .then(() => logger.info("Expired account check ran successfully"))
-    .catch((err) => logger.error("Failed to run expired account check", err));
-});

@@ -6,43 +6,85 @@ import * as pathUtils from "./pathUtils";
 import { promisify } from "util";
 import path from "path";
 import DJISRTParser from "dji_srt_parser";
+import { logger } from "../app";
+import VOD from "../models/vod";
+import { missionSpecificSocket } from "../socket";
+import { readToString, stat } from "./objectStorage";
 const asyncExec = promisify(exec);
 const matchExt = /\.\w+$/;
+
+export const REQ_QUEUE = "vod.transcode.req";
+export const RES_QUEUE = "vod.transcode.res";
+
+export type Video = {
+  srt: string | null,
+  hls: string | null,
+  thumb: string | null,
+}
+
+export type AruMetadata = {
+  location_id: string | null,
+  mission_id: string,
+  flight_id: string,
+  user_id: string,
+  tenant_id: string,
+  video_id: string,
+}
+
+export type TranscodeRequest = {
+  file: string,
+  metadata: AruMetadata,
+}
+
+export type TranscodeResponse = {
+  metadata: AruMetadata,
+  video: Video,
+  success: boolean,
+}
 
 /**
  * Supply mp4/flv video path, generate HLS files, thumbnail, and flv file. Also returns size of all files.
  * DELETES VOD AFTER CONVERSION!!!
  * */
 export const transcodeVideo = async (
-  filePath: pathUtils.KeyPath | pathUtils.DocPath
+  filePath: pathUtils.KeyPath | pathUtils.DocPath,
+  metadata: AruMetadata,
 ) => {
-  const doc = pathUtils.docPath(pathUtils.Directory.ROOT, filePath);
-  const docPath = pathUtils.docPath(
-    pathUtils.Directory.VOD,
-    path.basename(filePath)
-  );
-  const paths = {
-    hlsPath: docPath.replace(matchExt, ".m3u8"),
-    thumbnailPath: docPath.replace(matchExt, ".jpg"),
-    flvPath: docPath.replace(matchExt, ".flv"),
-  };
-
-  const absFilePath = pathUtils.absPath(pathUtils.Directory.ROOT, doc);
-  const command =
-    "/bin/ffmpeg -i " +
-    absFilePath +
-    " -c:v libx264 -b:v 2500k -g 30 -r 30 -s 1280x720 -preset fast -profile:v baseline -hls_list_size 0 -f hls " +
-    pathUtils.absPath(pathUtils.Directory.ROOT, paths.hlsPath) +
-    " -ss 00:00:05.000 -vframes 1 " +
-    pathUtils.absPath(pathUtils.Directory.ROOT, paths.thumbnailPath) +
-    " " +
-    pathUtils.absPath(pathUtils.Directory.ROOT, paths.flvPath);
-
-  await asyncExec(command);
-  await fs.promises.rm(absFilePath);
-  const totalSize = await getVodSize(paths.flvPath);
-  return { ...paths, size: totalSize };
+  const req: TranscodeRequest = {
+    file: pathUtils.keyPath(filePath),
+    metadata,
+  }
+  logger.info(req, "SENT VIDEO TRANSCODE REQUEST");
+  VODEvents.emit(REQ_QUEUE, req);
 };
+
+
+export const receiveVideo = async (video: Video, metadata: AruMetadata) => {
+  const vod = await VOD.findOneAndUpdate({
+    _id: metadata.video_id,
+    tenantId: metadata.tenant_id,
+  }, {
+    videoPath: path.join("/", video.hls),
+    thumbnail: path.join("/", video.thumb || "/processing.jpg"),
+  },
+    {
+      new: true
+    }
+  );
+  // missionSpecificSocket
+  //   .to(String(vod.missionID))
+  //   .emit("PROCESS_VIDEO_FINISHED", vod);
+  // done later to prevent it from messing with video
+  const size = await getHlsSize(video.hls);
+  await vod.update({ $inc: { fileSize: size } });
+};
+
+VODEvents.on(RES_QUEUE, function(res: TranscodeResponse) {
+  logger.info(res, "RECEIVED VIDEO TRANSCODE RESPONSE");
+  receiveVideo(res.video, res.metadata).
+    then(() => logger.info(res, "SAVED VIDEO"))
+    .catch((err) => logger.error({res, err}, "FAILED TO SAVE VIDEO"));
+});
 
 /**
  * Supply mp4/flv video path, generate srt and geojson files, and get metadata
@@ -91,13 +133,13 @@ export const extractTelemetry = async (
  * Takes absolute path to index.m3u8 file, returns approx size of entire HLS stream in bytes
  */
 const getHlsSize = async (indexPath: string) => {
-  const index = await fs.promises.readFile(indexPath, "utf8");
-  const dir = path.dirname(index);
+  const index = await readToString(indexPath);
+  const dir = path.dirname(indexPath);
   const vodFiles = index
     .split("\n")
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
-    await fs.promises.stat(
+    await stat(
       path.join(dir, vodFiles[Math.floor(vodFiles.length / 2)])
     )
   ).size;
