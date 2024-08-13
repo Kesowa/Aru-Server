@@ -1,5 +1,4 @@
 import app, { logger } from "./app";
-import cron from "node-cron";
 import http from "http";
 import { Server } from "socket.io";
 import { createAdapter } from "./utils/socket.io-adapter";
@@ -7,59 +6,12 @@ import { connect } from "amqplib";
 import { ioHandler } from "./socket";
 import { REQ_QUEUE, RES_QUEUE, VODEvents } from "./utils/videoUtils";
 
-import Tenant from "./models/tenant";
-import { sendMail } from "./utils/emailUtil";
 import mongoose from "mongoose";
 import {
   MONGODB_CONNECTION_STRING,
   PORT,
   RABBITMQ_CONNECTION_STRING,
 } from "./constants";
-
-const expiredSubs = async () => {
-  const doc = await Tenant.find({});
-  for (let i = 0; i < doc.length; i++) {
-    const date1 = doc[i].packageStartDate;
-    const date2 = new Date(Date.now());
-    const oneDay = 1000 * 60 * 60 * 24;
-    const diffInTime = date2.getTime() - date1.getTime();
-    const diffInDays = Math.round(diffInTime / oneDay);
-    if (diffInDays <= 30 && diffInDays >= 23) {
-      if (30 - diffInDays == 7 || 30 - diffInDays == 3) {
-        await sendMail(
-          doc[i].email,
-          "Kesowa Infinite Ventures Pvt. Ltd",
-          "",
-          `               
-                        <p>Your subscription is expiring in ${30 - diffInDays
-          } days.</b>
-                        <p>Best regards,</p>
-                        <p><b>Team Kesowa</b></p>
-                        `,
-          ""
-        );
-      }
-    } else if (diffInDays > 30 && diffInDays <= 45 && doc[i].isActive) {
-      if (45 - diffInDays == 7 || 45 - diffInDays == 0) {
-        await sendMail(
-          doc[i].email,
-          "Kesowa Infinite Ventures Pvt. Ltd",
-          "",
-          `               
-                    <p>Your subscription has expired.</b>
-                    <p>Please upgrade your subscription, Your data will be removed after 15 days of expiry.</b>
-                    <p>Best regards,</p>
-                    <p><b>Team Kesowa</b></p>
-                `,
-          ""
-        );
-      }
-    } else {
-      doc[i].isActive = false;
-      // Logic to purge the tenant data
-    }
-  }
-};
 
 const worker = async () => {
   await mongoose.connect(MONGODB_CONNECTION_STRING);

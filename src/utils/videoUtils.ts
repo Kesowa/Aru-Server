@@ -71,9 +71,9 @@ export const receiveVideo = async (video: Video, metadata: AruMetadata) => {
       new: true
     }
   );
-  // missionSpecificSocket
-  //   .to(String(vod.missionID))
-  //   .emit("PROCESS_VIDEO_FINISHED", vod);
+  missionSpecificSocket
+    .to(String(vod.missionID))
+    .emit("PROCESS_VIDEO_FINISHED", vod);
   // done later to prevent it from messing with video
   const size = await getHlsSize(video.hls);
   await vod.update({ $inc: { fileSize: size } });
