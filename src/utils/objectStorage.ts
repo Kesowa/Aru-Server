@@ -1,5 +1,5 @@
 import * as Minio from "minio";
-import { S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME } from "../constants";
+import { S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME, Mode, MODE } from "../constants";
 import { buffer } from "stream/consumers";
 import { finished } from "stream/promises";
 import { Directory, docPath, keyPath } from "./pathUtils";
@@ -16,6 +16,7 @@ export const minioClient = new Minio.Client({
   region: "ap-south-1",
   accessKey: S3_ACCESS_KEY,
   secretKey: S3_SECRET_KEY,
+  pathStyle: Mode.Dev == MODE,
 })
 
 export const readToString = async (objKey: string) => {
