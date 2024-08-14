@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import { Readable } from "stream";
 import { extname, join, relative } from "path";
 import { readdir, rm } from "fs/promises";
+import { logger } from "../app";
 
 export const minioClient = new Minio.Client({
   endPoint: S3_ENDPOINT,
@@ -76,7 +77,7 @@ export const deleteObj = async (objKey: string) => {
 }
 
 export const deleteDir = async (dirKey: string) => {
-  const entries = minioClient.listObjects(S3_BUCKET_NAME, keyPath(dirKey));
+  const entries = minioClient.listObjects(S3_BUCKET_NAME, keyPath(dirKey), true);
   entries.on("data", async function(obj) {
     await deleteObj(obj.name);
   });

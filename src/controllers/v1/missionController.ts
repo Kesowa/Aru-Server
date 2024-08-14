@@ -19,7 +19,6 @@ import layerFiles from "../../models/layerFiles";
 import layerGroupModel from "../../models/layerGroup";
 import {
   deleteDirFileUsingName,
-  deleteHlsVodUsingIndex,
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
 import { IMission } from "../../schemas/mission";
@@ -33,6 +32,7 @@ import { Directory } from "../../constants";
 import moment from "moment";
 import { saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
+import { deleteHlsVodUsingIndex } from "../../utils/videoUtils";
 
 //create flight controller
 type CreateMission = {
@@ -352,10 +352,11 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       if (deletedVodData.length) {
         for (let i = 0; i < deletedVodData.length; i++) {
           const doc = deletedVodData[i];
-          const docpath = doc.videoPath;
-          await deleteHlsVodUsingIndex(docpath);
-          await deletePublicFileUsingPath(doc.thumbnail);
-          await deletePublicFileUsingPath(docpath.replace(/m3u8$/, "flv"));
+          await deleteHlsVodUsingIndex(doc.videoPath);
+          if (doc.originalFile)
+           await deletePublicFileUsingPath(doc.originalFile)
+          if (doc.thumbnail)
+            await deletePublicFileUsingPath(doc.thumbnail)
         }
       }
       if (deletedDocumetnsData.length) {

@@ -4,16 +4,18 @@ import unzipper from "unzipper";
 import { minioClient, uploadAnything } from "./objectStorage";
 import { S3_BUCKET_NAME } from "../constants";
 import { PassThrough } from "stream";
+import { deletePublicFolderUsingPath } from "./fileDeleteUtils";
+import { logger } from "../app";
 
-export async function ZipToTiles3D(docLaz: string) {
-  const name = path.parse(docLaz).name;
+export async function ZipToTiles3D(zipDoc: string) {
+  const name = path.parse(zipDoc).name;
   const docDir = pathUtils.docPath(pathUtils.Directory.CESIUM_3D, name);
   const customSource = {
     stream: function(offset: number, length: number) {
       const pass = new PassThrough();
       minioClient.getPartialObject(
         S3_BUCKET_NAME,
-        pathUtils.keyPath(docLaz),
+        pathUtils.keyPath(zipDoc),
         offset,
         length
       )
@@ -22,7 +24,7 @@ export async function ZipToTiles3D(docLaz: string) {
       return pass;
     },
     size: async function() {
-      const objMetadata = await minioClient.statObject(S3_BUCKET_NAME, pathUtils.keyPath(docLaz));
+      const objMetadata = await minioClient.statObject(S3_BUCKET_NAME, pathUtils.keyPath(zipDoc));
       return objMetadata.size;
     }
   };
@@ -52,4 +54,19 @@ export async function ZipToTiles3D(docLaz: string) {
     );
   }
   return path.join(docDir, "tileset.json");
+}
+
+export async function delete3DTiles(tilesetJson: string) {
+  // check if it is really a tilesetJson string
+  logger.info(tilesetJson, "TILESETJSON");
+  const decomposePath = path.parse(tilesetJson);
+  const docDir = decomposePath.dir;
+  const filename = decomposePath.base;
+  if (
+    filename == "tileset.json" 
+  ) {
+    // delete the directory containing 3D tiles
+    return await deletePublicFolderUsingPath(docDir)
+  }
+  return false;
 }

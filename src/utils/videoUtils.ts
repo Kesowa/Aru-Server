@@ -9,7 +9,7 @@ import DJISRTParser from "dji_srt_parser";
 import { logger } from "../app";
 import VOD from "../models/vod";
 import { missionSpecificSocket } from "../socket";
-import { readToString, stat } from "./objectStorage";
+import { deleteObj, readToString, stat } from "./objectStorage";
 const asyncExec = promisify(exec);
 const matchExt = /\.\w+$/;
 
@@ -148,73 +148,18 @@ const getHlsSize = async (indexPath: string) => {
 };
 
 /**
- * Takes non-abs path to video file (hls, flv, mp4, etc), returns approx size of all video files in MegaBytes
- */
-export const getVodSize = async (
-  vodFile: pathUtils.KeyPath | pathUtils.DocPath
-) => {
-  const absVodPath = pathUtils
-    .absPath(pathUtils.Directory.ROOT, vodFile)
-    .replace(matchExt, "");
-  const absFlvPath = absVodPath + ".flv";
-  const absMp4Path = absVodPath + ".mp4";
-  const absHlsPath = absVodPath + ".m3u8";
-  const absThumbPath = absVodPath + ".jpg";
-
-  const getSize = async (filePath: string) => {
-    return (await fs.promises.stat(filePath)).size;
-  };
-
-  const getAllSizes = [
-    getSize(absFlvPath),
-    getSize(absMp4Path),
-    getSize(absThumbPath),
-    getHlsSize(absHlsPath),
-  ];
-
-  const allSizes = await Promise.allSettled(getAllSizes);
-  const totalSize = allSizes
-    .map((val) => (val.status === "fulfilled" ? val.value : 0))
-    .reduce((prevVal, currVal) => prevVal + currVal);
-  return totalSize / (1024 * 1024);
-};
-
-/**
  * Takes absolute path to HLS index.m3u8 file, and completely erases entire HLS stream
  */
-const deleteHls = async (indexPath: string) => {
-  const index = await fs.promises.readFile(indexPath, "utf8");
-  const dir = path.dirname(indexPath);
+export const deleteHlsVodUsingIndex = async (indexFile: string) => {
+  const index = await readToString(indexFile);
+  const indexDir = path.dirname(indexFile);
   const vodFiles = index
     .split("\n")
-    .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
-  vodFiles.push(path.basename(indexPath));
-  await Promise.allSettled(
-    vodFiles
-      .map((filename) => path.join(dir, filename))
-      .map((filepath) => fs.promises.rm(filepath))
+    .filter((line) => !line.startsWith("#") && line.endsWith(".ts"))
+    .map((file) => indexDir + "/" + file);
+  vodFiles.push(indexFile);
+  const result = await Promise.allSettled(
+    vodFiles.map((file) => deleteObj(file))
   );
-};
-
-/**
- * Takes non-abs path to video file (hls, flv, mp4, etc), and completely erases it
- */
-export const deleteVideo = async (
-  vodFile: pathUtils.KeyPath | pathUtils.DocPath
-) => {
-  const absVodPath = pathUtils
-    .absPath(pathUtils.Directory.ROOT, vodFile)
-    .replace(matchExt, "");
-  const absFlvPath = absVodPath + ".flv";
-  const absMp4Path = absVodPath + ".mp4";
-  const absHlsPath = absVodPath + ".m3u8";
-  const absThumbPath = absVodPath + ".jpg";
-  const absGeojsonPath = absVodPath + ".geojson";
-  await Promise.allSettled([
-    fs.promises.rm(absFlvPath),
-    fs.promises.rm(absMp4Path),
-    fs.promises.rm(absThumbPath),
-    fs.promises.rm(absGeojsonPath),
-    deleteHls(absHlsPath),
-  ]);
+  return result.every((res) => res);
 };

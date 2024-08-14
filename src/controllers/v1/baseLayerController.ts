@@ -16,7 +16,7 @@ import { IMission } from "../../schemas/mission";
 import { rasterProps } from "../../schemas/rasterprops";
 import { IPackage } from "../../schemas/package";
 import { ITenant } from "../../schemas/tenant";
-import mongoose, { HydratedDocument } from "mongoose";
+import mongoose from "mongoose";
 import {
   Directory,
   DirPath,
@@ -25,16 +25,15 @@ import {
 } from "../../constants";
 import Alert from "../../models/alert";
 import VOD from "../../models/vod";
-import { ILayer } from "../../schemas/layer";
 import {
-  copyFile,
   permPath,
   saveFile,
   saveGeojson,
   saveMultiGeojson,
   saveVectorLayer,
 } from "../../utils/dataUtils";
-import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
+import { LazToTiles3D } from "../../utils/pointcloud";
+import { delete3DTiles } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { randomUUID } from "crypto";
 
@@ -1136,8 +1135,8 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
       await deletePublicFileUsingPath(layer.layerpath);
 
     } else {
-      if (layer.raster == rasterProps.CESIUM_3D) {
-        await delete3DTiles(layer.layerpath);
+      if (layer.raster == rasterProps.CESIUM_3D && typeof layer.metadata === "string") {
+        await delete3DTiles(layer.metadata);
       } else {
         await deletePublicFileUsingPath(layer.layerpath);
       }

@@ -2,12 +2,7 @@ import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import {
-  deleteVideo,
-  extractTelemetry,
-  getVodSize,
-  transcodeVideo,
-} from "../../utils/videoUtils";
+import { deleteHlsVodUsingIndex, extractTelemetry, transcodeVideo, } from "../../utils/videoUtils";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
@@ -19,6 +14,7 @@ import * as pathUtils from "../../utils/pathUtils";
 import Location from "../../models/location";
 import UploadTask from "../../models/uploadTask";
 import { permPath } from "../../utils/dataUtils";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 
 export const saveVOD = async (
   req: Request<
@@ -47,9 +43,7 @@ export const saveVOD = async (
           .catch(console.error);
       }, 10_000);
     }
-    const vodSize = await getVodSize(
-      pathUtils.docPath(pathUtils.Directory.VOD, req.body.filename)
-    );
+    const vodSize = 1; // !TODO
     const VODdoc = new VOD({
       flightID: flightID,
       missionID: missionID,
@@ -349,7 +343,11 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (doc) {
-      await deleteVideo(doc.videoPath);
+      await deleteHlsVodUsingIndex(doc.videoPath);
+      if (doc.originalFile)
+       await deletePublicFileUsingPath(doc.originalFile)
+      if (doc.thumbnail)
+        await deletePublicFileUsingPath(doc.thumbnail)
     } else {
       res.status(404).json({
         status: false,
@@ -395,7 +393,11 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
     if (docs && docs.length > 0) {
       for (let index = 0; index < docs.length; index++) {
         const doc = docs[index];
-        await deleteVideo(doc.videoPath);
+        await deleteHlsVodUsingIndex(doc.videoPath);
+        if (doc.originalFile)
+         await deletePublicFileUsingPath(doc.originalFile)
+        if (doc.thumbnail)
+          await deletePublicFileUsingPath(doc.thumbnail)
         const res2 = await VOD.findByIdAndDelete(doc._id);
         if (res2) {
           deleted.push(doc._id.toString());

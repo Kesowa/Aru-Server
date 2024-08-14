@@ -35,7 +35,6 @@ import { rasterProps } from "../../schemas/rasterprops";
 import type { IPackage } from "../../schemas/package";
 import type { ILayerGroup } from "../../schemas/layerGroup";
 import {
-  CDN_URL,
   Directory,
   DirPath,
   TITILER_SERVER,
@@ -43,16 +42,13 @@ import {
 } from "../../constants";
 import { type HydratedDocument, Types } from "mongoose";
 import type { ILayerFile } from "../../schemas/layerFiles";
-import {
-  checkFileExists,
-  getFileSize,
-} from "../../utils/fileUtils";
+import { checkFileExists, } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
-import { copyFile, createArchive, permPath, saveAsKML, saveFile, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
-import { LazToTiles3D, delete3DTiles } from "../../utils/pointcloud";
-import { ZipToTiles3D } from "../../utils/cesium";
+import { createArchive, permPath, saveAsKML, saveFile, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import { LazToTiles3D } from "../../utils/pointcloud";
+import { ZipToTiles3D, delete3DTiles } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { readToBuffer } from "../../utils/objectStorage";
 import { randomUUID } from "crypto";
