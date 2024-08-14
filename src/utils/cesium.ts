@@ -17,7 +17,8 @@ export async function ZipToTiles3D(docLaz: string) {
         offset,
         length
       )
-        .then(stream => stream.pipe(pass));
+        .then(stream => stream.pipe(pass))
+        .catch(err => pass.destroy(err));
       return pass;
     },
     size: async function() {
