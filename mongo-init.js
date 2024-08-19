@@ -85,9 +85,7 @@ const commonProps = {
     time: "04:25:02 PM",
     duration: "2hr",
     geoFence: {
-      polygon: {
-        points: [],
-      },
+      polygon: null,
       circle: {
         radius: 854.8149453079126,
         area: 9180622.733828312,
