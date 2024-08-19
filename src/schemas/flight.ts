@@ -95,11 +95,13 @@ const flightSchema = new mongoose.Schema<IFlight>(
     geoFence: {
       polygon: {
         points: {
-          type: [{
-            lng: Number,
-            lat: Number,
-          }],
-          default: undefined
+          type: [
+            {
+              lng: Number,
+              lat: Number,
+            },
+          ],
+          default: undefined,
         },
         area: {
           type: Number,
