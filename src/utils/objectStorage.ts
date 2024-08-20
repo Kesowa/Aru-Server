@@ -16,7 +16,7 @@ export const minioClient = new Minio.Client({
   region: "ap-south-1",
   accessKey: S3_ACCESS_KEY,
   secretKey: S3_SECRET_KEY,
-  pathStyle: ARU_INSTANCE == Instance.AWS,
+  pathStyle: ARU_INSTANCE != Instance.AWS,
 })
 
 export const readToString = async (objKey: string) => {
