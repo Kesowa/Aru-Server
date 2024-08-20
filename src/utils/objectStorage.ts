@@ -1,5 +1,5 @@
 import * as Minio from "minio";
-import { S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME, Mode, MODE } from "../constants";
+import { S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME, ARU_INSTANCE, Instance } from "../constants";
 import { buffer } from "stream/consumers";
 import { finished } from "stream/promises";
 import { Directory, docPath, keyPath } from "./pathUtils";
@@ -8,7 +8,6 @@ import { randomUUID } from "crypto";
 import { Readable } from "stream";
 import { extname, join, relative } from "path";
 import { readdir, rm } from "fs/promises";
-import { logger } from "../app";
 
 export const minioClient = new Minio.Client({
   endPoint: S3_ENDPOINT,
@@ -17,7 +16,7 @@ export const minioClient = new Minio.Client({
   region: "ap-south-1",
   accessKey: S3_ACCESS_KEY,
   secretKey: S3_SECRET_KEY,
-  pathStyle: Mode.Dev == MODE,
+  pathStyle: ARU_INSTANCE == Instance.AWS,
 })
 
 export const readToString = async (objKey: string) => {
