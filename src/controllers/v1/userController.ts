@@ -235,7 +235,7 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
       }
       const doc = await User.findOneAndUpdate(
         { _id: req.body.id, tenantId: res.locals.user.tenantId },
-        req.body,
+        {...req.body, avatar: data.avatar},
         {
           new: true,
           upsert: true,
@@ -258,7 +258,7 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
           await saveThumbnails(fullPath);
           doc.avatar = fullPath;
         }
-        await dd.save();
+        await doc.save();
       }
 
       return res.status(200).json({
