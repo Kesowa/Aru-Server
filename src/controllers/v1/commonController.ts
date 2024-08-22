@@ -3,7 +3,7 @@ import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { CDN_URL, S3_BUCKET_NAME } from "../../constants";
+import { ARU_INSTANCE, CDN_URL, Instance, S3_BUCKET_NAME } from "../../constants";
 import { Directory } from "../../utils/pathUtils";
 import { minioClient } from "../../utils/objectStorage";
 import { IPackage } from "../../schemas/package";
@@ -100,7 +100,7 @@ export const createUploadUrl = async (req: Request<{}, {}, {
     },
     presigned: {
       formData: presignedUrl.formData,
-      postURL: CDN_URL, // !REVISIT: Change to public s3 path
+      postURL: ARU_INSTANCE != Instance.AWS ? CDN_URL + "/" + S3_BUCKET_NAME : CDN_URL, // !REVISIT: Change to public s3 path
     },
   });
 
