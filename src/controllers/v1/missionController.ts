@@ -201,7 +201,7 @@ export const createMission = async (
 export const editMission = async (req: Request, res: AuthResponse) => {
   {
     const { name, description, deliverables, type, isPublic } = req.body;
-    const missionType = await MissionType.findOne({ name: type });
+    const missionType = await MissionType.findById(type);
     const updatedMission = await Mission.findByIdAndUpdate(
       req.body.id,
       {
