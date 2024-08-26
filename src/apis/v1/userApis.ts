@@ -68,7 +68,7 @@ router.patch(
   body("dob").optional().notEmpty().isISO8601().toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm //REVISIT
   body("aadhaarNo").optional().notEmpty().isNumeric(),
   body("pilotLicenceNo").optional().notEmpty().isNumeric(),
-  body("avatar").optional().notEmpty().trim(),
+  body("avatar").optional().isMongoId(),
   validator,
   RobustRunner(UserEdit)
 );

@@ -226,16 +226,14 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
       _id: req.body.id,
       tenantId: res.locals.user.tenantId,
     });
+    const avatar = req.body.avatar;
+    delete req.body.avatar;
     if (req.body.password)
       req.body.password = await bcrypt.hash(req.body.password, 10);
     if (data) {
-      let bSavePath;
-      if (req.body.avatar) {
-        bSavePath = data.avatar;
-      }
       const doc = await User.findOneAndUpdate(
         { _id: req.body.id, tenantId: res.locals.user.tenantId },
-        {...req.body, avatar: data.avatar},
+        {...req.body},
         {
           new: true,
           upsert: true,
@@ -246,9 +244,9 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
         _id: req.body.id,
         tenantId: res.locals.user.tenantId,
       });
-      if (req.body.avatar && dd && doc) {
+      if (avatar && dd && doc) {
         const fileDoc = await UploadTask.findOne({
-          _id: req.body.avatar,
+          _id: avatar,
           tenant: res.locals.user.tenantId._id,
           createdBy: res.locals.user._id,
           // status: "started",
@@ -257,8 +255,14 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
           const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
           await saveThumbnails(fullPath);
           doc.avatar = fullPath;
+          try {
+            await deleteThumbnails(data.avatar);
+            await deletePublicFileUsingPath(data.avatar);
+          } catch (err) {
+            req.log.error(err, "failed to delete thumbnails");
+          };
+          await doc.save();
         }
-        await doc.save();
       }
 
       return res.status(200).json({
