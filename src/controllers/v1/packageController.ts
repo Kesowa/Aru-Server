@@ -74,9 +74,8 @@ export const fetchPackageById = async (req: Request, res: AuthResponse) => {
     } else {
       return res.status(404).json({
         status: false,
-        message: "Package not found."
+        message: "Package not found.",
       });
-
     }
   }
 };

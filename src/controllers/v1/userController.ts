@@ -225,7 +225,10 @@ export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
   }
 };
 
-export const fetchUserOfTenantById = async (req: Request, res: AuthResponse) => {
+export const fetchUserOfTenantById = async (
+  req: Request,
+  res: AuthResponse
+) => {
   {
     const doc = await User.findOne({
       _id: req.query.id,
