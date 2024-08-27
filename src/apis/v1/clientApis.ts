@@ -11,6 +11,7 @@ import {
   // devApiClientArr,
   getClientByEmail,
   reactivateClient,
+  getClientById,
 } from "../../controllers/v1/clientController";
 import { fetchMissionById } from "../../controllers/v1/missionController";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
@@ -151,6 +152,15 @@ router.get(
   validator,
   PermissionGuard(PERMS.CLIENT_LIST),
   RobustRunner(getClientByEmail)
+);
+
+router.get(
+  "/get-client-by-id",
+  isAuthenticated,
+  query("id").isMongoId().withMessage("invalid id"),
+  validator,
+  PermissionGuard(PERMS.CLIENT_LIST),
+  RobustRunner(getClientById)
 );
 
 router.post(

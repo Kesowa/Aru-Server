@@ -110,7 +110,7 @@ export const getUserDetails = async (req: Request, res: AuthResponse) => {
   const customPermissions = await GetPermissions(
     res.locals.user.userGroupId,
     res.locals.user.userType,
-    res.locals.user.tenantId._id
+    res.locals.user.tenantId?._id
   );
   if (customPermissions.length == 0) {
     return res.status(404).json({

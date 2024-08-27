@@ -3,6 +3,7 @@ import { body, query } from "express-validator";
 import {
   createUser,
   fetchAllUserOfTenant,
+  fetchUserOfTenantById,
   termsAccepted,
   testTerms,
   userCsv,
@@ -62,6 +63,14 @@ router.get(
   isAuthenticated,
   PermissionGuard(PERMS.USER_LIST),
   RobustRunner(fetchAllUserOfTenant)
+);
+
+router.get(
+  "/fetch-user-by-id",
+  isAuthenticated,
+  query("id").isMongoId().withMessage("Invalid id"),
+  PermissionGuard(PERMS.USER_LIST),
+  RobustRunner(fetchUserOfTenantById)
 );
 
 // TODO: Add other fields as optional to edit-user route. Everything else donee
