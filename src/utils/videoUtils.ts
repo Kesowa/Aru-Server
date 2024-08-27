@@ -9,7 +9,7 @@ import DJISRTParser from "dji_srt_parser";
 import { logger } from "../app";
 import VOD from "../models/vod";
 import { missionSpecificSocket } from "../socket";
-import { deleteObj, readToString, stat } from "./objectStorage";
+import { deleteObj, readToString, stat, uploadString } from "./objectStorage";
 const asyncExec = promisify(exec);
 const matchExt = /\.\w+$/;
 
@@ -59,31 +59,37 @@ export const transcodeVideo = async (
 };
 
 
-export const receiveVideo = async (video: Video, metadata: AruMetadata) => {
-  const vod = await VOD.findOneAndUpdate({
+export const receiveVideo = async (video: Video, metadata: AruMetadata, success: boolean) => {
+  const vod = await VOD.findOne({
     _id: metadata.video_id,
     tenantId: metadata.tenant_id,
-  }, {
-    videoPath: path.join("/", video.hls),
-    thumbnail: path.join("/", video.thumb || "/processing.jpg"),
-  },
-    {
-      new: true
-    }
-  );
-  missionSpecificSocket
-    .to(String(vod.missionID))
-    .emit("PROCESS_VIDEO_FINISHED", vod);
-  // done later to prevent it from messing with video
-  const size = await getHlsSize(video.hls);
-  await vod.update({ $inc: { fileSize: size } });
+  });
+  if (success) {
+    vod.videoPath = video.hls;
+    vod.thumbnail = video.thumb;
+    const size = await getHlsSize(video.hls);
+    vod.fileSize += size;
+    if (video.srt)
+      vod.isSRT = await extractTelemetry(video.srt);
+    await vod.save();
+    missionSpecificSocket
+      .to(String(vod.missionID))
+      .emit("PROCESS_VIDEO_FINISHED", vod);
+  } else {
+    vod.videoPath = "/failed.mp4";
+    vod.thumbnail = "/failed.png";
+    await vod.save();
+    missionSpecificSocket
+      .to(String(vod.missionID))
+      .emit("PROCESS_VIDEO_FAILED", vod);
+  };
 };
 
 VODEvents.on(RES_QUEUE, function(res: TranscodeResponse) {
   logger.info(res, "RECEIVED VIDEO TRANSCODE RESPONSE");
-  receiveVideo(res.video, res.metadata).
+  receiveVideo(res.video, res.metadata, res.success).
     then(() => logger.info(res, "SAVED VIDEO"))
-    .catch((err) => logger.error({res, err}, "FAILED TO SAVE VIDEO"));
+    .catch((err) => logger.error({ res, err }, "FAILED TO SAVE VIDEO"));
 });
 
 /**
@@ -91,42 +97,20 @@ VODEvents.on(RES_QUEUE, function(res: TranscodeResponse) {
  * Returns undefined if no srt found
  */
 export const extractTelemetry = async (
-  filePath: pathUtils.KeyPath | pathUtils.DocPath
+  srtPath: pathUtils.KeyPath | pathUtils.DocPath
 ) => {
-  const geojsonPath = pathUtils.docPath(
-    pathUtils.Directory.VOD,
-    path.basename(filePath).replace(matchExt, ".geojson")
-  );
-  const srtPath = pathUtils.docPath(
-    pathUtils.Directory.VOD,
-    path.basename(filePath).replace(matchExt, ".srt")
-  );
-  const absSrtPath = pathUtils.absPath(pathUtils.Directory.ROOT, srtPath);
-  const command =
-    "/bin/ffmpeg -i " +
-    pathUtils.absPath(pathUtils.Directory.ROOT, filePath) +
-    " -map 0:s:0 " +
-    absSrtPath;
+  const dir = path.dirname(srtPath);
+  const outPath = path.join(dir, "flightpath.geojson");
+  const srtData = await readToString(srtPath);
   try {
-    await asyncExec(command);
-    const srtData = await fs.promises.readFile(absSrtPath, "utf8");
-    const djiData = DJISRTParser(srtData, absSrtPath);
+    const djiData = DJISRTParser(srtData, "flightpath");
     const geojsonData = djiData.toGeoJSON(false, true, false);
-    await fs.promises.writeFile(
-      pathUtils.absPath(pathUtils.Directory.ROOT, geojsonPath),
-      geojsonData
-    );
-    const metadata = djiData.metadata();
-    await fs.promises.rm(absSrtPath);
-    return {
-      geojsonPath,
-      srtPath,
-      metadata,
-      geojsonSize: geojsonData.length / (1024 * 1024),
-    };
-  } catch (error) {
-    return undefined;
+    await uploadString(outPath, geojsonData);
+  } catch (err) {
+    logger.error(err, "failed to extract dji flightpath");
+    return false;
   }
+  return true;
 };
 
 /**
