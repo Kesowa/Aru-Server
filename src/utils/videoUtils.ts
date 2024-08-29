@@ -65,12 +65,10 @@ export const receiveVideo = async (video: Video, metadata: AruMetadata, success:
     tenantId: metadata.tenant_id,
   });
   if (success) {
-    vod.videoPath = video.hls;
-    vod.thumbnail = video.thumb;
-    const size = await getHlsSize(video.hls);
-    vod.fileSize += size;
+    vod.videoPath = "/" + video.hls;
+    vod.thumbnail = "/" + video.thumb;
     if (video.srt)
-      vod.isSRT = await extractTelemetry(video.srt);
+      vod.isSRT = await extractTelemetry("/" + video.srt);
     await vod.save();
     missionSpecificSocket
       .to(String(vod.missionID))
@@ -100,7 +98,7 @@ export const extractTelemetry = async (
   srtPath: pathUtils.KeyPath | pathUtils.DocPath
 ) => {
   const dir = path.dirname(srtPath);
-  const outPath = path.join(dir, "flightpath.geojson");
+  const outPath = path.join(dir, "index.geojson");
   const srtData = await readToString(srtPath);
   try {
     const djiData = DJISRTParser(srtData, "flightpath");
@@ -116,7 +114,7 @@ export const extractTelemetry = async (
 /**
  * Takes absolute path to index.m3u8 file, returns approx size of entire HLS stream in bytes
  */
-const getHlsSize = async (indexPath: string) => {
+export const getHlsSize = async (indexPath: string) => {
   const index = await readToString(indexPath);
   const dir = path.dirname(indexPath);
   const vodFiles = index
