@@ -44,7 +44,6 @@ import {
   ARU_INSTANCE,
   Mode,
   MODE,
-  PUBLIC_DIR,
   SEQ_API_KEY,
   SEQ_SERVER_URL,
 } from "./constants";
@@ -66,17 +65,6 @@ app.use(
   })
 );
 app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
-
-//static files
-if (MODE == Mode.Dev) {
-  app.use(
-    express.static(PUBLIC_DIR, {
-      setHeaders: function (res) {
-        res.set("x-timestamp", Date.now().toString());
-      },
-    })
-  );
-}
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
