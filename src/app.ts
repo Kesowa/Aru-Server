@@ -191,14 +191,6 @@ app.use(function (req, res, next) {
   }
   if (!req.url.startsWith("/apis/v1")) {
     req.log.info("url does not starts with /apis/v1");
-    res.sendFile(path.join(PUBLIC_DIR, "/index.html"), function (err) {
-      if (err) {
-        req.log.error("error sending index.html", err);
-        if (res.headersSent) return next();
-        return next(err);
-      }
-    });
-  } else {
     next();
   }
 });
