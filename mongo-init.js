@@ -221,7 +221,7 @@ db.tenants.insertOne({
   packageStartDate: ISODate(),
   storageUsed: 0,
   actualAlertCount: 0,
-  actualClientCount: 0,
+  actualClientCount: 10,
   actualLayerCount: 0,
   actualLocationCount: 0,
   actualMissionCount: 0,
@@ -672,7 +672,6 @@ const usergroups = [
       "delete_client", // usergroup specific
       "user_group_list",
       "client_data",
-      "client_mission_list", // related necessary permissions
       "user_list",
       "mission_list", // common for all tenant-staff
     ],
@@ -681,7 +680,7 @@ const usergroups = [
   },
   {
     _id: ObjectId("6116058af270c9142c1588f2"),
-    permissions: ["client_mission_list", "client_list", "mission_list"], // common for all tenant-client
+    permissions: ["client_list", "mission_list"], // common for all tenant-client
     isActive: true,
     name: "Client Access",
   },
