@@ -27,7 +27,7 @@ import { SortOrder } from "mongoose";
 import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
-import { TENANT_CLIENT_PERMS } from "../../schemas/permission";
+import { PERMS, TENANT_CLIENT_PERMS } from "../../schemas/permission";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -827,5 +827,44 @@ export const getClientByEmail = async (req: Request, res: AuthResponse) => {
       message: "client found",
       data: client,
     });
+  }
+};
+
+export const getClientById = async (req: Request, res: AuthResponse) => {
+  {
+    const doc = await User.findOne({
+      _id: req.query.id,
+      tenantId: res.locals.user.tenantId._id,
+      userType: "tenant-client",
+    }).populate<{
+      createdBy: IUser;
+    }>("createdBy", "name");
+    if (doc) {
+      if (!res.locals.user.customPermissions.includes(PERMS.EDIT_CLIENT)) {
+        // personal details to be viewed only for editing purpose
+        // otherwise hidden
+        doc.phoneNo = null;
+        doc.email = null;
+        doc.password = null;
+        doc.dob = null;
+        doc.aadhaarNo = null;
+        doc.pilotLicenceNo = null;
+        doc.city = null;
+        doc.country = null;
+        doc.expiryDatee = null;
+        doc.avatar = null;
+        doc.passwordResetToken = null;
+      }
+      res.json({
+        status: true,
+        message: "Client fetched sucessfully.",
+        data: doc,
+      });
+    } else {
+      res.json({
+        status: false,
+        message: "Client not found",
+      });
+    }
   }
 };

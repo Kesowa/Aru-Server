@@ -1,11 +1,12 @@
 import express from "express";
-import { body } from "express-validator";
+import { body, query } from "express-validator";
 import {
   createPackage,
   fetchAllPackages,
   fetchActivePackages,
   editPackageForId,
   deletePackageForId,
+  fetchPackageById,
 } from "../../controllers/v1/packageController";
 import { uploadFileforUSer } from "../../controllers/v1/commonController";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
@@ -53,6 +54,15 @@ router.get(
   isAuthenticated,
   PermissionGuard(PERMS.PACKAGE_LIST),
   RobustRunner(fetchAllPackages)
+);
+
+//fetch package by id
+router.get(
+  "/fetch-by-id",
+  isAuthenticated,
+  query("id").isMongoId().withMessage("Invalid id"),
+  PermissionGuard(PERMS.PACKAGE_LIST),
+  RobustRunner(fetchPackageById)
 );
 
 //fetch active packages

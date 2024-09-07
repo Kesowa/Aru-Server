@@ -61,6 +61,25 @@ export const fetchAllPackages = async (req: Request, res: AuthResponse) => {
   }
 };
 
+//fetch package by id
+export const fetchPackageById = async (req: Request, res: AuthResponse) => {
+  {
+    const doc = await Package.findById(req.query.id);
+    if (doc) {
+      return res.json({
+        status: true,
+        message: "Package fetched sucessfully.",
+        data: doc,
+      });
+    } else {
+      return res.status(404).json({
+        status: false,
+        message: "Package not found.",
+      });
+    }
+  }
+};
+
 export const fetchActivePackages = async (req: Request, res: AuthResponse) => {
   {
     const packages = await Package.find({ isActive: true });
