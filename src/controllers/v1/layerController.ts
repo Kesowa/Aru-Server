@@ -866,7 +866,9 @@ export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
 
 export const createVectorLayer = async (req: Request, res: AuthResponse) => {
   {
-    const vectorLayer = await saveVectorLayer(req.body.geoJSON, { inheritColor: true });
+    const vectorLayer = await saveVectorLayer(req.body.geoJSON, {
+      inheritColor: true,
+    });
     const layer = await Layer.create({
       name: req.body.name,
       type: "Vector",
