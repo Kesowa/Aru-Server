@@ -78,7 +78,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           {
             icon: req.body.icon,
             color: req.body.color,
-            inheritColor: req.body.inHeritOriginalColorFromFile,
+            inheritColor: req.body.inHeritOriginalColorFromFile === "true",
           }
         );
 
