@@ -814,10 +814,10 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       createdBy: res.locals.user._id,
       status: "started",
     });
-    const thumbs = await saveThumbnails(imgDoc.metadata.objectkey);
-    const ff = await readCoords(imgDoc.metadata.objectkey);
-
     const fullPath = await permPath(Directory.ALERT_IMAGES, imgDoc.metadata.objectkey);
+
+    const thumbs = await saveThumbnails(fullPath);
+    const ff = await readCoords(fullPath);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
