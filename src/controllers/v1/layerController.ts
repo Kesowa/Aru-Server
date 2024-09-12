@@ -46,7 +46,7 @@ import { checkFileExists, } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
-import { createArchive, permPath, saveAsKML, saveFile, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import { createArchive, permPath, saveAsKML, saveFeatureSearchIndex, saveFile, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
 import { LazToTiles3D } from "../../utils/pointcloud";
 import { ZipToTiles3D, delete3DTiles } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
@@ -447,6 +447,10 @@ export const addFeature = async (req: Request, res: AuthResponse) => {
             });
           }
           const newPath = await featureAddition(docpath, req.body, geojson);
+          if (data.isPublic) {
+            // for public layer, re-generate search index after feature editing
+            await saveFeatureSearchIndex(newPath);
+          }
           if (data.color != req.body.feature.properties.color) {
             await Layer.updateOne(
               { _id: req.body.id },
@@ -507,6 +511,10 @@ export const editGeoJson = async (
           });
         }
         const newPath = await editGeoJsonForAll(docpath, req.body, geojson);
+        if (data.isPublic) {
+          // for public layer, re-generate search index after feature editing
+          await saveFeatureSearchIndex(newPath);
+        }
         for (let i = 0; i < geojson.features.length; i++) {
           if (geojson.features[i].properties.color != data.color) {
             const savedDoc = await Layer.findByIdAndUpdate(
@@ -594,6 +602,10 @@ export const deleteGeoJson = async (
         { layerpath: newPath, }, { new: true, }
       );
       await deletePublicFileUsingPath(docpath);
+      if (data.isPublic) {
+        // for public layer, re-generate search index after feature editing
+        await saveFeatureSearchIndex(newPath);
+      }
       return res.status(200).json({
         status: true,
         message: "Feature Deleted successfully",
@@ -663,15 +675,26 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
 export const getbymissionID = async (req: Request, res: AuthResponse) => {
   {
     const id = req.query.missionId as string;
-    const mission = await Mission.findOne<{ name: string }>(
+    const isClient = res.locals.user.userType === "tenant-client";
+    const mission = await Mission.findOne<{
+      name: string;
+      clientId: Types.ObjectId[];
+    }>(
       {
         _id: id,
         tenantId: res.locals.user.tenantId._id,
       },
       {
         name: 1,
+        clientId: 1,
       }
     );
+    if (isClient && !mission.clientId.includes(res.locals.user._id)) {
+      return res.status(403).json({
+        status: false,
+        message: `Client does not have access to the mission`,
+      });
+    }
     const flight = await Flight.findOne<{
       centerPoints: {
         lat: number;
@@ -790,6 +813,10 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
       { color: req.body.color, layerpath: newPath },
       { new: true }
     );
+    if (doc.isPublic) {
+      // for public layer, re-generate search index after feature editing
+      await saveFeatureSearchIndex(newPath);
+    }
     if (updatedLayer) {
       res.json({
         status: true,
@@ -829,7 +856,9 @@ export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
 
 export const createVectorLayer = async (req: Request, res: AuthResponse) => {
   {
-    const vectorLayer = await saveVectorLayer(req.body.geoJSON);
+    const vectorLayer = await saveVectorLayer(req.body.geoJSON, {
+      inheritColor: true,
+    });
     const layer = await Layer.create({
       name: req.body.name,
       type: "Vector",
@@ -2291,13 +2320,14 @@ export const picktoMapUseForLayerCreate = async (
 // what is this even for?
 export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
   {
-    const docs = await Layer.find<{ layerpath: string }>(
+    const docs = await Layer.find<{ layerpath: string; isPublic: boolean }>(
       {
         type: "Vector",
         tenantId: res.locals.user.tenantId,
       },
       {
         layerpath: 1,
+        isPublic: 1,
       },
       {
         lean: true,
@@ -2309,6 +2339,10 @@ export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
         const geoJSON = await readGeoJson(docpath);
         if (geoJSON) {
           const modCheck = await modGeoJson(null, null, geoJSON, docpath);
+          if (docs[i].isPublic) {
+            // for public layer, re-generate search index after feature editing
+            await saveFeatureSearchIndex(docs[i].layerpath);
+          }
         } else {
           req.log.warn("Geojson Not found");
         }
@@ -2342,6 +2376,7 @@ export const sys_id_Inject_to_layerfiles = async (
       layerpath: string;
       layerLabel: string;
       missionId: ObjectId;
+      isPublic: boolean;
     }>(
       {
         _id: req.query.layerId,
@@ -2352,6 +2387,7 @@ export const sys_id_Inject_to_layerfiles = async (
         layerpath: 1,
         layerLabel: 1,
         missionId: 1,
+        isPublic: 1,
       }
     );
     if (docs) {
@@ -2367,6 +2403,11 @@ export const sys_id_Inject_to_layerfiles = async (
         }
 
         const modCheck = await modGeoJson(null, null, gjson, p); // add sys_ids to geojson
+
+        if (docs.isPublic) {
+          // for public layer, re-generate search index after feature editing
+          await saveFeatureSearchIndex(modCheck);
+        }
 
         if (modCheck) {
           // update new sys_ids in layerfiles

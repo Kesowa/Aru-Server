@@ -6,14 +6,9 @@ import {
   GetDocThread,
   RemoveDocComment,
 } from "../../controllers/v1/threadController";
-import {
-  isAuthenticated,
-  canCreateThread,
-  canUpdateThread,
-  canDeleteComment,
-  canListThread,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -24,7 +19,7 @@ router.get(
   query("ifExist").optional().isBoolean(),
   validator,
   isAuthenticated,
-  canListThread,
+  PermissionGuard(PERMS.THREAD_LIST),
   RobustRunner(GetDocThread)
 );
 router.post(
@@ -33,7 +28,7 @@ router.post(
   param("docId").isMongoId(),
   validator,
   isAuthenticated,
-  canCreateThread,
+  PermissionGuard(PERMS.THREAD_CREATE),
   RobustRunner(CreateDocThread)
 );
 router.patch(
@@ -44,7 +39,7 @@ router.patch(
   body("content").isString().isLength({ min: 10, max: 500 }),
   validator,
   isAuthenticated,
-  canUpdateThread,
+  PermissionGuard(PERMS.THREAD_UPDATE),
   RobustRunner(AddorUpdateDocComment)
 );
 router.delete(
@@ -54,7 +49,7 @@ router.delete(
   param("commentId").isMongoId(),
   validator,
   isAuthenticated,
-  canDeleteComment,
+  PermissionGuard(PERMS.COMMENT_DELETE),
   RobustRunner(RemoveDocComment)
 );
 

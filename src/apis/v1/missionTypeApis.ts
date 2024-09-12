@@ -6,8 +6,9 @@ import {
   editMissionType,
   deleteMissionType,
 } from "../../controllers/v1/missionTypeControllers";
-import { isAuthenticated, onlySuperAdminAccess } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -15,10 +16,10 @@ const router = express.Router();
 router.post(
   "/create",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("name").notEmpty().trim(),
   body("description").notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.MISSION_TYPE_CREATE),
   RobustRunner(createMissionType)
 );
 
@@ -26,7 +27,6 @@ router.post(
 router.post(
   "/edit",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("name").notEmpty().trim(),
   body("description").notEmpty().trim(),
   body("_id").notEmpty().isMongoId(),
@@ -36,6 +36,7 @@ router.post(
     .isBoolean()
     .toBoolean(),
   validator,
+  PermissionGuard(PERMS.MISSION_TYPE_UPDATE),
   RobustRunner(editMissionType)
 );
 
@@ -43,13 +44,18 @@ router.post(
 router.post(
   "/delete",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("_id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.MISSION_TYPE_DELETE),
   RobustRunner(deleteMissionType)
 );
 
 //++++++++++++++++++++ fetch all mission type Api++++++++++++++++++++++++
-router.get("/getall", isAuthenticated, RobustRunner(fetchAllMissionTypes));
+router.get(
+  "/getall",
+  isAuthenticated,
+  PermissionGuard(PERMS.MISSION_TYPE_LIST),
+  RobustRunner(fetchAllMissionTypes)
+);
 
 export default router;

@@ -9,14 +9,9 @@ import {
   toggleAsset,
   updateAsset,
 } from "../../controllers/v1/assetController";
-import {
-  isAuthenticated,
-  canCreateAsset,
-  canUpdateAsset,
-  canDeleteAsset,
-  canListAsset,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -42,7 +37,7 @@ router.post(
   body("manufactureDate").exists().isISO8601().toDate(),
   body("manufactureID").notEmpty().isMongoId(),
   validator,
-  canCreateAsset,
+  PermissionGuard(PERMS.ASSET_CREATE),
   RobustRunner(createAsset)
 );
 
@@ -51,14 +46,14 @@ router.get(
   isAuthenticated,
   query("assetID").notEmpty().isMongoId(),
   validator,
-  canListAsset,
+  PermissionGuard(PERMS.ASSET_LIST),
   RobustRunner(getAsset)
 );
 
 router.get(
   "/get-all-asset",
   isAuthenticated,
-  canListAsset,
+  PermissionGuard(PERMS.ASSET_LIST),
   RobustRunner(getallAsset)
 );
 
@@ -70,7 +65,7 @@ router.patch(
   body("assetID").notEmpty().isMongoId(),
   body("assetInfo").notEmpty().isArray(),
   validator,
-  canUpdateAsset,
+  PermissionGuard(PERMS.ASSET_UPDATE),
   RobustRunner(updateAsset)
 );
 
@@ -79,7 +74,7 @@ router.delete(
   isAuthenticated,
   body("assetID").notEmpty().isMongoId(),
   validator,
-  canDeleteAsset,
+  PermissionGuard(PERMS.ASSET_DELETE),
   RobustRunner(removeAsset)
 );
 
@@ -88,6 +83,7 @@ router.patch(
   isAuthenticated,
   body("assetID").notEmpty().isMongoId(),
   body("isActive").notEmpty().isBoolean().toBoolean(),
+  PermissionGuard(PERMS.ASSET_UPDATE),
   validator,
   RobustRunner(toggleAsset)
 );

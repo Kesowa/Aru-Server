@@ -1,11 +1,5 @@
 import express from "express";
-import {
-  isAuthenticated,
-  canCreateLocation,
-  canUpdateLocation,
-  canDeleteLocation,
-  canListLocation,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import {
   createLocation,
   deleteLocation,
@@ -18,6 +12,7 @@ import {
 import { isLocationCount } from "../../utils/countPermission";
 import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -27,13 +22,17 @@ router.post(
   body("type").notEmpty().trim(),
   body("coordinates").notEmpty().isObject(),
   body("properties").notEmpty().isObject(),
-
-  canCreateLocation,
+  PermissionGuard(PERMS.LOCATION_CREATE),
   isLocationCount,
   RobustRunner(createLocation)
 );
 
-router.get("/get", isAuthenticated, canListLocation, RobustRunner(getLocation));
+router.get(
+  "/get",
+  isAuthenticated,
+  PermissionGuard(PERMS.LOCATION_LIST),
+  RobustRunner(getLocation)
+);
 
 // Route not used in client, and inconsistent
 router.get(
@@ -41,7 +40,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  canListLocation,
+  PermissionGuard(PERMS.LOCATION_LIST),
   RobustRunner(getwithinLocationByID)
 );
 
@@ -50,7 +49,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  canListLocation,
+  PermissionGuard(PERMS.LOCATION_LIST),
   RobustRunner(getLocationByID)
 );
 
@@ -63,7 +62,7 @@ router.patch(
   body("geometry.coordinates").notEmpty().isArray(),
   body("geometry.type").notEmpty().isString(),
   validator,
-  canUpdateLocation,
+  PermissionGuard(PERMS.LOCATION_UPDATE),
   RobustRunner(updateLocation)
 );
 
@@ -73,6 +72,7 @@ router.get(
   query("lat").exists().isNumeric().toInt(),
   query("long").exists().isNumeric().toInt(),
   validator,
+  PermissionGuard(PERMS.LOCATION_LIST),
   RobustRunner(getLocationByLatLong)
 );
 
@@ -81,7 +81,7 @@ router.delete(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  canDeleteLocation,
+  PermissionGuard(PERMS.LOCATION_DELETE),
   RobustRunner(deleteLocation)
 );
 

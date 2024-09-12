@@ -7,12 +7,9 @@ import {
   removeAssetClass,
   updateAssetClass,
 } from "../../controllers/v1/assetClassController";
-import {
-  isAuthenticated,
-  onlySuperAdminAccess,
-  canListAssetClass,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -24,14 +21,14 @@ router.post(
   body("createdAt").optional().isISO8601().toDate(),
   header("userid").notEmpty().isMongoId(),
   validator,
-  onlySuperAdminAccess,
+  PermissionGuard(PERMS.ASSET_CLASS_CREATE),
   RobustRunner(createAssetClass)
 );
 
 router.get(
   "/get",
   isAuthenticated,
-  canListAssetClass,
+  PermissionGuard(PERMS.ASSET_CLASS_LIST),
   RobustRunner(getAssetClass)
 );
 
@@ -41,7 +38,7 @@ router.patch(
   body("id").notEmpty().isMongoId(),
   body("typeName").notEmpty().isString(),
   validator,
-  onlySuperAdminAccess,
+  PermissionGuard(PERMS.ASSET_CLASS_UPDATE),
   RobustRunner(updateAssetClass)
 );
 
@@ -50,7 +47,7 @@ router.get(
   isAuthenticated,
   query("_id").notEmpty().isMongoId(),
   validator,
-  canListAssetClass,
+  PermissionGuard(PERMS.ASSET_CLASS_LIST),
   RobustRunner(fetchAssetbyId)
 );
 
@@ -59,7 +56,7 @@ router.delete(
   isAuthenticated,
   body("id").notEmpty().isMongoId(),
   validator,
-  onlySuperAdminAccess,
+  PermissionGuard(PERMS.ASSET_CLASS_DELETE),
   RobustRunner(removeAssetClass)
 );
 

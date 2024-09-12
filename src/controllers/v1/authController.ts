@@ -1,18 +1,17 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import User from "../../models/user";
-import UserGroup from "../../models/usergroup";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sessionModel } from "../../models/session";
-import { IPermission } from "../../schemas/permission";
 import { API_SERVER, PUBLIC_SERVER } from "../../constants";
 import PassReset from "../../models/passwordReset";
 import { tokenEncoder } from "../../utils/authUtils";
 import ejs from "ejs";
 import path from "path";
+import { GetPermissions } from "../../schemas/permission";
 
 //++++++++++++++++++++++++++ user login +++++++++++++++++++++++++++++++++++++++
 
@@ -51,18 +50,14 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
 
           data.password = "secret";
 
-          if (data.userGroupId) {
-            const docs = await UserGroup.findById(data.userGroupId).populate<{
-              permissions: IPermission[];
-            }>("permissions");
-            if (!docs) {
-              throw "userGroup not found";
-            }
-            Object.assign(data, {
-              customPermissions: [docs],
-              password: undefined,
-            });
-          }
+          Object.assign(data, {
+            customPermissions: await GetPermissions(
+              user.userGroupId,
+              user.userType,
+              user.tenantId
+            ),
+            password: undefined,
+          });
           if (user.userType == "tenant-client") {
             const date1 = new Date(user.expiryDatee);
             const date2 = new Date(Date.now());
@@ -112,22 +107,21 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
 
 //++++++++++++++++++++++++++++++++ get user details +++++++++++++++++++++++++++++++++++++++
 export const getUserDetails = async (req: Request, res: AuthResponse) => {
-  if (res.locals.user.userGroupId) {
-    const docs = await UserGroup.findById(
-      res.locals.user.userGroupId
-    ).populate<{ permissions: IPermission[] }>("permissions");
-    if (!docs) {
-      return res.status(404).json({
-        status: false,
-        message: "userGroup not found",
-      });
-    }
-    Object.assign(res.locals.user, {
-      customPermissions: [docs],
-      password: undefined,
+  const customPermissions = await GetPermissions(
+    res.locals.user.userGroupId,
+    res.locals.user.userType,
+    res.locals.user.tenantId?._id
+  );
+  if (customPermissions.length == 0) {
+    return res.status(404).json({
+      status: false,
+      message: "userGroup not found",
     });
   }
-
+  Object.assign(res.locals.user, {
+    customPermissions,
+    password: undefined,
+  });
   res.json({
     status: true,
     message: "user details fetched",

@@ -202,7 +202,7 @@ export const createMission = async (
 export const editMission = async (req: Request, res: AuthResponse) => {
   {
     const { name, description, deliverables, type, isPublic } = req.body;
-    const missionType = await MissionType.findOne({ name: type });
+    const missionType = await MissionType.findById(type);
     const updatedMission = await Mission.findByIdAndUpdate(
       req.body.id,
       {
@@ -431,6 +431,7 @@ export const fetchAllMissionsForTenant = async (
 ) => {
   {
     const { client, filter, missionType, searchFilters, sort } = req.query;
+    const isClient = res.locals.user.userType === "tenant-client";
 
     const populate: any[] = [
       {
@@ -468,6 +469,7 @@ export const fetchAllMissionsForTenant = async (
       [missionType && "missionType"]: missionType,
       [filter && filter !== "all" && "status"]: filter,
       [client && "clientId"]: { $exists: true },
+      [isClient && "clientId"]: res.locals.user._id,
     };
 
     if (!searchFilters || searchFilters.toString().trim() === "") {
@@ -603,9 +605,11 @@ function flatten(a) {
 export const fetchMissionById = async (req: Request, res: AuthResponse) => {
   {
     const missionId = req.params.id;
+    const isClient = res.locals.user.userType === "tenant-client";
     const mission = await Mission.findOne({
       _id: missionId,
       tenantId: res.locals.user.tenantId._id,
+      [isClient && "clientId"]: res.locals.user._id,
     })
       .populate<{ user: IUser }>("user", "name")
       .populate<{ missionType: IMissionType }>("missionType")
@@ -931,9 +935,11 @@ export const missionStatusUpdate = async (req: Request, res: AuthResponse) => {
 export const autoComplete = async (req: Request, res: AuthResponse) => {
   {
     const query = String(req.query.query);
+    const isClient = res.locals.user.userType === "tenant-client";
     const dbResp = await Mission.find({
       $text: { $search: query },
       tenantId: res.locals.user.tenantId._id,
+      [isClient && "clientId"]: res.locals.user._id,
     });
     if (dbResp.length > 0) {
       res.json({

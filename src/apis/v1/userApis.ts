@@ -3,16 +3,21 @@ import { body, query } from "express-validator";
 import {
   createUser,
   fetchAllUserOfTenant,
+  fetchUserOfTenantById,
   termsAccepted,
   testTerms,
   userCsv,
   UserDelete,
   UserEdit,
 } from "../../controllers/v1/userController";
-// import { uploadFileforUSer } from "../../controllers/v1/commonController";
-import { canListUsers, isAuthenticated } from "../../utils/authUtils";
+import {
+  isAuthenticated,
+  onlyTenantRootAccess,
+  PermissionGuard,
+} from "../../utils/authUtils";
 import { isUserCount } from "../../utils/countPermission";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -42,6 +47,7 @@ router.post(
   body("avatar").optional().notEmpty().isMongoId(),
   validator,
   isAuthenticated,
+  onlyTenantRootAccess,
   isUserCount,
   RobustRunner(createUser)
 );
@@ -50,14 +56,23 @@ router.post(
 router.get(
   "/fetch-all-user",
   isAuthenticated,
-  canListUsers,
+  PermissionGuard(PERMS.USER_LIST),
   RobustRunner(fetchAllUserOfTenant)
+);
+
+router.get(
+  "/fetch-user-by-id",
+  isAuthenticated,
+  query("id").isMongoId().withMessage("Invalid id"),
+  PermissionGuard(PERMS.USER_LIST),
+  RobustRunner(fetchUserOfTenantById)
 );
 
 // TODO: Add other fields as optional to edit-user route. Everything else donee
 router.patch(
   "/edit-user",
   isAuthenticated,
+  onlyTenantRootAccess,
   body("id").notEmpty().isMongoId(),
   body("password").optional().notEmpty().isLength({ min: 6 }),
   body("email").optional().notEmpty().isEmail().withMessage("invalid Email."),
@@ -70,6 +85,7 @@ router.patch(
   body("pilotLicenceNo").optional().notEmpty().isNumeric(),
   body("avatar").optional().isMongoId(),
   validator,
+  PermissionGuard(PERMS.USER_UPDATE),
   RobustRunner(UserEdit)
 );
 
@@ -78,6 +94,7 @@ router.delete(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.USER_DELETE),
   RobustRunner(UserDelete)
 );
 

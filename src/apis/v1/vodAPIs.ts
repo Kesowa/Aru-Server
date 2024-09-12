@@ -4,10 +4,9 @@ import {
   getByMissionID,
   saveVOD,
   fetchAllVoddataByLocationId,
-  testApiinject,
   saveVODManual,
   removeVOD,
-  testApiinjectTenantID,
+  // testApiinjectTenantID,
   renameVOD,
   updateVOD,
   updateMultiVOD,
@@ -15,14 +14,11 @@ import {
   getCountByMissionID,
   getVODByID,
 } from "../../controllers/v1/VODcontroller";
-import {
-  canCreateVOD,
-  canListVOD,
-  isAuthenticated,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isVodCount } from "../../utils/countPermission";
 import { body, oneOf, query } from "express-validator";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -41,28 +37,29 @@ router.post(
   body("missionID").notEmpty().isMongoId(),
   body("flightID").notEmpty().isMongoId(),
   validator,
-  canCreateVOD,
+  PermissionGuard(PERMS.VOD_CREATE),
   isVodCount,
   RobustRunner(saveVODManual)
 );
 
 //  update data
-router.patch(
-  "/test-vod-inject",
-  isAuthenticated,
-  body("limit").exists({ checkFalsy: true }).isNumeric().toInt(),
-  body("locationId").notEmpty().isMongoId(),
-  body("missionId").notEmpty().isMongoId(),
-  body("flightId").notEmpty().isMongoId(),
-  validator,
-  RobustRunner(testApiinject)
-);
+// router.patch(
+//   "/test-vod-inject",
+//   isAuthenticated,
+//   body("limit").exists({ checkFalsy: true }).isNumeric().toInt(),
+//   body("locationId").notEmpty().isMongoId(),
+//   body("missionId").notEmpty().isMongoId(),
+//   body("flightId").notEmpty().isMongoId(),
+//   validator,
+//   RobustRunner(testApiinject)
+// );
 
 router.post(
   "/get-by-ID",
   isAuthenticated,
   body("Id").notEmpty().isArray({ min: 1 }),
   validator,
+  PermissionGuard(PERMS.VOD_LIST),
   RobustRunner(getVODByID)
 );
 
@@ -82,7 +79,7 @@ router.get(
   query("limit").default(200).isInt({ min: 1, max: 500 }).toInt(),
   query("isFlagged").optional().isBoolean().toBoolean(),
   validator,
-  canListVOD,
+  PermissionGuard(PERMS.VOD_LIST),
   RobustRunner(getByMissionID)
 );
 
@@ -91,7 +88,7 @@ router.get(
   isAuthenticated,
   query("missionID").notEmpty().isMongoId(),
   validator,
-  canListVOD,
+  PermissionGuard(PERMS.VOD_LIST),
   RobustRunner(getCountByMissionID)
 );
 
@@ -106,7 +103,7 @@ router.get(
     query("locationID").notEmpty().isMongoId(),
   ]),
   validator,
-  canListVOD,
+  PermissionGuard(PERMS.VOD_LIST),
   RobustRunner(getByFlightOrLocationID)
 );
 
@@ -117,7 +114,7 @@ router.get(
   query("page").default(1).isInt({ min: 1 }).toInt(),
   query("id").notEmpty().isMongoId(),
   validator,
-  canListVOD,
+  PermissionGuard(PERMS.VOD_LIST),
   RobustRunner(fetchAllVoddataByLocationId)
 );
 
@@ -126,6 +123,7 @@ router.delete(
   isAuthenticated,
   body("Id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.VOD_DELETE),
   RobustRunner(removeVOD)
 );
 
@@ -134,16 +132,17 @@ router.delete(
   isAuthenticated,
   body("Id").notEmpty().isArray({ min: 1 }),
   validator,
+  PermissionGuard(PERMS.VOD_DELETE, PERMS.VOD_LIST),
   RobustRunner(removeMultiVOD)
 );
 
-router.patch(
-  "/insert-tenantID",
-  isAuthenticated,
-  body("tenantID").notEmpty().isMongoId(),
-  validator,
-  RobustRunner(testApiinjectTenantID)
-);
+// router.patch(
+//   "/insert-tenantID",
+//   isAuthenticated,
+//   body("tenantID").notEmpty().isMongoId(),
+//   validator,
+//   RobustRunner(testApiinjectTenantID)
+// );
 
 router.patch(
   "/edit-by-ID",
@@ -151,6 +150,7 @@ router.patch(
   body("id").notEmpty().isMongoId(),
   body("update").notEmpty().isObject(),
   validator,
+  PermissionGuard(PERMS.VOD_UPDATE),
   RobustRunner(renameVOD)
 );
 
@@ -160,6 +160,7 @@ router.patch(
   body("id").notEmpty().isMongoId(),
   body("update").notEmpty().isObject(),
   validator,
+  PermissionGuard(PERMS.VOD_UPDATE),
   RobustRunner(updateVOD)
 );
 router.patch(
@@ -168,6 +169,7 @@ router.patch(
   body("Id").notEmpty().isArray({ min: 1 }),
   body("update").notEmpty().isObject(),
   validator,
+  PermissionGuard(PERMS.VOD_LIST, PERMS.VOD_UPDATE),
   RobustRunner(updateMultiVOD)
 );
 

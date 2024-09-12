@@ -2,7 +2,6 @@ import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Usergroup from "../../models/usergroup";
 import Mission from "../../models/mission";
-import Permission from "../../models/permission";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import Flight from "../../models/flight";
@@ -30,6 +29,7 @@ import { iv } from "../../utils/authUtils";
 import { permPath, saveFile } from "../../utils/dataUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
 import UploadTask from "../../models/uploadTask";
+import { PERMS, TENANT_CLIENT_PERMS } from "../../schemas/permission";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -42,35 +42,21 @@ export const createClientformissionGroup = async (
       createdBy: res.locals.user._id,
       // status: "started",
     });
-    const result = await Usergroup.findOne(
-      {
-        _id: req.body.userGroupId,
-      },
-      {
-        permissions: 1,
-      }
+    const result = await Usergroup.findOne({
+      _id: req.body.userGroupId,
+      tenantId: res.locals.user.tenantId._id,
+    });
+    const onlyClientPerms = result.permissions.every((perm) =>
+      TENANT_CLIENT_PERMS.includes(perm)
     );
     if (result) {
-      let cflag = 0;
-      let cId;
-      const permission = await Permission.findOne(
-        {
-          _id: { $in: result.permissions },
-          isClient: true,
-        },
-        { _id: 1 }
-      );
-      if (permission) {
-        const existingClient = await User.findOne(
-          { email: req.body.email },
-          { _id: 1 }
-        );
-        if (existingClient) {
-          cflag = 1;
-          cId = existingClient._id;
-        }
+      if (onlyClientPerms) {
+        const existingClient = await User.findOne({
+          email: req.body.email,
+          tenantId: res.locals.user.tenantId._id,
+        });
 
-        if (cflag == 1) {
+        if (existingClient) {
           const temppass = crypto.randomBytes(10).toString("hex");
           const date2 = new Date(req.body.expiryDate);
           // let docPath = DirPath(Directory.DEFAULT, req.body.avatar);
@@ -100,11 +86,11 @@ export const createClientformissionGroup = async (
             await saveThumbnails(fullPath);
             modClient.avatar = fullPath;
           }
-          await User.findOneAndUpdate({ _id: cId }, modClient, {
+          await User.findOneAndUpdate({ _id: existingClient._id }, modClient, {
             upsert: true,
             useFindAndModify: false,
           });
-          const modDoc = await User.findOne({ _id: cId });
+          const modDoc = await User.findOne({ _id: existingClient._id });
           // let tenant: any = await Tenant.findOne({ _id: res.locals.user.tenantId });
           // if (modDoc && tenant.actualClientCount >= 0) {
           //   await Tenant.updateOne({ _id: res.locals.user.tenantId},{ $inc: { actualClientCount: 1 } })
@@ -238,7 +224,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
     let data: any;
     if (req.query.status == "Upcoming" || req.query.status == "Completed") {
       resultt = await Mission.find({
-        clientId: req.query.clientId,
+        clientId: res.locals.user._id, // should work as intended user of the route is a client
         status: match.status,
         tenantId: res.locals.user.tenantId._id,
       })
@@ -260,7 +246,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
       );
     } else if (req.query.status == "All") {
       resultt = await Mission.find({
-        clientId: req.query.clientId,
+        clientId: res.locals.user._id, // should work as intended user of the route is a client
         tenantId: res.locals.user.tenantId._id,
       })
         .populate<{ clientId: IUser }>("clientId")
@@ -818,5 +804,44 @@ export const getClientByEmail = async (req: Request, res: AuthResponse) => {
       message: "client found",
       data: client,
     });
+  }
+};
+
+export const getClientById = async (req: Request, res: AuthResponse) => {
+  {
+    const doc = await User.findOne({
+      _id: req.query.id,
+      tenantId: res.locals.user.tenantId._id,
+      userType: "tenant-client",
+    }).populate<{
+      createdBy: IUser;
+    }>("createdBy", "name");
+    if (doc) {
+      if (!res.locals.user.customPermissions.includes(PERMS.EDIT_CLIENT)) {
+        // personal details to be viewed only for editing purpose
+        // otherwise hidden
+        doc.phoneNo = null;
+        doc.email = null;
+        doc.password = null;
+        doc.dob = null;
+        doc.aadhaarNo = null;
+        doc.pilotLicenceNo = null;
+        doc.city = null;
+        doc.country = null;
+        doc.expiryDatee = null;
+        doc.avatar = null;
+        doc.passwordResetToken = null;
+      }
+      res.json({
+        status: true,
+        message: "Client fetched sucessfully.",
+        data: doc,
+      });
+    } else {
+      res.json({
+        status: false,
+        message: "Client not found",
+      });
+    }
   }
 };

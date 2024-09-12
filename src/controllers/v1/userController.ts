@@ -15,6 +15,8 @@ import UploadTask from "../../models/uploadTask";
 import { permPath } from "../../utils/dataUtils";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
 
+import { PERMS } from "../../schemas/permission";
+// let saltRound = 10;
 //create user account
 export const createUser = async (req: Request, res: AuthResponse) => {
   {
@@ -172,6 +174,22 @@ export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
     }).populate<{
       createdBy: IUser;
     }>("createdBy", "name");
+    if (res.locals.user.userType !== "tenant-root") {
+      doc.forEach((d) => {
+        // hide personal details
+        d.phoneNo = null;
+        d.email = null;
+        d.password = null;
+        d.dob = null;
+        d.aadhaarNo = null;
+        d.pilotLicenceNo = null;
+        d.city = null;
+        d.country = null;
+        d.expiryDatee = null;
+        d.avatar = null;
+        d.passwordResetToken = null;
+      });
+    }
     if (doc.length) {
       res.json({
         status: true,
@@ -182,6 +200,48 @@ export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
       res.json({
         status: false,
         message: "Users not found",
+      });
+    }
+  }
+};
+
+export const fetchUserOfTenantById = async (
+  req: Request,
+  res: AuthResponse
+) => {
+  {
+    const doc = await User.findOne({
+      _id: req.query.id,
+      tenantId: res.locals.user.tenantId._id,
+      userType: { $ne: "tenant-client" },
+    }).populate<{
+      createdBy: IUser;
+    }>("createdBy", "name");
+    if (doc) {
+      if (!res.locals.user.customPermissions.includes(PERMS.USER_UPDATE)) {
+        // personal details to be viewed only for updating purpose
+        // otherwise hidden
+        doc.phoneNo = null;
+        doc.email = null;
+        doc.password = null;
+        doc.dob = null;
+        doc.aadhaarNo = null;
+        doc.pilotLicenceNo = null;
+        doc.city = null;
+        doc.country = null;
+        doc.expiryDatee = null;
+        doc.avatar = null;
+        doc.passwordResetToken = null;
+      }
+      res.json({
+        status: true,
+        message: "User fetched sucessfully.",
+        data: doc,
+      });
+    } else {
+      res.json({
+        status: false,
+        message: "User not found",
       });
     }
   }

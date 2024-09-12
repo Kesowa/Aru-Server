@@ -1,22 +1,15 @@
 import { Request } from "express";
 import User from "../../models/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { IPermission } from "../../schemas/permission";
+import UserGroup from "../../models/usergroup";
 
 // Create Alert Controlller
 export const getAllPilots = async (req: Request, res: AuthResponse) => {
   {
+    const userGroup = await UserGroup.findOne({ name: "pilot" });
     const users = await User.find({
       tenantId: res.locals.user.tenantId._id,
-      userGroupId: { $exists: true },
-    }).populate<{ userGroupId: { permissions: IPermission[] } }>({
-      path: "userGroupId",
-      select: "permissions",
-      populate: {
-        path: "permissions",
-        select: "isPilot",
-        match: { isPilot: true },
-      },
+      userGroupId: userGroup._id,
     });
     return res.json({
       status: true,

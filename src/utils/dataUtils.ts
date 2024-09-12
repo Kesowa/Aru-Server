@@ -4,7 +4,7 @@ import * as pathUtils from "./pathUtils";
 import path, { extname } from "path";
 import tokml from "tokml";
 import shp2json from "shpjs";
-import { GeoJson } from "./geojsonUtils";
+import { GeoJson, readGeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
 import { Directory } from "../constants";
 import { Readable } from "stream";
@@ -13,6 +13,7 @@ import togeojson from "@mapbox/togeojson";
 import { ObjectId } from "bson";
 import { archive, copyObj, deleteObj, downloadTemp, readToBuffer, readToString, stat, uploadAnything, uploadDir, uploadString } from "./objectStorage";
 import { rm, rmdir } from "fs/promises";
+import Fuse from "fuse.js";
 
 const asyncExec = promisify(exec);
 
@@ -48,9 +49,9 @@ const getFlagColor = (geojson: GeoJson) => {
 export const saveVectorLayer = async (
   layer: pathUtils.DocPath | GeoJson,
   options: {
-    icon: string;
-    color: string;
-    inheritColor: boolean;
+    icon?: string;
+    color?: string;
+    inheritColor?: boolean;
   } = {
     icon: "Marker",
     color: "#666",
@@ -272,3 +273,14 @@ export const permPath = async (dir: Directory, src: string) => {
   await deleteObj(src);
   return fullPath;
 }
+export const saveFeatureSearchIndex = async (layerPath: string) => {
+  const filename = "index_" + path.parse(layerPath).name + ".json";
+  const searchIndexPath = path.dirname(layerPath) + "/" + filename;
+  const geojsonData = await readGeoJson<any>(layerPath);
+  const keys = Object.keys(geojsonData.features[0].properties).map(
+    (key) => `properties.${key}`
+  );
+  const searchIndex = Fuse.createIndex<any>(keys, geojsonData.features);
+  await uploadString(searchIndexPath, JSON.stringify(searchIndex.toJSON()));
+  return pathUtils.docPath(Directory.VECTOR, filename);
+};

@@ -7,26 +7,23 @@ import {
   UserGroupforEdit,
   getUserGroupbyID,
 } from "../../controllers/v1/userGroupController";
-import {
-  isAuthenticated,
-  onlyTenantRootAccess,
-  canListUserGroup,
-} from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isUserGroupCount } from "../../utils/countPermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 const router = express.Router();
 
 //++++++++++++++++++++ Tenant creation Api +++++++++++++++++++++++++++++
 router.post(
   "/tenant-usergroup-create",
   isAuthenticated,
-  onlyTenantRootAccess,
   body("name").notEmpty().trim(),
   body("permissions")
     .notEmpty()
     .isArray({ min: 1 })
     .withMessage("Invalid permissions array"),
   validator,
+  PermissionGuard(PERMS.USER_GROUP_CREATE),
   isUserGroupCount,
   RobustRunner(createUserGroupforTenant)
 );
@@ -37,7 +34,7 @@ router.get(
   isAuthenticated,
   query("sort").optional(), // String of format "<field>:<asce or desc>", like "name:desc"
   validator,
-  canListUserGroup,
+  PermissionGuard(PERMS.USER_GROUP_LIST),
   RobustRunner(listUserGroupforTenant)
 );
 
@@ -47,7 +44,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  canListUserGroup,
+  PermissionGuard(PERMS.USER_GROUP_LIST),
   RobustRunner(getUserGroupbyID)
 );
 
@@ -62,7 +59,7 @@ router.patch(
     .isArray({ min: 1 })
     .withMessage("Invalid permissions array"),
   validator,
-  onlyTenantRootAccess,
+  PermissionGuard(PERMS.USER_GROUP_UPDATE),
   RobustRunner(UserGroupforEdit)
 );
 
@@ -71,7 +68,7 @@ router.delete(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  onlyTenantRootAccess,
+  PermissionGuard(PERMS.USER_GROUP_DELETE),
   RobustRunner(UserGroupDelete)
 );
 

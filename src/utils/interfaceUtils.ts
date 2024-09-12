@@ -1,14 +1,14 @@
 import { Response } from "express";
 import { IUser } from "../schemas/user";
 import { LeanDocument } from "mongoose";
-import { IPermission } from "../schemas/permission";
 import { ITenant } from "../schemas/tenant";
+import { PERMS } from "../schemas/permission";
 
 export type AuthResponse = Response & {
   locals: {
     user: LeanDocument<
       Omit<IUser, "customPermissions" | "tenantId"> & {
-        customPermissions: { permissions: IPermission[] }[];
+        customPermissions: PERMS[];
         tenantId: ITenant;
       }
     >;

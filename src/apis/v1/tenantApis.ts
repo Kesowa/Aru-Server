@@ -15,8 +15,7 @@ import {
   resendVerificationCode,
   tenantpublicmaprefupdate,
 } from "../../controllers/v1/tenantController";
-// import { uploadFile } from "../../controllers/v1/commonController";
-import { isAuthenticated, onlySuperAdminAccess } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { fetchActivePackages } from "../../controllers/v1/packageController";
 import {
   validator,
@@ -24,6 +23,8 @@ import {
   environmentGuard,
 } from "../../utils/requestHelpers";
 import { Mode } from "../../constants";
+import { PERMS } from "../../schemas/permission";
+
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
@@ -38,7 +39,6 @@ const router = express.Router();
 router.post(
   "/create",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("name").notEmpty().trim(),
   body("phoneNo").isString().notEmpty(),
   body("email").notEmpty().isEmail().withMessage("invalid Email."),
@@ -55,6 +55,7 @@ router.post(
   body("billingPin").notEmpty().isPostalCode("IN"),
   body("avatar").optional().notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.TENANT_CREATE),
   RobustRunner(createTenant)
 );
 
@@ -101,13 +102,17 @@ router.post(
   RobustRunner(resendVerificationCode)
 );
 
-router.get("/fetch-active-package-public", RobustRunner(fetchActivePackages));
+router.get(
+  "/fetch-active-package-public",
+  PermissionGuard(PERMS.PACKAGE_LIST),
+  RobustRunner(fetchActivePackages)
+);
 
 //+++++++++++++++++++++++++ fetch all tenants+++++++++++++++++++++++
 router.get(
   "/fetchall",
   isAuthenticated,
-  onlySuperAdminAccess,
+  PermissionGuard(PERMS.TENANT_LIST),
   RobustRunner(fetchAllTenants)
 );
 
@@ -115,17 +120,16 @@ router.get(
 router.post(
   "/add-initial-package",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("tenantId").notEmpty().isMongoId(),
   body("packageId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.TENANT_UPDATE),
   RobustRunner(addInitialPackageByAdmin)
 );
 
 router.patch(
   "/edit-tenant",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("tenantId").notEmpty().isMongoId(),
   body("name").optional().notEmpty().trim(),
   body("phoneNo").optional().isString().notEmpty(),
@@ -143,6 +147,7 @@ router.patch(
   body("billingPin").optional().notEmpty().isPostalCode("IN"),
   body("avatar").optional().notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.TENANT_UPDATE),
   RobustRunner(editTenantForId)
 );
 
@@ -150,38 +155,43 @@ router.patch(
 router.post(
   "/fetch-tenant-details",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("tenantId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.TENANT_LIST),
   RobustRunner(fetchTenantDetails)
 );
 
 router.patch(
   "/add-all-count-to-tenant",
   isAuthenticated,
-  onlySuperAdminAccess,
+  PermissionGuard(PERMS.TENANT_UPDATE),
   RobustRunner(addAllCountToTenant)
 );
 router.post(
   "/add-actualSize-to-tenant",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("tenantId").notEmpty().isMongoId(),
+  PermissionGuard(PERMS.TENANT_UPDATE),
   RobustRunner(addActualSizeToTenant)
 );
 router.delete(
   "/delete-tenant",
   isAuthenticated,
-  onlySuperAdminAccess,
   body("tenantId").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.TENANT_DELETE, PERMS.TENANT_UPDATE),
   RobustRunner(deleteTenantForId)
 );
-router.get("/get-tenant-stats", isAuthenticated, RobustRunner(getTenantStats));
+router.get(
+  "/get-tenant-stats",
+  isAuthenticated,
+  PermissionGuard(PERMS.MISSION_LIST),
+  RobustRunner(getTenantStats)
+);
 router.patch(
   "/updatepublicMapRef",
   isAuthenticated,
-  onlySuperAdminAccess,
+  PermissionGuard(PERMS.TENANT_UPDATE),
   RobustRunner(tenantpublicmaprefupdate)
 );
 

@@ -74,7 +74,8 @@ const commonProps = {
   },
   flights: {
     date: "2023-12-17",
-    geoLocation: "HFFC+G3V, Major Arterial Road (South East Extension), DC Block(Newtown), Action Area I, Newtown, New Town, Koch Pukur, West Bengal 700156, India",
+    geoLocation:
+      "HFFC+G3V, Major Arterial Road (South East Extension), DC Block(Newtown), Action Area I, Newtown, New Town, Koch Pukur, West Bengal 700156, India",
     centerPoints: {
       lng: 88.47035320408446,
       lat: 22.573772651224107,
@@ -84,9 +85,7 @@ const commonProps = {
     time: "04:25:02 PM",
     duration: "2hr",
     geoFence: {
-      polygon: {
-        points: [],
-      },
+      polygon: null,
       circle: {
         radius: 854.8149453079126,
         area: 9180622.733828312,
@@ -99,8 +98,8 @@ const commonProps = {
     client: TENANT_ROOT,
     tenant: TENANT,
     pilotID: FIRST_USER,
-  }
-}
+  },
+};
 
 db.locations.insertOne({
   _id: ObjectId("5f202f03b9225726102721b8"),
@@ -222,7 +221,7 @@ db.tenants.insertOne({
   packageStartDate: ISODate(),
   storageUsed: 0,
   actualAlertCount: 0,
-  actualClientCount: 0,
+  actualClientCount: 10,
   actualLayerCount: 0,
   actualLocationCount: 0,
   actualMissionCount: 0,
@@ -272,17 +271,30 @@ db.users.insertMany([
     createdBy: TENANT_ROOT,
     updatedBy: FIRST_USER,
   },
+  {
+    name: "TestStaff1",
+    email: "staff1@kesowa.com",
+    phoneNo: "9903032573",
+    userType: "tenant-staff",
+    userGroupId: ObjectId("66a1e5ddf317d282f50f9f47"),
+    ...commonProps.users,
+    ...commonProps.all,
+    createdBy: TENANT_ROOT,
+    updatedBy: TENANT_ROOT,
+  },
 ]);
 
-db.users.insertMany("0123456789".split("").map((i) => ({
-  name: `TestClient${i}`,
-  email: `client${i}@kesowa.com`,
-  phoneNo: "9" + Math.random().toString().substring(2, 11),
-  userType: "tenant-client",
-  userGroupId: ObjectId("6116058af270c9142c1588f2"),
-  ...commonProps.users,
-  ...commonProps.all,
-})));
+db.users.insertMany(
+  "0123456789".split("").map((i) => ({
+    name: `TestClient${i}`,
+    email: `client${i}@kesowa.com`,
+    phoneNo: "9" + Math.random().toString().substring(2, 11),
+    userType: "tenant-client",
+    userGroupId: ObjectId("6116058af270c9142c1588f2"),
+    ...commonProps.users,
+    ...commonProps.all,
+  }))
+);
 
 db.packages.insertMany([
   {
@@ -328,28 +340,77 @@ db.packages.insertMany([
 ]);
 
 const missionTypes = [
-  { _id: ObjectId("60cc7d408fb1793e8c76d4a3"), name: "Mapping", description: "Request a drone mapping mission" },
-  { _id: ObjectId("5f4771e3976282570dbfffc8"), name: "Surveillance", description: "Request a live video surveillance from a device" },
-]
+  {
+    _id: ObjectId("60cc7d408fb1793e8c76d4a3"),
+    name: "Mapping",
+    description: "Request a drone mapping mission",
+  },
+  {
+    _id: ObjectId("5f4771e3976282570dbfffc8"),
+    name: "Surveillance",
+    description: "Request a live video surveillance from a device",
+  },
+];
 
-db.missiontypes.insertMany(missionTypes.map(missionType => ({ ...commonProps.all, ...missionType, isActive: true, createdBy: SUPER_ADMIN, updatedBy: SUPER_ADMIN })));
+db.missiontypes.insertMany(
+  missionTypes.map((missionType) => ({
+    ...commonProps.all,
+    ...missionType,
+    isActive: true,
+    createdBy: SUPER_ADMIN,
+    updatedBy: SUPER_ADMIN,
+  }))
+);
 
 const missions = [
   { _id: ObjectId("61f3b1e65f915a05cb8885ec"), name: "Mapping mission sample" },
-  { _id: ObjectId("61fbccecb0f5f70beda4cd11"), name: "Survillance mission sample", status: "Live", missionType: ObjectId("5f4771e3976282570dbfffc8") },
+  {
+    _id: ObjectId("61fbccecb0f5f70beda4cd11"),
+    name: "Survillance mission sample",
+    status: "Live",
+    missionType: ObjectId("5f4771e3976282570dbfffc8"),
+  },
   { _id: ObjectId("657ed3d3b7e5f1af532b9f6e"), name: "PlotReportDemo" },
 ];
 
-db.missions.insertMany(missions.map(mission => ({ ...commonProps.all, ...commonProps.missions, ...mission })));
+db.missions.insertMany(
+  missions.map((mission) => ({
+    ...commonProps.all,
+    ...commonProps.missions,
+    ...mission,
+  }))
+);
 
 const flights = [
-  { _id: ObjectId("5f202f03b9225726102721a2"), name: "Live streaming flight test", mission: ObjectId("61fbccecb0f5f70beda4cd11") },
-  { _id: ObjectId("6267dd4b2a2d394080a20849"), name: "Surveillance mission sample flight", mission: ObjectId("61fbccecb0f5f70beda4cd11") },
-  { _id: ObjectId("6267dd4b2a2d394080a20869"), name: "Mapping mission sample flight", mission: ObjectId("61f3b1e65f915a05cb8885ec") },
-  { _id: ObjectId("657ed3d3b7e5f1af532b9f72"), name: "PlotDemoFlight", mission: ObjectId("657ed3d3b7e5f1af532b9f6e") },
+  {
+    _id: ObjectId("5f202f03b9225726102721a2"),
+    name: "Live streaming flight test",
+    mission: ObjectId("61fbccecb0f5f70beda4cd11"),
+  },
+  {
+    _id: ObjectId("6267dd4b2a2d394080a20849"),
+    name: "Surveillance mission sample flight",
+    mission: ObjectId("61fbccecb0f5f70beda4cd11"),
+  },
+  {
+    _id: ObjectId("6267dd4b2a2d394080a20869"),
+    name: "Mapping mission sample flight",
+    mission: ObjectId("61f3b1e65f915a05cb8885ec"),
+  },
+  {
+    _id: ObjectId("657ed3d3b7e5f1af532b9f72"),
+    name: "PlotDemoFlight",
+    mission: ObjectId("657ed3d3b7e5f1af532b9f6e"),
+  },
 ];
 
-db.flights.insertMany(flights.map(flight => ({ ...commonProps.all, ...commonProps.flights, ...flight })));
+db.flights.insertMany(
+  flights.map((flight) => ({
+    ...commonProps.all,
+    ...commonProps.flights,
+    ...flight,
+  }))
+);
 
 const layers = [
   // "Mapping mission sample" Mission Layers
@@ -520,9 +581,45 @@ const layers = [
     layerpath: "/vector/AA1_GarbageCollection.geojson",
     featureCount: 8,
   },
+  // Public Layers
+  {
+    _id: ObjectId("6693ac2b07bccc06869febb6"),
+    name: "PUBLIC_PLOT",
+    type: "Vector",
+    vector: ObjectId("60c3a13fca0cbe039fce0d4f"),
+    layerpath: "/vector/Public_Plot.geojson",
+    layerdataArr: [],
+    color: "#f8e71c",
+    layers: [],
+    isPublic: true,
+    isBase: false,
+    center: [],
+    fileSize: 4.8562469482421875,
+    captureDate: ISODate("2022-01-15T00:00:00Z"),
+    tenantId: ObjectId("5f204f03b9445726102781a8"),
+    createdBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    updatedBy: ObjectId("608e7b3ae11f711a34fb0476"),
+    flaggedFeatures: [],
+    isFlagged: false,
+    isThreadExist: false,
+    commentCount: 0,
+    createdAt: ISODate("2022-01-15T00:00:00Z"),
+    updatedAt: ISODate("2022-01-15T00:00:00Z"),
+    featureCount: 5211,
+    metadata: {
+      searchIndexPath: "/vector/index_Public_Plot.json",
+    },
+    __v: 0,
+  },
 ];
 
-db.layers.insertMany(layers.map(layer => ({ ...commonProps.all, ...commonProps.layers, ...layer })));
+db.layers.insertMany(
+  layers.map((layer) => ({
+    ...commonProps.all,
+    ...commonProps.layers,
+    ...layer,
+  }))
+);
 
 db.layerfiles.insertMany([
   {
@@ -551,292 +648,49 @@ db.layerfiles.insertMany([
   },
 ]);
 
-const permissions = [
-  ["60c4492da41c37d7856ed478", "mission_create", "Create mission"],
-  ["60c449ffa41c37d7856ed47a", "mission_delete"],
-  ["60c44ac9a41c37d7856ed47c", "data_page", "Data"],
-  ["60c44b50a41c37d7856ed480", "asset_list", "Assets"],
-  ["60c454b5a41c37d7856ed485", "location_update"],
-  ["60c454d1a41c37d7856ed486", "location_delete"],
-  ["60c4558aa41c37d7856ed48a", "manufacturer_delete"],
-  ["60c455a5a41c37d7856ed48b", "manufacturer_list"],
-  ["60c45606a41c37d7856ed490", "vod_create"],
-  ["60c4561aa41c37d7856ed492", "vod_delete"],
-  ["6108f0d75b12f36fa9457bd2", "add_feature"],
-  ["6108f0e75b12f36fa9457bd3", "upload_layer"],
-  ["6108f11b5b12f36fa9457bd7", "download_layer"],
-  ["6108dfefe7147ec0fca69aed", "client_mission_list", "Client Access", true],
-  ["611691117df4e48a31c2adca", "edit_client"],
-  ["611691677df4e48a31c2adcd", "client_data", "Client Data"],
-  ["612a2d6bc7771209e4f0ea7c", "user_create", "Create User"],
-  ["620bbc5db65c7f3820f4e44f", "canUpdateBaseLayer"],
-  ["620bbc79b65c7f3820f4e452", "canUploadToBaseLayer"],
-  ["60c44a54a41c37d7856ed47b", "mission_list", "Missions"],
-  ["60c44af7a41c37d7856ed47d", "asset_create"],
-  ["60c45543a41c37d7856ed487", "location_list"],
-  ["60c4556da41c37d7856ed488", "manufacturer_create"],
-  ["60c455dfa41c37d7856ed48e", "model_delete"],
-  ["60c45610a41c37d7856ed491", "vod_update"],
-  ["60c45658a41c37d7856ed496", "alert_delete"],
-  ["60c4566aa41c37d7856ed497", "alert_list"],
-  ["60c44964a41c37d7856ed479", "mission_update"],
-  ["60c455c5a41c37d7856ed48c", "model_create"],
-  ["60c455d3a41c37d7856ed48d", "model_update"],
-  ["60c455eca41c37d7856ed48f", "model_list"],
-  ["60c4562fa41c37d7856ed493", "vod_list"],
-  ["60c45643a41c37d7856ed494", "alert_create"],
-  ["60c4564da41c37d7856ed495", "alert_update"],
-  ["6108f0b85b12f36fa9457bcf", "set_cover_photo"],
-  ["6108f1065b12f36fa9457bd5", "edit_layer"],
-  ["6108f10f5b12f36fa9457bd6", "save_drawings"],
-  ["6108f1335b12f36fa9457bd8", "upload_document"],
-  ["6116911d7df4e48a31c2adcb", "delete_client"],
-  ["6116913f7df4e48a31c2adcc", "client_list", "Client List"],
-  ["620bbc70b65c7f3820f4e451", "canEditBaseLayer"],
-  ["60c44b03a41c37d7856ed47e", "asset_update"],
-  ["60c44b10a41c37d7856ed47f", "asset_delete"],
-  ["60c4520ca41c37d7856ed482", "asset_class_list"],
-  ["60c45489a41c37d7856ed483", "user_list", "User list"],
-  ["60c454a9a41c37d7856ed484", "location_create"],
-  ["60c4557ea41c37d7856ed489", "manufacturer_update"],
-  ["60c45905a41c37d7856ed498", "dashboard", "Dashboard"],
-  ["6108f0945b12f36fa9457bcd", "Feature_File_upload"],
-  ["6108f0aa5b12f36fa9457bce", "Feature_File_Delete"],
-  ["6108f0c25b12f36fa9457bd0", "edit_feature"],
-  ["6108f0cb5b12f36fa9457bd1", "delete_feature"],
-  ["6108f0f15b12f36fa9457bd4", "delete_layer"],
-  ["6108f1435b12f36fa9457bd9", "delete_document"],
-  ["611691057df4e48a31c2adc9", "create_client", "Create Client"],
-  ["620bbbc6b65c7f3820f4e44e", "canCreateBaseLayer"],
-  ["620bbc67b65c7f3820f4e450", "canDeleteBaseLayer"],
-  ["620bbc67b65c7f3820f4e455", "flight_log_list"],
-  ["620bbc67b65c7f3820f4e459", "webrtc_view"],
-];
-db.permissions.insertMany(
-  permissions.map(([id, perm, name, isClient]) => ({
-    _id: ObjectId(id),
-    isFrontendRoute: true,
-    isSideNavOption: true,
-    isVisibleToTenant: true,
-    isVisibleToSuperAdmin: false,
-    isActive: true,
-    name: perm,
-    frontendRoute: "/dashboard/tenant/user/create",
-    sideNavOptionIcon: "PlusCircleOutlined",
-    sideNavOptionLabel: name,
-    isClient: false || isClient,
-    isPilot: false,
-    ...commonProps.all,
-    createdBy: SUPER_ADMIN,
-    updatedBy: SUPER_ADMIN,
-  }))
-);
-db.permissions.insertMany([
-  {
-    _id: ObjectId("6034c12d31621054e4c01de6"),
-    isFrontendRoute: false,
-    isSideNavOption: false,
-    isPilot: true,
-    isVisibleToTenant: true,
-    isVisibleToSuperAdmin: true,
-    isActive: true,
-    name: "pilot",
-    isClient: false,
-    ...commonProps.all,
-    createdBy: SUPER_ADMIN,
-    updatedBy: SUPER_ADMIN,
-  },
-  {
-    _id: ObjectId("6034c12d31621054e4c04de6"),
-    isFrontendRoute: false,
-    isSideNavOption: false,
-    isPilot: false,
-    isVisibleToTenant: true,
-    isVisibleToSuperAdmin: true,
-    isActive: true,
-    name: "client",
-    isClient: true,
-    ...commonProps.all,
-    createdBy: SUPER_ADMIN,
-    updatedBy: SUPER_ADMIN,
-  },
-]);
-
 const usergroups = [
-  {
-    _id: ObjectId("5f2bdbf20a76045a548f4fbd"),
-    permissions: [ObjectId("5f2a1e627ebba113211507e2")],
-    name: "admin-h",
-  },
   {
     _id: ObjectId("6034c331a2f9c7554b1d42e0"),
     permissions: [
-      ObjectId("5f2980678927644fbb2f0a83"),
-      ObjectId("5f29818d8927644fbb2f0a84"),
-      ObjectId("5f2a1e977ebba113211507e3"),
-      ObjectId("603e0cab7bb21f084d5ccdbe"),
-      ObjectId("60964b1c18f9b0052d740e41"),
-      ObjectId("60b39b809162e0d4ba8eab97"),
-      ObjectId("61018b021a05d934800a2c85"),
-      ObjectId("6101951d3635b60cf4aa036c"),
-      ObjectId("610195563635b60cf4aa036d"),
-      ObjectId("610195713635b60cf4aa036e"),
-      ObjectId("6101957e3635b60cf4aa036f"),
-      ObjectId("6101958b3635b60cf4aa0370"),
-      ObjectId("610195983635b60cf4aa0371"),
-      ObjectId("610195a33635b60cf4aa0372"),
-      ObjectId("610195af3635b60cf4aa0373"),
-      ObjectId("610195ba3635b60cf4aa0374"),
-      ObjectId("61079e0ed043b0084b46dcca"),
-      ObjectId("610815e74356400c5e9ffba3"),
-      ObjectId("6108160b7dc6580c7ea312d8"),
-      ObjectId("6114e95337335d5893c55774"),
-      ObjectId("6114e9ad37335d5893c55775"),
-      ObjectId("6114e9bc37335d5893c55776"),
-      ObjectId("6114eaae37335d5893c55778"),
-      ObjectId("6114ed0137335d5893c55779"),
-      ObjectId("6034c12d31621054e4c01de6"),
-      ObjectId("60c4492da41c37d7856ed478"),
+      "mission_create", // usergroup specific
+      "mission_type_list",
+      "location_list", // related necessary permissions
+      "user_list",
+      "mission_list", // common for all tenant-staff
+      "client_list",
+      "layer_list",
     ],
     name: "pilot",
   },
   {
-    _id: ObjectId("60363a694aa2b002a340a9fa"),
+    _id: ObjectId("66a1e5ddf317d282f50f9f47"),
     permissions: [
-      ObjectId("5f2980678927644fbb2f0a83"),
-      ObjectId("5f2a1e977ebba113211507e3"),
-      ObjectId("6034c12d31621054e4c01de6"),
+      "create_client",
+      "client_list",
+      "edit_client",
+      "delete_client", // usergroup specific
+      "user_group_list",
+      "client_data",
+      "user_list",
+      "mission_list", // common for all tenant-staff
     ],
-    name: "UserRights",
-  },
-  {
-    _id: ObjectId("603e0cd87bb21f084d5ccdbf"),
-    permissions: [ObjectId("603e0cab7bb21f084d5ccdbe")],
-    name: "Mission viewer",
-  },
-  {
-    _id: ObjectId("60964bc818f9b0052d740e42"),
-    permissions: [ObjectId("60964b1c18f9b0052d740e41")],
-    name: "normal operations",
-  },
-  {
-    _id: ObjectId("60b081cff9f6d5cb19ca46be"),
-    permissions: [
-      ObjectId("5f2980678927644fbb2f0a83"),
-      ObjectId("5f29818d8927644fbb2f0a84"),
-      ObjectId("5f2a1e627ebba113211507e2"),
-      ObjectId("5f2a1e977ebba113211507e3"),
-      ObjectId("5f2a5df37a56312a6d7afe9f"),
-      ObjectId("5f2a9ff69f5a132de7cf2b54"),
-      ObjectId("6034c12d31621054e4c01de6"),
-      ObjectId("603e0cab7bb21f084d5ccdbe"),
-      ObjectId("60964b1c18f9b0052d740e41"),
-    ],
-    name: "xyz",
-  },
-  {
-    _id: ObjectId("60363a694aa2b002a340a9fd"),
-    permissions: [
-      ObjectId("5f2980678927644fbb2f0a83"),
-      ObjectId("5f2a1e977ebba113211507e3"),
-      ObjectId("6034c12d31621054e4c01de6"),
-    ],
-    name: "UserRights",
-  },
-  {
-    _id: ObjectId("603e0cd87bb21f084d5ccdbe"),
-    permissions: [ObjectId("603e0cab7bb21f084d5ccdbe")],
-    name: "Mission viewer",
-  },
-  {
-    _id: ObjectId("60964bc818f9b0052d740e12"),
-    permissions: [ObjectId("60964b1c18f9b0052d740e41")],
-    name: "normal operations",
-  },
-  {
-    _id: ObjectId("60b089fd05d08908ff06c441"),
-    permissions: [
-      ObjectId("603e0cab7bb21f084d5ccdbe"),
-      ObjectId("60964b1c18f9b0052d740e41"),
-    ],
-    name: "onlyMission",
-  },
-  {
-    _id: ObjectId("60b3997593f359ac27014d2c"),
-    permissions: [
-      ObjectId("60b3a11919574b1f8c0646f0"),
-      ObjectId("60b3a394eb18114ec6cf018a"),
-    ],
-    name: "onlyDataPage",
-  },
-  {
-    _id: ObjectId("61079b1e59f78c05a529e316"),
-    permissions: [
-      ObjectId("603e0cab7bb21f084d5ccdbe"),
-      ObjectId("6101958b3635b60cf4aa0370"),
-    ],
-    name: "Upload perm",
-  },
-  {
-    _id: ObjectId("61079b2b59f78c05a529e317"),
-    permissions: [ObjectId("603e0cab7bb21f084d5ccdbe")],
-    name: "Basic Perm",
-  },
-  {
-    _id: ObjectId("6107d24dd043b0084b46dccb"),
-    permissions: [
-      ObjectId("603e0cab7bb21f084d5ccdbe"),
-      ObjectId("60964b1c18f9b0052d740e41"),
-    ],
-    name: "Mission Manager",
-  },
-  {
-    _id: ObjectId("6108e040e7147ec0fca69aee"),
-    permissions: [ObjectId("625527d4aaeef08930297f85")],
-    name: "Client test group",
-  },
-  {
-    _id: ObjectId("6114ee8f4eca7b5b7d79a33d"),
-    permissions: [
-      ObjectId("6114eaae37335d5893c55778"),
-      ObjectId("6114ed0137335d5893c55779"),
-    ],
-    name: "CM Read only",
-  },
-  {
-    _id: ObjectId("611536f7ad1e4c5f0523fe18"),
-    permissions: [
-      ObjectId("6114e95337335d5893c55774"),
-      ObjectId("6114e9ad37335d5893c55775"),
-      ObjectId("6114e9bc37335d5893c55776"),
-      ObjectId("6114eaae37335d5893c55778"),
-      ObjectId("6114ed0137335d5893c55779"),
-    ],
-    name: "CM crud",
+    isActive: true,
+    name: "Client Management",
   },
   {
     _id: ObjectId("6116058af270c9142c1588f2"),
-    permissions: [ObjectId("6108dfefe7147ec0fca69aed")],
+    permissions: ["client_list", "mission_list"], // common for all tenant-client
+    isActive: true,
     name: "Client Access",
   },
-  {
-    _id: ObjectId("6119277db16d934d78871dd1"),
-    permissions: [
-      ObjectId("603e0cab7bb21f084d5ccdbe"),
-      ObjectId("5f2a1e977ebba113211507e3"),
-      ObjectId("5f2a5df37a56312a6d7afe9f"),
-      ObjectId("5f2a9ff69f5a132de7cf2b54"),
-    ],
-    name: "new usergroup",
-  },
-  {
-    _id: ObjectId("625f9d3fea21320d4fe61f0e"),
-    permissions: [
-      ObjectId("6034c12d31621054e4c01de6"),
-      ObjectId("603e0cab7bb21f084d5ccdbe"),
-    ],
-    name: "pilot/analyst",
-  },
-]
+];
 
-db.usergroups.insertMany(usergroups.map(usergroup => ({ ...commonProps.all, ...commonProps.usergroups, ...usergroup, createdBy: TENANT_ROOT, updatedBy: TENANT_ROOT })));
+db.usergroups.insertMany(
+  usergroups.map((usergroup) => ({
+    ...commonProps.all,
+    ...commonProps.usergroups,
+    ...usergroup,
+    createdBy: TENANT_ROOT,
+    updatedBy: TENANT_ROOT,
+  }))
+);

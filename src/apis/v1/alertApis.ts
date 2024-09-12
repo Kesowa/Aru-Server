@@ -9,10 +9,10 @@ import {
   fetchNumberofAlertsByLocationId,
   fetchAlertsUsePaginationByMissionID,
   fetchAllAlertsByMissionMapref,
-  testApiinject,
+  // testApiinject,
   fetchAllAlertByLocationIdAndTime,
   fetchAllAlertByLocationId,
-  convertImageToThumbnail,
+  // convertImageToThumbnail,
   fetchAlertsUsePaginationByLocationId,
   fetchAllAlertByTenantId,
   deleteMultipleAlerts,
@@ -22,19 +22,12 @@ import {
   updateMultiAlert,
 } from "../../controllers/v1/alertController";
 
-import { canCreateAlert, isAuthenticated } from "../../utils/authUtils";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isAlertCount } from "../../utils/countPermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { PERMS } from "../../schemas/permission";
 const router = express.Router();
 
-//++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-// router.post(
-//   "/upload-alert-image",
-//   isAuthenticated,
-//   canCreateAlert,
-//   body("image").notEmpty().isMongoId(),
-//   RobustRunner(uploadFile)
-// );
 
 //++++++++++++++++++++ create alert++++++++++++++++++++++++++++++++++
 router.post(
@@ -53,7 +46,7 @@ router.post(
   body("pcount").notEmpty().isNumeric(),
   body("type").notEmpty().isString(),
   validator,
-  canCreateAlert,
+  PermissionGuard(PERMS.ALERT_CREATE),
   isAlertCount,
   RobustRunner(createAlert)
 );
@@ -71,7 +64,7 @@ router.post(
   body("pcount").notEmpty().isNumeric(),
   body("type").notEmpty().isString(),
   validator,
-  canCreateAlert,
+  PermissionGuard(PERMS.ALERT_CREATE),
   RobustRunner(manualUploadAlert)
 );
 //+++++++++++++++++++ fetch all alert for a mission +++++++++++++++++++++++++
@@ -84,6 +77,7 @@ router.get(
     check("locationID").notEmpty().isMongoId(),
   ]),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertByFlightorLocationId)
 );
 router.get(
@@ -91,6 +85,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertByAlertId)
 );
 router.get(
@@ -98,6 +93,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertByLocationId)
 );
 
@@ -107,6 +103,7 @@ router.get(
   query("locationID").notEmpty().isMongoId(),
   query("time").notEmpty().isString(),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertByLocationIdAndTime)
 );
 
@@ -115,6 +112,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchNumberofAlertsByLocationId)
 );
 
@@ -133,6 +131,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   query("isFlagged").optional().isBoolean().toBoolean(),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAlertsUsePaginationByMissionID)
 );
 
@@ -149,6 +148,7 @@ router.get(
       /(createdAt|updatedAt|location|locationName|pcount|fileSize|type):(desc|asc)/
     ),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAlertsUsePaginationByLocationId)
 );
 
@@ -157,15 +157,16 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertsByMissionMapref)
 );
-router.patch(
-  "/test-alert-inject",
-  isAuthenticated,
-  body("tenantId").notEmpty().isMongoId(),
-  validator,
-  RobustRunner(testApiinject)
-);
+// router.patch(
+//   "/test-alert-inject",
+//   isAuthenticated,
+//   body("tenantId").notEmpty().isMongoId(),
+//   validator,
+//   RobustRunner(testApiinject)
+// );
 router.get(
   "/get-alerts-by-tenantid",
   isAuthenticated,
@@ -174,6 +175,7 @@ router.get(
     .optional()
     .matches(/[0-9]+\s[a-zA-Z]+/), // ex: "2 days"
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertByTenantId)
 );
 router.get(
@@ -191,18 +193,20 @@ router.get(
   query("page").isNumeric().toInt(),
   query("limit").isNumeric().toInt(),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(advancedAlertResultByTenantId)
 );
-router.get(
-  "/convert-all-image-to-thumbnail",
-  isAuthenticated,
-  RobustRunner(convertImageToThumbnail)
-);
+// router.get(
+//   "/convert-all-image-to-thumbnail",
+//   isAuthenticated,
+//   RobustRunner(convertImageToThumbnail)
+// );
 router.delete(
   "/delete-multiple-alerts",
   isAuthenticated,
   body("id").notEmpty().isArray({ min: 1 }),
   validator,
+  PermissionGuard(PERMS.ALERT_LIST, PERMS.ALERT_DELETE),
   RobustRunner(deleteMultipleAlerts)
 );
 
@@ -211,6 +215,7 @@ router.patch(
   isAuthenticated,
   body("id").notEmpty().isMongoId(),
   body("update").notEmpty().isObject(),
+  PermissionGuard(PERMS.ALERT_UPDATE),
   validator,
   RobustRunner(updateAlert)
 );
@@ -219,6 +224,7 @@ router.patch(
   isAuthenticated,
   body("Id").notEmpty().isArray({ min: 1 }),
   body("update").notEmpty().isObject(),
+  PermissionGuard(PERMS.ALERT_LIST, PERMS.ALERT_UPDATE),
   validator,
   RobustRunner(updateMultiAlert)
 );
