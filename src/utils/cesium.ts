@@ -11,26 +11,32 @@ export async function ZipToTiles3D(zipDoc: string) {
   const name = path.parse(zipDoc).name;
   const docDir = pathUtils.docPath(pathUtils.Directory.CESIUM_3D, name);
   const customSource = {
-    stream: function(offset: number, length: number) {
+    stream: function (offset: number, length: number) {
       const pass = new PassThrough();
-      minioClient.getPartialObject(
-        S3_BUCKET_NAME,
-        pathUtils.keyPath(zipDoc),
-        offset,
-        length
-      )
-        .then(stream => stream.pipe(pass))
-        .catch(err => pass.destroy(err));
+      minioClient
+        .getPartialObject(
+          S3_BUCKET_NAME,
+          pathUtils.keyPath(zipDoc),
+          offset,
+          length
+        )
+        .then((stream) => stream.pipe(pass))
+        .catch((err) => pass.destroy(err));
       return pass;
     },
-    size: async function() {
-      const objMetadata = await minioClient.statObject(S3_BUCKET_NAME, pathUtils.keyPath(zipDoc));
+    size: async function () {
+      const objMetadata = await minioClient.statObject(
+        S3_BUCKET_NAME,
+        pathUtils.keyPath(zipDoc)
+      );
       return objMetadata.size;
-    }
+    },
   };
 
   // @ts-ignore
-  const directory = await unzipper.Open.custom(customSource) as unzipper.CentralDirectory;
+  const directory = (await unzipper.Open.custom(
+    customSource
+  )) as unzipper.CentralDirectory;
   if (
     directory.files.findIndex(
       (entry) => entry.type == "File" && entry.path == "tileset.json"
@@ -41,16 +47,15 @@ export async function ZipToTiles3D(zipDoc: string) {
   }
   for (let i = 0; i < directory.files.length; i += 10) {
     await Promise.allSettled(
-      directory.files.slice(i, i + 10)
-        .filter(file => file.type == "File")
-        .map(
-          async (file) => {
-            await uploadAnything(
-              path.join(docDir, file.path),
-              await file.buffer()
-            );
-          }
-        )
+      directory.files
+        .slice(i, i + 10)
+        .filter((file) => file.type == "File")
+        .map(async (file) => {
+          await uploadAnything(
+            path.join(docDir, file.path),
+            await file.buffer()
+          );
+        })
     );
   }
   return path.join(docDir, "tileset.json");
@@ -62,11 +67,9 @@ export async function delete3DTiles(tilesetJson: string) {
   const decomposePath = path.parse(tilesetJson);
   const docDir = decomposePath.dir;
   const filename = decomposePath.base;
-  if (
-    filename == "tileset.json" 
-  ) {
+  if (filename == "tileset.json") {
     // delete the directory containing 3D tiles
-    return await deletePublicFolderUsingPath(docDir)
+    return await deletePublicFolderUsingPath(docDir);
   }
   return false;
 }

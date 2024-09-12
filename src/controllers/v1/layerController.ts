@@ -41,11 +41,19 @@ import {
 } from "../../constants";
 import { type HydratedDocument, Types } from "mongoose";
 import type { ILayerFile } from "../../schemas/layerFiles";
-import { checkFileExists, } from "../../utils/fileUtils";
+import { checkFileExists } from "../../utils/fileUtils";
 import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
-import { createArchive, permPath, saveAsKML, saveFeatureSearchIndex, saveFile, saveGeojson, saveVectorLayer } from "../../utils/dataUtils";
+import {
+  createArchive,
+  permPath,
+  saveAsKML,
+  saveFeatureSearchIndex,
+  saveFile,
+  saveGeojson,
+  saveVectorLayer,
+} from "../../utils/dataUtils";
 import { LazToTiles3D } from "../../utils/pointcloud";
 import { ZipToTiles3D, delete3DTiles } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
@@ -69,14 +77,11 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let featureCount = 0;
       let flagColor = "";
       try {
-        const vectorLayer = await saveVectorLayer(
-          fileDoc.metadata.objectkey,
-          {
-            icon: req.body.icon,
-            color: req.body.color,
-            inheritColor: req.body.inHeritOriginalColorFromFile,
-          }
-        );
+        const vectorLayer = await saveVectorLayer(fileDoc.metadata.objectkey, {
+          icon: req.body.icon,
+          color: req.body.color,
+          inheritColor: req.body.inHeritOriginalColorFromFile,
+        });
 
         if (vectorLayer == undefined) {
           res.status(400).json({
@@ -170,7 +175,10 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         // Extract zip, locate tileset, move to correct location
         metadata = await ZipToTiles3D(fileDoc.metadata.objectkey);
       }
-      const fullPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
+      const fullPath = await permPath(
+        Directory.RASTER,
+        fileDoc.metadata.objectkey
+      );
       layer = new Layer({
         name,
         type: "Raster",
@@ -456,15 +464,22 @@ export const addFeature = async (req: Request, res: AuthResponse) => {
               { color: "multiColor" }
             );
           }
-          const updatedLayer = await Layer.findOneAndUpdate({
-            _id: req.body.id,
-            tenantId: res.locals.user.tenantId._id,
-          }, {
-            color: data.color != req.body.feature.properties.color ? "multicolor" : undefined,
-            layerpath: newPath,
-          }, {
-            new: true
-          });
+          const updatedLayer = await Layer.findOneAndUpdate(
+            {
+              _id: req.body.id,
+              tenantId: res.locals.user.tenantId._id,
+            },
+            {
+              color:
+                data.color != req.body.feature.properties.color
+                  ? "multicolor"
+                  : undefined,
+              layerpath: newPath,
+            },
+            {
+              new: true,
+            }
+          );
           await deletePublicFileUsingPath(docpath);
           return res.status(200).json({
             status: true,
@@ -519,9 +534,13 @@ export const editGeoJson = async (
             const savedDoc = await Layer.findByIdAndUpdate(
               { _id: req.body.id },
               {
-                color: data.color != req.body.feature[i].properties.color ? "multicolor" : undefined,
+                color:
+                  data.color != req.body.feature[i].properties.color
+                    ? "multicolor"
+                    : undefined,
                 layerpath: newPath,
-              }, { new: true, }
+              },
+              { new: true }
             );
             await deletePublicFileUsingPath(docpath);
             return res.status(200).json({
@@ -598,7 +617,8 @@ export const deleteGeoJson = async (
       const newPath = await deleteGeoJsonFeature(docpath, req.body, geojson);
       const savedDoc = await Layer.findByIdAndUpdate(
         { _id: req.body.id },
-        { layerpath: newPath, }, { new: true, }
+        { layerpath: newPath },
+        { new: true }
       );
       await deletePublicFileUsingPath(docpath);
       if (data.isPublic) {
@@ -635,7 +655,10 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
     if (!(req.body.type == "image/jpeg" || req.body.type == "image/png")) {
       throw new Error("invalid file format");
     }
-    const fullPath = await permPath(Directory.GEOJSON_IMAGES, fileDoc.metadata.objectkey);
+    const fullPath = await permPath(
+      Directory.GEOJSON_IMAGES,
+      fileDoc.metadata.objectkey
+    );
     const thumbs = await saveThumbnails(fullPath);
     const featureFile = new layerFiles({
       name: fileDoc.metadata.originalName,
@@ -1330,8 +1353,9 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${ar.length - 1
-              } and data index should start from 0`,
+            message: `Your data must be less than equal to ${
+              ar.length - 1
+            } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -1408,7 +1432,11 @@ export const getFeatureCsvByLayerIdx = async (
       }
       const csv = new ObjectsToCsv(clone);
       const csvData = await csv.toString();
-      const { filepath } = await saveFile(Directory.TEMP, randomUUID() + ".csv", csvData);
+      const { filepath } = await saveFile(
+        Directory.TEMP,
+        randomUUID() + ".csv",
+        csvData
+      );
       res.json({
         status: true,
         message: "csv file created successfully!",
@@ -1430,7 +1458,10 @@ export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
       // status: "started",
     });
     const layerId = req.body.layerId;
-    const fullPath = await permPath(Directory.GEOJSON_IMAGES, fileDoc.metadata.objectkey);
+    const fullPath = await permPath(
+      Directory.GEOJSON_IMAGES,
+      fileDoc.metadata.objectkey
+    );
     let size = fileDoc.metadata.filesize;
     if (
       fileDoc.metadata.mimetype == "image/jpeg" ||
@@ -1686,7 +1717,9 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         let closestPoint: NearestPoint;
         // catch bad image
         try {
-          const { latitude, longitude } = await exifr.gps(await readToBuffer(fileDocs[j].metadata.objectkey));
+          const { latitude, longitude } = await exifr.gps(
+            await readToBuffer(fileDocs[j].metadata.objectkey)
+          );
           if (latitude == null || longitude == null) {
             throw new Error("invalid coordinates!");
           }
@@ -1714,7 +1747,10 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           lng: String(closestPoint.geometry.coordinates[0]),
           lat: String(closestPoint.geometry.coordinates[1]),
         };
-        const fullPath = await permPath(Directory.GEOJSON_IMAGES, fileDocs[j].metadata.objectkey);
+        const fullPath = await permPath(
+          Directory.GEOJSON_IMAGES,
+          fileDocs[j].metadata.objectkey
+        );
         let size = fileDocs[j].metadata.filesize;
         if (
           fileDocs[j].metadata.mimetype == "image/jpeg" ||
@@ -1770,7 +1806,10 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           lng: centroid.geometry.coordinates[0],
           lat: centroid.geometry.coordinates[1],
         };
-        const fullPath = await permPath(Directory.GEOJSON_IMAGES, uploadFile.metadata.objectkey);
+        const fullPath = await permPath(
+          Directory.GEOJSON_IMAGES,
+          uploadFile.metadata.objectkey
+        );
         let size = uploadFile.metadata.filesize;
         if (
           uploadFile.metadata.mimetype == "image/jpeg" ||
@@ -1975,8 +2014,10 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       });
       missionSpecificSocket.to(missionId).emit("LAYER_ZIP_START");
       try {
-        const archive = await createArchive(d.map(layer => layer.layerpath));
-        missionSpecificSocket.to(missionId).emit("LAYER_ZIP_COMPLETED", archive);
+        const archive = await createArchive(d.map((layer) => layer.layerpath));
+        missionSpecificSocket
+          .to(missionId)
+          .emit("LAYER_ZIP_COMPLETED", archive);
       } catch (error) {
         req.log.error(error);
         missionSpecificSocket.to(missionId).emit("LAYER_ZIP_FAILED");
@@ -2074,8 +2115,8 @@ export const deleteMultipleLayersFiles = async (
   {
     const layerFileDocs = await layerFiles.find({
       tenantId: res.locals.user.tenantId._id,
-      _id: { $in: req.body.layerFileIds }
-    })
+      _id: { $in: req.body.layerFileIds },
+    });
     for (let i = 0; i < layerFileDocs.length; i++) {
       const layerFileData = layerFileDocs[i];
       if (layerFileData) {
@@ -2111,24 +2152,27 @@ export const picktoMapUseForLayerCreate = async (
     });
     return;
   }
-  const features: Feature<Point, {
-    id: string
-    filename: string
-    color: string
-    icon: string
-    lat: string
-    long: string
-    date: string
-    time: string
-    sys_id: string
-  }>[] = [];
+  const features: Feature<
+    Point,
+    {
+      id: string;
+      filename: string;
+      color: string;
+      icon: string;
+      lat: string;
+      long: string;
+      date: string;
+      time: string;
+      sys_id: string;
+    }
+  >[] = [];
   const allImageData: {
-    originalname: string
-    sys_id: string
-    mimetype: string
-    path: string
-    coordinates: turf.Position
-    size: number
+    originalname: string;
+    sys_id: string;
+    mimetype: string;
+    path: string;
+    coordinates: turf.Position;
+    size: number;
   }[] = [];
   const badImages: any = [];
   const today = new Date();
@@ -2138,11 +2182,7 @@ export const picktoMapUseForLayerCreate = async (
     const ff: any = await exifr.parse(buff);
     if (ff) {
       const time: any =
-        today.getHours() +
-        ":" +
-        today.getMinutes() +
-        ":" +
-        today.getSeconds();
+        today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
       const date: any =
         today.getFullYear() +
         "-" +
@@ -2151,7 +2191,7 @@ export const picktoMapUseForLayerCreate = async (
         today.getDate();
       const long: number = ff.longitude ? ff.longitude : 0;
       const lat: number = ff.latitude ? ff.latitude : 0;
-      let sys_id = (new ObjectId).toString();
+      let sys_id = new ObjectId().toString();
 
       // check if image location already exists
       const imagePoint = turf.point([long, lat]);
@@ -2183,7 +2223,7 @@ export const picktoMapUseForLayerCreate = async (
         type: "Feature",
         geometry: {
           type: "Point",
-          coordinates: [long, lat]
+          coordinates: [long, lat],
         },
         properties: {
           id: String(i + 1),
@@ -2195,7 +2235,7 @@ export const picktoMapUseForLayerCreate = async (
           date: String(date),
           time: String(time),
           sys_id: sys_id,
-        }
+        },
       });
     } else {
       await deletePublicFileUsingPath(fileDocs[i].metadata.objectkey);
@@ -2216,7 +2256,9 @@ export const picktoMapUseForLayerCreate = async (
       .populate<{ activePackage: IPackage }>("activePackage")
       .lean();
 
-    const ress = docCount.activePackage.storage - Number(docCount.actualSize) > result.size;
+    const ress =
+      docCount.activePackage.storage - Number(docCount.actualSize) >
+      result.size;
     if (ress !== true) {
       for (let i = 0; i < allImageData.length; i++) {
         await deletePublicFileUsingPath(allImageData[i].path);
@@ -2260,7 +2302,10 @@ export const picktoMapUseForLayerCreate = async (
           lng: allImageData[i].coordinates[0],
           lat: allImageData[i].coordinates[1],
         };
-        const filePath = await permPath(Directory.GEOJSON_IMAGES, allImageData[i].path);
+        const filePath = await permPath(
+          Directory.GEOJSON_IMAGES,
+          allImageData[i].path
+        );
         const featureFile = new layerFiles({
           name: allImageData[i].originalname,
           layerId: savedDoc1._id,
@@ -2492,8 +2537,9 @@ export const flagFeature = async (
   if (layerToUpdate != null) {
     res.status(200).json({
       status: true,
-      message: `feature ${req.body.flag ? "flagged" : "unflagged"
-        } successfully`,
+      message: `feature ${
+        req.body.flag ? "flagged" : "unflagged"
+      } successfully`,
     });
   } else {
     res.status(501).json({

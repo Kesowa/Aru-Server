@@ -1,6 +1,9 @@
 import express from "express";
 import { body } from "express-validator";
-import { checkIfEmailIdIsAvailable, createUploadUrl } from "../../controllers/v1/commonController";
+import {
+  checkIfEmailIdIsAvailable,
+  createUploadUrl,
+} from "../../controllers/v1/commonController";
 import { isAuthenticated } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
 
@@ -15,7 +18,6 @@ router.post(
   RobustRunner(checkIfEmailIdIsAvailable)
 );
 
-
 router.post(
   "/upload-url",
   isAuthenticated,
@@ -24,7 +26,7 @@ router.post(
   body("type").isMimeType(),
   body("model").isString(),
   validator,
-  RobustRunner(createUploadUrl),
-)
+  RobustRunner(createUploadUrl)
+);
 
 export default router;

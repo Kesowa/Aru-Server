@@ -2,7 +2,10 @@ import { Directory } from "../constants";
 import { deleteDir, deleteObj } from "./objectStorage";
 import { docPath } from "./pathUtils";
 
-export const deleteDirFileUsingName = async (dir: Directory, objectkey: string) => {
+export const deleteDirFileUsingName = async (
+  dir: Directory,
+  objectkey: string
+) => {
   await deleteObj(docPath(dir, objectkey));
 };
 
@@ -17,7 +20,6 @@ export const deletePublicFolderUsingPath = async (folderName: string) => {
     folderName in Object.values(Directory)
   )
     return false;
-    await deleteDir(folderName);
-    return true;
+  await deleteDir(folderName);
+  return true;
 };
-

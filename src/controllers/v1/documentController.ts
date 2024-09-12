@@ -11,10 +11,7 @@ import {
   deletePublicFolderUsingPath,
 } from "../../utils/fileDeleteUtils";
 import { Directory, DirPath } from "../../constants";
-import {
-  checkFileExists,
-  getFileSize,
-} from "../../utils/fileUtils";
+import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
 import { createArchive, permPath, savePointcloud } from "../../utils/dataUtils";
 import UploadTask from "../../models/uploadTask";
@@ -30,7 +27,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
     if (!fileDoc) {
       res.status(404).json({
         status: false,
-        message: "no file in request"
+        message: "no file in request",
       });
       return;
     }
@@ -74,7 +71,10 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       }
     } else {
       const missionId = req.body.missionId;
-      const fullPath = await permPath(Directory.DOCUMENTS, fileDoc.metadata.objectkey);
+      const fullPath = await permPath(
+        Directory.DOCUMENTS,
+        fileDoc.metadata.objectkey
+      );
 
       const doc = new Document({
         name: fileDoc.metadata.originalName,
@@ -91,7 +91,8 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       if (
         (req.body.folderName == "rawPhotos" ||
           req.body.folderName == "photos") &&
-        (fileDoc.metadata.mimetype == "image/jpeg" || fileDoc.metadata.mimetype == "image/png")
+        (fileDoc.metadata.mimetype == "image/jpeg" ||
+          fileDoc.metadata.mimetype == "image/png")
       ) {
         req.log.debug("Uploading Thumbnails");
         const thumbs = await saveThumbnails(doc.filePath);
@@ -354,7 +355,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const archive = await createArchive(d.map(layer => layer.filePath));
+        const archive = await createArchive(d.map((layer) => layer.filePath));
         try {
           missionSpecificSocket
             .to(missionId)

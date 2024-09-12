@@ -134,9 +134,7 @@ export const MODE = new EnvVar("MODE").isEnum(Mode).toEnum<Mode>();
 export { Directory as Directory };
 
 export const DirPath = (dir: Directory, filename?: string | undefined) =>
-  filename == undefined
-    ? path.join(dir)
-    : path.join(dir, filename);
+  filename == undefined ? path.join(dir) : path.join(dir, filename);
 
 export const TITILER_PUBLIC = new EnvVar("TITILER_PUBLIC").isUrl().toString();
 export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();
@@ -149,7 +147,6 @@ export const SEQ_SERVER_URL = new EnvVar("SEQ_URL").isUrl().toString();
 export const SEQ_API_KEY = new EnvVar("SEQ_KEY").toString();
 
 export const AIML_SERVER = new EnvVar("AIML_SERVER").isUrl().toString();
-
 
 export const S3_ACCESS_KEY = new EnvVar("S3_ACCESS_KEY").toString();
 export const S3_SECRET_KEY = new EnvVar("S3_SECRET_KEY").toString();

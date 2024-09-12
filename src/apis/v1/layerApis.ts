@@ -45,7 +45,6 @@ import { PERMS } from "../../schemas/permission";
 import { vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
 
-
 // ********* create ***********
 router.post(
   "/create/:type",

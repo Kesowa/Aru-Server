@@ -3,7 +3,12 @@ import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { ARU_INSTANCE, CDN_URL, Instance, S3_BUCKET_NAME } from "../../constants";
+import {
+  ARU_INSTANCE,
+  CDN_URL,
+  Instance,
+  S3_BUCKET_NAME,
+} from "../../constants";
 import { Directory } from "../../utils/pathUtils";
 import { minioClient } from "../../utils/objectStorage";
 import { IPackage } from "../../schemas/package";
@@ -49,20 +54,31 @@ export const checkIfEmailIdIsAvailable = async (
   }
 };
 
-export const createUploadUrl = async (req: Request<{}, {}, {
-  name: string;
-  size: number;
-  type: string;
-  model: string;
-}>, res: AuthResponse) => {
+export const createUploadUrl = async (
+  req: Request<
+    {},
+    {},
+    {
+      name: string;
+      size: number;
+      type: string;
+      model: string;
+    }
+  >,
+  res: AuthResponse
+) => {
   // check storage
   const sizeInMb = req.body.size / (1024 * 1024);
-  const tenantPackage = await Tenant.findOne({ _id: res.locals.user.tenantId })
-    .populate<{ activePackage: IPackage }>("activePackage")
-  if (tenantPackage.activePackage.storage - tenantPackage.storageUsed < sizeInMb) {
+  const tenantPackage = await Tenant.findOne({
+    _id: res.locals.user.tenantId,
+  }).populate<{ activePackage: IPackage }>("activePackage");
+  if (
+    tenantPackage.activePackage.storage - tenantPackage.storageUsed <
+    sizeInMb
+  ) {
     res.status(401).json({
       status: false,
-      message: "insufficient storage available"
+      message: "insufficient storage available",
     });
   }
 
@@ -74,7 +90,9 @@ export const createUploadUrl = async (req: Request<{}, {}, {
   expiry.setSeconds(3600 * 24);
   policy.setExpires(expiry);
   const safeName = encodeURIComponent(req.body.name);
-  policy.setContentDisposition(`attachment; filename="${safeName}"; filename*="${safeName}"`);
+  policy.setContentDisposition(
+    `attachment; filename="${safeName}"; filename*="${safeName}"`
+  );
   const ext = path.extname(req.body.name);
   const key = path.join(Directory.TEMP, randomUUID() + ext);
   policy.setKey(key);
@@ -100,7 +118,8 @@ export const createUploadUrl = async (req: Request<{}, {}, {
     },
     presigned: {
       formData: presignedUrl.formData,
-      postURL: ARU_INSTANCE != Instance.AWS ? CDN_URL + "/" + S3_BUCKET_NAME : CDN_URL, // !REVISIT: Change to public s3 path
+      postURL:
+        ARU_INSTANCE != Instance.AWS ? CDN_URL + "/" + S3_BUCKET_NAME : CDN_URL, // !REVISIT: Change to public s3 path
     },
   });
 
@@ -109,5 +128,4 @@ export const createUploadUrl = async (req: Request<{}, {}, {
     message: "created presigned url",
     data: uploadTask,
   });
-
-}
+};

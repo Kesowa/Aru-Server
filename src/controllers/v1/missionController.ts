@@ -354,9 +354,8 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           const doc = deletedVodData[i];
           await deleteHlsVodUsingIndex(doc.videoPath);
           if (doc.originalFile)
-           await deletePublicFileUsingPath(doc.originalFile)
-          if (doc.thumbnail)
-            await deletePublicFileUsingPath(doc.thumbnail)
+            await deletePublicFileUsingPath(doc.originalFile);
+          if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
         }
       }
       if (deletedDocumetnsData.length) {
@@ -1153,7 +1152,11 @@ export const getMissionCsvForTenantOrUser = async (
     if (result.length) {
       const csv = new ObjectsToCsv(result);
       const csvData = await csv.toString();
-      const { filepath } = await saveFile(Directory.TEMP, randomUUID() + ".csv", csvData);
+      const { filepath } = await saveFile(
+        Directory.TEMP,
+        randomUUID() + ".csv",
+        csvData
+      );
       return res.status(200).json({
         status: true,
         message: "Successfully csv file created!",

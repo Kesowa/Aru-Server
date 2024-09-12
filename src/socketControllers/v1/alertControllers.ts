@@ -8,12 +8,7 @@ import { Types } from "mongoose";
 import { notificationSocket } from "../../socket";
 import { IPackage } from "../../schemas/package";
 import { WiproInterface } from "../../utils/wipro";
-import {
-  ARU_INSTANCE,
-  Directory,
-  Instance,
-  MAP_KEY,
-} from "../../constants";
+import { ARU_INSTANCE, Directory, Instance, MAP_KEY } from "../../constants";
 import { logger } from "../../app";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveFile } from "../../utils/dataUtils";
@@ -98,7 +93,8 @@ const alertSocketController = (alertSocket: Namespace) => {
           Number(docCount.activePackage.alertCount)
         ) {
           if (
-            Number(docCount.actualSize) + Number(details.size / (1024 * 1024)) <=
+            Number(docCount.actualSize) +
+              Number(details.size / (1024 * 1024)) <=
             Number(docCount.activePackage.storage)
           ) {
             alert

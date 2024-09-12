@@ -52,7 +52,10 @@ export const createUser = async (req: Request, res: AuthResponse) => {
         isActive: true,
       });
       if (fileDoc) {
-        const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+        const fullPath = await permPath(
+          Directory.USER_AVATARS,
+          fileDoc.metadata.objectkey
+        );
         await saveThumbnails(fullPath);
         userr.avatar = fullPath;
       }
@@ -117,7 +120,10 @@ export const createUser = async (req: Request, res: AuthResponse) => {
         isActive: true,
       };
       if (fileDoc) {
-        const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+        const fullPath = await permPath(
+          Directory.USER_AVATARS,
+          fileDoc.metadata.objectkey
+        );
         await saveThumbnails(fullPath);
         user.avatar = fullPath;
       }
@@ -293,7 +299,7 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
     if (data) {
       const doc = await User.findOneAndUpdate(
         { _id: req.body.id, tenantId: res.locals.user.tenantId },
-        {...req.body},
+        { ...req.body },
         {
           new: true,
           upsert: true,
@@ -312,7 +318,10 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
           // status: "started",
         });
         if (fileDoc) {
-          const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+          const fullPath = await permPath(
+            Directory.USER_AVATARS,
+            fileDoc.metadata.objectkey
+          );
           await saveThumbnails(fullPath);
           doc.avatar = fullPath;
           try {

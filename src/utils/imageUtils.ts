@@ -4,7 +4,13 @@ import path from "path";
 import exifr from "exifr";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { downloadTemp, readToBuffer, stat, uploadAnything, uploadFile } from "./objectStorage";
+import {
+  downloadTemp,
+  readToBuffer,
+  stat,
+  uploadAnything,
+  uploadFile,
+} from "./objectStorage";
 import { randomUUID } from "crypto";
 import { deletePublicFileUsingPath } from "./fileDeleteUtils";
 const asyncExec = promisify(exec);
@@ -48,9 +54,7 @@ export const saveThumbnails = async (img: KeyPath | DocPath) => {
   ]);
   return {
     ...paths,
-    size:
-      (small.byteLength + medium.byteLength) /
-      (1024 * 1024),
+    size: (small.byteLength + medium.byteLength) / (1024 * 1024),
   };
 };
 
@@ -64,7 +68,7 @@ export const deleteThumbnails = async (img: KeyPath | DocPath) => {
     deletePublicFileUsingPath(paths.small),
     deletePublicFileUsingPath(paths.medium),
   ]);
-}
+};
 
 /**
  * Returns path to thermal raw data file if it exists, or undefined

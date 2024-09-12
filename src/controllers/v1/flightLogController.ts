@@ -15,8 +15,11 @@ export const createFlightLog = async (req: Request, res: AuthResponse) => {
       // status: "started",
     });
     if (fileDoc) {
-      const filePath = await permPath(Directory.FLIGHT_LOGS, fileDoc.metadata.objectkey);
-      
+      const filePath = await permPath(
+        Directory.FLIGHT_LOGS,
+        fileDoc.metadata.objectkey
+      );
+
       const {
         date,
         time,

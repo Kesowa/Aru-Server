@@ -37,29 +37,16 @@ const worker = async () => {
   await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
   const resChannel = await amqpConnection.createChannel();
   await resChannel.assertQueue(RES_QUEUE, { durable: true });
-  VODEvents.on(
-    REQ_QUEUE,
-    function(req) {
-      reqChannel.sendToQueue(
-        REQ_QUEUE,
-        Buffer.from(JSON.stringify(req)),
-        {
-          persistent: true,
-          contentType: "application/json",
-        }
-      )
+  VODEvents.on(REQ_QUEUE, function (req) {
+    reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
+      persistent: true,
+      contentType: "application/json",
     });
-  resChannel.consume(
-    RES_QUEUE,
-    function(msg) {
-      VODEvents.emit(
-        RES_QUEUE,
-        JSON.parse(msg.content.toString())
-      );
-    });
-  io.adapter(
-    createAdapter({ amqpConnection: () => amqpConnection })
-  );
+  });
+  resChannel.consume(RES_QUEUE, function (msg) {
+    VODEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
+  });
+  io.adapter(createAdapter({ amqpConnection: () => amqpConnection }));
   //handle socket.io
   ioHandler(io);
 
@@ -68,4 +55,3 @@ const worker = async () => {
 worker()
   .then(() => logger.info("Server started"))
   .catch((err) => logger.error(err, "Failed to start server"));
-

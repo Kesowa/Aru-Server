@@ -28,7 +28,6 @@ import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
 const router = express.Router();
 
-
 //++++++++++++++++++++ create alert++++++++++++++++++++++++++++++++++
 router.post(
   "/create",

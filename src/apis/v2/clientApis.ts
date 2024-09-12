@@ -83,7 +83,7 @@ clientApi.get(
     }
 
     if (generateCSV) {
-      res.json({message: "not supported"});
+      res.json({ message: "not supported" });
     }
 
     res.json(resp);

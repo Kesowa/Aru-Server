@@ -16,30 +16,30 @@ export const REQ_QUEUE = "vod.transcode.req";
 export const RES_QUEUE = "vod.transcode.res";
 
 export type Video = {
-  srt: string | null,
-  hls: string | null,
-  thumb: string | null,
-}
+  srt: string | null;
+  hls: string | null;
+  thumb: string | null;
+};
 
 export type AruMetadata = {
-  location_id: string | null,
-  mission_id: string,
-  flight_id: string,
-  user_id: string,
-  tenant_id: string,
-  video_id: string,
-}
+  location_id: string | null;
+  mission_id: string;
+  flight_id: string;
+  user_id: string;
+  tenant_id: string;
+  video_id: string;
+};
 
 export type TranscodeRequest = {
-  file: string,
-  metadata: AruMetadata,
-}
+  file: string;
+  metadata: AruMetadata;
+};
 
 export type TranscodeResponse = {
-  metadata: AruMetadata,
-  video: Video,
-  success: boolean,
-}
+  metadata: AruMetadata;
+  video: Video;
+  success: boolean;
+};
 
 /**
  * Supply mp4/flv video path, generate HLS files, thumbnail, and flv file. Also returns size of all files.
@@ -47,18 +47,21 @@ export type TranscodeResponse = {
  * */
 export const transcodeVideo = async (
   filePath: pathUtils.KeyPath | pathUtils.DocPath,
-  metadata: AruMetadata,
+  metadata: AruMetadata
 ) => {
   const req: TranscodeRequest = {
     file: pathUtils.keyPath(filePath),
     metadata,
-  }
+  };
   logger.info(req, "SENT VIDEO TRANSCODE REQUEST");
   VODEvents.emit(REQ_QUEUE, req);
 };
 
-
-export const receiveVideo = async (video: Video, metadata: AruMetadata, success: boolean) => {
+export const receiveVideo = async (
+  video: Video,
+  metadata: AruMetadata,
+  success: boolean
+) => {
   const vod = await VOD.findOne({
     _id: metadata.video_id,
     tenantId: metadata.tenant_id,
@@ -66,8 +69,7 @@ export const receiveVideo = async (video: Video, metadata: AruMetadata, success:
   if (success) {
     vod.videoPath = "/" + video.hls;
     vod.thumbnail = "/" + video.thumb;
-    if (video.srt)
-      vod.isSRT = await extractTelemetry("/" + video.srt);
+    if (video.srt) vod.isSRT = await extractTelemetry("/" + video.srt);
     await vod.save();
     missionSpecificSocket
       .to(String(vod.missionID))
@@ -82,10 +84,10 @@ export const receiveVideo = async (video: Video, metadata: AruMetadata, success:
   }
 };
 
-VODEvents.on(RES_QUEUE, function(res: TranscodeResponse) {
+VODEvents.on(RES_QUEUE, function (res: TranscodeResponse) {
   logger.info(res, "RECEIVED VIDEO TRANSCODE RESPONSE");
-  receiveVideo(res.video, res.metadata, res.success).
-    then(() => logger.info(res, "SAVED VIDEO"))
+  receiveVideo(res.video, res.metadata, res.success)
+    .then(() => logger.info(res, "SAVED VIDEO"))
     .catch((err) => logger.error({ res, err }, "FAILED TO SAVE VIDEO"));
 });
 
@@ -120,9 +122,7 @@ export const getHlsSize = async (indexPath: string) => {
     .split("\n")
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
-    await stat(
-      path.join(dir, vodFiles[Math.floor(vodFiles.length / 2)])
-    )
+    await stat(path.join(dir, vodFiles[Math.floor(vodFiles.length / 2)]))
   ).size;
   const hlsSize = index.length + vodFiles.length * partSize;
   return hlsSize;

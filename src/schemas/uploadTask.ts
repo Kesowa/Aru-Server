@@ -18,15 +18,15 @@ export type UploadTask = {
   updatedBy: Types.ObjectId;
   tenant: Types.ObjectId;
   metadata: {
-    objectkey: string,
-    mimetype: string,
-    filesize: number,
-    originalName: string
+    objectkey: string;
+    mimetype: string;
+    filesize: number;
+    originalName: string;
   };
   presigned: {
-    formData: Record<string, string>,
-    postURL: string
-  },
+    formData: Record<string, string>;
+    postURL: string;
+  };
 };
 
 export const UploadTaskSchema = new Schema<UploadTask>(
@@ -65,8 +65,8 @@ export const UploadTaskSchema = new Schema<UploadTask>(
     },
     presigned: {
       postURL: String,
-      formData: Schema.Types.Map
-    }
+      formData: Schema.Types.Map,
+    },
   },
   { timestamps: true }
 );

@@ -11,7 +11,18 @@ import { Readable } from "stream";
 import { DOMParser } from "xmldom";
 import togeojson from "@mapbox/togeojson";
 import { ObjectId } from "bson";
-import { archive, copyObj, deleteObj, downloadTemp, readToBuffer, readToString, stat, uploadAnything, uploadDir, uploadString } from "./objectStorage";
+import {
+  archive,
+  copyObj,
+  deleteObj,
+  downloadTemp,
+  readToBuffer,
+  readToString,
+  stat,
+  uploadAnything,
+  uploadDir,
+  uploadString,
+} from "./objectStorage";
 import { rm, rmdir } from "fs/promises";
 import Fuse from "fuse.js";
 
@@ -20,11 +31,14 @@ const asyncExec = promisify(exec);
 /**
  * Takes pointcloud file path, returns web view index page path or undefined
  */
-export const savePointcloud = async ( doc: pathUtils.DocPath, ) => {
+export const savePointcloud = async (doc: pathUtils.DocPath) => {
   const absDocPath = await downloadTemp(doc);
   const filename = path.parse(doc).name;
   const absOutputPath = "/tmp/" + randomUUID();
-  const outputDirPath = pathUtils.docPath(pathUtils.Directory.DOCUMENTS, randomUUID());
+  const outputDirPath = pathUtils.docPath(
+    pathUtils.Directory.DOCUMENTS,
+    randomUUID()
+  );
   await asyncExec(
     `/bin/PotreeConverter ${absDocPath} -o ${absOutputPath} --generate-page ${filename}`
   );
@@ -67,22 +81,19 @@ export const saveVectorLayer = async (
     const ext = path.extname(layer).toLowerCase();
     if (ext == ".geojson") {
       geojsonData = JSON.parse(await readToString(layer));
-    }
-    else if (ext == ".kml") {
+    } else if (ext == ".kml") {
       const fileData = await readToString(layer);
       const kmlData = new DOMParser().parseFromString(fileData, "text/xml");
       geojsonData = togeojson.kml(kmlData, { styles: true });
-    }
-    else if (ext == ".zip") {
+    } else if (ext == ".zip") {
       const fileData = await readToBuffer(layer);
       geojsonData = await shp2json(fileData);
     }
   } else {
     geojsonData = layer;
-  } 
-  if (!geojsonData)
-    return null;
-    
+  }
+  if (!geojsonData) return null;
+
   let flagColor = "multiColor";
   geojsonData.features.forEach(
     (feature) =>
@@ -131,7 +142,9 @@ const populateMultiGeojson = async (
   };
   await Promise.allSettled(
     geojsons.map(async (geojsonFile) => {
-      const geojson = JSON.parse(await readToString(geojsonFile.path)) as GeoJson;
+      const geojson = JSON.parse(
+        await readToString(geojsonFile.path)
+      ) as GeoJson;
       const map = geojsonFile.map;
       if (map || options) {
         geojson.features.forEach((feature) => {
@@ -189,9 +202,12 @@ export const saveGeojson = async (
   }
   if (options?.name) geojsonObject.name = options.name;
   if (options?.type) geojsonObject.type = options.type;
-  const geojsonPath = pathUtils.docPath(Directory.VECTOR, randomUUID() + ".geojson");
+  const geojsonPath = pathUtils.docPath(
+    Directory.VECTOR,
+    randomUUID() + ".geojson"
+  );
   const stringData = JSON.stringify(geojsonObject);
-  const size = stringData.length / (1024*1024);
+  const size = stringData.length / (1024 * 1024);
   await uploadString(geojsonPath, stringData);
   return { geojsonPath, size };
 };
@@ -225,7 +241,10 @@ export const saveMultiGeojson = async (
   }
   const featureCount = geojsonObject.features.length;
   const stringData = JSON.stringify(geojsonObject);
-  const geojsonPath = pathUtils.docPath(Directory.VECTOR, randomUUID() + ".geojson");
+  const geojsonPath = pathUtils.docPath(
+    Directory.VECTOR,
+    randomUUID() + ".geojson"
+  );
   await uploadString(geojsonPath, stringData);
   const size = stringData.length / (1024 * 1024);
   return { path: geojsonPath, size, featureCount };
@@ -249,30 +268,27 @@ export const createArchive = async (files: pathUtils.DocPath[]) => {
 export const saveFile = async (
   dir: Directory,
   filename: string,
-  data:
-    | string
-    | Buffer
-    | Readable
+  data: string | Buffer | Readable
 ) => {
   const filepath = pathUtils.docPath(dir, filename);
-  await uploadAnything(filepath, data)
-  return {filepath, ...(await stat(filepath)) };
+  await uploadAnything(filepath, data);
+  return { filepath, ...(await stat(filepath)) };
 };
 
 export const copyFile = async (src: string, dest: string) => {
   await copyObj(src, dest);
-}
+};
 
 export const readFile = async (filepath: string) => {
-  return await readToBuffer(filepath)
+  return await readToBuffer(filepath);
 };
 
 export const permPath = async (dir: Directory, src: string) => {
-  const fullPath = pathUtils.docPath(dir, randomUUID() + extname(src))
+  const fullPath = pathUtils.docPath(dir, randomUUID() + extname(src));
   await copyObj(src, fullPath);
   await deleteObj(src);
   return fullPath;
-}
+};
 export const saveFeatureSearchIndex = async (layerPath: string) => {
   const filename = "index_" + path.parse(layerPath).name + ".json";
   const searchIndexPath = path.dirname(layerPath) + "/" + filename;

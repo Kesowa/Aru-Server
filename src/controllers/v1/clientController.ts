@@ -82,7 +82,10 @@ export const createClientformissionGroup = async (
             country,
           };
           if (fileDoc) {
-            const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+            const fullPath = await permPath(
+              Directory.USER_AVATARS,
+              fileDoc.metadata.objectkey
+            );
             await saveThumbnails(fullPath);
             modClient.avatar = fullPath;
           }
@@ -146,7 +149,10 @@ export const createClientformissionGroup = async (
             country,
           });
           if (fileDoc) {
-            const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+            const fullPath = await permPath(
+              Directory.USER_AVATARS,
+              fileDoc.metadata.objectkey
+            );
             await saveThumbnails(fullPath);
             newClient.avatar = fullPath;
           }
@@ -343,11 +349,14 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
       });
       if (req.body.avatar && modDoc && doc) {
         if (fileDoc) {
-          const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+          const fullPath = await permPath(
+            Directory.USER_AVATARS,
+            fileDoc.metadata.objectkey
+          );
           await saveThumbnails(fullPath);
           modDoc.avatar = fullPath;
         }
-          await modDoc.save();
+        await modDoc.save();
       }
 
       return res.status(200).json({
@@ -666,11 +675,15 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
 
       const csv = new ObjectsToCsv(savedResult);
       const csvData = await csv.toString();
-      const { filepath } = await saveFile(Directory.TEMP, randomUUID() + ".csv", csvData);
+      const { filepath } = await saveFile(
+        Directory.TEMP,
+        randomUUID() + ".csv",
+        csvData
+      );
       return res.status(200).json({
         status: true,
         message: "Client CSV generated successfully!",
-        pathh: filepath
+        pathh: filepath,
       });
     } else
       return res.status(400).json({

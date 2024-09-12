@@ -1,5 +1,12 @@
 import * as Minio from "minio";
-import { S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET_NAME, ARU_INSTANCE, Instance } from "../constants";
+import {
+  S3_ENDPOINT,
+  S3_ACCESS_KEY,
+  S3_SECRET_KEY,
+  S3_BUCKET_NAME,
+  ARU_INSTANCE,
+  Instance,
+} from "../constants";
 import { buffer } from "stream/consumers";
 import { finished } from "stream/promises";
 import { Directory, docPath, keyPath } from "./pathUtils";
@@ -17,44 +24,47 @@ export const minioClient = new Minio.Client({
   accessKey: S3_ACCESS_KEY,
   secretKey: S3_SECRET_KEY,
   pathStyle: ARU_INSTANCE != Instance.AWS,
-})
+});
 
 export const readToString = async (objKey: string) => {
   const obj = await minioClient.getObject(S3_BUCKET_NAME, keyPath(objKey));
   const buf = await buffer(obj);
   return buf.toString("utf8");
-}
+};
 
 export const readToBuffer = async (objKey: string) => {
   const obj = await minioClient.getObject(S3_BUCKET_NAME, keyPath(objKey));
   const buf = await buffer(obj);
   return buf;
-}
+};
 
 export const uploadString = async (objKey: string, data: string) => {
   await minioClient.putObject(S3_BUCKET_NAME, keyPath(objKey), data);
-}
+};
 
-export const uploadAnything = async (objKey: string, data: Readable | Buffer | string) => {
+export const uploadAnything = async (
+  objKey: string,
+  data: Readable | Buffer | string
+) => {
   await minioClient.putObject(S3_BUCKET_NAME, keyPath(objKey), data);
-}
+};
 
 export const stat = async (objKey: string) => {
   const data = await minioClient.statObject(S3_BUCKET_NAME, keyPath(objKey));
   return {
     size: data.size,
     metadata: data.metaData,
-  }
-}
+  };
+};
 
 export const downloadTemp = async (objKey: string) => {
   const downloadPath = "/tmp/" + randomUUID() + extname(objKey);
   await minioClient.fGetObject(S3_BUCKET_NAME, keyPath(objKey), downloadPath);
   setTimeout(() => {
-    rm(downloadPath).then().catch()
+    rm(downloadPath).then().catch();
   }, 1000 * 3600 * 2); // erase temp after 2 hours
   return downloadPath;
-}
+};
 
 export const uploadDir = async (src: string, dest: string) => {
   const entries = await readdir(src, { withFileTypes: true, recursive: true });
@@ -65,33 +75,41 @@ export const uploadDir = async (src: string, dest: string) => {
     const objKey = join(dest, relativePath);
     await minioClient.fPutObject(S3_BUCKET_NAME, objKey, entry.parentPath);
   }
-}
+};
 
 export const copyObj = async (src: string, dest: string) => {
-  await minioClient.copyObject(S3_BUCKET_NAME, keyPath(dest), "/" + S3_BUCKET_NAME + "/" + keyPath(src));
-}
+  await minioClient.copyObject(
+    S3_BUCKET_NAME,
+    keyPath(dest),
+    "/" + S3_BUCKET_NAME + "/" + keyPath(src)
+  );
+};
 
 export const deleteObj = async (objKey: string) => {
   await minioClient.removeObject(S3_BUCKET_NAME, keyPath(objKey));
-}
+};
 
 export const deleteDir = async (dirKey: string) => {
-  const entries = minioClient.listObjects(S3_BUCKET_NAME, keyPath(dirKey), true);
-  entries.on("data", async function(obj) {
+  const entries = minioClient.listObjects(
+    S3_BUCKET_NAME,
+    keyPath(dirKey),
+    true
+  );
+  entries.on("data", async function (obj) {
     await deleteObj(obj.name);
   });
   await finished(entries);
-}
+};
 
 export const uploadFile = async (src: string, dest: string) => {
   await minioClient.fPutObject(S3_BUCKET_NAME, dest, src);
-}
+};
 
 export const archive = async (objKeys: string[]) => {
   const archive = archiver("zip", {
     zlib: { level: 9 }, // Sets the compression level.
   });
-  objKeys.forEach(async objKey => {
+  objKeys.forEach(async (objKey) => {
     const stream = await minioClient.getObject(S3_BUCKET_NAME, keyPath(objKey));
     archive.append(stream, {
       name: objKey,
@@ -100,7 +118,7 @@ export const archive = async (objKeys: string[]) => {
   const archivePath = keyPath(docPath(Directory.TEMP, randomUUID() + ".zip"));
   await Promise.all([
     await minioClient.putObject(S3_BUCKET_NAME, archivePath, archive),
-    await archive.finalize()
-  ])
-  return archivePath
-}
+    await archive.finalize(),
+  ]);
+  return archivePath;
+};

@@ -50,7 +50,10 @@ export const createAlert = async (
         long: req.body.location.long ? req.body.location.long : 0,
       };
     }
-    const fullPath = await permPath(Directory.ALERT_IMAGES, fileDoc.metadata.objectkey);
+    const fullPath = await permPath(
+      Directory.ALERT_IMAGES,
+      fileDoc.metadata.objectkey
+    );
     const thumbs = await saveThumbnails(fullPath);
     const newAlert = new Alert({
       locationName,
@@ -814,7 +817,10 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       createdBy: res.locals.user._id,
       status: "started",
     });
-    const fullPath = await permPath(Directory.ALERT_IMAGES, imgDoc.metadata.objectkey);
+    const fullPath = await permPath(
+      Directory.ALERT_IMAGES,
+      imgDoc.metadata.objectkey
+    );
 
     const thumbs = await saveThumbnails(fullPath);
     const ff = await readCoords(fullPath);
