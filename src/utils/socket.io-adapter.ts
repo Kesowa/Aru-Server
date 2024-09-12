@@ -1,10 +1,9 @@
 /* eslint-disable no-console */
 import { BroadcastOptions, Room, SocketId, Adapter } from 'socket.io-adapter';
-import { Namespace, Socket } from 'socket.io';
-import { EventEmitter } from 'events';
+import { Namespace } from 'socket.io';
 import debugFactory, { Debugger } from 'debug';
 import { Channel, ConfirmChannel, Connection } from 'amqplib';
-import { hostname, networkInterfaces } from 'os';
+import { hostname } from 'os';
 import { randomString, mapIter, filterIter } from './adapterUtils';
 import { promisify } from 'util';
 import { ReplaySubject, filter, firstValueFrom } from 'rxjs';
@@ -321,14 +320,14 @@ export class AmqpAdapter extends Adapter {
             except: opts.except && [...opts.except],
         };
         const rooms = opts.rooms && opts.rooms.size ? opts.rooms : nullSet;
-        const nonlocalRooms = [...filterIter(rooms, (room) => !this.localRouting.has(room!))];
+        const nonlocalRooms = [...filterIter(rooms, (room) => !this.localRouting.has(room))];
         await Promise.all([
             ...mapIter(
-                filterIter(rooms, (room) => this.localRouting.has(room!)),
+                filterIter(rooms, (room) => this.localRouting.has(room)),
                 async (room) => {
                     await this.broadcast(packet, {
                         ...opts,
-                        rooms: new Set([room!]),
+                        rooms: new Set([room]),
                         flags: { ...opts.flags, local: true },
                     });
                 },

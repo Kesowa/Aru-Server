@@ -1,7 +1,7 @@
 import Layer from "../models/layer";
 
 import { ObjectId } from "bson";
-import { DirPath, Directory } from "../constants";
+import { Directory } from "../constants";
 import { readToString } from "./objectStorage";
 import { saveFile } from "./dataUtils";
 import { parse } from "path";

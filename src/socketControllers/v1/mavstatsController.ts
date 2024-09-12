@@ -9,8 +9,6 @@ import Flight from "../../models/flight";
 import { generateToken } from "../../controllers/v1/streamTokenController";
 
 import format from "date-fns/format";
-import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { getFileSize } from "../../utils/fileUtils";
 import { Directory, DirPath } from "../../constants";
 

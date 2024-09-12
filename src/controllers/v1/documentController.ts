@@ -4,10 +4,9 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import path, { extname } from "path";
+import path from "path";
 import { missionSpecificSocket } from "../../socket";
 import {
-  deleteDirFileUsingName,
   deletePublicFileUsingPath,
   deletePublicFolderUsingPath,
 } from "../../utils/fileDeleteUtils";

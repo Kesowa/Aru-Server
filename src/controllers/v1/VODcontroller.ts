@@ -2,7 +2,7 @@ import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { deleteHlsVodUsingIndex, extractTelemetry, transcodeVideo, } from "../../utils/videoUtils";
+import { deleteHlsVodUsingIndex, transcodeVideo, } from "../../utils/videoUtils";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";

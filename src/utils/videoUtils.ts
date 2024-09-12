@@ -1,6 +1,5 @@
 import { EventEmitter } from "events";
 import { exec } from "child_process";
-import fs from "fs";
 export const VODEvents = new EventEmitter();
 import * as pathUtils from "./pathUtils";
 import { promisify } from "util";
@@ -80,7 +79,7 @@ export const receiveVideo = async (video: Video, metadata: AruMetadata, success:
     missionSpecificSocket
       .to(String(vod.missionID))
       .emit("PROCESS_VIDEO_FAILED", vod);
-  };
+  }
 };
 
 VODEvents.on(RES_QUEUE, function(res: TranscodeResponse) {

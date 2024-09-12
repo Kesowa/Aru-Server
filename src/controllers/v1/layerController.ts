@@ -1,4 +1,3 @@
-import * as pathUtils from "../../utils/pathUtils";
 import type { Request } from "express";
 import type { AuthResponse } from "../../utils/interfaceUtils";
 import fetch from "node-fetch";
@@ -26,7 +25,7 @@ import * as turf from "@turf/turf";
 import nearestPoint from "@turf/nearest-point";
 import type { NearestPoint } from "@turf/nearest-point";
 import exifr from "exifr";
-import path, { basename, extname } from "path";
+import path, { basename } from "path";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
 import Flight from "../../models/flight";
 import LayerGroup from "../../models/layerGroup";

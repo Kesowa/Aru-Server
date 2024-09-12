@@ -2,7 +2,6 @@ import { Request } from "express";
 import * as pathUtils from "../../utils/pathUtils";
 import Layer from "../../models/layer";
 import fetch from "node-fetch";
-import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import Tenant from "../../models/tenant";
@@ -841,7 +840,7 @@ export const uploadLayerToUpdateBaseLayer = async (
         message: "BaseLayer not found"
       });
       return;
-    };
+    }
 
     const bgjson = await readGeoJson(baseLayer.layerpath);
 
@@ -925,7 +924,7 @@ export const updateBaseLayerByUploadedFile = async (
         message: "baselayer is null"
       });
       return;
-    };
+    }
 
     const bgjson = await readGeoJson(baseLayer.layerpath);
 

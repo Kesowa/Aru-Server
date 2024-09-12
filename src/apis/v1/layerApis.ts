@@ -1,4 +1,4 @@
-import express, { Request } from "express";
+import express from "express";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 const router = express.Router();
 import {

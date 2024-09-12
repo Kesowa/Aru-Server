@@ -320,7 +320,7 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
             await deletePublicFileUsingPath(data.avatar);
           } catch (err) {
             req.log.error(err, "failed to delete thumbnails");
-          };
+          }
           await doc.save();
         }
       }

@@ -11,11 +11,9 @@ import { WiproInterface } from "../../utils/wipro";
 import {
   ARU_INSTANCE,
   Directory,
-  DirPath,
   Instance,
   MAP_KEY,
 } from "../../constants";
-import { getFileSize } from "../../utils/fileUtils";
 import { logger } from "../../app";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { saveFile } from "../../utils/dataUtils";
