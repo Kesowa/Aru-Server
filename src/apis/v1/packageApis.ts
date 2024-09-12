@@ -8,23 +8,19 @@ import {
   deletePackageForId,
   fetchPackageById,
 } from "../../controllers/v1/packageController";
-import { uploadFileforUSer } from "../../controllers/v1/commonController";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
-import multer from "multer";
-import { multerStorage } from "../../utils/fileUploadUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
 import { PERMS } from "../../schemas/permission";
-const upload = multer({ storage: multerStorage(Directory.TEMP_IMAGES) });
+
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-router.post(
-  "/upload-poster",
-  isAuthenticated,
-  upload.single("poster"),
-  RobustRunner(uploadFileforUSer)
-);
+// router.post(
+//   "/upload-poster",
+//   isAuthenticated,
+//   body("poster").notEmpty().isMongoId(),
+//   RobustRunner(uploadFileforUSer)
+// );
 
 //++++++++++++++++++++ package creation Api +++++++++++++++++++++++++++++
 router.post(

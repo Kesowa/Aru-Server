@@ -30,7 +30,6 @@ import locationApis from "./apis/v1/locationApis";
 import flightLogApis from "./apis/v1/flightLogApis";
 import layerApis from "./apis/v1/layerApis";
 import documentApis from "./apis/v1/documentApis";
-import webrtcApis from "./apis/v1/webrtcApis";
 import clientApis from "./apis/v1/clientApis";
 import LayerGroupApis from "./apis/v1/layerGroupApis";
 import PaymentApis from "./apis/v1/paymentApis";
@@ -45,7 +44,6 @@ import {
   ARU_INSTANCE,
   Mode,
   MODE,
-  PUBLIC_DIR,
   SEQ_API_KEY,
   SEQ_SERVER_URL,
 } from "./constants";
@@ -67,17 +65,6 @@ app.use(
   })
 );
 app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
-
-//static files
-if (MODE == Mode.Dev) {
-  app.use(
-    express.static(PUBLIC_DIR, {
-      setHeaders: function (res) {
-        res.set("x-timestamp", Date.now().toString());
-      },
-    })
-  );
-}
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -184,7 +171,6 @@ app.use("/apis/v1/flightlog", flightLogApis);
 // app.use("/apis/v1/vectorProp", vectorPropsApis);
 app.use("/apis/v1/layer", layerApis);
 app.use("/apis/v1/document", documentApis);
-app.use("/apis/v1/webrtc", webrtcApis);
 app.use("/apis/v1/client", clientApis);
 app.use("/apis/v1/layergroup", LayerGroupApis);
 app.use("/apis/v1/payment", PaymentApis);
@@ -205,14 +191,6 @@ app.use(function (req, res, next) {
   }
   if (!req.url.startsWith("/apis/v1")) {
     req.log.info("url does not starts with /apis/v1");
-    res.sendFile(path.join(PUBLIC_DIR, "/index.html"), function (err) {
-      if (err) {
-        req.log.error("error sending index.html", err);
-        if (res.headersSent) return next();
-        return next(err);
-      }
-    });
-  } else {
     next();
   }
 });

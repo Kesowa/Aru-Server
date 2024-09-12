@@ -1,94 +1,17 @@
 import app, { logger } from "./app";
-import cron from "node-cron";
-import User from "./models/user";
 import http from "http";
 import { Server } from "socket.io";
 import { createAdapter } from "./utils/socket.io-adapter";
 import { connect } from "amqplib";
 import { ioHandler } from "./socket";
+import { REQ_QUEUE, RES_QUEUE, VODEvents } from "./utils/videoUtils";
 
-import { deletePublicFileUsingPath } from "./utils/fileDeleteUtils";
-import { promises as asyncFS } from "fs";
-import path from "path";
-import Tenant from "./models/tenant";
-import { sendMail } from "./utils/emailUtil";
 import mongoose from "mongoose";
 import {
-  DUMMY_TENANT,
   MONGODB_CONNECTION_STRING,
   PORT,
-  PUBLIC_DIR,
   RABBITMQ_CONNECTION_STRING,
 } from "./constants";
-import { IUser } from "./schemas/user";
-import { clientReactivationMail } from "./controllers/v1/clientController";
-
-const tempCleanup = async () => {
-  logger.info("Running Cron Job");
-  logger.info("Expiry check started for client");
-  const doc = await User.find({
-    userType: "tenant-client",
-    expiryDatee: { $lte: new Date().getTime() },
-    isActive: true,
-  }).populate<{ createdBy: IUser }>("createdBy");
-  for (let i = 0; i < doc.length; i++) {
-    await deletePublicFileUsingPath(doc[i].avatar);
-    doc[i].userType = "standalone-user";
-    doc[i].isActive = false;
-    doc[i].tenantId = DUMMY_TENANT;
-    await doc[i].save();
-    await clientReactivationMail(doc[i].createdBy, doc[i]);
-  }
-  const TMP_IMG = path.join(PUBLIC_DIR, "/images/temp/");
-  const files = await asyncFS.readdir(TMP_IMG);
-  await Promise.all(files.map((file) => asyncFS.rm(path.join(TMP_IMG, file))));
-};
-
-const expiredSubs = async () => {
-  const doc = await Tenant.find({});
-  for (let i = 0; i < doc.length; i++) {
-    const date1 = doc[i].packageStartDate;
-    const date2 = new Date(Date.now());
-    const oneDay = 1000 * 60 * 60 * 24;
-    const diffInTime = date2.getTime() - date1.getTime();
-    const diffInDays = Math.round(diffInTime / oneDay);
-    if (diffInDays <= 30 && diffInDays >= 23) {
-      if (30 - diffInDays == 7 || 30 - diffInDays == 3) {
-        await sendMail(
-          doc[i].email,
-          "Kesowa Infinite Ventures Pvt. Ltd",
-          "",
-          `               
-                        <p>Your subscription is expiring in ${
-                          30 - diffInDays
-                        } days.</b>
-                        <p>Best regards,</p>
-                        <p><b>Team Kesowa</b></p>
-                        `,
-          ""
-        );
-      }
-    } else if (diffInDays > 30 && diffInDays <= 45 && doc[i].isActive) {
-      if (45 - diffInDays == 7 || 45 - diffInDays == 0) {
-        await sendMail(
-          doc[i].email,
-          "Kesowa Infinite Ventures Pvt. Ltd",
-          "",
-          `               
-                    <p>Your subscription has expired.</b>
-                    <p>Please upgrade your subscription, Your data will be removed after 15 days of expiry.</b>
-                    <p>Best regards,</p>
-                    <p><b>Team Kesowa</b></p>
-                `,
-          ""
-        );
-      }
-    } else {
-      doc[i].isActive = false;
-      // Logic to purge the tenant data
-    }
-  }
-};
 
 const worker = async () => {
   await mongoose.connect(MONGODB_CONNECTION_STRING);
@@ -109,11 +32,21 @@ const worker = async () => {
       credentials: false,
     },
   });
-
-  // @ts-ignore
-  io.adapter(
-    createAdapter({ amqpConnection: () => connect(RABBITMQ_CONNECTION_STRING) })
-  );
+  const amqpConnection = await connect(RABBITMQ_CONNECTION_STRING);
+  const reqChannel = await amqpConnection.createChannel();
+  await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
+  const resChannel = await amqpConnection.createChannel();
+  await resChannel.assertQueue(RES_QUEUE, { durable: true });
+  VODEvents.on(REQ_QUEUE, function (req) {
+    reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
+      persistent: true,
+      contentType: "application/json",
+    });
+  });
+  resChannel.consume(RES_QUEUE, function (msg) {
+    VODEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
+  });
+  io.adapter(createAdapter({ amqpConnection: () => amqpConnection }));
   //handle socket.io
   ioHandler(io);
 
@@ -122,15 +55,3 @@ const worker = async () => {
 worker()
   .then(() => logger.info("Server started"))
   .catch((err) => logger.error(err, "Failed to start server"));
-
-cron.schedule("00 00 * * *", () => {
-  tempCleanup()
-    .then(() => logger.info("Temp files cleanup successful"))
-    .catch((err) => logger.error("Unable to cleanup temp files", err));
-});
-
-cron.schedule("00 00 * * *", () => {
-  expiredSubs()
-    .then(() => logger.info("Expired account check ran successfully"))
-    .catch((err) => logger.error("Failed to run expired account check", err));
-});

@@ -10,12 +10,20 @@ services:
     environment:
       - TZ="Asia/Kolkata"
       - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET_NAME=aru
+      - S3_ENDPOINT=minio
       - RABBITMQ_CONNECTION_STRING=amqp://rabbitmq
     env_file:
       - ./server.env
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - 5011:5011
     extra_hosts:
@@ -31,9 +39,14 @@ services:
     environment:
       - MONGO_INITDB_DATABASE=test
     ports:
-      - 27019:27017
+      - 27017:27017
     mem_limit: 256m
     memswap_limit: 512m
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
   titiler:
     environment:
@@ -47,7 +60,57 @@ services:
     memswap_limit: 256m
     cpus: 0.5
 
+  minio:
+    image: minio/minio@sha256:c7175077d39a8cc10c9fd611cdcc68b6a5b365793e9ac6f4198ffff1ef0fe555
+    command: server /data --console-address ":9001"
+    expose:
+      - "9000"
+      - "9001"
+    healthcheck:
+      test: ["CMD", "curl", "-I", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - 9001:9001
+      - 9000:9000
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+        /usr/bin/mc mb myminio/aru;
+        /usr/bin/mc anonymous set public myminio/aru;
+        /usr/bin/mc ilm rule add myminio/aru/temp --expire-days "1"
+        exit 0;
+      "
+
+  vod:
+    image: vod:latest
+    profiles:
+      - vod
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - S3_BUCKET=aru
+      - S3_ENDPOINT=http://minio:9000
+      - S3_PATH_STYLE=true
+      - AMQP_ADDR=amqp://rabbitmq:5672/%2f
+      - RUST_LOG=debug
+
   rabbitmq:
     image: rabbitmq@sha256:473953b02b8346091f0b3a6819e017618cbe95cb568bca2fecf00966a20ccf2a
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "status"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     # mem_limit: 128m
     # memswap_limit: 128m

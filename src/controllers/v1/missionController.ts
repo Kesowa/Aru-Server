@@ -19,7 +19,6 @@ import layerFiles from "../../models/layerFiles";
 import layerGroupModel from "../../models/layerGroup";
 import {
   deleteDirFileUsingName,
-  deleteHlsVodUsingIndex,
   deletePublicFileUsingPath,
 } from "../../utils/fileDeleteUtils";
 import { IMission } from "../../schemas/mission";
@@ -29,9 +28,11 @@ import { IInvite } from "../../schemas/invite";
 import { ILocation } from "../../schemas/location";
 import MissionType from "../../models/missionType";
 import Location from "../../models/location";
-import { Directory, DirPath } from "../../constants";
-import { createDirIfNotExists } from "../../utils/fileUtils";
+import { Directory } from "../../constants";
 import moment from "moment";
+import { saveFile } from "../../utils/dataUtils";
+import { randomUUID } from "crypto";
+import { deleteHlsVodUsingIndex } from "../../utils/videoUtils";
 
 //create flight controller
 type CreateMission = {
@@ -351,11 +352,10 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       if (deletedVodData.length) {
         for (let i = 0; i < deletedVodData.length; i++) {
           const doc = deletedVodData[i];
-          const docpath = doc.videoPath;
-          const indexFile = path.parse(docpath).base;
-          await deleteHlsVodUsingIndex(indexFile);
-          await deletePublicFileUsingPath(doc.thumbnail);
-          await deletePublicFileUsingPath(path.parse(docpath).name + ".flv");
+          await deleteHlsVodUsingIndex(doc.videoPath);
+          if (doc.originalFile)
+            await deletePublicFileUsingPath(doc.originalFile);
+          if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
         }
       }
       if (deletedDocumetnsData.length) {
@@ -1150,20 +1150,17 @@ export const getMissionCsvForTenantOrUser = async (
       })
       .lean();
     if (result.length) {
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
       const csv = new ObjectsToCsv(result);
-      const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
-      await csv.toDisk(file);
+      const csvData = await csv.toString();
+      const { filepath } = await saveFile(
+        Directory.TEMP,
+        randomUUID() + ".csv",
+        csvData
+      );
       return res.status(200).json({
         status: true,
         message: "Successfully csv file created!",
-        pathh:
-          "/" +
-          file
-            .split(/[\\\/]/)
-            .slice(7)
-            .join("/"),
+        pathh: filepath,
       });
     } else
       return res.status(404).json({

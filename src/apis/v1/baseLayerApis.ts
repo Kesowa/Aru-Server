@@ -26,25 +26,14 @@ import {
   // sys_id_Inject
 } from "../../controllers/v1/baseLayerController";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
-import multer from "multer";
-import { isSize } from "../../utils/sizePermission";
 import { isLayerCount } from "../../utils/countPermission";
 import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
-import { multerStorage } from "../../utils/fileUploadUtils";
 import { PERMS } from "../../schemas/permission";
 import { vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
 
 const router = express.Router();
-
-const uploadVector = multer({
-  storage: multerStorage(Directory.VECTOR),
-});
-const uploadRaster = multer({
-  storage: multerStorage(Directory.RASTER),
-});
 
 router.patch(
   "/get-meta-data",
@@ -58,7 +47,7 @@ router.patch(
 router.post(
   "/create/Vector",
   isAuthenticated,
-  uploadVector.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("name").notEmpty().trim(),
   body("vector")
     .notEmpty()
@@ -73,7 +62,6 @@ router.post(
   validator,
   PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),
   isLayerCount,
-  isSize,
   RobustRunner(createVectorBaseLayer)
 );
 
@@ -91,7 +79,7 @@ router.put(
   "/set-prime-attr",
   isAuthenticated,
   body("path").notEmpty(),
-  body("pattr").notEmpty().isArray(),
+  body("pattr").isArray({ min: 0 }),
   body("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.CAN_UPDATE_BASE_LAYER),
@@ -150,7 +138,7 @@ router.get(
 router.post(
   "/upload-to-update-base-layer/Vector",
   isAuthenticated,
-  uploadVector.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("baseLayer").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.CAN_UPLOAD_TO_BASE_LAYER, PERMS.CAN_UPDATE_BASE_LAYER),
@@ -191,7 +179,7 @@ router.delete(
 router.post(
   "/create-base-raster-upload/Raster",
   isAuthenticated,
-  uploadRaster.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("name").notEmpty().trim(),
   body("raster")
     .notEmpty()
@@ -202,14 +190,13 @@ router.post(
   validator,
   PermissionGuard(PERMS.CAN_UPLOAD_TO_BASE_LAYER, PERMS.CAN_UPDATE_BASE_LAYER),
   isLayerCount,
-  isSize,
   RobustRunner(createBaseRasterfromUpload)
 );
 
 router.patch(
   "/updateRasterLayerUpload/Raster",
   isAuthenticated,
-  uploadRaster.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("layerId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.CAN_UPDATE_BASE_LAYER),

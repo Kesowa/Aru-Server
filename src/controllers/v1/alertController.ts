@@ -10,12 +10,13 @@ import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IFlight } from "../../schemas/flight";
-import { ARU_INSTANCE, Directory, DirPath, Instance } from "../../constants";
-import { getFileSize } from "../../utils/fileUtils";
+import { ARU_INSTANCE, Directory, Instance } from "../../constants";
 import path from "path";
 import { WiproInterface } from "../../utils/wipro";
 import { readCoords, saveThumbnails } from "../../utils/imageUtils";
 import * as pathUtils from "../../utils/pathUtils";
+import UploadTask from "../../models/uploadTask";
+import { permPath } from "../../utils/dataUtils";
 
 // Create Alert Controlller
 type CreateAlert = {
@@ -35,6 +36,12 @@ export const createAlert = async (
   res: AuthResponse
 ) => {
   {
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.image,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
     if (req.body.location) {
@@ -43,8 +50,11 @@ export const createAlert = async (
         long: req.body.location.long ? req.body.location.long : 0,
       };
     }
-    const docPath: string = DirPath(Directory.ROOT, req.body.image);
-    const size1: number = await getFileSize(docPath);
+    const fullPath = await permPath(
+      Directory.ALERT_IMAGES,
+      fileDoc.metadata.objectkey
+    );
+    const thumbs = await saveThumbnails(fullPath);
     const newAlert = new Alert({
       locationName,
       location: {
@@ -60,8 +70,8 @@ export const createAlert = async (
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: size1,
-      image: req.body.image ? req.body.image : undefined,
+      fileSize: fileDoc.metadata.filesize + thumbs.size,
+      image: fullPath,
     });
 
     const data = await newAlert.save();
@@ -801,12 +811,19 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
 
 export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   {
-    const img_path = pathUtils.docPath(
-      pathUtils.Directory.ALERT_IMAGES,
-      req.file.filename
+    const imgDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      status: "started",
+    });
+    const fullPath = await permPath(
+      Directory.ALERT_IMAGES,
+      imgDoc.metadata.objectkey
     );
-    const thumbs = await saveThumbnails(img_path);
-    const ff = await readCoords(img_path);
+
+    const thumbs = await saveThumbnails(fullPath);
+    const ff = await readCoords(fullPath);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
@@ -826,8 +843,8 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: thumbs.size,
-      image: img_path,
+      fileSize: imgDoc.metadata.filesize + thumbs.size,
+      image: fullPath,
     });
 
     const data = await newAlert.save();

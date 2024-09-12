@@ -660,7 +660,6 @@ const usergroups = [
       "client_list",
       "layer_list",
     ],
-    isActive: true,
     name: "pilot",
   },
   {

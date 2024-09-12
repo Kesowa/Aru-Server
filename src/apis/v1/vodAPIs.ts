@@ -16,15 +16,9 @@ import {
 } from "../../controllers/v1/VODcontroller";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isVodCount } from "../../utils/countPermission";
-import multer from "multer";
-import { isSize } from "../../utils/sizePermission";
 import { body, oneOf, query } from "express-validator";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
-import { multerStorage } from "../../utils/fileUploadUtils";
 import { PERMS } from "../../schemas/permission";
-
-const upload = multer({ storage: multerStorage(Directory.TEMP) });
 
 const router = express.Router();
 
@@ -38,14 +32,13 @@ router.post(
 router.post(
   "/save-vod-manual",
   isAuthenticated,
-  upload.single("video"),
+  body("file").notEmpty().isMongoId(),
   body("locationID").default("5f202f03b9225726102721b8").notEmpty().isMongoId(),
   body("missionID").notEmpty().isMongoId(),
   body("flightID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.VOD_CREATE),
   isVodCount,
-  isSize,
   RobustRunner(saveVODManual)
 );
 

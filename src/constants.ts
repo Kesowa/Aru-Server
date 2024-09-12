@@ -1,4 +1,3 @@
-import { existsSync } from "fs";
 import { Types } from "mongoose";
 import path from "path";
 import { Directory } from "./utils/pathUtils";
@@ -117,7 +116,6 @@ export const ARU_INSTANCE = new EnvVar("ARU_INSTANCE")
   .isEnum(Instance)
   .toEnum<Instance>();
 export const LIVE_URL = new EnvVar("LIVE_URL").isUrl().toString();
-export const PUBLIC_DIR = new EnvVar("PUBLIC_DIR").check(existsSync).toString();
 export const TITILER_SERVER = new EnvVar("TITILER_SERVER").isUrl().toString();
 export const TITILER_STATIC = new EnvVar("TITILER_STATIC").isUrl().toString();
 export const RAZORPAY_KEY_ID = new EnvVar("RAZORPAY_KEY_ID").toString();
@@ -136,9 +134,7 @@ export const MODE = new EnvVar("MODE").isEnum(Mode).toEnum<Mode>();
 export { Directory as Directory };
 
 export const DirPath = (dir: Directory, filename?: string | undefined) =>
-  filename == undefined
-    ? path.join(PUBLIC_DIR, dir)
-    : path.join(PUBLIC_DIR, dir, filename);
+  filename == undefined ? path.join(dir) : path.join(dir, filename);
 
 export const TITILER_PUBLIC = new EnvVar("TITILER_PUBLIC").isUrl().toString();
 export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();
@@ -151,3 +147,8 @@ export const SEQ_SERVER_URL = new EnvVar("SEQ_URL").isUrl().toString();
 export const SEQ_API_KEY = new EnvVar("SEQ_KEY").toString();
 
 export const AIML_SERVER = new EnvVar("AIML_SERVER").isUrl().toString();
+
+export const S3_ACCESS_KEY = new EnvVar("S3_ACCESS_KEY").toString();
+export const S3_SECRET_KEY = new EnvVar("S3_SECRET_KEY").toString();
+export const S3_BUCKET_NAME = new EnvVar("S3_BUCKET_NAME").toString();
+export const S3_ENDPOINT = new EnvVar("S3_ENDPOINT").toString();

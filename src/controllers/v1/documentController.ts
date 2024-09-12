@@ -7,38 +7,40 @@ import Mission from "../../models/mission";
 import path from "path";
 import { missionSpecificSocket } from "../../socket";
 import {
-  deleteDirFileUsingName,
   deletePublicFileUsingPath,
   deletePublicFolderUsingPath,
 } from "../../utils/fileDeleteUtils";
-import { Directory, DirPath, PUBLIC_DIR } from "../../constants";
-import {
-  checkFileExists,
-  createDirFileWriteStreamUsingName,
-  createDirIfNotExists,
-  getFileSize,
-} from "../../utils/fileUtils";
-import { saveThumbnails } from "../../utils/imageUtils";
-import { createArchive, savePointcloud } from "../../utils/dataUtils";
+import { Directory, DirPath } from "../../constants";
+import { checkFileExists, getFileSize } from "../../utils/fileUtils";
+import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
+import { createArchive, permPath, savePointcloud } from "../../utils/dataUtils";
+import UploadTask from "../../models/uploadTask";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
-    if (!req.file) {
-      throw new Error("no file in request");
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started"
+    });
+    if (!fileDoc) {
+      res.status(404).json({
+        status: false,
+        message: "no file in request",
+      });
+      return;
     }
     if (req.body.type === "pointCloud") {
       const { missionId } = req.body;
       missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
       req.log.info("POINTCLOUD_EXTRACTION_STARTED");
-      const webviewPath = await savePointcloud(
-        path.relative(PUBLIC_DIR, req.file.path),
-        req.log
-      );
+      const webviewPath = await savePointcloud(fileDoc.metadata.objectkey);
       if (webviewPath) {
         const doc = new Document({
-          name: req.file.originalname,
+          name: fileDoc.metadata.originalName,
           modDate: new Date(),
-          fileSize: req.file.size / (1024 * 1024),
+          fileSize: fileDoc.metadata.filesize,
           folderName: req.body.folderName,
           fileType: req.body.type,
           filePath: webviewPath,
@@ -69,17 +71,18 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       }
     } else {
       const missionId = req.body.missionId;
-      const filesize: number = Number(
-        (Number(req.file.size) / (1024 * 1024)).toFixed(5)
+      const fullPath = await permPath(
+        Directory.DOCUMENTS,
+        fileDoc.metadata.objectkey
       );
 
       const doc = new Document({
-        name: req.file.originalname,
+        name: fileDoc.metadata.originalName,
         modDate: new Date(),
-        fileSize: filesize,
-        fileType: req.file.mimetype,
+        fileSize: fileDoc.metadata.filesize,
+        fileType: fileDoc.metadata.mimetype,
         folderName: req.body.folderName,
-        filePath: `/documents/${req.file.filename}`,
+        filePath: fullPath,
         missionId,
         tenantId: res.locals.user.tenantId,
         createdBy: res.locals.user._id,
@@ -88,7 +91,8 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       if (
         (req.body.folderName == "rawPhotos" ||
           req.body.folderName == "photos") &&
-        (req.file.mimetype == "image/jpeg" || req.file.mimetype == "image/png")
+        (fileDoc.metadata.mimetype == "image/jpeg" ||
+          fileDoc.metadata.mimetype == "image/png")
       ) {
         req.log.debug("Uploading Thumbnails");
         const thumbs = await saveThumbnails(doc.filePath);
@@ -140,21 +144,11 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
         });
       }
     } else if (data) {
-      const pathObj = path.parse(data.filePath);
-      const fname = pathObj.base;
       if (data.folderName == "rawPhotos" || data.folderName == "photos") {
-        const newFilename1 = `1x_${fname}`;
-        const newFilename2 = `2x_${fname}`;
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename1);
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename2);
+        await deleteThumbnails(data.filePath);
       }
 
-      const conf = await deletePublicFileUsingPath(data.filePath);
-      if (conf) {
-        req.log.info("Files deleted");
-      } else {
-        req.log.info("Files does not exist");
-      }
+      await deletePublicFileUsingPath(data.filePath);
       if (data) {
         res.status(200).json({
           status: true,
@@ -198,18 +192,11 @@ export const deletemultipleDocument = async (
     );
     for (let i = 0; i < documents.length; i++) {
       const d = documents[i];
-      const fname = path.parse(d.filePath).base;
       if (d.folderName == "rawPhotos" || d.folderName == "photos") {
-        const newFilename1 = `1x_${fname}`;
-        const newFilename2 = `2x_${fname}`;
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename1);
-        await deleteDirFileUsingName(Directory.DOCUMENTS, newFilename2);
+        await deleteThumbnails(d.filePath);
       }
 
-      const conf = await deletePublicFileUsingPath(d.filePath);
-      if (conf) {
-        req.log.info("Files Deleted");
-      }
+      await deletePublicFileUsingPath(d.filePath);
       const doc = await d.delete();
       if (doc) {
         flag = 1;
@@ -368,30 +355,11 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const dir = DirPath(Directory.ZIP);
-        await createDirIfNotExists(dir, req.log);
-
-        const fname = `${d[0].folderName}_${Date.now()}.zip`;
-        const output = createDirFileWriteStreamUsingName(Directory.ZIP, fname);
-        const archive = archiver("zip", {
-          zlib: { level: 9 }, // Sets the compression level.
-        });
-        // output.on('close', function () {
-        //     req.log.info(archive.pointer() + ' total bytes');
-        //     req.log.info('archiver has been finalized and the output file descriptor has closed.');
-        // });
-        archive.pipe(output);
-        for (let i = 0; i < d.length; i++) {
-          archive.file(DirPath(Directory.ROOT, d[i].filePath), {
-            name: d[i].filePath.split("/")[2],
-          });
-        }
+        const archive = await createArchive(d.map((layer) => layer.filePath));
         try {
-          const _archiveFinalized = await archive.finalize();
-          const link = `/zip/${fname}`;
           missionSpecificSocket
             .to(missionId)
-            .emit("DOCUMENT_ZIP_COMPLETED", link);
+            .emit("DOCUMENT_ZIP_COMPLETED", archive);
         } catch (error) {
           req.log.error(error);
           missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_FAILED");

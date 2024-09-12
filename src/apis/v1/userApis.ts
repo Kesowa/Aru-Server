@@ -10,29 +10,24 @@ import {
   UserDelete,
   UserEdit,
 } from "../../controllers/v1/userController";
-import { uploadFileforUSer } from "../../controllers/v1/commonController";
 import {
   isAuthenticated,
   onlyTenantRootAccess,
   PermissionGuard,
 } from "../../utils/authUtils";
-import { multerStorage } from "../../utils/fileUploadUtils";
 import { isUserCount } from "../../utils/countPermission";
-import multer from "multer";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
 import { PERMS } from "../../schemas/permission";
 
-const upload = multer({ storage: multerStorage(Directory.TEMP_IMAGES) });
 const router = express.Router();
 
 //++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-router.post(
-  "/upload-profile-picture",
-  isAuthenticated,
-  upload.single("avatar"),
-  RobustRunner(uploadFileforUSer)
-);
+// router.post(
+//   "/upload-profile-picture",
+//   isAuthenticated,
+//   body("avatar").notEmpty().isMongoId(),
+//   RobustRunner(uploadFileforUSer)
+// );
 
 //++++++++++++++++++++ create user++++++++++++++++++++++++++++++++++
 router.post(
@@ -49,7 +44,7 @@ router.post(
     .toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm //REVISIT
   body("aadhaarNo").optional().notEmpty().isNumeric(), // aadharNo is optional in user creation form on frontend
   body("pilotLicenceNo").optional().notEmpty().isNumeric(), // pilotLicenceNo is optional in user creation form on frontend
-  body("avatar").optional().notEmpty().trim(),
+  body("avatar").optional().notEmpty().isMongoId(),
   validator,
   isAuthenticated,
   onlyTenantRootAccess,
@@ -88,7 +83,7 @@ router.patch(
   body("dob").optional().notEmpty().isISO8601().toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm //REVISIT
   body("aadhaarNo").optional().notEmpty().isNumeric(),
   body("pilotLicenceNo").optional().notEmpty().isNumeric(),
-  body("avatar").optional().notEmpty().trim(),
+  body("avatar").optional().isMongoId(),
   validator,
   PermissionGuard(PERMS.USER_UPDATE),
   RobustRunner(UserEdit)

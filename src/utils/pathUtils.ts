@@ -1,10 +1,11 @@
 import path from "path";
-import { PUBLIC_DIR } from "../constants";
+
+export const absPath = (_dir: Directory, _filename: string) => "";
 
 /**
- * Relative path within Public folder (Directory + File path)
+ * Object key (no / at start)
  */
-export type DirPath = string;
+export type KeyPath = string;
 
 /**
  * Path for use within MongoBD documents (/ + relative path)
@@ -39,6 +40,16 @@ export enum Directory {
   DEFAULT = "",
 }
 
+export const DocToDir = <const>{
+  VOD: Directory.VOD,
+  user: Directory.USER_AVATARS,
+  alert: Directory.ALERT_IMAGES,
+  vector: Directory.VECTOR,
+  raster: Directory.RASTER,
+  document: Directory.DOCUMENTS,
+  layerFiles: Directory.LAYER_FILES,
+};
+
 /**
  * Get file path for use in MongoDB documents and URL
  */
@@ -48,13 +59,7 @@ export const docPath = (dir: Directory, filename: string): DocPath =>
 /**
  * Get relative path from Public directory, or for use as S3 object key
  */
-export const relPath = (dir: Directory, filename: string): DirPath => {
+export const keyPath = (filename: string): KeyPath => {
   filename = filename.replace(/^\//, "");
-  return path.join(dir, filename);
+  return filename;
 };
-
-/**
- * Get absolute path to file on system
- */
-export const absPath = (dir: Directory, filename: string) =>
-  path.join(PUBLIC_DIR, dir, filename);

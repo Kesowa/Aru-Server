@@ -1,7 +1,6 @@
-import express, { Request } from "express";
+import express from "express";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 const router = express.Router();
-import multer from "multer";
 import {
   createLayer,
   updateLayer,
@@ -40,32 +39,17 @@ import {
   publicLayerByMissionId,
 } from "../../controllers/v1/layerController";
 import { isLayerCount } from "../../utils/countPermission";
-import { isSize } from "../../utils/sizePermission";
 import { body, oneOf, query, param } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
-import { multerStorage } from "../../utils/fileUploadUtils";
 import { PERMS } from "../../schemas/permission";
 import { vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
-
-const upload = multer({
-  storage: multerStorage((req: Request): Directory => {
-    if (req.params.type == "Vector") return Directory.VECTOR;
-    else if (req.params.type == "Raster") return Directory.RASTER;
-    else return Directory.GEOJSON_IMAGES;
-  }),
-});
-
-const uploadlayerfile = multer({
-  storage: multerStorage(Directory.LAYER_FILES),
-});
 
 // ********* create ***********
 router.post(
   "/create/:type",
   isAuthenticated,
-  upload.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("name").notEmpty().trim(),
   // REGEX
   body("type")
@@ -98,7 +82,6 @@ router.post(
   validator,
   PermissionGuard(PERMS.UPLOAD_LAYER),
   isLayerCount,
-  isSize,
   RobustRunner(createLayer)
 );
 
@@ -106,7 +89,7 @@ router.post(
 router.post(
   "/upload-file-to-layer",
   isAuthenticated,
-  uploadlayerfile.single("file"),
+  body("file").notEmpty().isMongoId(),
   body("layerId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FEATURE_FILE_UPLOAD),
@@ -179,7 +162,7 @@ router.patch(
 router.patch(
   "/upload-file-geojson",
   isAuthenticated,
-  upload.single("file"),
+  body("file").notEmpty().isMongoId(),
   // req.body is of type layerFile, schema in schemas/layerFile.ts
   body("layerId").notEmpty().isMongoId(),
   body("sys_Id").notEmpty().isString(),
@@ -190,7 +173,6 @@ router.patch(
     .custom((val) => val.lat && val.lng),
   validator,
   PermissionGuard(PERMS.FEATURE_FILE_UPLOAD),
-  isSize,
   RobustRunner(uploadmultiplefile)
 );
 
@@ -387,7 +369,7 @@ router.patch(
 router.patch(
   "/auto-assign-uploaded-image",
   isAuthenticated,
-  upload.array("file"), // array of files
+  body("file").isArray({ min: 1 }), // array of files
   body("radius").optional().isNumeric(),
   body("Id").notEmpty().isMongoId(),
   query("mode").notEmpty().isIn(["LayerLabel", "GeoCoord"]),
@@ -397,7 +379,6 @@ router.patch(
     PERMS.FEATURE_FILE_UPLOAD,
     PERMS.ADD_FEATURE
   ),
-  isSize,
   RobustRunner(autoAssignImage)
 );
 
@@ -461,7 +442,7 @@ router.patch(
 router.post(
   "/pick-to-map-for-layer",
   isAuthenticated,
-  upload.array("file", 50),
+  body("file").isArray({ min: 1 }),
   body("name").trim(),
   body("vectorType")
     .notEmpty()

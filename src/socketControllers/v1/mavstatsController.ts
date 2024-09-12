@@ -3,15 +3,12 @@ import { addUser, searchUser, SocketUserObject } from "../../utils/socketUtils";
 import Asset from "../../models/asset";
 import dgram from "dgram";
 const server = dgram.createSocket("udp4");
-import webrtc from "wrtc";
 // export let stat: mavStat;
 import { VODEvents } from "../../utils/videoUtils";
 import Flight from "../../models/flight";
 import { generateToken } from "../../controllers/v1/streamTokenController";
 
 import format from "date-fns/format";
-import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { getFileSize } from "../../utils/fileUtils";
 import { Directory, DirPath } from "../../constants";
 
@@ -54,13 +51,6 @@ export const mavstatIoController = async (io: Namespace) => {
               assetData.assetInfo[0].UIN.toString()
             );
             if (droneSocket) {
-              const p = consumer(
-                {
-                  missionId: payload.missionId,
-                  assetData: assetData,
-                },
-                droneSocket
-              );
               // }
             }
           }
@@ -224,100 +214,6 @@ const joinRoomByStreamKey = async (
 //     }
 // }
 
-const consumer = async (
-  payload: { missionId: any; assetData: any },
-  socket: {
-    emit: (arg0: string, arg1: string) => void;
-    on: (arg0: string, arg1: (data: any) => void) => void;
-  }
-) => {
-  const peer = new webrtc.RTCPeerConnection({
-    iceServers: [
-      {
-        urls: "turn:14.97.37.70:3478",
-        username: "test",
-        credential: "test123",
-      },
-    ],
-  });
-
-  const offer = await peer.createOffer({
-    offerToReceiveVideo: true,
-    offerToReceiveAudio: true,
-  });
-
-  await peer.setLocalDescription(offer);
-  console.log(offer);
-
-  const res = {
-    offer: offer,
-    missionId: payload.missionId,
-    assetData: payload.assetData,
-  };
-
-  socket.emit("START_STREAM", JSON.stringify(res));
-
-  peer.addEventListener("icegatheringstatechange", function () {
-    console.log("hp", peer.iceGatheringState);
-  });
-
-  peer.addEventListener("iceconnectionstatechange", function () {
-    console.log("as", peer.iceConnectionState);
-
-    if (peer.iceConnectionState === "checking") {
-      console.log("It is checking right now");
-      peer
-        .createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: true })
-        .then(
-          function (offer: any) {
-            //console.log('New offer created: ' + JSON.stringify(offer))
-            peer.setLocalDescription(offer);
-            socket.emit(
-              "START_STREAM",
-              JSON.stringify({
-                offer: peer.localDescription,
-                missionId: payload.missionId,
-                assetData: payload.assetData,
-              })
-            );
-          },
-          function (err: any) {
-            console.log("Error creating new offer");
-          }
-        );
-    }
-  });
-
-  peer.addEventListener("signalingstatechange", function () {
-    console.log("kp", peer.signalingState);
-  });
-
-  socket.on("answer", (data: string) => {
-    const descInit = JSON.parse(data) as RTCSessionDescriptionInit;
-    console.log(data);
-    const desc = new webrtc.RTCSessionDescription(descInit);
-    peer.setRemoteDescription(desc).catch((e: any) => console.log(e));
-  });
-
-  peer.addEventListener("icegatheringstatechange", function () {
-    console.log("hp", peer.iceGatheringState);
-  });
-
-  peer.addEventListener("iceconnectionstatechange", function () {
-    console.log("as", peer.iceConnectionState);
-  });
-
-  peer.addEventListener("signalingstatechange", function () {
-    console.log("kp", peer.signalingState);
-  });
-
-  peer.ontrack = (e: any) => {
-    handleTrackEvent(e, peer, payload.missionId);
-  };
-
-  return peer;
-};
-
 function handleTrackEvent(e: any, peer: any, missionId: string) {
   console.log(`track handled for missionId : ${missionId}`);
   senderStreams.set(missionId, e.streams[0]);
@@ -375,42 +271,5 @@ const processVideo = async (data: {
     });
   } catch (error) {
     console.error(error);
-  }
-};
-
-export const consumerContoller = async (req: Request, res: AuthResponse) => {
-  try {
-    const peer = new webrtc.RTCPeerConnection({
-      iceServers: [
-        {
-          urls: "turn:14.97.37.70:3478",
-          username: "test",
-          credential: "test123",
-        },
-      ],
-    });
-    const desc = new webrtc.RTCSessionDescription(req.body.sdp);
-    await peer.setRemoteDescription(desc);
-    const senderStream = senderStreams.get(req.body.missionId);
-    if (senderStream == null) {
-      console.log(`No mission with missionId ${req.body.missionId}`);
-      res.status(404).json({
-        message: "No stream found with the supplied missionId",
-      });
-      return;
-    }
-    senderStream.getTracks().forEach((track: any) => {
-      peer.addTrack(track, senderStream);
-    });
-    const answer = await peer.createAnswer();
-    await peer.setLocalDescription(answer);
-    const payload = {
-      sdp: peer.localDescription,
-    };
-
-    res.json(payload);
-  } catch (err) {
-    req.log.error(err);
-    res.sendStatus(500);
   }
 };

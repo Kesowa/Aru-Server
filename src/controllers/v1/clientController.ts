@@ -8,11 +8,10 @@ import Flight from "../../models/flight";
 import Tenant from "../../models/tenant";
 import path from "path";
 import ObjectsToCsv from "objects-to-csv";
-import crypto from "crypto";
+import crypto, { randomUUID } from "crypto";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
-import { copyFiled } from "../../utils/moveFileUtils";
 import { IUser } from "../../schemas/user";
 import { IMission } from "../../schemas/mission";
 import { ILocation } from "../../schemas/location";
@@ -24,9 +23,12 @@ import {
   SECRET_KEY,
 } from "../../constants";
 import { SortOrder } from "mongoose";
-import { createDirIfNotExists, getFileSize } from "../../utils/fileUtils";
+import { getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
+import { permPath, saveFile } from "../../utils/dataUtils";
+import { saveThumbnails } from "../../utils/imageUtils";
+import UploadTask from "../../models/uploadTask";
 import { PERMS, TENANT_CLIENT_PERMS } from "../../schemas/permission";
 
 export const createClientformissionGroup = async (
@@ -34,6 +36,12 @@ export const createClientformissionGroup = async (
   res: AuthResponse
 ) => {
   {
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.avatar,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
     const result = await Usergroup.findOne({
       _id: req.body.userGroupId,
       tenantId: res.locals.user.tenantId._id,
@@ -67,32 +75,25 @@ export const createClientformissionGroup = async (
             tenantId: res.locals.user.tenantId,
             createdBy: res.locals.user._id,
             updatedBy: res.locals.user._id,
-            avatar: req.body.avatar ? req.body.avatar : undefined,
+            avatar: null,
             isBanned: false,
             isActive: true,
             city,
             country,
           };
+          if (fileDoc) {
+            const fullPath = await permPath(
+              Directory.USER_AVATARS,
+              fileDoc.metadata.objectkey
+            );
+            await saveThumbnails(fullPath);
+            modClient.avatar = fullPath;
+          }
           await User.findOneAndUpdate({ _id: existingClient._id }, modClient, {
             upsert: true,
             useFindAndModify: false,
           });
           const modDoc = await User.findOne({ _id: existingClient._id });
-          if (req.body.avatar && modDoc) {
-            copyFiled(
-              req.body.avatar,
-              `/images/client/${req.body.avatar.split(/[\\\/]/)[3]}`
-            );
-          }
-          if (req.body.avatar && modDoc) {
-            modDoc.avatar = `/images/client/${
-              req.body.avatar.split(/[\\\/]/)[3]
-            }`;
-            await modDoc.save();
-          }
-          if (req.body.avatar && modDoc) {
-            await deletePublicFileUsingPath(req.body.avatar);
-          }
           // let tenant: any = await Tenant.findOne({ _id: res.locals.user.tenantId });
           // if (modDoc && tenant.actualClientCount >= 0) {
           //   await Tenant.updateOne({ _id: res.locals.user.tenantId},{ $inc: { actualClientCount: 1 } })
@@ -147,25 +148,16 @@ export const createClientformissionGroup = async (
             city,
             country,
           });
-          const createDoc = await newClient.save();
-          const docPath = DirPath(Directory.ROOT, req.body.avatar);
-          const size: number = await getFileSize(docPath);
-          if (req.body.avatar && createDoc) {
-            copyFiled(
-              req.body.avatar,
-              `/images/client/${req.body.avatar.split(/[\\\/]/)[3]}`
+          if (fileDoc) {
+            const fullPath = await permPath(
+              Directory.USER_AVATARS,
+              fileDoc.metadata.objectkey
             );
+            await saveThumbnails(fullPath);
+            newClient.avatar = fullPath;
           }
-          if (req.body.avatar && createDoc) {
-            createDoc.avatar = `/images/client/${
-              req.body.avatar.split(/[\\\/]/)[3]
-            }`;
-            await createDoc.save();
-          }
-          if (req.body.avatar && createDoc) {
-            await deletePublicFileUsingPath(req.body.avatar);
-          }
-          const tenant: any = await Tenant.findOne(
+          const createDoc = await newClient.save();
+          const tenant = await Tenant.findOne(
             {
               _id: res.locals.user.tenantId,
             },
@@ -319,7 +311,13 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
 
 export const editClientDetails = async (req: Request, res: AuthResponse) => {
   {
-    const result: any = await User.findOne(
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.avatar,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
+    const result = await User.findOne(
       {
         _id: req.body.id,
         tenantId: res.locals.user.tenantId,
@@ -336,7 +334,7 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
       if (req.body.avatar) {
         bSavePath = result.avatar;
       }
-      const doc: Array<any> = await User.findOneAndUpdate(
+      const doc = await User.findOneAndUpdate(
         { _id: req.body.id, tenantId: res.locals.user.tenantId },
         req.body,
         {
@@ -345,25 +343,20 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
           useFindAndModify: false,
         }
       );
-      const modDoc: any = await User.findOne({
+      const modDoc = await User.findOne({
         _id: req.body.id,
         tenantId: res.locals.user.tenantId,
       });
       if (req.body.avatar && modDoc && doc) {
-        const a = new String(String(req.body.avatar)).valueOf();
-        const b = new String(String(bSavePath)).valueOf();
-        if (a !== b) {
-          copyFiled(
-            req.body.avatar,
-            `/images/client/${req.body.avatar.split(/[\\\/]/)[3]}`
+        if (fileDoc) {
+          const fullPath = await permPath(
+            Directory.USER_AVATARS,
+            fileDoc.metadata.objectkey
           );
-          modDoc.avatar = `/images/client/${
-            req.body.avatar.split(/[\\\/]/)[3]
-          }`;
-          await modDoc.save();
-          await deletePublicFileUsingPath(req.body.avatar);
-          await deletePublicFileUsingPath(bSavePath);
+          await saveThumbnails(fullPath);
+          modDoc.avatar = fullPath;
         }
+        await modDoc.save();
       }
 
       return res.status(200).json({
@@ -671,8 +664,6 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       .lean();
     const savedResult: any = [];
     if (result.length) {
-      const ws = DirPath(Directory.CSV);
-      await createDirIfNotExists(ws, req.log);
       for (let i = 0; i < result.length; i++) {
         const d = {
           name: result[i].name,
@@ -683,17 +674,16 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       }
 
       const csv = new ObjectsToCsv(savedResult);
-      const file = path.join(ws, `${Math.floor(Math.random() * 62000000)}.csv`);
-      await csv.toDisk(file);
+      const csvData = await csv.toString();
+      const { filepath } = await saveFile(
+        Directory.TEMP,
+        randomUUID() + ".csv",
+        csvData
+      );
       return res.status(200).json({
         status: true,
         message: "Client CSV generated successfully!",
-        pathh:
-          "/" +
-          file
-            .split(/[\\\/]/)
-            .slice(8)
-            .join("/"),
+        pathh: filepath,
       });
     } else
       return res.status(400).json({

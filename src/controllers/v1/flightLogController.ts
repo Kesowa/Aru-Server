@@ -2,20 +2,24 @@ import { Request } from "express";
 import { Types } from "mongoose";
 import flightLog from "../../models/flightLog";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { renameFile } from "../../utils/moveFileUtils";
+import UploadTask from "../../models/uploadTask";
+import { permPath } from "../../utils/dataUtils";
+import { Directory } from "../../constants";
 
 export const createFlightLog = async (req: Request, res: AuthResponse) => {
   {
-    if (req.file) {
-      //adding extension to file
-      await renameFile(
-        req.file.path,
-        req.file.path + "." + req.file.mimetype.split("/")[1]
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.file,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
+    if (fileDoc) {
+      const filePath = await permPath(
+        Directory.FLIGHT_LOGS,
+        fileDoc.metadata.objectkey
       );
 
-      const filePath = `/flight_logs/${req.file.filename}.${
-        req.file.mimetype.split("/")[1]
-      }`;
       const {
         date,
         time,
@@ -46,6 +50,7 @@ export const createFlightLog = async (req: Request, res: AuthResponse) => {
         pilotName,
         jobType,
         deliverables,
+        fileSize: fileDoc.metadata.filesize,
         tenantId: res.locals.user.tenantId._id,
       });
       const savedDoc = await newLog.save();

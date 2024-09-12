@@ -9,6 +9,7 @@ export interface IVOD {
   videoPath: string;
   bookmarks: Map<number, String>;
   thumbnail: string;
+  originalFile?: string;
   locationID?: mongoose.Types.ObjectId; // index
   tenantId: mongoose.Types.ObjectId; // index
   videoName: string;
@@ -27,6 +28,7 @@ export const VODType = {
   videoPath: Types.String(),
   // bookmarks: Map<number, String>; // TODO: No matching Type found in ts-openapi
   thumbnail: Types.String(),
+  originalFile: Types.String(),
   locationID: Types.String(), // index
   tenantId: Types.String(), // index
   videoName: Types.String(),
@@ -66,6 +68,10 @@ const VODSchema = new mongoose.Schema<IVOD>(
     thumbnail: {
       type: String,
       required: true,
+    },
+    originalFile: {
+      type: String,
+      required: false,
     },
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,

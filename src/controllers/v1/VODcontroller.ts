@@ -2,12 +2,7 @@ import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import {
-  deleteVideo,
-  extractTelemetry,
-  getVodSize,
-  transcodeVideo,
-} from "../../utils/videoUtils";
+import { deleteHlsVodUsingIndex, transcodeVideo } from "../../utils/videoUtils";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
@@ -17,7 +12,9 @@ import { WiproInterface } from "../../utils/wipro";
 import Flight from "../../models/flight";
 import * as pathUtils from "../../utils/pathUtils";
 import Location from "../../models/location";
-import { randomUUID } from "crypto";
+import UploadTask from "../../models/uploadTask";
+import { permPath } from "../../utils/dataUtils";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 
 export const saveVOD = async (
   req: Request<
@@ -46,9 +43,7 @@ export const saveVOD = async (
           .catch(console.error);
       }, 10_000);
     }
-    const vodSize = await getVodSize(
-      pathUtils.docPath(pathUtils.Directory.VOD, req.body.filename)
-    );
+    const vodSize = 1; // !TODO
     const VODdoc = new VOD({
       flightID: flightID,
       missionID: missionID,
@@ -272,63 +267,73 @@ export const testApiinject = async (req: Request, res: AuthResponse) => {
 };
 
 export const saveVODManual = async (req: Request, res: AuthResponse) => {
-  {
-    const tenantId = String(res.locals.user.tenantId._id);
-    let { missionID, flightID, locationID } = req.body;
-    req.log.info({ missionID, flightID }, "VOD Info");
-    const filename = randomUUID();
-    if (locationID == null || locationID == undefined) {
-      const flight = await Flight.findOne(
-        { _id: flightID, tenant: tenantId },
-        { locationID: 1 }
-      );
-      locationID = flight.locationID;
-    }
-    if (req.file) {
-      res.json({
-        status: true,
-        message: "Sucessfully uploaded the video",
-        file: `temp/${filename}.mp4`,
-      });
-      const filepath = pathUtils.relPath(
-        pathUtils.Directory.TEMP,
-        req.file.filename
-      );
-      const telemetryData = await extractTelemetry(filepath);
-      const transcodeData = await transcodeVideo(filepath);
-      if (telemetryData) {
-        const location = await Location.create({
-          properties: {
-            name: req.file.originalname,
-          },
-          tenantId: res.locals.user.tenantId._id,
-          geometry: {
-            type: "Point",
-            coordinates: {
-              lng: telemetryData.metadata.stats.GPS.LONGITUDE.avg,
-              lat: telemetryData.metadata.stats.GPS.LATITUDE.avg,
-            },
-          },
-        });
-        locationID = location._id;
-      }
-      const vod = await VOD.create({
-        videoName: req.file.originalname,
-        missionID: missionID,
-        flightID: flightID,
-        locationID: locationID,
-        videoPath: transcodeData.hlsPath,
-        thumbnail: transcodeData.thumbnailPath,
-        tenantId: res.locals.user.tenantId._id,
-        isSRT: telemetryData ? true : false,
-        fileSize:
-          transcodeData.size + (telemetryData ? telemetryData.geojsonSize : 0),
-      });
-      missionSpecificSocket
-        .to(String(missionID))
-        .emit("PROCESS_VIDEO_FINISHED", vod);
-    }
+  const tenantId = String(res.locals.user.tenantId._id);
+  let { missionID, flightID, locationID } = req.body;
+  req.log.info({ missionID, flightID }, "VOD Info");
+  const fileDoc = await UploadTask.findOne({
+    tenant: res.locals.user.tenantId._id,
+    createdBy: res.locals.user._id,
+    _id: req.body.file,
+    // status: "started",
+  });
+  if (locationID == null || locationID == undefined) {
+    const flight = await Flight.findOne(
+      { _id: flightID, tenant: tenantId },
+      { locationID: 1 }
+    );
+    locationID = flight.locationID;
   }
+  const fullPath = await permPath(
+    pathUtils.Directory.VOD,
+    fileDoc.metadata.objectkey
+  );
+  // const telemetryData = await extractTelemetry(filepath);
+  const telemetryData = null;
+  if (telemetryData) {
+    const location = await Location.create({
+      properties: {
+        name: fileDoc.metadata.originalName,
+      },
+      tenantId: res.locals.user.tenantId._id,
+      geometry: {
+        type: "Point",
+        coordinates: {
+          lng: telemetryData.metadata.stats.GPS.LONGITUDE.avg,
+          lat: telemetryData.metadata.stats.GPS.LATITUDE.avg,
+        },
+      },
+    });
+    locationID = location._id;
+  }
+  const vod = await VOD.create({
+    videoName: fileDoc.metadata.originalName,
+    missionID: missionID,
+    flightID: flightID,
+    locationID: locationID,
+    videoPath: "/processing.m3u8",
+    thumbnail: "/processing.png",
+    originalFile: fullPath,
+    tenantId: res.locals.user.tenantId._id,
+    isSRT: telemetryData ? true : false,
+    fileSize: fileDoc.metadata.filesize,
+  });
+  await transcodeVideo(fullPath, {
+    location_id: locationID ?? null,
+    mission_id: missionID,
+    tenant_id: tenantId,
+    user_id: res.locals.user._id.toString(),
+    flight_id: flightID,
+    video_id: vod._id.toString(),
+  });
+
+  await fileDoc.delete();
+
+  res.json({
+    status: true,
+    message: "Sucessfully uploaded the video",
+    file: fullPath,
+    data: vod,
+  });
 };
 
 //Delete VOD Entry
@@ -340,7 +345,9 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (doc) {
-      await deleteVideo(doc.videoPath);
+      await deleteHlsVodUsingIndex(doc.videoPath);
+      if (doc.originalFile) await deletePublicFileUsingPath(doc.originalFile);
+      if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
     } else {
       res.status(404).json({
         status: false,
@@ -386,7 +393,9 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
     if (docs && docs.length > 0) {
       for (let index = 0; index < docs.length; index++) {
         const doc = docs[index];
-        await deleteVideo(doc.videoPath);
+        await deleteHlsVodUsingIndex(doc.videoPath);
+        if (doc.originalFile) await deletePublicFileUsingPath(doc.originalFile);
+        if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
         const res2 = await VOD.findByIdAndDelete(doc._id);
         if (res2) {
           deleted.push(doc._id.toString());

@@ -1,6 +1,6 @@
 import express from "express";
 import { body, check, oneOf, query } from "express-validator";
-import { uploadFile } from "../../controllers/v1/commonController";
+// import { uploadFile } from "../../controllers/v1/commonController";
 
 import {
   createAlert,
@@ -24,24 +24,9 @@ import {
 
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isAlertCount } from "../../utils/countPermission";
-import { multerStorage } from "../../utils/fileUploadUtils";
-import multer from "multer";
-import { isSize } from "../../utils/sizePermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { Directory } from "../../constants";
 import { PERMS } from "../../schemas/permission";
-const upload = multer({ storage: multerStorage(Directory.ALERT_IMAGES) });
 const router = express.Router();
-
-//++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-router.post(
-  "/upload-alert-image",
-  isAuthenticated,
-  PermissionGuard(PERMS.ALERT_CREATE),
-  upload.single("image"),
-  isSize,
-  RobustRunner(uploadFile)
-);
 
 //++++++++++++++++++++ create alert++++++++++++++++++++++++++++++++++
 router.post(
@@ -67,7 +52,7 @@ router.post(
 router.post(
   "/manual-upload-alert",
   isAuthenticated,
-  upload.single("image"),
+  body("file").notEmpty().isMongoId(),
   body("missionId").notEmpty().isMongoId(),
   body("flightId").notEmpty().isMongoId(),
   body("locationName").notEmpty().isString(),
@@ -79,7 +64,6 @@ router.post(
   body("type").notEmpty().isString(),
   validator,
   PermissionGuard(PERMS.ALERT_CREATE),
-  isSize,
   RobustRunner(manualUploadAlert)
 );
 //+++++++++++++++++++ fetch all alert for a mission +++++++++++++++++++++++++
