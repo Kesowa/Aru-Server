@@ -1,19 +1,18 @@
 import { EventEmitter } from "events";
-import { exec } from "child_process";
 export const VODEvents = new EventEmitter();
 import * as pathUtils from "./pathUtils";
-import { promisify } from "util";
 import path from "path";
 import DJISRTParser from "dji_srt_parser";
 import { logger } from "../app";
 import VOD from "../models/vod";
 import { missionSpecificSocket } from "../socket";
 import { deleteObj, readToString, stat, uploadString } from "./objectStorage";
-const asyncExec = promisify(exec);
-const matchExt = /\.\w+$/;
+import { IVOD } from "../schemas/VOD";
 
 export const REQ_QUEUE = "vod.transcode.req";
 export const RES_QUEUE = "vod.transcode.res";
+
+export type ProcessVideoData = IVOD;
 
 export type Video = {
   srt: string | null;
