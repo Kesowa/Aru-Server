@@ -118,8 +118,7 @@ export const createUploadUrl = async (
     },
     presigned: {
       formData: presignedUrl.formData,
-      postURL:
-        ARU_INSTANCE != Instance.AWS ? CDN_URL + "/" + S3_BUCKET_NAME : CDN_URL, // !REVISIT: Change to public s3 path
+      postURL: CDN_URL, // !REVISIT: Change to public s3 path
     },
   });
 
