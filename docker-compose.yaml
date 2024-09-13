@@ -77,6 +77,8 @@ services:
 
   createbuckets:
     image: minio/mc
+    volumes:
+      - ./assets:/assets
     depends_on:
       minio:
         condition: service_healthy
@@ -86,6 +88,9 @@ services:
         /usr/bin/mc mb myminio/aru;
         /usr/bin/mc anonymous set public myminio/aru;
         /usr/bin/mc ilm rule add myminio/aru/temp --expire-days "1"
+        /usr/bin/mc cp /assets/*.geojson myminio/aru/vector/
+        /usr/bin/mc cp /assets/*.tif myminio/aru/raster/
+        /usr/bin/mc cp /assets/layerFileImages/*.png myminio/aru/images/geojson/
         exit 0;
       "
 
