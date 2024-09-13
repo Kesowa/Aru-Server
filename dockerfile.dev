@@ -1,6 +1,6 @@
 FROM node:18.20-bookworm-slim@sha256:cbfb3c9830932b7b1c2738abf47c66568fc7b06cf782d803e7ddff52b2fc835d
 WORKDIR /app
-RUN apt-get update && apt-get install -y curl gnupg \
+RUN apt-get update && apt-get install -y curl gnupg libgomp1 \
   && curl --location --silent https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
   && apt-get update \
