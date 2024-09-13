@@ -4,9 +4,7 @@ import User from "../../models/user";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import {
-  ARU_INSTANCE,
   CDN_URL,
-  Instance,
   S3_BUCKET_NAME,
 } from "../../constants";
 import { Directory } from "../../utils/pathUtils";
