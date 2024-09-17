@@ -529,40 +529,36 @@ export const editGeoJson = async (
           // for public layer, re-generate search index after feature editing
           await saveFeatureSearchIndex(newPath);
         }
+        let color = data.color;
         for (let i = 0; i < geojson.features.length; i++) {
           if (geojson.features[i].properties.color != data.color) {
-            const savedDoc = await Layer.findByIdAndUpdate(
-              { _id: req.body.id },
-              {
-                color:
-                  data.color != req.body.feature[i].properties.color
-                    ? "multicolor"
-                    : undefined,
-                layerpath: newPath,
-              },
-              { new: true }
-            );
-            await deletePublicFileUsingPath(docpath);
-            return res.status(200).json({
-              status: true,
-              message: "Successfully edited GEOJSON And multiColor exist!",
-              result: savedDoc,
-            });
+              data.color != req.body.feature[i].properties.color
+                ? "multicolor"
+                : undefined;
           }
         }
+        const savedDoc = await Layer.findByIdAndUpdate(
+          { _id: req.body.id },
+          {
+            color: color,
+            layerpath: newPath,
+          },
+          { new: true }
+        );
+        await deletePublicFileUsingPath(docpath);
         return res.status(200).json({
           status: true,
           message: "Successfully edited GEOJSON",
-          data: data,
+          data: savedDoc,
         });
       } else {
-        return res.json({
+        return res.status(404).json({
           status: false,
           message: "Feature Error",
         });
       }
     } else {
-      res.json({
+      res.status(404).json({
         status: false,
         message: "Layer ID does not match",
       });

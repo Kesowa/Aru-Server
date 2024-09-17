@@ -129,7 +129,7 @@ export async function editGeoJsonForAll(
     geojson.features[editObject.featureIndex].properties,
     editObject.feature.properties
   );
-  const newPath = parse(pathh).dir + randomUUID() + ".geojson";
+  const newPath = parse(pathh).dir + "/" + randomUUID() + ".geojson";
   await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
   return newPath;
 }
