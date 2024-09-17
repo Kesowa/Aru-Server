@@ -532,9 +532,9 @@ export const editGeoJson = async (
         const color = data.color;
         for (let i = 0; i < geojson.features.length; i++) {
           if (geojson.features[i].properties.color != data.color) {
-              data.color != req.body.feature[i].properties.color
-                ? "multicolor"
-                : undefined;
+            data.color != req.body.feature[i].properties.color
+              ? "multicolor"
+              : undefined;
           }
         }
         const savedDoc = await Layer.findByIdAndUpdate(
