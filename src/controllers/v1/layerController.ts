@@ -529,7 +529,7 @@ export const editGeoJson = async (
           // for public layer, re-generate search index after feature editing
           await saveFeatureSearchIndex(newPath);
         }
-        let color = data.color;
+        const color = data.color;
         for (let i = 0; i < geojson.features.length; i++) {
           if (geojson.features[i].properties.color != data.color) {
               data.color != req.body.feature[i].properties.color
