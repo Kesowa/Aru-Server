@@ -44,7 +44,7 @@ router.post(
     .toDate(), // yyyy-mm-ddThh:mm:ss.sss+hh:mm //REVISIT
   body("aadhaarNo").optional().notEmpty().isNumeric(), // aadharNo is optional in user creation form on frontend
   body("pilotLicenceNo").optional().notEmpty().isNumeric(), // pilotLicenceNo is optional in user creation form on frontend
-  body("avatar").optional().notEmpty().isMongoId(),
+  body("avatar").optional({ nullable: true, checkFalsy: true }).isMongoId(),
   validator,
   isAuthenticated,
   onlyTenantRootAccess,

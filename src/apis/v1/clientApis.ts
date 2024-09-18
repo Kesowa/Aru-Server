@@ -38,7 +38,7 @@ router.post(
   body("city").optional().notEmpty().trim(),
   //adding date format
   body("expiryDate").exists().isISO8601().toDate(),
-  body("avatar").optional().isString().trim(),
+  body("avatar").optional({ nullable: true, checkFalsy: true }).isMongoId(),
   validator,
   PermissionGuard(PERMS.CREATE_CLIENT),
   isClientCount,
