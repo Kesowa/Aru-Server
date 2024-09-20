@@ -105,7 +105,7 @@ db.locations.insertOne({
   _id: ObjectId("5f202f03b9225726102721b8"),
   geometry: {
     type: "Point",
-    coordinates: [ 88.88, 22.22 ],
+    coordinates: [88.88, 22.22],
   },
   properties: {
     name: "Base",
