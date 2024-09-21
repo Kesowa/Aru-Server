@@ -104,7 +104,7 @@ export const readCoords = async (img: KeyPath | DocPath | Buffer) => {
     metadata = await exifr.parse(img);
   }
   return {
-    lat: metadata.latitude ?? 0,
-    lng: metadata.longitude ?? 0,
+    lat: metadata?.latitude ?? 0,
+    lng: metadata?.longitude ?? 0,
   };
 };
