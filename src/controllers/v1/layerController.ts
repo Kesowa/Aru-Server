@@ -529,18 +529,17 @@ export const editGeoJson = async (
           // for public layer, re-generate search index after feature editing
           await saveFeatureSearchIndex(newPath);
         }
-        const color = data.color;
+        let updatedColor = geojson.features[0].properties.color;
         for (let i = 0; i < geojson.features.length; i++) {
-          if (geojson.features[i].properties.color != data.color) {
-            data.color != req.body.feature[i].properties.color
-              ? "multicolor"
-              : undefined;
+          if (geojson.features[i].properties.color != updatedColor) {
+            updatedColor = "multicolor";
+            break;
           }
         }
         const savedDoc = await Layer.findByIdAndUpdate(
           { _id: req.body.id },
           {
-            color: color,
+            color: updatedColor,
             layerpath: newPath,
           },
           { new: true }
