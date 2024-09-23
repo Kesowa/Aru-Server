@@ -78,7 +78,7 @@ router.post(
     .trim()
     .matches(/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/), // hex codes of color, ex: "#FFFFFF" or "#FFF"
   body("icon").optional().notEmpty().trim(), // example: MarkerIcon
-  body("inHeritOriginalColorFromFile").optional().notEmpty().trim().isBoolean(),
+  body("inHeritOriginalColorFromFile").optional().notEmpty().toBoolean(),
   validator,
   PermissionGuard(PERMS.UPLOAD_LAYER),
   isLayerCount,
