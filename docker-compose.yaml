@@ -95,7 +95,7 @@ services:
       "
 
   vod:
-    image: vod:latest
+    image: vod:1.0.0
     profiles:
       - vod
     depends_on:
@@ -105,7 +105,7 @@ services:
       - AWS_ACCESS_KEY_ID=minioadmin
       - AWS_SECRET_ACCESS_KEY=minioadmin
       - S3_BUCKET=aru
-      - S3_ENDPOINT=http://minio:9000
+      - S3_ENDPOINT=http://minio
       - S3_PATH_STYLE=true
       - AMQP_ADDR=amqp://rabbitmq:5672/%2f
       - RUST_LOG=debug
