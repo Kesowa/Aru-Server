@@ -18,12 +18,11 @@ import { readdir, rm } from "fs/promises";
 
 export const minioClient = new Minio.Client({
   endPoint: S3_ENDPOINT,
-  port: 9000,
-  useSSL: false,
+  useSSL: ARU_INSTANCE !== Instance.NKDA,
   region: "ap-south-1",
   accessKey: S3_ACCESS_KEY,
   secretKey: S3_SECRET_KEY,
-  pathStyle: ARU_INSTANCE != Instance.AWS,
+  pathStyle: ARU_INSTANCE === Instance.NKDA,
 });
 
 export const readToString = async (objKey: string) => {

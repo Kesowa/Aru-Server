@@ -3,7 +3,7 @@ import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import path from "path";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { CDN_URL, S3_BUCKET_NAME } from "../../constants";
+import { ARU_INSTANCE, CDN_URL, Instance, S3_BUCKET_NAME } from "../../constants";
 import { Directory } from "../../utils/pathUtils";
 import { minioClient } from "../../utils/objectStorage";
 import { IPackage } from "../../schemas/package";
@@ -79,7 +79,7 @@ export const createUploadUrl = async (
 
   const policy = minioClient.newPostPolicy();
   policy.setBucket(S3_BUCKET_NAME);
-  policy.setContentLengthRange(req.body.size * 0.99, req.body.size * 1.01);
+  policy.setContentLengthRange(Math.floor(req.body.size * 0.99), Math.ceil(req.body.size * 1.01));
   policy.setContentType(req.body.type);
   const expiry = new Date();
   expiry.setSeconds(3600 * 24);
@@ -113,7 +113,7 @@ export const createUploadUrl = async (
     },
     presigned: {
       formData: presignedUrl.formData,
-      postURL: CDN_URL, // !REVISIT: Change to public s3 path
+      postURL: ARU_INSTANCE == Instance.NKDA ? CDN_URL : presignedUrl.postURL, // !REVISIT: Change to public s3 path
     },
   });
 
