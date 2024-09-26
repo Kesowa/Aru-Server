@@ -448,7 +448,7 @@ const layers = [
     _id: ObjectId("64baa29d90d8e029361cd9a7"),
     name: "GREENERY",
     type: "Vector",
-    vector: "Jungle",
+    vector: "Green Verge",
     missionId: ObjectId("61f3b1e65f915a05cb8885ec"),
     color: "#81ee0a",
     fileSize: 0.00116,

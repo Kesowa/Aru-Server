@@ -612,14 +612,17 @@ export const generatePlotReport = async (
           }
         });
         const csv = new ObjectsToCsv(rows);
-        const filename = Math.floor(Math.random() * 620000);
-        const file = DirPath(Directory.CSV, `${filename}.csv`);
-        await csv.toDisk(file);
+        const csvData = await csv.toString();
+        const { filepath } = await saveFile(
+          Directory.TEMP,
+          randomUUID() + ".csv",
+          csvData
+        );
         return res.json({
           status: false,
           message: "Missing properties in features",
           errors,
-          csvPath: `/csv/${filename}.csv`,
+          csvPath: filepath,
         });
       }
 

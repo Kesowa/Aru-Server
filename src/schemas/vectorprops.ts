@@ -38,7 +38,7 @@ export enum vectorProps {
   POTHOLES = "Potholes",
   MUNICIPAL_BOUNDARY = "Municipal Boundary",
   WATER_BODY = "Waterbody",
-  GREEN_VERGE = "Green verge",
+  GREEN_VERGE = "Green Verge",
   PANCHAYAT_BOUNDARY = "Panchayat Boundary",
   REVENUE_WARD_BOUNDARY = "Revenue Ward Boundary",
   FIRE_STATION = "Fire Station",

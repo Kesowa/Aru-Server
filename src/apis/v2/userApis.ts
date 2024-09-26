@@ -7,6 +7,8 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUsers } from "../../utils/authUtils";
 import ObjectsToCsv from "objects-to-csv";
 import { Directory, DirPath } from "../../constants";
+import { saveFile } from "../../utils/dataUtils";
+import { randomUUID } from "crypto";
 
 const userApi = Router();
 
@@ -55,17 +57,13 @@ userApi.get(
 
     if (genCSV && data.length) {
       const csv = new ObjectsToCsv(data);
-      const file = DirPath(
-        Directory.CSV,
-        `${Math.floor(Math.random() * 62000000)}.csv`
+      const csvData = await csv.toString();
+      const { filepath } = await saveFile(
+        Directory.TEMP,
+        randomUUID() + ".csv",
+        csvData
       );
-      await csv.toDisk(file);
-      resp.csvPath =
-        "/" +
-        file
-          .split(/[\\\/]/)
-          .slice(8)
-          .join("/");
+      resp.csvPath = filepath;
     }
 
     res.json(resp);
