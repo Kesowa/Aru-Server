@@ -2,6 +2,10 @@ import { Request } from "express";
 import Tenant from "../../models/tenant";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { sendMail } from "../../utils/emailUtil";
+import { permPath } from "../../utils/dataUtils";
+import { saveThumbnails } from "../../utils/imageUtils";
+import { Directory } from "../../constants";
+import UploadTask from "../../models/uploadTask";
 
 //check if email is available for registration
 export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {
@@ -26,41 +30,50 @@ export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {
 export const updateOrganisationInfo = async (
   req: Request,
   res: AuthResponse
-) => {
-  {
+) => 
+  {  
     if (res.locals.user.tenantId) {
-      const tenant = await Tenant.findByIdAndUpdate(
-        res.locals.user.tenantId,
-        {
-          name: req.body.name,
-          contactPerson: req.body.contactPerson,
-          registrationNumber: req.body.registrationNumber,
-          officialWebsite: req.body.officialWebsite,
-          gstNumber: req.body.gstNumber,
-          billingAddressLine1: req.body.billingAddressLine1,
-          billingAddressLine2: req.body.billingAddressLine2,
-          billingCity: req.body.billingCity,
-          billingDistrict: req.body.billingDistrict,
-          billingState: req.body.billingState,
-          billingPin: req.body.billingPin,
-          updatedBy: res.locals.user._id,
-          avatar: req.body.avatar ? req.body.avatar : undefined,
-        },
-        {
-          new: true,
-        }
-      );
-      res.json({
-        status: true,
-        message: "Organisation updated sucessfully.",
-        data: tenant,
-      });
-    } else {
-      res.json({
-        status: false,
-        message: "You can not use this API.",
+    let fileDoc;
+    if (req.body.avatar) {
+      fileDoc = await UploadTask.findOne({
+        _id: req.body.avatar,
+        tenant: res.locals.user.tenantId._id,
+        createdBy: res.locals.user._id,
       });
     }
+    const updateData: any = {
+      name: req.body.name,
+      contactPerson: req.body.contactPerson,
+      registrationNumber: req.body.registrationNumber,
+      officialWebsite: req.body.officialWebsite,
+      gstNumber: req.body.gstNumber,
+      billingAddressLine1: req.body.billingAddressLine1,
+      billingAddressLine2: req.body.billingAddressLine2,
+      billingCity: req.body.billingCity,
+      billingDistrict: req.body.billingDistrict,
+      billingState: req.body.billingState,
+      billingPin: req.body.billingPin,
+      updatedBy: res.locals.user._id,
+    };
+    
+    if (fileDoc) {
+      const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+      await saveThumbnails(fullPath); // Generate and save thumbnails (optional)
+      updateData.avatar = fullPath; // Set the full path as the avatar field
+    }
+    const tenant = await Tenant.findByIdAndUpdate(res.locals.user.tenantId, updateData, {
+      new: true,
+    });
+    res.json({
+      status: true,
+      message: "Organisation updated successfully.",
+      data: tenant,
+    });
+  } else {
+    res.json({
+      status: false,
+      message: "You can not use this API.",
+    });
   }
 };
 
