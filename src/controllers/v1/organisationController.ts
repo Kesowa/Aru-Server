@@ -30,9 +30,8 @@ export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {
 export const updateOrganisationInfo = async (
   req: Request,
   res: AuthResponse
-) => 
-  {  
-    if (res.locals.user.tenantId) {
+) => {
+  if (res.locals.user.tenantId) {
     let fileDoc;
     if (req.body.avatar) {
       fileDoc = await UploadTask.findOne({
@@ -55,15 +54,22 @@ export const updateOrganisationInfo = async (
       billingPin: req.body.billingPin,
       updatedBy: res.locals.user._id,
     };
-    
+
     if (fileDoc) {
-      const fullPath = await permPath(Directory.USER_AVATARS, fileDoc.metadata.objectkey);
+      const fullPath = await permPath(
+        Directory.USER_AVATARS,
+        fileDoc.metadata.objectkey
+      );
       await saveThumbnails(fullPath); // Generate and save thumbnails (optional)
       updateData.avatar = fullPath; // Set the full path as the avatar field
     }
-    const tenant = await Tenant.findByIdAndUpdate(res.locals.user.tenantId, updateData, {
-      new: true,
-    });
+    const tenant = await Tenant.findByIdAndUpdate(
+      res.locals.user.tenantId,
+      updateData,
+      {
+        new: true,
+      }
+    );
     res.json({
       status: true,
       message: "Organisation updated successfully.",
