@@ -150,8 +150,8 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         let metadata = await response.json();
         req.log.info(metadata, "get metadata data :  ");
         //-------handle for detail:not found----
-        minP = metadata["1"]["min"];
-        maxP = metadata["1"]["max"];
+        minP = metadata["b1"]["min"];
+        maxP = metadata["b1"]["max"];
         metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}/${fileDoc.metadata.objectkey}`;
         response = await fetch(metaDataURL, {
           method: "GET",
