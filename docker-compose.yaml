@@ -53,7 +53,7 @@ services:
       - PORT=8000
       - WORKERS_PER_CORE=1
       - MAX_WORKERS=1
-    image: ghcr.io/developmentseed/titiler@sha256:3f71fe71d00d60e960a06804e368e3bd32d89f6e089e2c2eee8f6bdd526c759d
+    image: ghcr.io/developmentseed/titiler@sha256:86d3caa383c6a44752f662f40701b163727226318ba4f3f370f0fe8f660ec69e
     ports:
       - 8000:8000
     mem_limit: 256m
