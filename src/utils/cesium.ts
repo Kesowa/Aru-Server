@@ -3,9 +3,81 @@ import path from "path";
 import unzipper from "unzipper";
 import { minioClient, uploadAnything } from "./objectStorage";
 import { S3_BUCKET_NAME } from "../constants";
-import { PassThrough } from "stream";
+import { EventEmitter, PassThrough } from "stream";
 import { deletePublicFolderUsingPath } from "./fileDeleteUtils";
 import { logger } from "../app";
+import { ILayer } from "../schemas/layer";
+import { missionSpecificSocket } from "../socket";
+import layer from "../models/layer";
+
+export const LayerEvents = new EventEmitter();
+export const REQ_QUEUE = "file.decompress.req";
+export const RES_QUEUE = "file.decompress.res";
+
+export type ProcessZipData = ILayer;
+
+export type Zip = {
+  zip: string | null;
+};
+
+export type AruMetadata = {
+  mission_id: string;
+  user_id: string;
+  tenant_id: string;
+  layer_id: string;
+};
+
+export type TranscodeRequest = {
+  file: string;
+  metadata: AruMetadata;
+};
+
+export type TranscodeResponse = {
+  metadata: AruMetadata;
+  zip: Zip;
+  success: boolean;
+};
+
+export const decompressZip = async (
+  filePath: pathUtils.KeyPath | pathUtils.DocPath,
+  metadata: AruMetadata
+) => {
+  const req: TranscodeRequest = {
+    file: pathUtils.keyPath(filePath),
+    metadata,
+  };
+  logger.info(req, "SENT ZIP DECOMPRESS REQUEST");
+  LayerEvents.emit(REQ_QUEUE, req);
+};
+
+export const receiveZip = async (
+  zip: Zip,
+  metadata: AruMetadata,
+  success: boolean
+) => {
+  const data = await layer.findOne({
+    _id: metadata.layer_id,
+    tenantId: metadata.tenant_id,
+  });
+  if (success) {
+    data.metadata = "/" + zip.zip;
+    await data.save();
+    missionSpecificSocket
+      .to(String(data.missionId))
+      .emit("PROCESS_ZIP_FINISHED", data);
+  } else {
+    missionSpecificSocket
+      .to(String(data.missionId))
+      .emit("PROCESS_ZIP_FAILED", data);
+  }
+};
+
+LayerEvents.on(RES_QUEUE, function (res: TranscodeResponse) {
+  logger.info(res, "RECEIVED VIDEO TRANSCODE RESPONSE");
+  receiveZip(res.zip, res.metadata, res.success)
+    .then(() => logger.info(res, "SAVED ZIP"))
+    .catch((err) => logger.error({ res, err }, "FAILED TO SAVE ZIP"));
+});
 
 export async function ZipToTiles3D(zipDoc: string) {
   const name = path.parse(zipDoc).name;
