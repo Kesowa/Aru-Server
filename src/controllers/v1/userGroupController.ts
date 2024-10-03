@@ -60,8 +60,7 @@ export const listUserGroupforTenant = async (
     const [sortBy, order] = (req.query.sort || "name:desc").split(":");
     const user_groups = await UserGroup.find({
       tenantId: res.locals.user.tenantId._id,
-    })
-      .sort({ [sortBy]: sanitizeSort(order) });
+    }).sort({ [sortBy]: sanitizeSort(order) });
     return res.json({
       status: true,
       message: "user groups fetched",
