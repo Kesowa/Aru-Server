@@ -44,6 +44,7 @@ const worker = async () => {
     });
   });
   resChannel.consume(RES_QUEUE, function (msg) {
+    resChannel.ack(msg);
     VODEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
   });
   io.adapter(createAdapter({ amqpConnection: () => amqpConnection }));

@@ -53,6 +53,9 @@ import routerV2 from "./apis/v2/routerV2";
 
 const app: Application = express();
 
+app.get("/", (_, res) => {
+  res.status(200).send();
+});
 app.use(compression());
 app.use(
   helmet({
