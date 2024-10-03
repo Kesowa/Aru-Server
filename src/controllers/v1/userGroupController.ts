@@ -61,7 +61,6 @@ export const listUserGroupforTenant = async (
     const user_groups = await UserGroup.find({
       tenantId: res.locals.user.tenantId._id,
     })
-      .collation({ locale: "en" })
       .sort({ [sortBy]: sanitizeSort(order) });
     return res.json({
       status: true,

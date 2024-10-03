@@ -739,7 +739,6 @@ export const getListClient = async (req: Request, res: AuthResponse) => {
       userType: "tenant-client",
     })
       .populate<{ createdBy: IUser }>({ path: "createdBy", select: "name" })
-      .collation({ locale: "en" })
       .sort({ [sortBy]: order as SortOrder })
       .skip(limit * page)
       .limit(limit)
