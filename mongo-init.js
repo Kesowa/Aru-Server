@@ -44,7 +44,7 @@ const commonProps = {
     layerGroupId: null,
     captureDate: ISODate(),
     tenantId: TENANT,
-    layerLabel: "filename",
+    layerLabel: "Id",
     isBase: false,
     isPublic: false,
     publicMapRef: null,
