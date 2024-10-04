@@ -109,6 +109,22 @@ services:
       - S3_PATH_STYLE=true
       - AMQP_ADDR=amqp://rabbitmq:5672/%2f
       - RUST_LOG=debug
+          
+  zip:
+    image: zip:latest
+    profiles:
+      - zip
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - S3_BUCKET=aru
+      - S3_ENDPOINT=http://minio
+      - S3_PATH_STYLE=true
+      - AMQP_ADDR=amqp://rabbitmq:5672/%2f
+      - RUST_LOG=debug
 
   rabbitmq:
     image: rabbitmq@sha256:473953b02b8346091f0b3a6819e017618cbe95cb568bca2fecf00966a20ccf2a

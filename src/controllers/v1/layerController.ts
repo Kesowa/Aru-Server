@@ -55,7 +55,7 @@ import {
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D } from "../../utils/pointcloud";
-import { ZipToTiles3D, decompressZip, delete3DTiles } from "../../utils/cesium";
+import { decompressZip, delete3DTiles } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { readToBuffer } from "../../utils/objectStorage";
 import { randomUUID } from "crypto";
