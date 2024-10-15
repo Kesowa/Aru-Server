@@ -49,7 +49,11 @@ import { readFile, saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
 import ObjectsToCsv from "objects-to-csv";
 import { rasterProps } from "../../schemas/rasterprops";
-import { PlotPropertiesSchema, BlockPropertiesSchema, BuildingPropertiesSchema } from "../../../aru-common/schemas/properties";
+import {
+  PlotPropertiesSchema,
+  BlockPropertiesSchema,
+  BuildingPropertiesSchema,
+} from "../../../aru-common/schemas/properties";
 import z from "zod";
 
 export function findArea(features: Feature<turf.Geometry, turf.Properties>[]) {
