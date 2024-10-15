@@ -1,0 +1,3 @@
+[submodule "aru-common"]
+	path = aru-common
+	url = https://github.com/Kesowa/aru-common.git

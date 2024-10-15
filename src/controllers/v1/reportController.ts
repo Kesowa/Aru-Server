@@ -40,7 +40,6 @@ import {
   IBuildingProperties,
   IPlotProperties,
   IPlotReportData,
-  IPlotReportError,
 } from "../../utils/reportUtils/plot-report/types";
 import { generatePlotReportDocument } from "../../utils/reportUtils/plot-report/report";
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
@@ -50,6 +49,8 @@ import { readFile, saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
 import ObjectsToCsv from "objects-to-csv";
 import { rasterProps } from "../../schemas/rasterprops";
+import { PlotPropertiesSchema, BlockPropertiesSchema, BuildingPropertiesSchema } from "../../../aru-common/schemas/properties";
+import z from "zod";
 
 export function findArea(features: Feature<turf.Geometry, turf.Properties>[]) {
   try {
@@ -421,37 +422,11 @@ export const generatePlotReport = async (
 ) => {
   {
     const { missionId } = req.body;
-    const errors: IPlotReportError = {
+    const errors = {
       layers: [],
-      plots: {
-        plotNo: [],
-        premiseNo: [],
-        buildingAvailable: [],
-        pincode: [],
-        category: [],
-        shopFloor: [],
-        buildingStatus: [],
-        blockName: [],
-        sys_id: [],
-        sanctionedBuildingNo: [],
-        infraction: [],
-        isIncentiveEligible: [],
-        isGreenTopEligible: [],
-        isSolarPlantEligible: [],
-        hasTradeLicense: [],
-        tax: [],
-      },
-      blocks: {
-        blockName: [],
-        averageBlockHeight: [],
-        averageIncentives: [],
-      },
-      buildings: {
-        premiseNo: [],
-        height: [],
-        sys_id: [],
-        blockName: [],
-      },
+      plots: {},
+      blocks: {},
+      buildings: {},
     };
 
     try {
@@ -550,26 +525,41 @@ export const generatePlotReport = async (
       let foundError = false;
 
       plotGeojson.features.forEach((plot, index) => {
-        for (const key of Object.keys(errors.plots)) {
-          if (!plot.properties[key]) {
+        try {
+          PlotPropertiesSchema.parse(plot.properties);
+        } catch (error) {
+          const zodErrors = (error as z.ZodError).errors;
+          for (const zodError of zodErrors) {
+            const prop = String(zodError.path[0]);
             foundError = true;
-            errors.plots[key].push(index);
+            if (errors.plots[prop]) errors.plots[prop].push(index);
+            else errors.plots[prop] = [index];
           }
         }
       });
       actionAreaGeojson.features.forEach((block, index) => {
-        for (const key of Object.keys(errors.blocks)) {
-          if (!block.properties[key]) {
+        try {
+          BlockPropertiesSchema.parse(block.properties);
+        } catch (error) {
+          const zodErrors = (error as z.ZodError).errors;
+          for (const zodError of zodErrors) {
+            const prop = String(zodError.path[0]);
             foundError = true;
-            errors.blocks[key].push(index);
+            if (errors.blocks[prop]) errors.blocks[prop].push(index);
+            else errors.blocks[prop] = [index];
           }
         }
       });
       buildingsGeojson.features.forEach((building, index) => {
-        for (const key of Object.keys(errors.buildings)) {
-          if (!building.properties[key]) {
+        try {
+          BuildingPropertiesSchema.parse(building.properties);
+        } catch (error) {
+          const zodErrors = (error as z.ZodError).errors;
+          for (const zodError of zodErrors) {
+            const prop = String(zodError.path[0]);
             foundError = true;
-            errors.buildings[key].push(index);
+            if (errors.buildings[prop]) errors.buildings[prop].push(index);
+            else errors.buildings[prop] = [index];
           }
         }
       });
@@ -612,14 +602,17 @@ export const generatePlotReport = async (
           }
         });
         const csv = new ObjectsToCsv(rows);
-        const filename = Math.floor(Math.random() * 620000);
-        const file = DirPath(Directory.CSV, `${filename}.csv`);
-        await csv.toDisk(file);
+        const csvData = await csv.toString();
+        const { filepath } = await saveFile(
+          Directory.TEMP,
+          randomUUID() + ".csv",
+          csvData
+        );
         return res.json({
           status: false,
           message: "Missing properties in features",
           errors,
-          csvPath: `/csv/${filename}.csv`,
+          csvPath: filepath,
         });
       }
 

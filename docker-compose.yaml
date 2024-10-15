@@ -5,6 +5,7 @@ services:
       dockerfile: dockerfile.dev
     volumes:
       - ./src:/app/src
+      - ./aru-common:/app/aru-common
       - ./public:/app/public:rw
       - ./adapter:/app/adapter:ro
     environment:
