@@ -6,7 +6,7 @@ import { UserType } from "../../schemas/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUsers } from "../../utils/authUtils";
 import ObjectsToCsv from "objects-to-csv";
-import { Directory, DirPath } from "../../constants";
+import { Directory } from "../../constants";
 import { saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
 
