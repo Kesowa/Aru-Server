@@ -6,13 +6,13 @@ import bcrypt from "bcrypt";
 import ObjectsToCsv from "objects-to-csv";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
-import crypto from "crypto";
+import crypto, { randomUUID } from "crypto";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { IUser } from "../../schemas/user";
 import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
 import { getFileSize } from "../../utils/fileUtils";
 import UploadTask from "../../models/uploadTask";
-import { permPath } from "../../utils/dataUtils";
+import { permPath, saveFile } from "../../utils/dataUtils";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
 
 import { PERMS } from "../../schemas/permission";
@@ -263,20 +263,16 @@ export const userCsv = async (req: Request, res: AuthResponse) => {
     ).lean();
     if (data.length) {
       const csv = new ObjectsToCsv(data);
-      const file = DirPath(
-        Directory.CSV,
-        `${Math.floor(Math.random() * 62000000)}.csv`
+      const csvData = await csv.toString();
+      const { filepath } = await saveFile(
+        Directory.TEMP,
+        randomUUID() + ".csv",
+        csvData
       );
-      await csv.toDisk(file);
       res.json({
         status: true,
         message: "Users CSV generated sucessfully.",
-        pathh:
-          "/" +
-          file
-            .split(/[\\\/]/)
-            .slice(8)
-            .join("/"),
+        pathh: filepath,
       });
     } else
       return res.status(400).json({
