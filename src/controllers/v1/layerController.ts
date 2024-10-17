@@ -55,7 +55,7 @@ import {
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D } from "../../utils/pointcloud";
-import { ZipToTiles3D, delete3DTiles } from "../../utils/cesium";
+import { decompressZip, delete3DTiles } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { readToBuffer } from "../../utils/objectStorage";
 import { randomUUID } from "crypto";
@@ -171,9 +171,6 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         } else {
           metadata = await LazToTiles3D(fileDoc.metadata.objectkey);
         }
-      } else if (rasterType == rasterProps.CESIUM_3D) {
-        // Extract zip, locate tileset, move to correct location
-        metadata = await ZipToTiles3D(fileDoc.metadata.objectkey);
       }
       const fullPath = await permPath(
         Directory.RASTER,
@@ -204,6 +201,16 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
     }
     if (layer) {
       const savedDoc = await layer.save();
+
+      if (layer.raster == rasterProps.CESIUM_3D) {
+        // Extract zip, locate tileset, move to correct location
+        decompressZip(layer.layerpath, {
+          layer_id: layer._id.toString(),
+          tenant_id: layer.tenantId.toString(),
+          mission_id: layer.missionId.toString(),
+          user_id: layer.createdBy.toString(),
+        });
+      }
       const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,
       });
