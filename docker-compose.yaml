@@ -109,7 +109,7 @@ services:
       - S3_PATH_STYLE=true
       - AMQP_ADDR=amqp://rabbitmq:5672/%2f
       - RUST_LOG=debug
-          
+
   zip:
     image: zip:latest
     profiles:

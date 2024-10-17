@@ -171,7 +171,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         } else {
           metadata = await LazToTiles3D(fileDoc.metadata.objectkey);
         }
-      } 
+      }
       const fullPath = await permPath(
         Directory.RASTER,
         fileDoc.metadata.objectkey
@@ -209,7 +209,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           tenant_id: layer.tenantId.toString(),
           mission_id: layer.missionId.toString(),
           user_id: layer.createdBy.toString(),
-        })
+        });
       }
       const tenant = await Tenant.findOne({
         _id: res.locals.user.tenantId,

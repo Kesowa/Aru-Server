@@ -5,7 +5,11 @@ import { createAdapter } from "./utils/socket.io-adapter";
 import { connect } from "amqplib";
 import { ioHandler } from "./socket";
 import { REQ_QUEUE, RES_QUEUE, VODEvents } from "./utils/videoUtils";
-import { REQ_QUEUE as LAYER_REQ, RES_QUEUE as LAYER_RES, LayerEvents } from "./utils/cesium";
+import {
+  REQ_QUEUE as LAYER_REQ,
+  RES_QUEUE as LAYER_RES,
+  LayerEvents,
+} from "./utils/cesium";
 
 import mongoose from "mongoose";
 import {
@@ -41,13 +45,13 @@ const worker = async () => {
     await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
     const resChannel = await amqpConnection.createChannel();
     await resChannel.assertQueue(RES_QUEUE, { durable: true });
-    VODEvents.on(REQ_QUEUE, function(req) {
+    VODEvents.on(REQ_QUEUE, function (req) {
       reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
         persistent: true,
         contentType: "application/json",
       });
     });
-    resChannel.consume(RES_QUEUE, function(msg) {
+    resChannel.consume(RES_QUEUE, function (msg) {
       resChannel.ack(msg);
       VODEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
     });
@@ -61,13 +65,13 @@ const worker = async () => {
     await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
     const resChannel = await amqpConnection.createChannel();
     await resChannel.assertQueue(RES_QUEUE, { durable: true });
-    LayerEvents.on(REQ_QUEUE, function(req) {
+    LayerEvents.on(REQ_QUEUE, function (req) {
       reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
         persistent: true,
         contentType: "application/json",
       });
     });
-    resChannel.consume(RES_QUEUE, function(msg) {
+    resChannel.consume(RES_QUEUE, function (msg) {
       resChannel.ack(msg);
       LayerEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
     });
