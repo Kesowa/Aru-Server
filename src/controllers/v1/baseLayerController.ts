@@ -1208,17 +1208,17 @@ export const createBaseRasterfromUpload = async (
     let center = { lat: 0, lng: 0 };
     let metadata = {};
     if (rasterType == rasterProps.DEM) {
-      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
+      let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}/${fileDoc.metadata.objectkey}`;
       //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       let response = await fetch(metaDataURL, {
         method: "GET",
       });
       let metadata = await response.json();
       //-------handle for detail:not found----
-      minP = metadata["1"]["min"];
-      maxP = metadata["1"]["max"];
+      minP = metadata["b1"]["min"];
+      maxP = metadata["b1"]["max"];
 
-      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
+      metaDataURL = `${TITILER_SERVER}/cog/info?url=${TITILER_STATIC}/${fileDoc.metadata.objectkey}`;
       response = await fetch(metaDataURL, {
         method: "GET",
       });
