@@ -23,7 +23,7 @@ router.post(
   isAuthenticated,
   body("name").isString(),
   body("size").isInt({ min: 1 }).withMessage("file size in bytes"),
-  body("type").isMimeType(),
+  body("type").default("application/octet-stream").isMimeType(),
   body("model").isString(),
   validator,
   RobustRunner(createUploadUrl)
