@@ -733,35 +733,21 @@ export const getbymissionID = async (req: Request, res: AuthResponse) => {
         centerPoints: 1,
       }
     );
+
     const doc = await Layer.find({
       missionId: id,
       tenantId: res.locals.user.tenantId._id,
     }).populate<{ layerGroupId: ILayerGroup }>("layerGroupId");
-    if (doc.length) {
-      if (doc) {
-        res.status(200).json({
-          status: true,
-          message: "Layer fetched successfully",
-          data: {
-            mission: mission["name"],
-            centerPoints: flight.centerPoints,
-            layers: doc,
-          },
-        });
-      } else {
-        res.status(200).json({
-          status: false,
-          message: `Layer does not exist for ${id}`,
-        });
-      }
-    } else {
-      res.status(200).json({
-        status: true,
-        message: "No layer exists for mission",
+
+    res.status(200).json({
+      status: true,
+      message: "Layer fetched successfully",
+      data: {
         mission: mission["name"],
         centerPoints: flight.centerPoints,
-      });
-    }
+        layers: doc,
+      },
+    });
   }
 };
 
