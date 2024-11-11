@@ -67,7 +67,7 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
                 message: "Client has expired",
               });
             } else {
-              res.cookie("email", user.email);
+              res.cookie("email", user.email, { httpOnly: true, secure: true });
               res.json({
                 status: true,
                 message: "login sucessfully",
@@ -76,7 +76,7 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
               });
             }
           } else {
-            res.cookie("email", user.email);
+            res.cookie("email", user.email, { httpOnly: true, secure: true });
             res.json({
               status: true,
               message: "login sucessfully",
