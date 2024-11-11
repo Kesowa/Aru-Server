@@ -89,7 +89,7 @@ if (MODE == Mode.Prod) {
         loggerOpts: seqConfig,
       },
     },
-    redact: ["req.body.password"],
+    redact: ["req.body.password", "req.headers.authorization"],
   });
 } else {
   logger = pino({
