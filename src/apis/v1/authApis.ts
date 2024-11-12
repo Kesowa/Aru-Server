@@ -8,7 +8,15 @@ import {
 } from "../../controllers/v1/authController";
 import { isAuthenticated, shouldLinkSend } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
+import rateLimit from "express-rate-limit";
 const router = express.Router();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 50,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+})
 
 //++++++++++++++++++++ user login Api +++++++++++++++++++++++++++++
 router.post(
@@ -18,6 +26,7 @@ router.post(
     .isLength({ min: 5 })
     .withMessage("Password must be at least 5 chars long."),
   validator,
+  limiter,
   RobustRunner(loginUser)
 );
 
