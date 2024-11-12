@@ -50,8 +50,18 @@ import {
 import cors from "cors";
 import cookie from "cookie";
 import routerV2 from "./apis/v2/routerV2";
+import rateLimit from "express-rate-limit";
 
 const app: Application = express();
+
+const limiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 250,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
+
+app.use(limiter);
 
 app.get("/", (_, res) => {
   res.status(200).send();

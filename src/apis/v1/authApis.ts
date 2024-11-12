@@ -16,7 +16,7 @@ const limiter = rateLimit({
   limit: 50,
   standardHeaders: "draft-7",
   legacyHeaders: false,
-})
+});
 
 //++++++++++++++++++++ user login Api +++++++++++++++++++++++++++++
 router.post(
