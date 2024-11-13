@@ -60,6 +60,8 @@ services:
     mem_limit: 256m
     memswap_limit: 256m
     cpus: 0.5
+    networks:
+      - aru
 
   minio:
     image: minio/minio@sha256:c7175077d39a8cc10c9fd611cdcc68b6a5b365793e9ac6f4198ffff1ef0fe555
@@ -75,6 +77,8 @@ services:
     ports:
       - 9001:9001
       - 9000:80
+    networks:
+      - aru
 
   createbuckets:
     image: minio/mc
@@ -136,3 +140,8 @@ services:
       retries: 3
     # mem_limit: 128m
     # memswap_limit: 128m
+
+networks:
+  aru:
+    name: aru
+    driver: bridge
