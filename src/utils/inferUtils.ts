@@ -5,6 +5,9 @@ import { missionSpecificSocket } from "../socket";
 import { Connection } from "amqplib";
 import aimlModel from "../models/aimlTask";
 import { IAimlTask, inferTypes } from "../schemas/aimlTask";
+import { permPath } from "./dataUtils";
+import { randomUUID } from "crypto";
+import { extname } from "path";
 
 export const InferEvents = new EventEmitter();
 
@@ -30,10 +33,7 @@ export async function Setup(conn: Connection) {
 
 export type ProcessInferData = IAimlTask;
 
-export type Infer = {
-  data: string | null;
-  path: string | null;
-};
+export type Infer = string;
 
 export type AruMetadata = {
   mission_id: string;
@@ -50,7 +50,7 @@ export type InferRequest = {
 
 export type InferResponse = {
   metadata: AruMetadata;
-  infer: Infer;
+  inference: Infer;
   success: boolean;
 };
 
@@ -78,23 +78,30 @@ export const receiveInfer = async (
     tenantId: metadata.tenant_id,
   });
   if (success) {
-    data.data = infer.data || "/" + infer.path;
+    if (infer) {
+      const file_path = await permPath(pathUtils.Directory.AI_ML, infer);
+      data.data = file_path;
+    }
+    else {
+      logger.error(metadata, "No data for inference!");
+    }
     data.status = "completed";
     await data.save();
     missionSpecificSocket
       .to(String(metadata.mission_id))
-      .emit("PROCESS_INFER_FINISHED", data);
+      .emit("AI_TASK", data);
   } else {
-    await data.updateOne({ status: "failed" });
+    data.status = "failed";
+    await data.save();
     missionSpecificSocket
       .to(String(metadata.mission_id))
-      .emit("PROCESS_INFER_FAILED", data);
+      .emit("AI_TASK", data);
   }
 };
 
 InferEvents.on(RES_QUEUE, function(res: InferResponse) {
   logger.info(res, "RECEIVED ZIP DECOMPRESS RESPONSE");
-  receiveInfer(res.infer, res.metadata, res.success)
+  receiveInfer(res.inference, res.metadata, res.success)
     .then(() => logger.info(res, "SAVED INFERENCE"))
     .catch((err) => logger.error({ res, err }, "FAILED TO SAVE INFERENCE"));
 });

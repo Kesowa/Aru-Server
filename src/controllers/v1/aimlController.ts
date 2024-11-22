@@ -1,14 +1,10 @@
 import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { AIML_SERVER, API_SERVER, CDN_URL, Directory } from "../../constants";
 import VOD from "../../models/vod";
 import aimlModel from "../../models/aimlTask";
-import { IVOD } from "../../schemas/VOD";
-import { HydratedDocument } from "mongoose";
-import fetch from "node-fetch";
 import moment from "moment";
 import { notificationSocket } from "../../socket";
-import { saveAIMLFile } from "../../utils/dataUtils";
+import { sendInfer } from "../../utils/inferUtils";
 
 export const inferVodViolence = async (
   req: Request<{ vodId: string }>,
@@ -67,44 +63,30 @@ export const inferVodViolence = async (
   const newTask = hadFailed
     ? oldTask
     : await aimlModel.create({
-        doc: vod._id,
-        docModel: "vod",
-        status: "started",
-        infer: "violence",
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
-        tenant: res.locals.user.tenantId._id,
-        data: "null",
-      });
-  const body = {
-    inference: "violence",
-    target: CDN_URL + mp4,
-    callback: `${API_SERVER}/apis/v1/aiml/vod/${newTask._id.toHexString()}/violence/callback`,
-  };
-  try {
-    const aiServerResponse = await fetch(AIML_SERVER + "/video/violence", {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "content-type": "application/json",
-      },
+      doc: vod._id,
+      docModel: "vod",
+      status: "started",
+      infer: "violence",
+      createdBy: res.locals.user._id,
+      updatedBy: res.locals.user._id,
+      tenant: res.locals.user.tenantId._id,
+      data: "null",
     });
-    if (aiServerResponse.ok) {
-      res.status(201).json({
-        status: true,
-        message: hadFailed ? "task restarted" : "task started",
-      });
-      notificationSocket
-        .to(newTask.tenant.toHexString())
-        .emit("AI_TASK", newTask);
-      return;
-    } else {
-      res.status(505).json({
-        status: false,
-        message: "unable to start task",
-      });
-      return;
-    }
+  try {
+    await sendInfer(mp4, "violence", {
+      mission_id: newTask.doc._id.toString(),
+      tenant_id: newTask.tenant.toString(),
+      user_id: newTask.createdBy.toString(),
+      infer_id: newTask._id.toString(),
+    });
+    res.status(201).json({
+      status: true,
+      message: hadFailed ? "task restarted" : "task started",
+    });
+    notificationSocket
+      .to(newTask.tenant.toHexString())
+      .emit("AI_TASK", newTask);
+    return;
   } catch (err) {
     await newTask.updateOne({ status: "failed" });
     req.log.error(err, "ai server request failed");
@@ -114,45 +96,6 @@ export const inferVodViolence = async (
     });
     return;
   }
-};
-export const callbackVodViolence = async (
-  req: Request<
-    { taskId: string },
-    {
-      Keys: string[];
-      Values: [number, number][];
-    }
-  >,
-  res: AuthResponse
-) => {
-  const task = await aimlModel
-    .findById(req.params.taskId)
-    .populate<{ doc: HydratedDocument<IVOD> }>("doc");
-  if (task === null) {
-    res.status(404).json({
-      status: false,
-      message: "task not found",
-    });
-    return;
-  }
-  if (task.status == "completed") {
-    res.status(408).json({
-      status: false,
-      message: "task already completed",
-    });
-    return;
-  }
-  const filename = `${task.infer}_${task._id}.json`;
-  await saveAIMLFile(filename, JSON.stringify(req.body));
-  task.status = "completed";
-  task.data = `${Directory.AI_ML}/${filename}`;
-  await task.save();
-  notificationSocket.to(task.tenant.toHexString()).emit("AI_TASK", task);
-  res.status(201).json({
-    status: true,
-    message: "task successfully completed",
-  });
-  return;
 };
 
 export const fetchAimlTasks = async (
