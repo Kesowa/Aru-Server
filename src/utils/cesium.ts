@@ -6,10 +6,29 @@ import { logger } from "../app";
 import { ILayer } from "../schemas/layer";
 import { missionSpecificSocket } from "../socket";
 import layer from "../models/layer";
+import { Connection } from "amqplib";
 
 export const LayerEvents = new EventEmitter();
+
 export const REQ_QUEUE = "file.decompress.req";
 export const RES_QUEUE = "file.decompress.res";
+
+export async function Setup(conn: Connection) {
+  const reqChannel = await conn.createChannel();
+  await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
+  const resChannel = await conn.createChannel();
+  await resChannel.assertQueue(RES_QUEUE, { durable: true });
+  LayerEvents.on(REQ_QUEUE, function(req) {
+    reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
+      persistent: true,
+      contentType: "application/json",
+    });
+  });
+  resChannel.consume(RES_QUEUE, function(msg) {
+    resChannel.ack(msg);
+    LayerEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
+  });
+}
 
 export type ProcessZipData = ILayer;
 
@@ -69,7 +88,7 @@ export const receiveZip = async (
   }
 };
 
-LayerEvents.on(RES_QUEUE, function (res: TranscodeResponse) {
+LayerEvents.on(RES_QUEUE, function(res: TranscodeResponse) {
   logger.info(res, "RECEIVED ZIP DECOMPRESS RESPONSE");
   receiveZip(res.zip, res.metadata, res.success)
     .then(() => logger.info(res, "SAVED ZIP"))
