@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { body, param, query } from "express-validator";
+import { param, query } from "express-validator";
 import {
-  callbackVodViolence,
   inferVodViolence,
   fetchAimlTasks,
 } from "../../controllers/v1/aimlController";
@@ -17,14 +16,7 @@ router.post(
   validator,
   RobustRunner(inferVodViolence)
 );
-router.post(
-  "/vod/:taskId/violence/callback",
-  param("taskId").isMongoId(),
-  body("Keys").isArray(),
-  body("Values").isArray(),
-  validator,
-  RobustRunner(callbackVodViolence)
-);
+
 router.get(
   "/:docModel/:docId",
   param("docModel").isString(),
