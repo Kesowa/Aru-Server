@@ -39,9 +39,9 @@ import {
   IBlockProperties,
   IBuildingProperties,
   IPlotProperties,
-  IPlotReportData,
 } from "../../utils/reportUtils/plot-report/types";
-import { generatePlotReportDocument } from "../../utils/reportUtils/plot-report/report";
+import { IPlotReportData } from "../../utils/reportUtils";
+import { generatePlotReport as generatePlotReportDocument } from "../../utils/reportUtils";
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
@@ -505,7 +505,6 @@ export const generatePlotReport = async (
         });
       }
 
-      const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;
       const plotGeojson = await readGeoJson<
         Feature<turf.MultiPolygon, IPlotProperties>
       >(DirPath(Directory.DEFAULT, plotLayer.layerpath));
@@ -522,9 +521,9 @@ export const generatePlotReport = async (
 
       // multiple plot reports will be generated, one for each flagged plot
       // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
-      const flaggedPlotGeojson = plotGeojson.features.filter((_, index) =>
-        plotLayer.flaggedFeatures.includes(index)
-      );
+      // const flaggedPlotGeojson = plotGeojson.features.map((feature, index) => {
+      //   if (plotLayer.flaggedFeatures.includes(index)) return { plotIdx: index, feature };
+      // }).filter(e => !!e);
 
       let foundError = false;
 
@@ -622,17 +621,39 @@ export const generatePlotReport = async (
 
       const PlotsByBlock: Map<
         string,
-        Array<Feature<turf.MultiPolygon, IPlotProperties>>
+        {
+          blockIdx: number;
+          blockFeature: Feature<turf.MultiPolygon, IBlockProperties>;
+          plots: Array<{
+            plotIdx: number;
+            feature: Feature<turf.MultiPolygon, IPlotProperties>;
+          }>
+        }
       > = new Map();
 
-      for (const plotFeature of flaggedPlotGeojson) {
-        const block = PlotsByBlock.get(plotFeature.properties.blockName);
-        if (block != undefined) {
-          block.push(plotFeature);
+      for (const plotIdx of plotLayer.flaggedFeatures) {
+        const blockName = plotGeojson.features[plotIdx].properties.blockName;
+        const blockFound = PlotsByBlock.get(blockName);
+        if (blockFound != undefined) {
+          blockFound.plots.push({
+            plotIdx,
+            feature: plotGeojson.features[plotIdx],
+          });
         } else {
-          const array = [];
-          array.push(plotFeature);
-          PlotsByBlock.set(plotFeature.properties.blockName, array);
+          const blockIdx = actionAreaGeojson.features.findIndex(block => block.properties.blockName == blockName);
+          if (blockIdx != -1) {
+            PlotsByBlock.set(
+              plotGeojson.features[plotIdx].properties.blockName, 
+              {
+                blockIdx,
+                blockFeature: actionAreaGeojson.features[blockIdx],
+                plots: [{
+                  plotIdx,
+                  feature: plotGeojson.features[plotIdx],
+                }]
+              }
+            );
+          }
         }
       }
       // plot images (one per plot, fail safe if absent)
@@ -677,19 +698,6 @@ export const generatePlotReport = async (
 
       // =================================== DETAILS THAT WON'T VARY ACROSS REPORTS OF DIFFERENT PLOTS ==================================
 
-      // ************* COVER PAGE DETAILS ****************
-      // Cover page in sample report shows block boundary and all the plots in the block, so it will be same for all plot reports
-      const coverPageVectorFeatures = [
-        ...actionAreaGeojson.features,
-        ...plotGeojson.features,
-      ];
-      const coverImageBuffer = await saveScreenshot(
-        coverPageVectorFeatures,
-        [rasterFilePath],
-        req.log
-      );
-      // await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); // For Debugging
-
       const waterbodyGeojson = await readGeoJson(
         DirPath(Directory.DEFAULT, waterbodyLayer.layerpath)
       );
@@ -730,19 +738,12 @@ export const generatePlotReport = async (
 
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
-      for (const blockName of PlotsByBlock.keys()) {
+      for (const [blockName, blockData] of PlotsByBlock) {
         // ************* BLOCK DETAILS ******************
         // All plots belong to same block, so block properties need not be calculated repeatedly
 
-        const blockGeojson = actionAreaGeojson.features.find(
-          (block) => block.properties.blockName == blockName
-        );
+        const blockGeojson = blockData.blockFeature;
         const blockArea = turf.area(blockGeojson);
-        const blockImageBuffer = await saveScreenshot(
-          [blockGeojson],
-          [rasterFilePath],
-          req.log
-        );
         const blockProperties = blockGeojson.properties; // block layer will have only one MultiPolygon features
 
         const intersectWaterbody = turf.intersect(
@@ -779,7 +780,7 @@ export const generatePlotReport = async (
           .map((building) => building.properties.height)
           .reduce((prev, curr) => Number(curr) + prev, 0);
 
-        for (const plotFeature of PlotsByBlock.get(blockName)) {
+        for (const { plotIdx, feature: plotFeature } of blockData.plots) {
           try {
             const filename = `plot_report | ${
               plotFeature.properties.plotNo || "plotNo"
@@ -804,11 +805,6 @@ export const generatePlotReport = async (
             // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
             // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
             const plotArea = findArea([plotFeature]);
-            const plotImageBuffer = await saveScreenshot(
-              [plotFeature],
-              [rasterFilePath],
-              req.log
-            );
 
             // ******************** BUILDING DETAILS ************************
 
@@ -826,7 +822,6 @@ export const generatePlotReport = async (
               layerId: plotLayer._id,
               sys_Id: plotFeature.properties.sys_id,
             });
-            const frontViewImageBuffer = await readFile(plotLayerFile.filePath);
 
             const buildingProperties = plotBuildingFeature.properties;
 
@@ -835,16 +830,21 @@ export const generatePlotReport = async (
             // ================= PUTTING TOGETHER THE DATA =======================
 
             const data: IPlotReportData = {
+              plotLayerpath: plotLayer.layerpath,
+              blockLayerpath: actionAreaLayer.layerpath,
+              rasterLayerpath: rasterLayer.layerpath,
+              plotLayerFilepath: plotLayerFile.filePath,
+
+              plotIdx,
+              blockIdx: blockData.blockIdx,
+
               // cover page details
 
               date,
               users,
-              coverImageBuffer,
 
               // plot details
 
-              frontViewImageBuffer,
-              plotImageBuffer,
               plotArea: plotArea.toFixed(2),
               plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
               premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
@@ -873,7 +873,6 @@ export const generatePlotReport = async (
 
               // block details
 
-              blockImageBuffer,
               blockArea: blockArea.toFixed(2),
               greeneryArea: greeneryArea.toFixed(2),
               canopyArea: canopyArea.toFixed(2),
@@ -898,41 +897,16 @@ export const generatePlotReport = async (
 
             // req.log.info(data);
 
-            // saving the document
-            const doc = generatePlotReportDocument(data);
-            const buffer = await Packer.toBuffer(doc);
-            const filenamePath = randomUUID() + ".docx";
-            const { size } = await saveFile(
-              Directory.DOCUMENTS,
-              filenamePath,
-              buffer
-            );
-
-            await Document.findOneAndDelete({
-              tenantId: res.locals.user.tenantId._id,
-              missionId,
-              name: filename,
+            await generatePlotReportDocument({
+              ...data,
+              metadata: {
+                filename,
+                tenant_id: String(res.locals.user.tenantId._id),
+                user_id: String(res.locals.user._id),
+                mission_id: missionId,
+              }
             });
-
-            const docDB = new Document({
-              name: filename,
-              modDate: new Date(),
-              fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
-              fileType: "docx",
-              folderName: "root1234",
-              filePath: `/documents/${filenamePath}`,
-              missionId: missionId,
-              tenantId: res.locals.user.tenantId,
-              createdBy: res.locals.user._id,
-              updatedBy: res.locals.user._id,
-            });
-            const savedDoc = await docDB.save();
-
-            req.log.info("Report Generation Complete");
-
-            missionSpecificSocket
-              .to(missionId.toString())
-              .emit("REPORT_GENERATION_COMPLETE", savedDoc);
+          
           } catch (err) {
             req.log.error(
               { err, plot: plotFeature.properties },
