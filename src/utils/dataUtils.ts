@@ -1,5 +1,3 @@
-import { exec } from "child_process";
-import { promisify } from "util";
 import * as pathUtils from "./pathUtils";
 import path, { extname } from "path";
 import tokml from "tokml";
@@ -15,38 +13,13 @@ import {
   archive,
   copyObj,
   deleteObj,
-  downloadTemp,
   readToBuffer,
   readToString,
   stat,
   uploadAnything,
-  uploadDir,
   uploadString,
 } from "./objectStorage";
-import { rm, rmdir } from "fs/promises";
 import Fuse from "fuse.js";
-
-const asyncExec = promisify(exec);
-
-/**
- * Takes pointcloud file path, returns web view index page path or undefined
- */
-export const savePointcloud = async (doc: pathUtils.DocPath) => {
-  const absDocPath = await downloadTemp(doc);
-  const filename = path.parse(doc).name;
-  const absOutputPath = "/tmp/" + randomUUID();
-  const outputDirPath = pathUtils.docPath(
-    pathUtils.Directory.DOCUMENTS,
-    randomUUID()
-  );
-  await asyncExec(
-    `/bin/PotreeConverter ${absDocPath} -o ${absOutputPath} --generate-page ${filename}`
-  );
-  await uploadDir(absOutputPath, outputDirPath);
-  await rm(absDocPath);
-  await rmdir(absOutputPath);
-  return outputDirPath + "filename" + ".html";
-};
 
 const getFlagColor = (geojson: GeoJson) => {
   const colorSet = new Set(
@@ -57,6 +30,7 @@ const getFlagColor = (geojson: GeoJson) => {
   }
   return colorSet.values().next().value;
 };
+
 /**
  * Takes layer path, converts to geojson if necessary, and returns the new geojson path. Also cleans up.
  */

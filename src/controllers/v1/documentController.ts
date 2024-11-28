@@ -13,7 +13,7 @@ import {
 import { Directory, DirPath } from "../../constants";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
-import { createArchive, permPath, savePointcloud } from "../../utils/dataUtils";
+import { createArchive, permPath } from "../../utils/dataUtils";
 import UploadTask from "../../models/uploadTask";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
@@ -31,89 +31,50 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       });
       return;
     }
-    if (req.body.type === "pointCloud") {
-      const { missionId } = req.body;
-      missionSpecificSocket.to(missionId).emit("POINTCLOUD_EXTRACTION_START");
-      req.log.info("POINTCLOUD_EXTRACTION_STARTED");
-      const webviewPath = await savePointcloud(fileDoc.metadata.objectkey);
-      if (webviewPath) {
-        const doc = new Document({
-          name: fileDoc.metadata.originalName,
-          modDate: new Date(),
-          fileSize: fileDoc.metadata.filesize,
-          folderName: req.body.folderName,
-          fileType: req.body.type,
-          filePath: webviewPath,
-          missionId,
-          tenantId: res.locals.user.tenantId,
-          createdBy: res.locals.user._id,
-          updatedBy: res.locals.user._id,
-        });
-        const savedDoc = await doc.save();
-        missionSpecificSocket
-          .to(missionId)
-          .emit("POINTCLOUD_EXTRACTION_COMPLETED", savedDoc);
-        res.status(201).json({
-          status: true,
-          message: "New Document(s) Uploaded",
-          data: savedDoc,
-        });
-        return;
-      } else {
-        missionSpecificSocket
-          .to(missionId)
-          .emit("POINTCLOUD_EXTRACTION_FAILED");
-        res.status(500).json({
-          status: false,
-          message: "Failed to upload documents",
-        });
-        return;
-      }
-    } else {
-      const missionId = req.body.missionId;
-      const fullPath = await permPath(
-        Directory.DOCUMENTS,
-        fileDoc.metadata.objectkey
-      );
 
-      const doc = new Document({
-        name: fileDoc.metadata.originalName,
-        modDate: new Date(),
-        fileSize: fileDoc.metadata.filesize,
-        fileType: fileDoc.metadata.mimetype,
-        folderName: req.body.folderName,
-        filePath: fullPath,
-        missionId,
-        tenantId: res.locals.user.tenantId,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
+    const missionId = req.body.missionId;
+    const fullPath = await permPath(
+      Directory.DOCUMENTS,
+      fileDoc.metadata.objectkey
+    );
+
+    const doc = new Document({
+      name: fileDoc.metadata.originalName,
+      modDate: new Date(),
+      fileSize: fileDoc.metadata.filesize,
+      fileType: fileDoc.metadata.mimetype,
+      folderName: req.body.folderName,
+      filePath: fullPath,
+      missionId,
+      tenantId: res.locals.user.tenantId,
+      createdBy: res.locals.user._id,
+      updatedBy: res.locals.user._id,
+    });
+    if (
+      (req.body.folderName == "rawPhotos" ||
+        req.body.folderName == "photos") &&
+      (fileDoc.metadata.mimetype == "image/jpeg" ||
+        fileDoc.metadata.mimetype == "image/png")
+    ) {
+      req.log.debug("Uploading Thumbnails");
+      const thumbs = await saveThumbnails(doc.filePath);
+      doc.fileSize = thumbs.size;
+    }
+    const savedDoc = await doc.save();
+    missionSpecificSocket
+      .to(savedDoc.missionId.toString())
+      .emit("DOCUMENT_CREATED", savedDoc);
+    if (savedDoc) {
+      res.status(201).json({
+        status: true,
+        message: "New Document(s) Uploaded",
+        data: savedDoc,
       });
-      if (
-        (req.body.folderName == "rawPhotos" ||
-          req.body.folderName == "photos") &&
-        (fileDoc.metadata.mimetype == "image/jpeg" ||
-          fileDoc.metadata.mimetype == "image/png")
-      ) {
-        req.log.debug("Uploading Thumbnails");
-        const thumbs = await saveThumbnails(doc.filePath);
-        doc.fileSize = thumbs.size;
-      }
-      const savedDoc = await doc.save();
-      missionSpecificSocket
-        .to(savedDoc.missionId.toString())
-        .emit("DOCUMENT_CREATED", savedDoc);
-      if (savedDoc) {
-        res.status(201).json({
-          status: true,
-          message: "New Document(s) Uploaded",
-          data: savedDoc,
-        });
-      } else {
-        res.status(500).json({
-          status: false,
-          message: "Failed to upload documents",
-        });
-      }
+    } else {
+      res.status(500).json({
+        status: false,
+        message: "Failed to upload documents",
+      });
     }
   }
 };
