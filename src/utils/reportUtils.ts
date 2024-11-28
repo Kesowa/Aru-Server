@@ -116,7 +116,7 @@ export const receiveReport = async (res: PlotReportResponse) => {
       fileSize: (Number(res.size) / (1024 * 1024)).toFixed(5),
       fileType: "docx",
       folderName: "root1234",
-      filePath: `/documents/${res.metadata.filename}.docx`,
+      filePath: `/documents/${res.metadata.filename}`,
       missionId: res.metadata.mission_id,
       tenantId: res.metadata.tenant_id,
       createdBy: res.metadata.user_id,
