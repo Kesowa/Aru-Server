@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y curl gnupg libgomp1 \
   && apt-get install google-chrome-stable -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
-ADD ./ffmpeg.tar.gz /bin
 ADD ./dji_bin.tar.gz /bin
 ADD ./dji_lib.tar.gz /lib
 COPY package*.json ./
