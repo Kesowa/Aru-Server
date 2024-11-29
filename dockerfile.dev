@@ -12,7 +12,7 @@ ADD ./dji_bin.tar.gz /bin
 ADD ./dji_lib.tar.gz /lib
 COPY package*.json ./
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
-RUN npm ci
+RUN npm i
 COPY ./tsconfig.json ./
 ENV NODE_ENV=development
 CMD ["npm", "run", "dev"]

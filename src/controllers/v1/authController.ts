@@ -4,11 +4,9 @@ import User from "../../models/user";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
-import { sessionModel } from "../../models/session";
+import crypto, { randomUUID } from "crypto";
 import { API_SERVER, PUBLIC_SERVER } from "../../constants";
 import PassReset from "../../models/passwordReset";
-import { tokenEncoder } from "../../utils/authUtils";
 import ejs from "ejs";
 import path from "path";
 import { GetPermissions } from "../../schemas/permission";
@@ -36,16 +34,14 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
         const isPasswordValid = await user.comparePassword(req.body.password);
 
         if (isPasswordValid) {
-          const deletedSession = await sessionModel.deleteMany({
-            owner: user._id,
-          });
-          const createdSession = await sessionModel.create({ owner: user._id });
 
-          const token = tokenEncoder({
-            session: createdSession._id.toJSON(),
-            ip: req.ip,
-            agent: req.headers["user-agent"],
-          });
+          const token = randomUUID();
+          req.session["user"] = {
+            id: user._id,
+            email: user.email,
+            tenant: user.tenantId,
+          };
+
           const data = user.toObject();
 
           data.password = "secret";
@@ -67,7 +63,6 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
                 message: "Client has expired",
               });
             } else {
-              res.cookie("email", user.email, { httpOnly: true, secure: true });
               res.json({
                 status: true,
                 message: "login sucessfully",
@@ -76,7 +71,6 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
               });
             }
           } else {
-            res.cookie("email", user.email, { httpOnly: true, secure: true });
             res.json({
               status: true,
               message: "login sucessfully",
@@ -245,12 +239,18 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
       return;
     }
 
-    const user = await User.findOneAndUpdate(
+    await User.findOneAndUpdate(
       { email: pass.email },
       { $set: { password: hashedPassword } }
     );
-    const deletedSession = await sessionModel.deleteMany({ owner: user._id });
+
     await pass.delete();
+    req.session.destroy(err => {
+      if (err) {
+        req.log.error(err, "failed to delete session");
+      }
+      res.clearCookie("connect.sid");
+    });
     res.redirect(PUBLIC_SERVER);
   }
 };

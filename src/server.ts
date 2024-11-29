@@ -19,15 +19,10 @@ import {
 } from "./constants";
 
 const worker = async () => {
-  await mongoose.connect(MONGODB_CONNECTION_STRING);
+  const mongodb = await mongoose.connect(MONGODB_CONNECTION_STRING);
+
   //create http server
-  const server = http.createServer(
-    {
-      requestTimeout: 0,
-      connectionsCheckingInterval: 60 * 60 * 1e3,
-    },
-    app
-  );
+  const server = http.createServer(app(mongodb.connection));
 
   //create socket server
   const io = new Server(server, {
@@ -45,13 +40,13 @@ const worker = async () => {
     await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
     const resChannel = await amqpConnection.createChannel();
     await resChannel.assertQueue(RES_QUEUE, { durable: true });
-    VODEvents.on(REQ_QUEUE, function (req) {
+    VODEvents.on(REQ_QUEUE, function(req) {
       reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
         persistent: true,
         contentType: "application/json",
       });
     });
-    resChannel.consume(RES_QUEUE, function (msg) {
+    resChannel.consume(RES_QUEUE, function(msg) {
       resChannel.ack(msg);
       VODEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
     });
@@ -65,13 +60,13 @@ const worker = async () => {
     await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
     const resChannel = await amqpConnection.createChannel();
     await resChannel.assertQueue(RES_QUEUE, { durable: true });
-    LayerEvents.on(REQ_QUEUE, function (req) {
+    LayerEvents.on(REQ_QUEUE, function(req) {
       reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
         persistent: true,
         contentType: "application/json",
       });
     });
-    resChannel.consume(RES_QUEUE, function (msg) {
+    resChannel.consume(RES_QUEUE, function(msg) {
       resChannel.ack(msg);
       LayerEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
     });

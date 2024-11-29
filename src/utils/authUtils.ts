@@ -2,14 +2,12 @@ import { Request, NextFunction, Response } from "express";
 import User from "../models/user";
 import { AuthResponse } from "./interfaceUtils";
 import Tenant from "../models/tenant";
-import { sessionModel } from "../models/session";
 
 import { IPackage } from "../schemas/package";
 import PassReset from "../models/passwordReset";
-import crypto from "crypto";
-import { MODE, Mode, SECRET_KEY } from "../constants";
-import { ObjectId } from "mongodb";
 import { GetPermissions, PERMS } from "../schemas/permission";
+import { Session } from "express-session";
+import zod from "zod";
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,
@@ -18,53 +16,21 @@ enum InvalidAuth {
   INVALID_AGENT,
 }
 
-const hasher = crypto.createHash("MD5");
-hasher.update("somerandomkey", "utf8");
-export const iv = hasher.digest();
+const UserSession = zod.object({
+  id: zod.string(),
+  email: zod.string(),
+  tenant: zod.string(),
+});
 
-type Payload = {
-  session: string;
-  ip: string;
-  agent: string;
-};
-
-export const tokenEncoder = (payload: Payload) => {
-  const cipher = crypto.createCipheriv(
-    "aes192",
-    Buffer.from(SECRET_KEY, "base64"),
-    iv
-  );
-  let encrypted = cipher.update(JSON.stringify(payload), "utf8", "base64");
-  encrypted += cipher.final("base64");
-  return encrypted;
-};
-
-const tokenDecoder = (token: string) => {
-  const decipher = crypto.createDecipheriv(
-    "aes192",
-    Buffer.from(SECRET_KEY, "base64"),
-    iv
-  );
-  try {
-    let decrypted = decipher.update(token, "base64", "utf8");
-    decrypted += decipher.final("utf8");
-    const payload = JSON.parse(decrypted) as Payload;
-    return payload;
-  } catch {
-    return { session: null, ip: null, agent: null };
+const Authenticator = async (session: Session) => {
+  const sessionData = UserSession.safeParse(session["user"]);
+  if (!sessionData.success) {
+    return InvalidAuth.INVALID_USER;
   }
-};
+  const { id, email, tenant, } = sessionData.data;
+  const user = await User.findById(id).populate("tenantId").lean();
 
-const Authenticator = async (token: string, ip: string, agent: string) => {
-  const payload = tokenDecoder(token);
-  if (MODE == Mode.Prod) {
-    if (payload.ip != ip) return InvalidAuth.INVALID_LOCATION;
-    if (payload.agent != agent) return InvalidAuth.INVALID_AGENT;
-  }
-  const session = await sessionModel.findById(new ObjectId(payload.session));
-  const user = await User.findById(session?.owner).populate("tenantId").lean();
-
-  if (user && session) {
+  if (user) {
     user["customPermissions"] = await GetPermissions(
       user.userGroupId,
       user.userType,
@@ -93,20 +59,7 @@ export const isAuthenticated = (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    res.status(400).json({
-      status: false,
-      message: "request validation failed",
-      data: {
-        headers: {
-          authorization: "bearer token not set or invalid",
-        },
-      },
-    });
-    return;
-  }
-  Authenticator(token, req.ip, req.headers["user-agent"])
+  Authenticator(req.session)
     .then((data) => {
       if (data == InvalidAuth.PACKAGE_EXPIRED) {
         res.status(401).json({
@@ -117,16 +70,6 @@ export const isAuthenticated = (
         res.status(401).json({
           status: false,
           message: "Invalid user id",
-        });
-      } else if (data == InvalidAuth.INVALID_LOCATION && MODE != Mode.Dev) {
-        res.status(401).json({
-          status: false,
-          message: "Location not authorized",
-        });
-      } else if (data == InvalidAuth.INVALID_AGENT) {
-        res.status(401).json({
-          status: false,
-          message: "Agent not authorized",
         });
       } else {
         res.locals["user"] = data;
