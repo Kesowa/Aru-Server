@@ -4,31 +4,39 @@ import { logger } from "../app";
 import { missionSpecificSocket } from "../socket";
 import { Connection } from "amqplib";
 import aimlModel from "../models/aimlTask";
-import { IAimlTask, inferTypes } from "../schemas/aimlTask";
+import { IAimlTask, inferences, inferTypes } from "../schemas/aimlTask";
 import { permPath } from "./dataUtils";
-import { randomUUID } from "crypto";
-import { extname } from "path";
 
 export const InferEvents = new EventEmitter();
 
-export const REQ_QUEUE = "file.infer.req";
-export const RES_QUEUE = "file.infer.res";
+export const REQ_QUEUE_SFX = ".infer.req";
+export const RES_QUEUE_SFX = ".infer.res";
 
 export async function Setup(conn: Connection) {
-  const reqChannel = await conn.createChannel();
-  await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
-  const resChannel = await conn.createChannel();
-  await resChannel.assertQueue(RES_QUEUE, { durable: true });
-  InferEvents.on(REQ_QUEUE, function(req) {
-    reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
-      persistent: true,
-      contentType: "application/json",
+  for (const queue of inferences) {
+    const REQ_QUEUE = queue + REQ_QUEUE_SFX;
+    const RES_QUEUE = queue + RES_QUEUE_SFX;
+    const reqChannel = await conn.createChannel();
+    await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
+    const resChannel = await conn.createChannel();
+    await resChannel.assertQueue(RES_QUEUE, { durable: true });
+    InferEvents.on(REQ_QUEUE, function(req) {
+      reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
+        persistent: true,
+        contentType: "application/json",
+      });
     });
-  });
-  resChannel.consume(RES_QUEUE, function(msg) {
-    resChannel.ack(msg);
-    InferEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
-  });
+    resChannel.consume(RES_QUEUE, function(msg) {
+      resChannel.ack(msg);
+      InferEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
+    });
+    InferEvents.on(RES_QUEUE, function(res: InferResponse) {
+      logger.info(res, "RECEIVED INFERENCE RESPONSE");
+      receiveInfer(res.inference, res.metadata, res.success)
+        .then(() => logger.info(res, "SAVED INFERENCE"))
+        .catch((err) => logger.error({ res, err }, "FAILED TO SAVE INFERENCE"));
+    });
+  }
 }
 
 export type ProcessInferData = IAimlTask;
@@ -59,6 +67,7 @@ export const sendInfer = async (
   infer: inferTypes,
   metadata: AruMetadata
 ) => {
+  const REQ_QUEUE = infer + REQ_QUEUE_SFX;
   const req: InferRequest = {
     file: pathUtils.keyPath(filePath),
     infer,
@@ -99,10 +108,4 @@ export const receiveInfer = async (
   }
 };
 
-InferEvents.on(RES_QUEUE, function(res: InferResponse) {
-  logger.info(res, "RECEIVED ZIP DECOMPRESS RESPONSE");
-  receiveInfer(res.inference, res.metadata, res.success)
-    .then(() => logger.info(res, "SAVED INFERENCE"))
-    .catch((err) => logger.error({ res, err }, "FAILED TO SAVE INFERENCE"));
-});
 

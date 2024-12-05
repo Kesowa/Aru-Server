@@ -169,7 +169,7 @@ export const inferLayerProcessing = async (
       });
 
   try {
-    await sendInfer(layer.layerPath, "deepforest", {
+    await sendInfer(layer.layerpath, "deepforest", {
       mission_id: newTask.doc._id.toString(),
       tenant_id: newTask.tenant.toString(),
       user_id: newTask.createdBy.toString(),
