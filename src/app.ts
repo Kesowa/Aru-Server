@@ -176,12 +176,6 @@ export default function app(mongo: Connection) {
     })
   );
 
-  app.use((req, _res, next) => {
-    req.log.info(req.session, "SESSION");
-    req.log.info(req.cookies, "COOKIES");
-    next();
-  });
-
   app.use("/apis/v2", routerV2);
 
   //connecting APIs routes
