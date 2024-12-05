@@ -161,7 +161,7 @@ export const inferLayerProcessing = async (
         doc: layer._id,
         docModel: "layer",
         status: "started",
-        infer: "layer_processing",
+        infer: "deepforest",
         createdBy: res.locals.user._id,
         updatedBy: res.locals.user._id,
         tenant: res.locals.user.tenantId._id,
