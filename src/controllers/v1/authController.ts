@@ -35,7 +35,6 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
 
         if (isPasswordValid) {
 
-          const token = randomUUID();
           req.session["user"] = {
             id: user._id,
             email: user.email,
@@ -66,7 +65,6 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
               res.json({
                 status: true,
                 message: "login sucessfully",
-                token,
                 data,
               });
             }
@@ -74,7 +72,6 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
             res.json({
               status: true,
               message: "login sucessfully",
-              token,
               data,
             });
           }
