@@ -99,6 +99,22 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
   }
 };
 
+//++++++++++++++++++++++++++++++++ log out user +++++++++++++++++++++++++++++++++++++++++
+export const logoutUser = async (req: Request, res: AuthResponse) => {
+  if (req.session) {
+    req.session.destroy((err) => { if (err) req.log.error(err, "unable to destroy session!") });
+    res.clearCookie("connect.sid");
+    return res.json({
+      status: true,
+      message: "user session deleted",
+    });
+  }
+  res.json({
+    status: false,
+    message: "no session to delete",
+  });
+}
+
 //++++++++++++++++++++++++++++++++ get user details +++++++++++++++++++++++++++++++++++++++
 export const getUserDetails = async (req: Request, res: AuthResponse) => {
   const customPermissions = await GetPermissions(
