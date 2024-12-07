@@ -57,6 +57,7 @@ router.post(
   body("password2").isString().isLength({ min: 5 }),
   param("token").notEmpty().isString().trim(),
   validator,
+  limiter,
   RobustRunner(resetPassword)
 );
 
