@@ -522,6 +522,7 @@ const layers = [
     fileSize: 0.00052,
     layerpath: "/vector/AA1_Block_Boundary.geojson",
     featureCount: 36,
+    flaggedFeatures: [23],
   },
   {
     _id: ObjectId("657ed742ec705f444b069712"),

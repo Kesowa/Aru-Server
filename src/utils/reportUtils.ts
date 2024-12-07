@@ -3,27 +3,49 @@ import { logger } from "../app";
 import { missionSpecificSocket } from "../socket";
 import { Connection } from "amqplib";
 import Document from "../models/document";
+import { vectorProps } from "../schemas/vectorprops";
 
 export const ReportEvents = new EventEmitter();
 
-export const REQ_QUEUE = "report.generate.req";
-export const RES_QUEUE = "report.generate.res";
+export const PLOT_REQ_QUEUE = "report.plot.req";
+export const PLOT_RES_QUEUE = "report.plot.res";
+
+export const BLOCK_REQ_QUEUE = "report.block.req";
+export const BLOCK_RES_QUEUE = "report.block.res";
 
 export async function Setup(conn: Connection) {
-  const reqChannel = await conn.createChannel();
-  await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
-  const resChannel = await conn.createChannel();
-  await resChannel.assertQueue(RES_QUEUE, { durable: true });
-  ReportEvents.on(REQ_QUEUE, function(req) {
-    reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
+  // for plot report
+  const plotReqChannel = await conn.createChannel();
+  await plotReqChannel.assertQueue(PLOT_REQ_QUEUE, { durable: true });
+  const plotResChannel = await conn.createChannel();
+  await plotResChannel.assertQueue(PLOT_RES_QUEUE, { durable: true });
+  ReportEvents.on(PLOT_REQ_QUEUE, function(req) {
+    plotReqChannel.sendToQueue(PLOT_REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
       persistent: true,
       contentType: "application/json",
     });
   });
-  resChannel.consume(RES_QUEUE, function(msg) {
-    resChannel.ack(msg);
-    ReportEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
+  plotResChannel.consume(PLOT_RES_QUEUE, function(msg) {
+    plotResChannel.ack(msg);
+    ReportEvents.emit(PLOT_RES_QUEUE, JSON.parse(msg.content.toString()));
+  }).catch(e => console.log(e));
+
+  // for block report
+  const blockReqChannel = await conn.createChannel();
+  await blockReqChannel.assertQueue(BLOCK_REQ_QUEUE, { durable: true });
+  const blockResChannel = await conn.createChannel();
+  await blockResChannel.assertQueue(BLOCK_RES_QUEUE, { durable: true });
+  ReportEvents.on(BLOCK_REQ_QUEUE, function(req) {
+    blockReqChannel.sendToQueue(BLOCK_REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
+      persistent: true,
+      contentType: "application/json",
+    });
   });
+  blockResChannel.consume(BLOCK_RES_QUEUE, function(msg) {
+    blockResChannel.ack(msg);
+    ReportEvents.emit(BLOCK_RES_QUEUE, JSON.parse(msg.content.toString()));
+  }).catch(e => console.log(e));
+
 }
 
 export interface IPlotReportData {
@@ -82,6 +104,58 @@ export interface IPlotReportData {
   averageIncentives?: string; 
 }
 
+export interface IAreaDesc {
+  name: string;
+  value: number;
+}
+export interface IOccupancyDesc {
+  name: string;
+  occupied: number;
+  underConstruction: number;
+  vacant: number;
+}
+export interface IAreaData {
+  total: number;
+  privateSpaces: IAreaDesc[];
+  publicSpaces: IAreaDesc[];
+  other: number;
+}
+
+export interface IDeliverable {
+  name: string;
+  layerpath: string;
+  layerType: string;
+  imgBuffer?: Buffer;
+}
+
+export interface IBlockReportData {
+  categoryPieChart?: Buffer;
+  statusPieChart?: Buffer;
+  barChart?: Buffer;
+  missionMapImg?: Buffer;
+
+  blockLayerpath: string;
+  blockIdx: number;
+  rasterLayerpath: string;
+  blockName: string;
+  
+  actionArea: string;
+  missionCode: string;
+  date: string;
+  users: string[];
+  emails: string[];
+  phoneNos: string[];
+  
+  area: IAreaData;
+  occupancy: IOccupancyDesc[];
+  
+  roadCount: number;
+  roadLength: number;
+  cycleTrackLength: number;
+  
+  deliverables: IDeliverable[];
+}
+
 export type AruMetadata = {
   mission_id: string;
   user_id: string;
@@ -90,8 +164,9 @@ export type AruMetadata = {
 };
 
 export type PlotReportRequest = IPlotReportData & { metadata: AruMetadata; };
+export type BlockReportRequest = IBlockReportData & { metadata: AruMetadata; };
 
-export type PlotReportResponse = {
+export type ReportResponse = {
   size: number;
   success: boolean;
   metadata: AruMetadata;
@@ -104,11 +179,21 @@ export const generatePlotReport = async (req: PlotReportRequest) => {
     missionId: req.metadata.mission_id,
     name: req.metadata.filename,
   });
-  ReportEvents.emit(REQ_QUEUE, req);
-  logger.info(req, "SENT REPORT GENERATION REQUEST");
+  ReportEvents.emit(PLOT_REQ_QUEUE, req);
+  logger.info(req, "SENT PLOT REPORT GENERATION REQUEST");
 };
 
-export const receiveReport = async (res: PlotReportResponse) => {
+export const generateBlockReport = async (req: BlockReportRequest) => {
+  await Document.findOneAndDelete({
+    tenantId: req.metadata.tenant_id,
+    missionId: req.metadata.mission_id,
+    name: req.metadata.filename,
+  });
+  ReportEvents.emit(BLOCK_REQ_QUEUE, req);
+  logger.info(req, "SENT BLOCK REPORT GENERATION REQUEST");
+};
+
+export const receiveReport = async (res: ReportResponse) => {
   if (res.success) {
     const docDB = new Document({
       name: res.metadata.filename,
@@ -140,17 +225,18 @@ export const receiveReport = async (res: PlotReportResponse) => {
   }
 };
 
-ReportEvents.on(RES_QUEUE, function(res: PlotReportResponse) {
+ReportEvents.on(PLOT_RES_QUEUE, function(res: ReportResponse) {
   logger.info(res, "RECEIVED REPORT GENERATION RESPONSE");
   receiveReport(res)
     .then(() => logger.info(res, "GENERATED REPORT"))
     .catch((err) => logger.error({ res, err }, "FAILED TO GENERATE REPORT"));
 });
-
-export interface IDeliverable {
-  imageHeading: string;
-  imageBuffer: Buffer;
-}
+ReportEvents.on(BLOCK_RES_QUEUE, function(res: ReportResponse) {
+  logger.info(res, "RECEIVED REPORT GENERATION RESPONSE");
+  receiveReport(res)
+    .then(() => logger.info(res, "GENERATED REPORT"))
+    .catch((err) => logger.error({ res, err }, "FAILED TO GENERATE REPORT"));
+});
 
 export interface IPage1Properties {
   blockName: string;
@@ -258,3 +344,66 @@ export interface IPlotReportError {
     blockName: number[];
   };
 }
+
+export enum entityCategories {
+  MOTORABLE_ROADS = "Motorable Roads",
+  FOOTPATH = "Footpath",
+  CYCLE_TRACK = "Cycle Track",
+  PARKS_AND_GREENERY = "Parks & Green",
+  WATERBODY = "Waterbody",
+}
+
+export const entityTypes : Record<entityCategories, vectorProps[]> = {
+  [entityCategories.MOTORABLE_ROADS]: [
+    vectorProps.FLYOVER,
+    vectorProps.ROUNDABOUT,
+    vectorProps.BRIDGE_FLYOVER,
+    vectorProps.BRIDGE,
+    vectorProps.CARRIAGE_WAY,
+    vectorProps.ROAD,
+    vectorProps.STREET,
+  ],
+  [entityCategories.FOOTPATH]: [vectorProps.FOOTPATH],
+  [entityCategories.CYCLE_TRACK]: [vectorProps.CYCLE_TRACK],
+  [entityCategories.PARKS_AND_GREENERY]: [
+    vectorProps.PLAYGROUND,
+    vectorProps.PARK,
+    vectorProps.GREEN_VERGE,
+    vectorProps.JUNGLE,
+  ],
+  [entityCategories.WATERBODY]: [
+    vectorProps.DRAINAGE_NETWORK,
+    vectorProps.CANAL,
+    vectorProps.SEWERAGE_NETWORK,
+    vectorProps.WATER_BODY,
+  ],
+}
+
+export enum plotCategories {
+  RESIDENTIAL = 'Residential',
+  PRIVATE_COMMERCIAL = 'Private Commercial',
+  GOVERNMENT = 'Government',
+  HOUSING_COMPLEX = 'Housing Complex',
+  GOVT_COMMERCIAL = 'Govt. Commercial',
+  COMMERCIAL = 'Commercial',
+  GOVERNMENT_COMMERCIAL = 'Government Commercial',
+}
+
+export enum plotBuildingStatus {
+  CONSTRUCTED = 'Constructed',
+  UNDER_CONSTRUCTION = 'Under Construction',
+  EMPTY_PLOT = 'Empty Plot',
+  WTP = 'WTP'
+}
+
+export const privatePlotCategories = [
+  plotCategories.PRIVATE_COMMERCIAL,
+  plotCategories.RESIDENTIAL,
+  plotCategories.GOVERNMENT_COMMERCIAL,
+  plotCategories.GOVT_COMMERCIAL,
+  plotCategories.HOUSING_COMPLEX,
+]
+
+export const publicPlotCategories = [
+  plotCategories.GOVERNMENT,
+];
