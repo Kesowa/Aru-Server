@@ -81,6 +81,7 @@ export const inferVodViolence = async (
       tenant_id: newTask.tenant.toString(),
       user_id: newTask.createdBy.toString(),
       infer_id: newTask._id.toString(),
+      doc_id: vod._id.toString(),
     });
     res.status(201).json({
       status: true,
@@ -174,6 +175,7 @@ export const inferLayerProcessing = async (
       tenant_id: newTask.tenant.toString(),
       user_id: newTask.createdBy.toString(),
       infer_id: newTask._id.toString(),
+      doc_id: layer._id.toString(),
     });
 
     res.status(201).json({

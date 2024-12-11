@@ -5,7 +5,9 @@ import { missionSpecificSocket } from "../socket";
 import { Connection } from "amqplib";
 import aimlModel from "../models/aimlTask";
 import { IAimlTask, inferences, inferTypes } from "../schemas/aimlTask";
-import { permPath } from "./dataUtils";
+import { permPath, saveVectorLayer } from "./dataUtils";
+import Layer from "../models/layer";
+import { vectorProps } from "../schemas/vectorprops";
 
 export const InferEvents = new EventEmitter();
 
@@ -32,7 +34,7 @@ export async function Setup(conn: Connection) {
     });
     InferEvents.on(RES_QUEUE, function(res: InferResponse) {
       logger.info(res, "RECEIVED INFERENCE RESPONSE");
-      receiveInfer(res.inference, res.metadata, res.success)
+      receiveInfer(res.inference, queue, res.metadata, res.success)
         .then(() => logger.info(res, "SAVED INFERENCE"))
         .catch((err) => logger.error({ res, err }, "FAILED TO SAVE INFERENCE"));
     });
@@ -41,13 +43,14 @@ export async function Setup(conn: Connection) {
 
 export type ProcessInferData = IAimlTask;
 
-export type Infer = string;
+export type Inference = string;
 
 export type AruMetadata = {
   mission_id: string;
   user_id: string;
   tenant_id: string;
   infer_id: string;
+  doc_id: string;
 };
 
 export type InferRequest = {
@@ -58,7 +61,7 @@ export type InferRequest = {
 
 export type InferResponse = {
   metadata: AruMetadata;
-  inference: Infer;
+  inference: Inference;
   success: boolean;
 };
 
@@ -78,7 +81,8 @@ export const sendInfer = async (
 };
 
 export const receiveInfer = async (
-  infer: Infer,
+  filePath: Inference,
+  infer: inferTypes,
   metadata: AruMetadata,
   success: boolean
 ) => {
@@ -87,8 +91,8 @@ export const receiveInfer = async (
     tenantId: metadata.tenant_id,
   });
   if (success) {
-    if (infer) {
-      const file_path = await permPath(pathUtils.Directory.AI_ML, infer);
+    if (filePath) {
+      const file_path = await permPath(pathUtils.Directory.AI_ML, filePath);
       data.data = file_path;
     }
     else {
@@ -99,6 +103,12 @@ export const receiveInfer = async (
     missionSpecificSocket
       .to(String(metadata.mission_id))
       .emit("AI_TASK", data);
+
+    switch (infer) {
+      case "violence": break;
+      case "deepforest": await receiveDeepforest(data); break;
+      case "thermal": break;
+    }
   } else {
     data.status = "failed";
     await data.save();
@@ -108,4 +118,22 @@ export const receiveInfer = async (
   }
 };
 
-
+async function receiveDeepforest(task: IAimlTask) {
+  const sourceLayer = await Layer.findOne({ tenantId: task.tenant, _id: task.doc });
+  const vectorLayer = await saveVectorLayer(task.data as string, { color: "#7ed321", icon: "MarkerIcon" });
+  const forestLayer = await Layer.create({
+    name: sourceLayer.name + ": Deepforest",
+    type: "Vector",
+    vector: vectorProps.GREEN_VERGE,
+    color: vectorLayer.flagColor,
+    layerpath: task.data as string,
+    fileSize: vectorLayer.size,
+    featureCount: vectorLayer.featureCount,
+    captureDate: new Date(),
+    missionId: sourceLayer.missionId,
+    tenantId: sourceLayer.tenantId,
+    createdBy: task.createdBy,
+    updatedBy: task.updatedBy,
+  });
+  return forestLayer;
+}
