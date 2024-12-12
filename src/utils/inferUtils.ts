@@ -1,7 +1,7 @@
 import * as pathUtils from "./pathUtils";
 import { EventEmitter } from "stream";
 import { logger } from "../app";
-import { missionSpecificSocket } from "../socket";
+import { missionSpecificSocket, notificationSocket } from "../socket";
 import { Connection } from "amqplib";
 import aimlModel from "../models/aimlTask";
 import { IAimlTask, inferences, inferTypes } from "../schemas/aimlTask";
@@ -60,9 +60,16 @@ export type InferRequest = {
 };
 
 export type InferResponse = {
+  infer_id: any;
   metadata: AruMetadata;
   inference: Inference;
   success: boolean;
+};
+
+export type InferProgress = {
+  inferId: string,
+  status: string,
+  progress: number,
 };
 
 export const sendInfer = async (
@@ -71,6 +78,7 @@ export const sendInfer = async (
   metadata: AruMetadata
 ) => {
   const REQ_QUEUE = infer + REQ_QUEUE_SFX;
+  const RES_QUEUE = infer + RES_QUEUE_SFX;
   const req: InferRequest = {
     file: pathUtils.keyPath(filePath),
     infer,
@@ -78,6 +86,14 @@ export const sendInfer = async (
   };
   logger.info(req, "SENT INFERENCE REQUEST");
   InferEvents.emit(REQ_QUEUE, req);
+  InferEvents.on(RES_QUEUE, (progress: InferProgress) => {
+    logger.info(progress, "INFERENCE PROGRESS UPDATE");
+    // Optionally store progress in DB (if needed)
+    notificationSocket
+      .to(String(metadata.tenant_id))
+      .emit("AI_TASK_PROGRESS", {inferId: progress.inferId, status:progress.status,progress:progress.progress });
+    console.log("done")
+  });
 };
 
 export const receiveInfer = async (
@@ -100,8 +116,8 @@ export const receiveInfer = async (
     }
     data.status = "completed";
     await data.save();
-    missionSpecificSocket
-      .to(String(metadata.mission_id))
+    notificationSocket
+      .to(String(metadata.tenant_id))
       .emit("AI_TASK", data);
 
     switch (infer) {
@@ -112,8 +128,8 @@ export const receiveInfer = async (
   } else {
     data.status = "failed";
     await data.save();
-    missionSpecificSocket
-      .to(String(metadata.mission_id))
+    notificationSocket
+      .to(String(metadata.tenant_id))
       .emit("AI_TASK", data);
   }
 };
