@@ -202,7 +202,7 @@ export const generateBlockReport = async (
             rasterLayerpath: rasterLayer.layerpath,
             blockName: blockFeature.properties.blockName,
             actionArea: blockLayer.name,
-            missionCode: "MissionCode",
+            missionCode: mission.name.split("||")[0].trim(),
             date: `${dd}/${mm}/${yyyy}`,
             users: [mission.user.name, flight.pilotID.name],
             emails: [mission.user.email, flight.pilotID.email],
@@ -217,6 +217,8 @@ export const generateBlockReport = async (
             ), { length: 0, area: 0, vector: "" as vectorProps }).length,
             area,
             occupancy,
+            tenantName: res.locals.user.tenantId.name,
+            tenantImagePath: res.locals.user.tenantId.avatar,
           };
 
           req.log.info(data);
@@ -644,7 +646,7 @@ export const generatePlotReport = async (
             // // front view image
             // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
             // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
-            const plotArea = findArea([plotFeature]);
+            const plotArea = turf.area(plotFeature);
 
             // ******************** BUILDING DETAILS ************************
 
@@ -665,7 +667,7 @@ export const generatePlotReport = async (
 
             const buildingProperties = plotBuildingFeature.properties;
 
-            const buildingArea = findArea([plotBuildingFeature]);
+            const buildingArea = turf.area(plotBuildingFeature);
 
             // ================= PUTTING TOGETHER THE DATA =======================
 
@@ -682,6 +684,8 @@ export const generatePlotReport = async (
 
               date,
               users,
+              tenantName: res.locals.user.tenantId.name,
+              tenantImagePath: res.locals.user.tenantId.avatar,
 
               // plot details
 
@@ -745,11 +749,6 @@ export const generatePlotReport = async (
                 user_id: String(res.locals.user._id),
                 mission_id: missionId,
               }
-            });
-
-            res.status(200).json({
-              status: true,
-              message: "Data collection complete... Report generation started!",
             });
           
           } catch (err) {

@@ -56,18 +56,21 @@ export interface IPlotReportData {
   blockIdx: number,
   rasterLayerpath: string,
   plotLayerFilepath: string;
+  tenantImagePath: string;
 
   // data generated after SS
   plotImageBuffer?: Buffer;
   blockImageBuffer?: Buffer;
   coverImageBuffer?: Buffer;
   frontViewImageBuffer?: Buffer;
+  tenantImageBuffer?: Buffer;
 
   // all other data
 
   blockName?: string;
   date: string;
   users: string[];
+  tenantName: string;
 
   // plot details
   plotArea: string; 
@@ -133,14 +136,17 @@ export interface IBlockReportData {
   statusPieChart?: Buffer;
   barChart?: Buffer;
   missionMapImg?: Buffer;
+  tenantImageBuffer?: Buffer;
 
   blockLayerpath: string;
   blockIdx: number;
   rasterLayerpath: string;
   blockName: string;
+  tenantImagePath: string;
   
   actionArea: string;
   missionCode: string;
+  tenantName: string;
   date: string;
   users: string[];
   emails: string[];

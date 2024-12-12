@@ -209,7 +209,7 @@ db.tenants.insertOne({
   billingDistrict: "Birbhum",
   billingState: "near durga mandir",
   billingPin: "731209",
-  avatar: "/images/tenantLogos/avatar-1595952865875.png",
+  avatar: "/images/userAvatars/NKDA_Logo.png",
   officialWebsite: "nkda.org",
   modefiedEmailRequestedOTPs: [],
   modefiedphoneNoRequestedOTPs: [],

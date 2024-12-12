@@ -100,6 +100,7 @@ services:
         /usr/bin/mc cp /assets/*.geojson myminio/aru/vector/
         /usr/bin/mc cp /assets/*.tif myminio/aru/raster/
         /usr/bin/mc cp /assets/layerFileImages/*.png myminio/aru/images/geojson/
+        /usr/bin/mc cp /assets/userAvatars/*.png myminio/aru/images/userAvatars/
         exit 0;
       "
     networks:
