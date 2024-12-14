@@ -1,7 +1,7 @@
 import * as pathUtils from "./pathUtils";
 import { EventEmitter } from "stream";
 import { logger } from "../app";
-import { missionSpecificSocket, notificationSocket } from "../socket";
+import { notificationSocket } from "../socket";
 import { Connection } from "amqplib";
 import aimlModel from "../models/aimlTask";
 import { IAimlTask, inferences, inferTypes } from "../schemas/aimlTask";
@@ -32,11 +32,27 @@ export async function Setup(conn: Connection) {
       resChannel.ack(msg);
       InferEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
     });
-    InferEvents.on(RES_QUEUE, function(res: InferResponse) {
-      logger.info(res, "RECEIVED INFERENCE RESPONSE");
-      receiveInfer(res.inference, queue, res.metadata, res.success)
-        .then(() => logger.info(res, "SAVED INFERENCE"))
-        .catch((err) => logger.error({ res, err }, "FAILED TO SAVE INFERENCE"));
+    InferEvents.on(RES_QUEUE, function(res: InferResponse | InferProgress) {
+      if ((res as InferProgress).progress !== undefined) {
+        const progress = res as InferProgress;
+
+        logger.info(progress, "INFERENCE PROGRESS UPDATE");
+        notificationSocket
+          .to(String(progress.metadata.tenant_id))
+          .emit("AI_TASK_PROGRESS",
+            {
+              inferId: progress.metadata.infer_id,
+              status: progress.status,
+              progress: progress.progress
+            });
+      } else {
+        const response = res as InferResponse;
+
+        logger.info(response, "RECEIVED INFERENCE RESPONSE");
+        receiveInfer(response.inference, queue, response.metadata, response.success)
+          .then(() => logger.info(response, "SAVED INFERENCE"))
+          .catch((err) => logger.error({ res, err }, "FAILED TO SAVE INFERENCE"));
+      }
     });
   }
 }
@@ -60,14 +76,13 @@ export type InferRequest = {
 };
 
 export type InferResponse = {
-  infer_id: any;
   metadata: AruMetadata;
   inference: Inference;
   success: boolean;
 };
 
 export type InferProgress = {
-  inferId: string,
+  metadata: AruMetadata;
   status: string,
   progress: number,
 };
@@ -78,7 +93,6 @@ export const sendInfer = async (
   metadata: AruMetadata
 ) => {
   const REQ_QUEUE = infer + REQ_QUEUE_SFX;
-  const RES_QUEUE = infer + RES_QUEUE_SFX;
   const req: InferRequest = {
     file: pathUtils.keyPath(filePath),
     infer,
@@ -86,14 +100,6 @@ export const sendInfer = async (
   };
   logger.info(req, "SENT INFERENCE REQUEST");
   InferEvents.emit(REQ_QUEUE, req);
-  InferEvents.on(RES_QUEUE, (progress: InferProgress) => {
-    logger.info(progress, "INFERENCE PROGRESS UPDATE");
-    // Optionally store progress in DB (if needed)
-    notificationSocket
-      .to(String(metadata.tenant_id))
-      .emit("AI_TASK_PROGRESS", {inferId: progress.inferId, status:progress.status,progress:progress.progress });
-    console.log("done")
-  });
 };
 
 export const receiveInfer = async (
