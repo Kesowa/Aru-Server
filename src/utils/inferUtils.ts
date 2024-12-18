@@ -148,7 +148,7 @@ async function receiveDeepforest(task: IAimlTask) {
     type: "Vector",
     vector: vectorProps.GREEN_VERGE,
     color: vectorLayer.flagColor,
-    layerpath: task.data as string,
+    layerpath: vectorLayer.geojsonPath,
     fileSize: vectorLayer.size,
     featureCount: vectorLayer.featureCount,
     captureDate: new Date(),
