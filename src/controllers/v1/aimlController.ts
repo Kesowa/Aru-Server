@@ -62,7 +62,7 @@ export const inferVodViolence = async (
       // return;
     }
   }
-  const mp4 = vod.videoPath.replace(/m3u8$/, "flv");
+  const mp4 = vod.videoPath.replace(/\/index\.m3u8$/, ".mp4");
   const newTask = hadFailed
     ? oldTask
     : await aimlModel.create({
