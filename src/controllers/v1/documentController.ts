@@ -51,8 +51,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       updatedBy: res.locals.user._id,
     });
     if (
-      (req.body.folderName == "rawPhotos" ||
-        req.body.folderName == "photos") &&
+      (req.body.folderName == "rawPhotos" || req.body.folderName == "photos") &&
       (fileDoc.metadata.mimetype == "image/jpeg" ||
         fileDoc.metadata.mimetype == "image/png")
     ) {
