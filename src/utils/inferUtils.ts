@@ -22,36 +22,42 @@ export async function Setup(conn: Connection) {
     await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
     const resChannel = await conn.createChannel();
     await resChannel.assertQueue(RES_QUEUE, { durable: true });
-    InferEvents.on(REQ_QUEUE, function(req) {
+    InferEvents.on(REQ_QUEUE, function (req) {
       reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
         persistent: true,
         contentType: "application/json",
       });
     });
-    resChannel.consume(RES_QUEUE, function(msg) {
+    resChannel.consume(RES_QUEUE, function (msg) {
       resChannel.ack(msg);
       InferEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
     });
-    InferEvents.on(RES_QUEUE, function(res: InferResponse | InferProgress) {
+    InferEvents.on(RES_QUEUE, function (res: InferResponse | InferProgress) {
       if ((res as InferProgress).progress !== undefined) {
         const progress = res as InferProgress;
 
         logger.info(progress, "INFERENCE PROGRESS UPDATE");
         notificationSocket
           .to(String(progress.metadata.tenant_id))
-          .emit("AI_TASK_PROGRESS",
-            {
-              inferId: progress.metadata.infer_id,
-              status: progress.status,
-              progress: progress.progress
-            });
+          .emit("AI_TASK_PROGRESS", {
+            inferId: progress.metadata.infer_id,
+            status: progress.status,
+            progress: progress.progress,
+          });
       } else {
         const response = res as InferResponse;
 
         logger.info(response, "RECEIVED INFERENCE RESPONSE");
-        receiveInfer(response.inference, queue, response.metadata, response.success)
+        receiveInfer(
+          response.inference,
+          queue,
+          response.metadata,
+          response.success
+        )
           .then(() => logger.info(response, "SAVED INFERENCE"))
-          .catch((err) => logger.error({ res, err }, "FAILED TO SAVE INFERENCE"));
+          .catch((err) =>
+            logger.error({ res, err }, "FAILED TO SAVE INFERENCE")
+          );
       }
     });
   }
@@ -83,8 +89,8 @@ export type InferResponse = {
 
 export type InferProgress = {
   metadata: AruMetadata;
-  status: string,
-  progress: number,
+  status: string;
+  progress: number;
 };
 
 export const sendInfer = async (
@@ -116,33 +122,38 @@ export const receiveInfer = async (
     if (filePath) {
       const file_path = await permPath(pathUtils.Directory.AI_ML, filePath);
       data.data = file_path;
-    }
-    else {
+    } else {
       logger.error(metadata, "No data for inference!");
     }
     data.status = "completed";
     await data.save();
-    notificationSocket
-      .to(String(metadata.tenant_id))
-      .emit("AI_TASK", data);
+    notificationSocket.to(String(metadata.tenant_id)).emit("AI_TASK", data);
 
     switch (infer) {
-      case "violence": break;
-      case "deepforest": await receiveDeepforest(data); break;
-      case "thermal": break;
+      case "violence":
+        break;
+      case "deepforest":
+        await receiveDeepforest(data);
+        break;
+      case "thermal":
+        break;
     }
   } else {
     data.status = "failed";
     await data.save();
-    notificationSocket
-      .to(String(metadata.tenant_id))
-      .emit("AI_TASK", data);
+    notificationSocket.to(String(metadata.tenant_id)).emit("AI_TASK", data);
   }
 };
 
 async function receiveDeepforest(task: IAimlTask) {
-  const sourceLayer = await Layer.findOne({ tenantId: task.tenant, _id: task.doc });
-  const vectorLayer = await saveVectorLayer(task.data as string, { color: "#7ed321", icon: "MarkerIcon" });
+  const sourceLayer = await Layer.findOne({
+    tenantId: task.tenant,
+    _id: task.doc,
+  });
+  const vectorLayer = await saveVectorLayer(task.data as string, {
+    color: "#7ed321",
+    icon: "MarkerIcon",
+  });
   const forestLayer = await Layer.create({
     name: sourceLayer.name + ": Deepforest",
     type: "Vector",
