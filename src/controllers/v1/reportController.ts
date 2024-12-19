@@ -4,10 +4,7 @@ import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { vectorProps } from "../../schemas/vectorprops";
-import {
-  DirPath,
-  Directory,
-} from "../../constants";
+import { DirPath, Directory } from "../../constants";
 import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
 import {
@@ -25,7 +22,10 @@ import {
   privatePlotCategories,
   publicPlotCategories,
 } from "../../utils/reportUtils";
-import { generatePlotReport as generatePlotReportDocument, generateBlockReport as generateBlockReportDocument } from "../../utils/reportUtils";
+import {
+  generatePlotReport as generatePlotReportDocument,
+  generateBlockReport as generateBlockReportDocument,
+} from "../../utils/reportUtils";
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
@@ -56,7 +56,6 @@ export const generateBlockReport = async (
   {
     const { missionId } = req.body;
     try {
-
       const rasterLayer = await Layer.findOne({
         missionId: missionId,
         type: "Raster",
@@ -67,16 +66,22 @@ export const generateBlockReport = async (
         type: "Vector",
       });
 
-      const blockLayer = vectorLayers.find(l => l.vector === vectorProps.BLOCK_BOUNDARY);
-      const plotLayer = vectorLayers.find(l => l.vector === vectorProps.PLOT);
+      const blockLayer = vectorLayers.find(
+        (l) => l.vector === vectorProps.BLOCK_BOUNDARY
+      );
+      const plotLayer = vectorLayers.find((l) => l.vector === vectorProps.PLOT);
 
-      const blockFeatures = (await readGeoJson<Feature<turf.MultiPolygon, IBlockProperties>>(
-        DirPath(Directory.DEFAULT, blockLayer.layerpath)
-      )).features;
+      const blockFeatures = (
+        await readGeoJson<Feature<turf.MultiPolygon, IBlockProperties>>(
+          DirPath(Directory.DEFAULT, blockLayer.layerpath)
+        )
+      ).features;
 
-      const plotFeatures = (await readGeoJson<Feature<turf.MultiPolygon, IPlotProperties>>(
-        DirPath(Directory.DEFAULT, plotLayer.layerpath)
-      )).features;
+      const plotFeatures = (
+        await readGeoJson<Feature<turf.MultiPolygon, IPlotProperties>>(
+          DirPath(Directory.DEFAULT, plotLayer.layerpath)
+        )
+      ).features;
 
       // date
       const now = new Date();
@@ -112,15 +117,19 @@ export const generateBlockReport = async (
         },
       });
 
-      const deliverables = vectorLayers.filter(l => l.vector !== vectorProps.BLOCK_BOUNDARY).map(({ name, layerpath, vector }) => ({ 
-        name, 
-        layerpath, 
-        layerType: vector 
-      }));
+      const deliverables = vectorLayers
+        .filter((l) => l.vector !== vectorProps.BLOCK_BOUNDARY)
+        .map(({ name, layerpath, vector }) => ({
+          name,
+          layerpath,
+          layerType: vector,
+        }));
 
       for (const blockIdx of blockLayer.flaggedFeatures) {
         const blockFeature = blockFeatures[blockIdx];
-        const plotsInBlock = plotFeatures.filter(f => f.properties.blockName === blockFeature.properties.blockName);
+        const plotsInBlock = plotFeatures.filter(
+          (f) => f.properties.blockName === blockFeature.properties.blockName
+        );
         req.log.info("Number of plots: " + String(plotsInBlock.length));
         try {
           const filename = `block_report | ${
@@ -137,14 +146,25 @@ export const generateBlockReport = async (
             );
           }
 
-          const processedLayerData: { area: number; length: number; vector: vectorProps }[] = [];
-  
+          const processedLayerData: {
+            area: number;
+            length: number;
+            vector: vectorProps;
+          }[] = [];
+
           for (const layer of vectorLayers) {
             req.log.info("Processing layer: " + layer.name);
             try {
-              const layerGeojson = await readGeoJson(DirPath(Directory.DEFAULT, layer.layerpath));
-              const combinedFeatures = turf.combine(turf.featureCollection(layerGeojson.features));
-              const intersection = turf.intersect(combinedFeatures.features[0], blockFeature);
+              const layerGeojson = await readGeoJson(
+                DirPath(Directory.DEFAULT, layer.layerpath)
+              );
+              const combinedFeatures = turf.combine(
+                turf.featureCollection(layerGeojson.features)
+              );
+              const intersection = turf.intersect(
+                combinedFeatures.features[0],
+                blockFeature
+              );
               processedLayerData.push({
                 vector: layer.vector,
                 area: intersection ? turf.area(intersection) : 0,
@@ -165,37 +185,52 @@ export const generateBlockReport = async (
           const occupancy: IOccupancyDesc[] = [];
 
           const areaByCategory = new Map<string, number>();
-          const occupancyByCategory: Map<string, {
-            occupied: number;
-            underConstruction: number;
-            vacant: number;
-          }> = new Map();
+          const occupancyByCategory: Map<
+            string,
+            {
+              occupied: number;
+              underConstruction: number;
+              vacant: number;
+            }
+          > = new Map();
 
           for (const plot of plotsInBlock) {
             const plotCategory = plot.properties.category;
-            areaByCategory.set(plotCategory, (areaByCategory.get(plotCategory) || 0) + turf.area(plot));
+            areaByCategory.set(
+              plotCategory,
+              (areaByCategory.get(plotCategory) || 0) + turf.area(plot)
+            );
 
             const plotStatus = plot.properties.buildingStatus;
             occupancyByCategory.set(plotCategory, {
-              occupied: (occupancyByCategory.get(plotCategory)?.occupied || 0) + (plotStatus === plotBuildingStatus.CONSTRUCTED ? 1: 0),
-              underConstruction: (occupancyByCategory.get(plotCategory)?.underConstruction || 0) + (plotStatus === plotBuildingStatus.UNDER_CONSTRUCTION ? 1: 0),
-              vacant: (occupancyByCategory.get(plotCategory)?.vacant || 0) + (plotStatus === plotBuildingStatus.EMPTY_PLOT ? 1: 0),
+              occupied:
+                (occupancyByCategory.get(plotCategory)?.occupied || 0) +
+                (plotStatus === plotBuildingStatus.CONSTRUCTED ? 1 : 0),
+              underConstruction:
+                (occupancyByCategory.get(plotCategory)?.underConstruction ||
+                  0) +
+                (plotStatus === plotBuildingStatus.UNDER_CONSTRUCTION ? 1 : 0),
+              vacant:
+                (occupancyByCategory.get(plotCategory)?.vacant || 0) +
+                (plotStatus === plotBuildingStatus.EMPTY_PLOT ? 1 : 0),
             });
           }
 
           for (const [c, a] of areaByCategory) {
-            if (privatePlotCategories.includes(c as plotCategories)) area.privateSpaces.push({ name: c, value: a });
-            else if (publicPlotCategories.includes(c as plotCategories)) area.publicSpaces.push({ name: c, value: a });
+            if (privatePlotCategories.includes(c as plotCategories))
+              area.privateSpaces.push({ name: c, value: a });
+            else if (publicPlotCategories.includes(c as plotCategories))
+              area.publicSpaces.push({ name: c, value: a });
             else area.other += a;
           }
 
-          for (const [c, obj] of occupancyByCategory) occupancy.push({
-            name: c,
-            ...obj,
-          });
-  
+          for (const [c, obj] of occupancyByCategory)
+            occupancy.push({
+              name: c,
+              ...obj,
+            });
+
           const data: IBlockReportData = {
-            
             // DONE
             blockIdx,
             blockLayerpath: blockLayer.layerpath,
@@ -208,13 +243,25 @@ export const generateBlockReport = async (
             emails: [mission.user.email, flight.pilotID.email],
             phoneNos: [mission.user.phoneNo, flight.pilotID.phoneNo],
             deliverables,
-            roadCount: processedLayerData.filter(d => entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector)).length,
-            roadLength: processedLayerData.filter(d => entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector)).reduce((acc,curr) => (
-              { ...curr, length: acc.length + curr.length }
-            ), { length: 0, area: 0, vector: "" as vectorProps }).length,
-            cycleTrackLength: processedLayerData.filter(d => entityTypes[entityCategories.CYCLE_TRACK].includes(d.vector)).reduce((acc,curr) => (
-              { ...curr, length: acc.length + curr.length }
-            ), { length: 0, area: 0, vector: "" as vectorProps }).length,
+            roadCount: processedLayerData.filter((d) =>
+              entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector)
+            ).length,
+            roadLength: processedLayerData
+              .filter((d) =>
+                entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector)
+              )
+              .reduce(
+                (acc, curr) => ({ ...curr, length: acc.length + curr.length }),
+                { length: 0, area: 0, vector: "" as vectorProps }
+              ).length,
+            cycleTrackLength: processedLayerData
+              .filter((d) =>
+                entityTypes[entityCategories.CYCLE_TRACK].includes(d.vector)
+              )
+              .reduce(
+                (acc, curr) => ({ ...curr, length: acc.length + curr.length }),
+                { length: 0, area: 0, vector: "" as vectorProps }
+              ).length,
             area,
             occupancy,
             tenantName: res.locals.user.tenantId.name,
@@ -222,7 +269,7 @@ export const generateBlockReport = async (
           };
 
           req.log.info(data);
-  
+
           await generateBlockReportDocument({
             ...data,
             metadata: {
@@ -230,7 +277,7 @@ export const generateBlockReport = async (
               tenant_id: String(res.locals.user.tenantId._id),
               user_id: String(res.locals.user._id),
               mission_id: missionId,
-            }
+            },
           });
         } catch (err) {
           req.log.error(
@@ -469,7 +516,7 @@ export const generatePlotReport = async (
           plots: Array<{
             plotIdx: number;
             feature: Feature<turf.MultiPolygon, IPlotProperties>;
-          }>
+          }>;
         }
       > = new Map();
 
@@ -482,17 +529,21 @@ export const generatePlotReport = async (
             feature: plotGeojson.features[plotIdx],
           });
         } else {
-          const blockIdx = actionAreaGeojson.features.findIndex(block => block.properties.blockName == blockName);
+          const blockIdx = actionAreaGeojson.features.findIndex(
+            (block) => block.properties.blockName == blockName
+          );
           if (blockIdx != -1) {
             PlotsByBlock.set(
-              plotGeojson.features[plotIdx].properties.blockName, 
+              plotGeojson.features[plotIdx].properties.blockName,
               {
                 blockIdx,
                 blockFeature: actionAreaGeojson.features[blockIdx],
-                plots: [{
-                  plotIdx,
-                  feature: plotGeojson.features[plotIdx],
-                }]
+                plots: [
+                  {
+                    plotIdx,
+                    feature: plotGeojson.features[plotIdx],
+                  },
+                ],
               }
             );
           }
@@ -748,9 +799,8 @@ export const generatePlotReport = async (
                 tenant_id: String(res.locals.user.tenantId._id),
                 user_id: String(res.locals.user._id),
                 mission_id: missionId,
-              }
+              },
             });
-          
           } catch (err) {
             req.log.error(
               { err, plot: plotFeature.properties },

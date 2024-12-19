@@ -17,13 +17,13 @@ export async function Setup(conn: Connection) {
   await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
   const resChannel = await conn.createChannel();
   await resChannel.assertQueue(RES_QUEUE, { durable: true });
-  InferEvents.on(REQ_QUEUE, function(req) {
+  InferEvents.on(REQ_QUEUE, function (req) {
     reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
       persistent: true,
       contentType: "application/json",
     });
   });
-  resChannel.consume(RES_QUEUE, function(msg) {
+  resChannel.consume(RES_QUEUE, function (msg) {
     resChannel.ack(msg);
     InferEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
   });
@@ -79,28 +79,22 @@ export const receiveInfer = async (
     if (infer) {
       const file_path = await permPath(pathUtils.Directory.AI_ML, infer);
       data.data = file_path;
-    }
-    else {
+    } else {
       logger.error(metadata, "No data for inference!");
     }
     data.status = "completed";
     await data.save();
-    missionSpecificSocket
-      .to(String(metadata.mission_id))
-      .emit("AI_TASK", data);
+    missionSpecificSocket.to(String(metadata.mission_id)).emit("AI_TASK", data);
   } else {
     data.status = "failed";
     await data.save();
-    missionSpecificSocket
-      .to(String(metadata.mission_id))
-      .emit("AI_TASK", data);
+    missionSpecificSocket.to(String(metadata.mission_id)).emit("AI_TASK", data);
   }
 };
 
-InferEvents.on(RES_QUEUE, function(res: InferResponse) {
+InferEvents.on(RES_QUEUE, function (res: InferResponse) {
   logger.info(res, "RECEIVED ZIP DECOMPRESS RESPONSE");
   receiveInfer(res.inference, res.metadata, res.success)
     .then(() => logger.info(res, "SAVED INFERENCE"))
     .catch((err) => logger.error({ res, err }, "FAILED TO SAVE INFERENCE"));
 });
-

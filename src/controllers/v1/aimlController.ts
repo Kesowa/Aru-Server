@@ -63,15 +63,15 @@ export const inferVodViolence = async (
   const newTask = hadFailed
     ? oldTask
     : await aimlModel.create({
-      doc: vod._id,
-      docModel: "vod",
-      status: "started",
-      infer: "violence",
-      createdBy: res.locals.user._id,
-      updatedBy: res.locals.user._id,
-      tenant: res.locals.user.tenantId._id,
-      data: "null",
-    });
+        doc: vod._id,
+        docModel: "vod",
+        status: "started",
+        infer: "violence",
+        createdBy: res.locals.user._id,
+        updatedBy: res.locals.user._id,
+        tenant: res.locals.user.tenantId._id,
+        data: "null",
+      });
   try {
     await sendInfer(mp4, "violence", {
       mission_id: newTask.doc._id.toString(),

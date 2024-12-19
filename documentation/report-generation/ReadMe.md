@@ -165,16 +165,16 @@ Both of the above requirements have been implemented using `puppeteer` and some 
 
 **`Members of ScreenshotGenerator Class`**:
 
-| Name       | Type                                              | Description                                                                                                                                                                   |
-| ---------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| browser    | [Browser](https://pptr.dev/api/puppeteer.browser) | Stores reference to the `headless` browser instances created by puppeteer                                                                                                     |
-| chartPage  | [Page](https://pptr.dev/api/puppeteer.page)       | Stores a reference to the chart webpage opened in the headless browser, where the chart HTML template has been loaded.                                                        |
-| mapboxPage | [Page](https://pptr.dev/api/puppeteer.page)       | Stores a reference to the mapbox webpage opened in the headless browser, where the mapbox HTML template has been loaded.                                                      |
-| mapboxHtml | string                                            | Stores the raw `HTML` string read from the mapbox HTML template file. |
-| chartHtml  | string                                            | Stores the raw `HTML` string read from the chart HTML template file.   |
-| logger     | [Logger](https://getpino.io/#/docs/api?id=logger) | The logger used to log progress and errors during the entire process.                                                                                                         |
-| PIE_CHART  | string                                            | Static variable that stores the constant value `"pie chart"`. Used to tell the `getChartSS` function that a pie chart is to be generated (and not a bar chart).               |
-| BAR_CHART  | string                                            | Static variable that stores the constant value `"bar chart"`. Used to tell the `getChartSS` function that a bar chart is to be generated (and not a pie chart).               |
+| Name       | Type                                              | Description                                                                                                                                                     |
+| ---------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| browser    | [Browser](https://pptr.dev/api/puppeteer.browser) | Stores reference to the `headless` browser instances created by puppeteer                                                                                       |
+| chartPage  | [Page](https://pptr.dev/api/puppeteer.page)       | Stores a reference to the chart webpage opened in the headless browser, where the chart HTML template has been loaded.                                          |
+| mapboxPage | [Page](https://pptr.dev/api/puppeteer.page)       | Stores a reference to the mapbox webpage opened in the headless browser, where the mapbox HTML template has been loaded.                                        |
+| mapboxHtml | string                                            | Stores the raw `HTML` string read from the mapbox HTML template file.                                                                                           |
+| chartHtml  | string                                            | Stores the raw `HTML` string read from the chart HTML template file.                                                                                            |
+| logger     | [Logger](https://getpino.io/#/docs/api?id=logger) | The logger used to log progress and errors during the entire process.                                                                                           |
+| PIE_CHART  | string                                            | Static variable that stores the constant value `"pie chart"`. Used to tell the `getChartSS` function that a pie chart is to be generated (and not a bar chart). |
+| BAR_CHART  | string                                            | Static variable that stores the constant value `"bar chart"`. Used to tell the `getChartSS` function that a bar chart is to be generated (and not a pie chart). |
 
 **`Methods of ScreenshotGenerator Class`**:
 
