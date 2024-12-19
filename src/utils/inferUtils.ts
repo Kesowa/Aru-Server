@@ -6,8 +6,6 @@ import { Connection } from "amqplib";
 import aimlModel from "../models/aimlTask";
 import { IAimlTask, inferTypes } from "../schemas/aimlTask";
 import { permPath } from "./dataUtils";
-import { randomUUID } from "crypto";
-import { extname } from "path";
 
 export const InferEvents = new EventEmitter();
 
