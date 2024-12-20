@@ -6,7 +6,7 @@ export type docTypes = typeof docModels[number];
 const status = <const>["started", "completed", "failed"];
 export type statusType = typeof status[number];
 
-const inferences = <const>["violence", "deepforest", "thermal"];
+export const inferences = <const>["violence", "deepforest", "thermal"];
 export type inferTypes = typeof inferences[number];
 
 type TaskTemp<docModel, inference, data> = {

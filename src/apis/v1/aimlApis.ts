@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { body, param, query } from "express-validator";
+import { param, query } from "express-validator";
 import {
-  callbackVodViolence,
   inferVodViolence,
   fetchAimlTasks,
+  inferLayerProcessing,
 } from "../../controllers/v1/aimlController";
 import { isAuthenticated } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
@@ -17,14 +17,7 @@ router.post(
   validator,
   RobustRunner(inferVodViolence)
 );
-router.post(
-  "/vod/:taskId/violence/callback",
-  param("taskId").isMongoId(),
-  body("Keys").isArray(),
-  body("Values").isArray(),
-  validator,
-  RobustRunner(callbackVodViolence)
-);
+
 router.get(
   "/:docModel/:docId",
   param("docModel").isString(),
@@ -33,6 +26,14 @@ router.get(
   validator,
   isAuthenticated,
   RobustRunner(fetchAimlTasks)
+);
+
+router.post(
+  "/layer/:layerId/treecount/infer",
+  isAuthenticated,
+  param("layerId").isMongoId(),
+  validator,
+  RobustRunner(inferLayerProcessing)
 );
 
 export default router;

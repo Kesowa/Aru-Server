@@ -257,10 +257,6 @@ export const saveAsKML = async (geojson: GeoJson) => {
   return kmlPath;
 };
 
-export const saveAIMLFile = async (filename: string, data: string) => {
-  await uploadString(pathUtils.docPath(Directory.AI_ML, filename), data);
-};
-
 export const createArchive = async (files: pathUtils.DocPath[]) => {
   return await archive(files);
 };
