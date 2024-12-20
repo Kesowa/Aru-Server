@@ -17,7 +17,7 @@ export const inferVodViolence = async (
     _id: req.params.vodId,
     tenantId: res.locals.user.tenantId._id,
   });
-  if (vod === null) {
+  if (vod === null || !vod.originalFile) {
     res.status(404).json({
       status: false,
       message: "vod not found",
@@ -62,7 +62,7 @@ export const inferVodViolence = async (
       // return;
     }
   }
-  const mp4 = vod.videoPath.replace(/\/index\.m3u8$/, ".mp4");
+  const mp4 = vod.originalFile;
   const newTask = hadFailed
     ? oldTask
     : await aimlModel.create({
