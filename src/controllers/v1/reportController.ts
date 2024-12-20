@@ -1,51 +1,35 @@
 import * as turf from "@turf/turf";
 
 import { Request } from "express";
-import Mission from "../../models/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { vectorProps } from "../../schemas/vectorprops";
-import {
-  DirPath,
-  Directory,
-  TITILER_SERVER,
-  TITILER_STATIC,
-} from "../../constants";
-import { generateDocument } from "../../utils/reportUtils/block-report/report";
-import { Packer } from "docx";
-import { IData } from "../../utils/reportUtils/block-report/types";
-import Flight from "../../models/flight";
-import { IUser } from "../../schemas/user";
-import {
-  privateCommercialLayerTypes,
-  residentialLayerTypes,
-  govtCommercialLayerTypes,
-  housingComplexLayerTypes,
-  govtLayerTypes,
-  motorableRoadsLayerTypes,
-  footpathLayerTypes,
-  cycleTrackLayerTypes,
-  greeneryLayerTypes,
-  waterBodyLayerTypes,
-  vacantTypes,
-  underConstructionTypes,
-  deliverableTypes,
-} from "../../utils/reportUtils/reportUtils";
+import { DirPath, Directory } from "../../constants";
 import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
-import { ScreenshotGenerator } from "../../utils/reportUtils/screenshot";
-import { pino } from "pino";
 import {
+  entityCategories,
+  entityTypes,
+  IAreaData,
   IBlockProperties,
+  IBlockReportData,
   IBuildingProperties,
+  IOccupancyDesc,
   IPlotProperties,
   IPlotReportData,
-} from "../../utils/reportUtils/plot-report/types";
-import { generatePlotReportDocument } from "../../utils/reportUtils/plot-report/report";
+  plotBuildingStatus,
+  plotCategories,
+  privatePlotCategories,
+  publicPlotCategories,
+} from "../../utils/reportUtils";
+import {
+  generatePlotReport as generatePlotReportDocument,
+  generateBlockReport as generateBlockReportDocument,
+} from "../../utils/reportUtils";
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
-import { readFile, saveFile } from "../../utils/dataUtils";
+import { saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
 import ObjectsToCsv from "objects-to-csv";
 import { rasterProps } from "../../schemas/rasterprops";
@@ -55,137 +39,11 @@ import {
   BuildingPropertiesSchema,
 } from "../../../aru-common/schemas/properties";
 import z from "zod";
+import Mission from "../../models/mission";
+import { IUser } from "../../schemas/user";
+import Flight from "../../models/flight";
 
-export function findArea(features: Feature<turf.Geometry, turf.Properties>[]) {
-  try {
-    let totalArea = 0;
-    const allIndependantLines: turf.Position[][] = [];
-    for (const feature of features) {
-      // Point or Position => number[] of length 2 => one coordinate
-      // LineString => Position[]
-      // MultiLineString and Polygon => Position[][]
-      // MultiPolygon => Position[][][]
-      // There are no other shapes defined under geometry specifications that can have an area
-      if (
-        ["MultiPolygon", "Polygon", "MultiLineString"].includes(
-          feature.geometry.type
-        )
-      ) {
-        if (feature.geometry.type === "MultiLineString") {
-          for (const linestring of feature.geometry
-            .coordinates as turf.Position[][]) {
-            allIndependantLines.concat(linestring);
-          }
-          continue;
-        }
-        let polygons = feature.geometry.coordinates;
-        if (feature.geometry.type === "Polygon") {
-          polygons = [polygons as turf.Position[][]];
-        }
-        for (const polygon of polygons as turf.Position[][][]) {
-          const area = turf.area(turf.polygon(polygon));
-          totalArea += area;
-        }
-      }
-    }
-    if (allIndependantLines.length >= 3) {
-      const area = turf.area(turf.polygon(allIndependantLines));
-      totalArea += area;
-    }
-    return totalArea;
-  } catch (error) {
-    console.error(error);
-    return 0;
-  }
-}
-
-export function findLength(
-  features: Feature<turf.Geometry, turf.Properties>[]
-) {
-  try {
-    let totalLength = 0;
-    for (const feature of features) {
-      // LineString => Position[]
-      // MultiLineString and Polygon => Position[][]
-      // There are no other shapes defined under geometry specifications that can have a length
-      if (
-        ["MultiLineString", "LineString", "Polygon"].includes(
-          feature.geometry.type
-        )
-      ) {
-        const lines =
-          feature.geometry.type === "LineString"
-            ? [feature.geometry.coordinates as turf.Position[]]
-            : (feature.geometry.coordinates as turf.Position[][]);
-        // Polygon and MultiLineString both have similar structure, array of line strings
-        totalLength += turf.length(turf.multiLineString(lines));
-      }
-    }
-    return totalLength / 1000; // as turf calculates in km, but we need in m
-  } catch (error) {
-    console.error(error);
-    return 0;
-  }
-}
-
-export function countPolygons(
-  features: Feature<turf.Geometry, turf.Properties>[]
-) {
-  try {
-    let count = 0;
-    for (const feature of features) {
-      if (feature.geometry.type === "Polygon") {
-        count++;
-      } else if (feature.geometry.type === "MultiPolygon") {
-        count += feature.geometry.coordinates.length;
-      }
-    }
-    return count;
-  } catch (error) {
-    console.error(error);
-    return 0;
-  }
-}
-
-function assignOccupancy(layerType: string, idx: number, data: IData) {
-  if (vacantTypes.includes(layerType)) {
-    data.occupancy[idx].vacant++;
-  } else if (underConstructionTypes.includes(layerType)) {
-    data.occupancy[idx].underConstruction++;
-  } else {
-    data.occupancy[idx].occupied++;
-  }
-}
-
-export async function saveScreenshot(
-  vectorFeatures: Feature<turf.Geometry, turf.Properties>[],
-  rasterFilePaths: string[],
-  logger: pino.Logger
-) {
-  try {
-    const ssGenerator = new ScreenshotGenerator(logger);
-    await ssGenerator.init();
-
-    logger.info("Browser Launched for screenshots...");
-
-    const ssBuffer = await ssGenerator.getMapSS(
-      TITILER_SERVER,
-      vectorFeatures,
-      rasterFilePaths
-    );
-
-    await ssGenerator.destroy();
-
-    logger.info("Image Captured...");
-
-    return ssBuffer;
-  } catch (error) {
-    logger.error("Error while taking screenshot: ", error);
-    return null;
-  }
-}
-
-export const generateReport = async (
+export const generateBlockReport = async (
   req: Request<
     {},
     {},
@@ -198,61 +56,40 @@ export const generateReport = async (
   {
     const { missionId } = req.body;
     try {
-      // initializing all numbers and texts
-      const data: IData = {
-        missionHeading: "",
-        missionSubHeading: "",
-        missionMapImg: null,
-        missionCode: "",
-        date: "",
-        users: [],
-        emails: [],
-        phoneNos: [],
-        area: {
-          total: 0,
-          privateSpaces: [
-            { name: "Private Commercial", value: 0 },
-            { name: "Residential", value: 0 },
-            { name: "Govt. Commercial", value: 0 },
-            { name: "Housing Complex", value: 0 },
-          ],
-          publicSpaces: [
-            { name: "Government", value: 0 },
-            { name: "Motorable Roads", value: 0 },
-            { name: "Footpath", value: 0 },
-            { name: "Cycle Track", value: 0 },
-            { name: "Parks & Green", value: 0 },
-            { name: "Waterbody", value: 0 },
-          ],
-          other: 0,
-        },
-        occupancy: [
-          {
-            name: "Private Commercial",
-            occupied: 0,
-            underConstruction: 0,
-            vacant: 0,
-          },
-          { name: "Residential", occupied: 0, underConstruction: 0, vacant: 0 },
-          {
-            name: "Govt. Commercial",
-            occupied: 0,
-            underConstruction: 0,
-            vacant: 0,
-          },
-          {
-            name: "Housing Complex",
-            occupied: 0,
-            underConstruction: 0,
-            vacant: 0,
-          },
-          { name: "Government", occupied: 0, underConstruction: 0, vacant: 0 },
-        ],
-        roadCount: 0,
-        roadLength: 0,
-        cycleTrackLength: 0,
-        deliverables: [],
-      };
+      const rasterLayer = await Layer.findOne({
+        missionId: missionId,
+        type: "Raster",
+      });
+
+      const vectorLayers = await Layer.find({
+        missionId: missionId,
+        type: "Vector",
+      });
+
+      const blockLayer = vectorLayers.find(
+        (l) => l.vector === vectorProps.BLOCK_BOUNDARY
+      );
+      const plotLayer = vectorLayers.find((l) => l.vector === vectorProps.PLOT);
+
+      const blockFeatures = (
+        await readGeoJson<Feature<turf.MultiPolygon, IBlockProperties>>(
+          DirPath(Directory.DEFAULT, blockLayer.layerpath)
+        )
+      ).features;
+
+      const plotFeatures = (
+        await readGeoJson<Feature<turf.MultiPolygon, IPlotProperties>>(
+          DirPath(Directory.DEFAULT, plotLayer.layerpath)
+        )
+      ).features;
+
+      // date
+      const now = new Date();
+      const yyyy = now.getFullYear().toString();
+      let mm = (now.getMonth() + 1).toString();
+      let dd = now.getDate().toString();
+      if (parseInt(dd) < 10) dd = "0" + dd;
+      if (parseInt(mm) < 10) mm = "0" + mm;
 
       // mission details filling
       const mission = await Mission.findOne(
@@ -266,17 +103,6 @@ export const generateReport = async (
           email: 1,
         },
       });
-      data.missionHeading = mission.name;
-      // TODO: missionCode(??), missionMapImgPath(scrape screenshot)
-
-      // date
-      const now = new Date();
-      const yyyy = now.getFullYear().toString();
-      let mm = (now.getMonth() + 1).toString();
-      let dd = now.getDate().toString();
-      if (parseInt(dd) < 10) dd = "0" + dd;
-      if (parseInt(mm) < 10) mm = "0" + mm;
-      data.date = dd + "/" + mm + "/" + yyyy;
 
       // pilot details (names, phone numbers, emails)
       const flight = await Flight.findOne(
@@ -290,121 +116,184 @@ export const generateReport = async (
           email: 1,
         },
       });
-      data.users.push(mission.user.name);
-      data.users.push(flight.pilotID.name);
-      data.emails.push(mission.user.email);
-      data.emails.push(flight.pilotID.email);
-      data.phoneNos.push(mission.user.phoneNo);
-      data.phoneNos.push(flight.pilotID.phoneNo);
 
-      // area details filling (for page 2 tables)
-      const vectorLayers = await Layer.find({
-        missionId: missionId,
-        type: "Vector",
-      });
+      const deliverables = vectorLayers
+        .filter((l) => l.vector !== vectorProps.BLOCK_BOUNDARY)
+        .map(({ name, layerpath, vector }) => ({
+          name,
+          layerpath,
+          layerType: vector,
+        }));
 
-      for (const layer of vectorLayers) {
-        const gjson = await readGeoJson<
-          Feature<turf.Geometry, turf.Properties>
-        >(DirPath(Directory.DEFAULT, layer.layerpath));
-        const currLayerArea = findArea(gjson.features);
-        const currLayerLength = findLength(gjson.features);
-        data.area.total += currLayerArea;
-        // check the layer type and accordingly add area to respective type
-        if (privateCommercialLayerTypes.includes(layer.vector)) {
-          data.area.privateSpaces[0].value += currLayerArea;
-          assignOccupancy(layer.vector, 0, data);
-        } else if (residentialLayerTypes.includes(layer.vector)) {
-          data.area.privateSpaces[1].value += currLayerArea;
-          assignOccupancy(layer.vector, 1, data);
-        } else if (govtCommercialLayerTypes.includes(layer.vector)) {
-          data.area.privateSpaces[2].value += currLayerArea;
-          assignOccupancy(layer.vector, 2, data);
-        } else if (housingComplexLayerTypes.includes(layer.vector)) {
-          data.area.privateSpaces[3].value += currLayerArea;
-          assignOccupancy(layer.vector, 3, data);
-        } else if (govtLayerTypes.includes(layer.vector)) {
-          data.area.publicSpaces[0].value += currLayerArea;
-          assignOccupancy(layer.vector, 4, data);
-        } else if (motorableRoadsLayerTypes.includes(layer.vector)) {
-          data.area.publicSpaces[1].value += currLayerArea;
-          data.roadCount++;
-          data.roadLength += currLayerLength;
-        } else if (footpathLayerTypes.includes(layer.vector)) {
-          data.area.publicSpaces[2].value += currLayerArea;
-        } else if (cycleTrackLayerTypes.includes(layer.vector)) {
-          data.area.publicSpaces[3].value += currLayerArea;
-          data.cycleTrackLength += currLayerLength;
-        } else if (greeneryLayerTypes.includes(layer.vector)) {
-          data.area.publicSpaces[4].value += currLayerArea;
-        } else if (waterBodyLayerTypes.includes(layer.vector)) {
-          data.area.publicSpaces[5].value += currLayerArea;
-        } else {
-          data.area.other += currLayerArea;
-        }
-      }
-
-      // categorizing the geojson for map and capturing images
-      for (const d in deliverableTypes) {
-        const deliverableLayers = vectorLayers.filter((layer) =>
-          deliverableTypes[d].includes(layer.vector)
+      for (const blockIdx of blockLayer.flaggedFeatures) {
+        const blockFeature = blockFeatures[blockIdx];
+        const plotsInBlock = plotFeatures.filter(
+          (f) => f.properties.blockName === blockFeature.properties.blockName
         );
-        const deliverableFeatures: Feature<turf.Geometry, turf.Properties>[] =
-          [];
-        for (const layer of deliverableLayers) {
-          const layerGeojson = await readGeoJson<
-            Feature<turf.Geometry, turf.Properties>
-          >(DirPath(Directory.DEFAULT, layer.layerpath));
-          deliverableFeatures.push(...layerGeojson.features);
-        }
-        if (deliverableFeatures.length > 0) {
-          const deliverableImgBuffer = await saveScreenshot(
-            deliverableFeatures,
-            [],
-            req.log
-          );
-          data.deliverables.push({
-            name: d,
-            imgBuffer: deliverableImgBuffer,
+        req.log.info("Number of plots: " + String(plotsInBlock.length));
+        try {
+          const filename = `block_report | ${
+            blockFeature.properties.blockName || "blockName"
+          }.docx`;
+          const reportExists = await Document.exists({
+            tenantId: res.locals.user.tenantId._id,
+            missionId,
+            name: filename,
           });
+          if (reportExists) {
+            req.log.warn(
+              "block report exists, skipping. filename: " + filename
+            );
+          }
 
-          if (d === "OVERVIEW") data.missionMapImg = deliverableImgBuffer;
+          const processedLayerData: {
+            area: number;
+            length: number;
+            vector: vectorProps;
+          }[] = [];
+
+          for (const layer of vectorLayers) {
+            req.log.info("Processing layer: " + layer.name);
+            try {
+              const layerGeojson = await readGeoJson(
+                DirPath(Directory.DEFAULT, layer.layerpath)
+              );
+              const combinedFeatures = turf.combine(
+                turf.featureCollection(layerGeojson.features)
+              );
+              const intersection = turf.intersect(
+                combinedFeatures.features[0],
+                blockFeature
+              );
+              processedLayerData.push({
+                vector: layer.vector,
+                area: intersection ? turf.area(intersection) : 0,
+                length: intersection ? turf.length(intersection) : 0,
+              });
+            } catch (err) {
+              req.log.error("Error in processing layer: " + layer.name);
+              req.log.error(err);
+            }
+          }
+
+          const area: IAreaData = {
+            total: turf.area(blockFeature),
+            privateSpaces: [],
+            publicSpaces: [],
+            other: 0,
+          };
+          const occupancy: IOccupancyDesc[] = [];
+
+          const areaByCategory = new Map<string, number>();
+          const occupancyByCategory: Map<
+            string,
+            {
+              occupied: number;
+              underConstruction: number;
+              vacant: number;
+            }
+          > = new Map();
+
+          for (const plot of plotsInBlock) {
+            const plotCategory = plot.properties.category;
+            areaByCategory.set(
+              plotCategory,
+              (areaByCategory.get(plotCategory) || 0) + turf.area(plot)
+            );
+
+            const plotStatus = plot.properties.buildingStatus;
+            occupancyByCategory.set(plotCategory, {
+              occupied:
+                (occupancyByCategory.get(plotCategory)?.occupied || 0) +
+                (plotStatus === plotBuildingStatus.CONSTRUCTED ? 1 : 0),
+              underConstruction:
+                (occupancyByCategory.get(plotCategory)?.underConstruction ||
+                  0) +
+                (plotStatus === plotBuildingStatus.UNDER_CONSTRUCTION ? 1 : 0),
+              vacant:
+                (occupancyByCategory.get(plotCategory)?.vacant || 0) +
+                (plotStatus === plotBuildingStatus.EMPTY_PLOT ? 1 : 0),
+            });
+          }
+
+          for (const [c, a] of areaByCategory) {
+            if (privatePlotCategories.includes(c as plotCategories))
+              area.privateSpaces.push({ name: c, value: a });
+            else if (publicPlotCategories.includes(c as plotCategories))
+              area.publicSpaces.push({ name: c, value: a });
+            else area.other += a;
+          }
+
+          for (const [c, obj] of occupancyByCategory)
+            occupancy.push({
+              name: c,
+              ...obj,
+            });
+
+          const data: IBlockReportData = {
+            // DONE
+            blockIdx,
+            blockLayerpath: blockLayer.layerpath,
+            rasterLayerpath: rasterLayer.layerpath,
+            blockName: blockFeature.properties.blockName,
+            actionArea: blockLayer.name,
+            missionCode: mission.name.split("||")[0].trim(),
+            date: `${dd}/${mm}/${yyyy}`,
+            users: [mission.user.name, flight.pilotID.name],
+            emails: [mission.user.email, flight.pilotID.email],
+            phoneNos: [mission.user.phoneNo, flight.pilotID.phoneNo],
+            deliverables,
+            roadCount: processedLayerData.filter((d) =>
+              entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector)
+            ).length,
+            roadLength: processedLayerData
+              .filter((d) =>
+                entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector)
+              )
+              .reduce(
+                (acc, curr) => ({ ...curr, length: acc.length + curr.length }),
+                { length: 0, area: 0, vector: "" as vectorProps }
+              ).length,
+            cycleTrackLength: processedLayerData
+              .filter((d) =>
+                entityTypes[entityCategories.CYCLE_TRACK].includes(d.vector)
+              )
+              .reduce(
+                (acc, curr) => ({ ...curr, length: acc.length + curr.length }),
+                { length: 0, area: 0, vector: "" as vectorProps }
+              ).length,
+            area,
+            occupancy,
+            tenantName: res.locals.user.tenantId.name,
+            tenantImagePath: res.locals.user.tenantId.avatar,
+          };
+
+          req.log.info(data);
+
+          await generateBlockReportDocument({
+            ...data,
+            metadata: {
+              filename,
+              tenant_id: String(res.locals.user.tenantId._id),
+              user_id: String(res.locals.user._id),
+              mission_id: missionId,
+            },
+          });
+        } catch (err) {
+          req.log.error(
+            { err, block: blockFeature.properties },
+            "REPORT GENERATION FAILED for " + missionId
+          );
+          missionSpecificSocket
+            .to(missionId.toString())
+            .emit("REPORT_GENERATION_FAILED", { ...err, blockFeature });
         }
       }
 
-      // all information received without errors, now can start report generation successfully
       res.status(200).json({
         status: true,
-        message: "Report generation started!",
+        message: "Data collection complete... Report generation started!",
       });
-
-      req.log.info("Generating report...");
-
-      // saving the document
-      const doc = await generateDocument(data, req.log);
-      const buffer = await Packer.toBuffer(doc);
-      const filename = `${mission.name}${mission._id}-block_report.docx`;
-      const { size } = await saveFile(Directory.DOCUMENTS, filename, buffer);
-
-      const docDB = new Document({
-        name: filename,
-        modDate: new Date(),
-        fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
-        fileType: "docx",
-        folderName: "root1234",
-        filePath: `/documents/${filename}`,
-        missionId,
-        tenantId: res.locals.user.tenantId,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
-      });
-      const savedDoc = await docDB.save();
-
-      req.log.info("Report Generation Complete");
-
-      missionSpecificSocket
-        .to(missionId.toString())
-        .emit("REPORT_GENERATION_COMPLETE", savedDoc);
     } catch (error) {
       req.log.error(error);
       missionSpecificSocket
@@ -505,7 +394,6 @@ export const generatePlotReport = async (
         });
       }
 
-      const rasterFilePath = TITILER_STATIC + rasterLayer.layerpath;
       const plotGeojson = await readGeoJson<
         Feature<turf.MultiPolygon, IPlotProperties>
       >(DirPath(Directory.DEFAULT, plotLayer.layerpath));
@@ -522,9 +410,9 @@ export const generatePlotReport = async (
 
       // multiple plot reports will be generated, one for each flagged plot
       // use Plot_no to join building_footprint with each plot. A single plot can have multiple building, and hence multiple building footprints, on top of it.
-      const flaggedPlotGeojson = plotGeojson.features.filter((_, index) =>
-        plotLayer.flaggedFeatures.includes(index)
-      );
+      // const flaggedPlotGeojson = plotGeojson.features.map((feature, index) => {
+      //   if (plotLayer.flaggedFeatures.includes(index)) return { plotIdx: index, feature };
+      // }).filter(e => !!e);
 
       let foundError = false;
 
@@ -622,17 +510,43 @@ export const generatePlotReport = async (
 
       const PlotsByBlock: Map<
         string,
-        Array<Feature<turf.MultiPolygon, IPlotProperties>>
+        {
+          blockIdx: number;
+          blockFeature: Feature<turf.MultiPolygon, IBlockProperties>;
+          plots: Array<{
+            plotIdx: number;
+            feature: Feature<turf.MultiPolygon, IPlotProperties>;
+          }>;
+        }
       > = new Map();
 
-      for (const plotFeature of flaggedPlotGeojson) {
-        const block = PlotsByBlock.get(plotFeature.properties.blockName);
-        if (block != undefined) {
-          block.push(plotFeature);
+      for (const plotIdx of plotLayer.flaggedFeatures) {
+        const blockName = plotGeojson.features[plotIdx].properties.blockName;
+        const blockFound = PlotsByBlock.get(blockName);
+        if (blockFound != undefined) {
+          blockFound.plots.push({
+            plotIdx,
+            feature: plotGeojson.features[plotIdx],
+          });
         } else {
-          const array = [];
-          array.push(plotFeature);
-          PlotsByBlock.set(plotFeature.properties.blockName, array);
+          const blockIdx = actionAreaGeojson.features.findIndex(
+            (block) => block.properties.blockName == blockName
+          );
+          if (blockIdx != -1) {
+            PlotsByBlock.set(
+              plotGeojson.features[plotIdx].properties.blockName,
+              {
+                blockIdx,
+                blockFeature: actionAreaGeojson.features[blockIdx],
+                plots: [
+                  {
+                    plotIdx,
+                    feature: plotGeojson.features[plotIdx],
+                  },
+                ],
+              }
+            );
+          }
         }
       }
       // plot images (one per plot, fail safe if absent)
@@ -677,19 +591,6 @@ export const generatePlotReport = async (
 
       // =================================== DETAILS THAT WON'T VARY ACROSS REPORTS OF DIFFERENT PLOTS ==================================
 
-      // ************* COVER PAGE DETAILS ****************
-      // Cover page in sample report shows block boundary and all the plots in the block, so it will be same for all plot reports
-      const coverPageVectorFeatures = [
-        ...actionAreaGeojson.features,
-        ...plotGeojson.features,
-      ];
-      const coverImageBuffer = await saveScreenshot(
-        coverPageVectorFeatures,
-        [rasterFilePath],
-        req.log
-      );
-      // await fs.writeFile(DirPath(Directory.DOCUMENTS, "coverImage.png"), coverImageBuffer); // For Debugging
-
       const waterbodyGeojson = await readGeoJson(
         DirPath(Directory.DEFAULT, waterbodyLayer.layerpath)
       );
@@ -730,19 +631,12 @@ export const generatePlotReport = async (
 
       // ===================================== DETAILS THAT VARY ACROSS REPORTS OF DIFFERENT PLOTS ========================================
 
-      for (const blockName of PlotsByBlock.keys()) {
+      for (const [blockName, blockData] of PlotsByBlock) {
         // ************* BLOCK DETAILS ******************
         // All plots belong to same block, so block properties need not be calculated repeatedly
 
-        const blockGeojson = actionAreaGeojson.features.find(
-          (block) => block.properties.blockName == blockName
-        );
+        const blockGeojson = blockData.blockFeature;
         const blockArea = turf.area(blockGeojson);
-        const blockImageBuffer = await saveScreenshot(
-          [blockGeojson],
-          [rasterFilePath],
-          req.log
-        );
         const blockProperties = blockGeojson.properties; // block layer will have only one MultiPolygon features
 
         const intersectWaterbody = turf.intersect(
@@ -779,7 +673,7 @@ export const generatePlotReport = async (
           .map((building) => building.properties.height)
           .reduce((prev, curr) => Number(curr) + prev, 0);
 
-        for (const plotFeature of PlotsByBlock.get(blockName)) {
+        for (const { plotIdx, feature: plotFeature } of blockData.plots) {
           try {
             const filename = `plot_report | ${
               plotFeature.properties.plotNo || "plotNo"
@@ -803,12 +697,7 @@ export const generatePlotReport = async (
             // // front view image
             // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
             // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
-            const plotArea = findArea([plotFeature]);
-            const plotImageBuffer = await saveScreenshot(
-              [plotFeature],
-              [rasterFilePath],
-              req.log
-            );
+            const plotArea = turf.area(plotFeature);
 
             // ******************** BUILDING DETAILS ************************
 
@@ -826,25 +715,31 @@ export const generatePlotReport = async (
               layerId: plotLayer._id,
               sys_Id: plotFeature.properties.sys_id,
             });
-            const frontViewImageBuffer = await readFile(plotLayerFile.filePath);
 
             const buildingProperties = plotBuildingFeature.properties;
 
-            const buildingArea = findArea([plotBuildingFeature]);
+            const buildingArea = turf.area(plotBuildingFeature);
 
             // ================= PUTTING TOGETHER THE DATA =======================
 
             const data: IPlotReportData = {
+              plotLayerpath: plotLayer.layerpath,
+              blockLayerpath: actionAreaLayer.layerpath,
+              rasterLayerpath: rasterLayer.layerpath,
+              plotLayerFilepath: plotLayerFile.filePath,
+
+              plotIdx,
+              blockIdx: blockData.blockIdx,
+
               // cover page details
 
               date,
               users,
-              coverImageBuffer,
+              tenantName: res.locals.user.tenantId.name,
+              tenantImagePath: res.locals.user.tenantId.avatar,
 
               // plot details
 
-              frontViewImageBuffer,
-              plotImageBuffer,
               plotArea: plotArea.toFixed(2),
               plotNo: plotProperties.plotNo, // although named as plot "number", it can contain non-numeric characters
               premiseNo: plotProperties.premiseNo, // although named as premise "number", can contain non-numeric characters
@@ -873,7 +768,6 @@ export const generatePlotReport = async (
 
               // block details
 
-              blockImageBuffer,
               blockArea: blockArea.toFixed(2),
               greeneryArea: greeneryArea.toFixed(2),
               canopyArea: canopyArea.toFixed(2),
@@ -898,41 +792,15 @@ export const generatePlotReport = async (
 
             // req.log.info(data);
 
-            // saving the document
-            const doc = generatePlotReportDocument(data);
-            const buffer = await Packer.toBuffer(doc);
-            const filenamePath = randomUUID() + ".docx";
-            const { size } = await saveFile(
-              Directory.DOCUMENTS,
-              filenamePath,
-              buffer
-            );
-
-            await Document.findOneAndDelete({
-              tenantId: res.locals.user.tenantId._id,
-              missionId,
-              name: filename,
+            await generatePlotReportDocument({
+              ...data,
+              metadata: {
+                filename,
+                tenant_id: String(res.locals.user.tenantId._id),
+                user_id: String(res.locals.user._id),
+                mission_id: missionId,
+              },
             });
-
-            const docDB = new Document({
-              name: filename,
-              modDate: new Date(),
-              fileSize: (Number(size) / (1024 * 1024)).toFixed(5),
-              fileType: "docx",
-              folderName: "root1234",
-              filePath: `/documents/${filenamePath}`,
-              missionId: missionId,
-              tenantId: res.locals.user.tenantId,
-              createdBy: res.locals.user._id,
-              updatedBy: res.locals.user._id,
-            });
-            const savedDoc = await docDB.save();
-
-            req.log.info("Report Generation Complete");
-
-            missionSpecificSocket
-              .to(missionId.toString())
-              .emit("REPORT_GENERATION_COMPLETE", savedDoc);
           } catch (err) {
             req.log.error(
               { err, plot: plotFeature.properties },

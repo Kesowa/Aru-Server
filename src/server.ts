@@ -7,6 +7,7 @@ import { ioHandler } from "./socket";
 import { Setup as VodSetup } from "./utils/videoUtils";
 import { Setup as ZipSetup } from "./utils/cesium";
 import { Setup as InferSetup } from "./utils/inferUtils";
+import { Setup as ReportSetup } from "./utils/reportUtils";
 
 import mongoose from "mongoose";
 import {
@@ -45,6 +46,9 @@ const worker = async () => {
 
   // Inference Microservice
   await InferSetup(amqpConnection);
+
+  // Report Microservice
+  await ReportSetup(amqpConnection);
 
   io.adapter(createAdapter({ amqpConnection: () => amqpConnection }));
   //handle socket.io

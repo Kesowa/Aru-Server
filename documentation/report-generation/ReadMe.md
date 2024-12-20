@@ -4,39 +4,44 @@ The Block Report is a document containing information about a block.
 
 ## Table of Contents
 
-- [Table of Contents](#table-of-contents)
-- [Structure of Block Report](#structure-of-block-report)
-- [Pre-requisites](#pre-requisites)
-- [Overview](#overview)
-- [Utilities](#utilities)
-  - [GeoJSON Utilities](#geojson-utilities)
-  - [Screenshot (or Image Generation) Utilities](#screenshot-or-image-generation-utilities)
-  - [Report Utilities](#report-utilities)
-  - [Pre-defined Categories](#pre-defined-categories)
-    - [Pre-defined area categories](#following-is-the-current-list-of-pre-defined-area-categories-and-associated-vectortypes)
-    - [Pre-defined occupancy categories](#following-is-the-current-list-of-pre-defined-occupancy-categories-and-associated-vectortypes)
-    - [Pre-defined deliverable types](#following-is-the-current-list-of-pre-defined-deliverable-types-and-associated-vectortypes)
-- [Generating Cover Page](#generating-cover-page)
-  - [Identifying Major Components](#identifying-major-components)
-  - [Structure of Data Required](#structure-of-data-required)
-  - [Gathering the Data](#gathering-the-data)
-- [Generating Summary Page](#generating-summary-page)
-  - [Identifying Major Components](#identifying-major-components-1)
-  - [Structure of Data Required](#structure-of-data-required-1)
-  - [Gathering the Data](#gathering-the-data-1)
-- [Generating Insights Page](#generating-insights-page)
-  - [Identifying Major Components](#identifying-major-components-2)
-  - [Structure of Data Required](#structure-of-data-required-2)
-  - [Gathering the Data](#gathering-the-data-2)
-- [Generating Plot Details Page](#generating-plot-details-page)
-  - [Identifying Major Components](#identifying-major-components-3)
-  - [Structure of Data Required](#structure-of-data-required-3)
-  - [Gathering the Data](#gathering-the-data-3)
-- [Generating Map Deliverables Page](#generating-map-deliverables-page)
-  - [Identifying Major Components](#identifying-major-components-4)
-  - [Structure of Data Required](#structure-of-data-required-4)
-  - [Gathering the Data](#gathering-the-data-4)
-- [Final Structure of data sent from `reportController` to `generateDocument`](#final-structure-of-data-sent-from-reportcontroller-to-generatedocument)
+- [Block Report Generation on Aru](#block-report-generation-on-aru)
+  - [Table of Contents](#table-of-contents)
+  - [Structure of Block Report](#structure-of-block-report)
+  - [Pre-requisites](#pre-requisites)
+  - [Overview](#overview)
+  - [Utilities](#utilities)
+    - [GeoJSON Utilities](#geojson-utilities)
+    - [Screenshot (or Image Generation) Utilities](#screenshot-or-image-generation-utilities)
+    - [Report Utilities](#report-utilities)
+    - [Pre-defined Categories](#pre-defined-categories)
+      - [Following is the current list of pre-defined area categories and associated vectorTypes:](#following-is-the-current-list-of-pre-defined-area-categories-and-associated-vectortypes)
+      - [Following is the current list of pre-defined occupancy categories and associated vectorTypes:](#following-is-the-current-list-of-pre-defined-occupancy-categories-and-associated-vectortypes)
+      - [Following is the current list of pre-defined deliverable types and associated vectorTypes:](#following-is-the-current-list-of-pre-defined-deliverable-types-and-associated-vectortypes)
+  - [Generating Cover Page](#generating-cover-page)
+    - [Identifying Major Components](#identifying-major-components)
+    - [Structure of Data Required](#structure-of-data-required)
+    - [Gathering the Data](#gathering-the-data)
+  - [Generating Summary Page](#generating-summary-page)
+    - [Identifying Major Components](#identifying-major-components-1)
+    - [Structure of Data Required](#structure-of-data-required-1)
+      - [**IAreaDesc:**](#iareadesc)
+      - [**IOccupancyDesc:**](#ioccupancydesc)
+      - [**IAreaData:**](#iareadata)
+    - [Gathering the Data](#gathering-the-data-1)
+  - [Generating Insights Page](#generating-insights-page)
+    - [Identifying Major Components](#identifying-major-components-2)
+    - [Structure of Data Required](#structure-of-data-required-2)
+      - [**IDetailDesc**](#idetaildesc)
+    - [Gathering the Data](#gathering-the-data-2)
+  - [Generating Plot Details Page](#generating-plot-details-page)
+    - [Identifying Major Components](#identifying-major-components-3)
+    - [Structure of Data Required](#structure-of-data-required-3)
+    - [Gathering the Data](#gathering-the-data-3)
+  - [Generating Map Deliverables Page](#generating-map-deliverables-page)
+    - [Identifying Major Components](#identifying-major-components-4)
+    - [Structure of Data Required](#structure-of-data-required-4)
+    - [Gathering the Data](#gathering-the-data-4)
+  - [Final Structure of data sent from `reportController` to `generateDocument`](#final-structure-of-data-sent-from-reportcontroller-to-generatedocument)
 
 ## Structure of Block Report
 
@@ -106,16 +111,15 @@ The utilities `findArea`, `findLength` and `countPolygons` help in extracting in
     - `name` refers to the name of category whose area percentage the object contains.
     - `percentage` is the percentage of total area of the block covered by the category `name`.
     - `color` is the color by which the area percentage will be represented on the pie chart. It must be specified in hex format `#xxxxxx`.
-  - The template for chart screenshot can be found [here](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/screenshot/templates/chart.html).
 - #### **mapData:**
-  This is just the cog server url of the `geojson` file whose screenshot is to be taken. Using the url, the mapbox html template loads the map with the geojson layer mask, and puppeteer captures the screenshot. The template for map screenshot generation can be found [here](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/screenshot/templates/mapbox.html). The structure of **mapData** is:
+  This is just the cog server url of the `geojson` file whose screenshot is to be taken. Using the url, the mapbox html template loads the map with the geojson layer mask, and puppeteer captures the screenshot. The structure of **mapData** is:
   ```
   {
     cogServerUrl: string,
     vectorFilePaths: string[]
   }
   ```
-- **docx components:** The main [`Document`](https://docx.js.org/#/usage/document) component generated by the `generateDocument` function, using all the data and screenshots, that is returned to the controller. The controller then saves it to the database and file storage. The `generateDocument` function can be found [here](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#L12)
+- **docx components:** The main [`Document`](https://docx.js.org/#/usage/document) component generated by the `generateDocument` function, using all the data and screenshots, that is returned to the controller. The controller then saves it to the database and file storage.
 
 ## Utilities
 
@@ -157,20 +161,20 @@ Every layer of a mission is expected to represent a deliverable. We need to show
 
 Also, we can display charts on a webpage using `chart.js` library. We can also take screenshots of such webpages to obtain the required bar chart and pie chart images. So, a way to automate the process of displaying charts on a webpage and capturing their screenshot is required. <br/>
 
-Both of the above requirements have been implemented using `puppeteer` and some `HTML Templates`, and the functionalities have been encapsulated into the **`ScreenshotGenerator`** class, which can be found [here](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/screenshot/index.ts#L19).
+Both of the above requirements have been implemented using `puppeteer` and some `HTML Templates`, and the functionalities have been encapsulated into the **`ScreenshotGenerator`** class.
 
 **`Members of ScreenshotGenerator Class`**:
 
-| Name       | Type                                              | Description                                                                                                                                                                   |
-| ---------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| browser    | [Browser](https://pptr.dev/api/puppeteer.browser) | Stores reference to the `headless` browser instances created by puppeteer                                                                                                     |
-| chartPage  | [Page](https://pptr.dev/api/puppeteer.page)       | Stores a reference to the chart webpage opened in the headless browser, where the chart HTML template has been loaded.                                                        |
-| mapboxPage | [Page](https://pptr.dev/api/puppeteer.page)       | Stores a reference to the mapbox webpage opened in the headless browser, where the mapbox HTML template has been loaded.                                                      |
-| mapboxHtml | string                                            | Stores the raw `HTML` string read from the [mapbox HTML template file](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/screenshot/templates/mapbox.html). |
-| chartHtml  | string                                            | Stores the raw `HTML` string read from the [chart HTML template file](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/screenshot/templates/chart.html).   |
-| logger     | [Logger](https://getpino.io/#/docs/api?id=logger) | The logger used to log progress and errors during the entire process.                                                                                                         |
-| PIE_CHART  | string                                            | Static variable that stores the constant value `"pie chart"`. Used to tell the `getChartSS` function that a pie chart is to be generated (and not a bar chart).               |
-| BAR_CHART  | string                                            | Static variable that stores the constant value `"bar chart"`. Used to tell the `getChartSS` function that a bar chart is to be generated (and not a pie chart).               |
+| Name       | Type                                              | Description                                                                                                                                                     |
+| ---------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| browser    | [Browser](https://pptr.dev/api/puppeteer.browser) | Stores reference to the `headless` browser instances created by puppeteer                                                                                       |
+| chartPage  | [Page](https://pptr.dev/api/puppeteer.page)       | Stores a reference to the chart webpage opened in the headless browser, where the chart HTML template has been loaded.                                          |
+| mapboxPage | [Page](https://pptr.dev/api/puppeteer.page)       | Stores a reference to the mapbox webpage opened in the headless browser, where the mapbox HTML template has been loaded.                                        |
+| mapboxHtml | string                                            | Stores the raw `HTML` string read from the mapbox HTML template file.                                                                                           |
+| chartHtml  | string                                            | Stores the raw `HTML` string read from the chart HTML template file.                                                                                            |
+| logger     | [Logger](https://getpino.io/#/docs/api?id=logger) | The logger used to log progress and errors during the entire process.                                                                                           |
+| PIE_CHART  | string                                            | Static variable that stores the constant value `"pie chart"`. Used to tell the `getChartSS` function that a pie chart is to be generated (and not a bar chart). |
+| BAR_CHART  | string                                            | Static variable that stores the constant value `"bar chart"`. Used to tell the `getChartSS` function that a bar chart is to be generated (and not a pie chart). |
 
 **`Methods of ScreenshotGenerator Class`**:
 
@@ -213,11 +217,11 @@ await ssGenerator.destroy();
 
 ### Report Utilities
 
-The main utility function that generates the report is the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function. It takes all data required to generate the report as argument, and returns a [`Document`](https://docx.js.org/#/usage/document) object representing the generated report. That object is then turned into a buffer and stored into file system by the `reportController`. Also, an entry in the `documents` collection is added in the database, corresponding to the report. <br/>
+The main utility function that generates the report is the `generateDocument` function. It takes all data required to generate the report as argument, and returns a [`Document`](https://docx.js.org/#/usage/document) object representing the generated report. That object is then turned into a buffer and stored into file system by the `reportController`. Also, an entry in the `documents` collection is added in the database, corresponding to the report. <br/>
 
 Now, the entire `Document` component is too large to fit into a single file. So, I split the code further into other utility functions, which return individual pages to the `generateDocument` function. <br/>
 
-The [`page1`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg1.ts#L313) function returns the `cover page`. The [`page2`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg2.ts#L968) function returns the `summary page`. The [`page3`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg3.ts#L669) function returns the `insights page`. The [`page4`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg4.ts#L21) function returns the `plot details page`. Finally, the [`reportMapPage`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportMapPage.ts#16) function returns the `map deliverable page(s)`. <br />
+The `page1` function returns the `cover page`. The `page2` function returns the `summary page`. The `page3` function returns the `insights page`. The `page4` function returns the `plot details page`. Finally, the `reportMapPage` function returns the `map deliverable page(s)`. <br />
 
 Each of them accepts only specific parts of data as arguments, that are required to generate the associated page. The final structure of data which the `generateDocument` function takes as argument, is like a union of all the different data required by the different pages. The generation process and data required by each page is discussed in the upcoming sections.
 
@@ -225,7 +229,7 @@ Each of them accepts only specific parts of data as arguments, that are required
 
 There is a pre-defined list of categories into which the regions marked by geojsons are categorized. Every vector layer has an associated `vectorType` or `vectorProp` which stores metadata about what type of layer it is. Using these types, we can categorize the layers into the pre-defined categories. <br/>
 
-The lists of categorization can be found in the [`reportUtils.ts`]() file. <br/>
+The lists of categorization can be found in the `reportUtils.ts` file. <br/>
 
 #### Following is the current list of pre-defined area categories and associated vectorTypes:
 
@@ -276,7 +280,7 @@ Also, there are `pre-defined types` of `deliverables` which the map pages can di
 
 ## Generating Cover Page
 
-The cover page is the first page of the report. It gets generated by the [`page1`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg1.ts#L313) function.
+The cover page is the first page of the report. It gets generated by the `page1` function.
 
 ### Identifying Major Components
 
@@ -302,7 +306,7 @@ The components are:
 
 ### Structure of Data Required
 
-The constants can be ignored. Only the variables need to be considered. The structure of data required by [`page1`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg1.ts#L313) function is thus the following:
+The constants can be ignored. Only the variables need to be considered. The structure of data required by `page1` function is thus the following:
 
 ```
 interface IPage1Properties {
@@ -330,7 +334,7 @@ interface IPage1Properties {
 
 ### Gathering the Data
 
-All above data except `missionMapImg` is provided to the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110).
+All above data except `missionMapImg` is provided to the `generateDocument` function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110).
 
 - The mission details are fetched from the database by the controller. The `missionHeading` and `missionSubHeading` are extracted by splitting the `name` of the mission.
 
@@ -342,11 +346,11 @@ All above data except `missionMapImg` is provided to the [`generateDocument`](ht
 
 <br/>
 
-The `missionMapImg` is generated within the `generateDocument` function using the [`ScreenshotGenerator`](#screenshot-or-image-generation-utilities) class. The `generateDocument` function then sends all this data to the [`page1`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg1.ts#L313) function.<br/>
+The `missionMapImg` is generated within the `generateDocument` function using the [`ScreenshotGenerator`](#screenshot-or-image-generation-utilities) class. The `generateDocument` function then sends all this data to the `page1` function.<br/>
 
 ## Generating Summary Page
 
-The summary page is the second page of the report. It gets generated by the [`page2`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg2.ts#L968) function.
+The summary page is the second page of the report. It gets generated by the `page2` function.
 
 ### Identifying Major Components
 
@@ -367,7 +371,7 @@ The components are:
 
 ### Structure of Data Required
 
-The constants can be ignored. Only the variables need to be considered. The structure of data required by [`page2`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg2.ts#L968) function is thus the following:
+The constants can be ignored. Only the variables need to be considered. The structure of data required by `page2` function is thus the following:
 
 ```
 interface IPage2Properties {
@@ -463,7 +467,7 @@ interface IPage2Properties {
 
 ### Gathering the Data
 
-All above data except `missionMapImg` is provided to the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110).
+All above data except `missionMapImg` is provided to the `generateDocument` function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110).
 
 - The mission details are fetched from the database by the controller. The `missionHeading` and `missionSubHeading` are extracted by splitting the `name` of the mission.
 
@@ -473,11 +477,11 @@ All above data except `missionMapImg` is provided to the [`generateDocument`](ht
 
 <br/>
 
-The `missionMapImg` is generated within the `generateDocument` function using the [`ScreenshotGenerator`](#screenshot-or-image-generation-utilities) class. The `generateDocument` function then sends all this data to the [`page2`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg2.ts#L968) functionn.<br/>
+The `missionMapImg` is generated within the `generateDocument` function using the [`ScreenshotGenerator`](#screenshot-or-image-generation-utilities) class. The `generateDocument` function then sends all this data to the `page2` functionn.<br/>
 
 ## Generating Insights Page
 
-The block specific insights page is the thrid page of the report. It gets generated by the [`page3`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg3.ts#L669) function.
+The block specific insights page is the thrid page of the report. It gets generated by the `page3` function.
 
 ### Identifying Major Components
 
@@ -510,7 +514,7 @@ The components are:
 
 ### Structure of Data Required
 
-The constants can be ignored. Only the variables need to be considered. The structure of data required by [`page3`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg3.ts#L669) function is thus the following:
+The constants can be ignored. Only the variables need to be considered. The structure of data required by `page3` function is thus the following:
 
 ```
 interface IPage3Properties {
@@ -586,11 +590,11 @@ The `IDetailsDesc` recursive type is designed to handle this scenario. The above
 ]
 ```
 
-This type of data later gets parsed by the recursive function [`renderTableCellFromData`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg3.ts#L40) in the [`reportPg3.ts`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg3.ts) file. The base condition for the recursion encountering a "value" of type string. Otherwise, if value if of type `IDetailsDesc`, the function gets recursively called again.
+This type of data later gets parsed by the recursive function `renderTableCellFromData` in the `reportPg3.ts` file. The base condition for the recursion encountering a "value" of type string. Otherwise, if value if of type `IDetailsDesc`, the function gets recursively called again.
 
 ### Gathering the Data
 
-All above data provided to the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110). <br/>
+All above data provided to the `generateDocument` function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110). <br/>
 
 Using the `missionId`, the layers associated with the mission are fetched from database, and based on their `vectorType` or `vectorProp`, they are categorized under any of the pre-defined sections if possible. <br/>
 
@@ -598,7 +602,7 @@ The logic for implementing this not yet properly written because of confusion re
 
 ## Generating Plot Details Page
 
-The plot details page is the fourth page of the report. It gets generated by the [`page4`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg4.ts#L21) function.
+The plot details page is the fourth page of the report. It gets generated by the `page4` function.
 
 ### Identifying Major Components
 
@@ -621,7 +625,7 @@ The components are:
 
 ### Structure of Data Required
 
-The constants can be ignored. Only the variables need to be considered. The structure of data required by [`page4`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportPg4.ts#L21) function is thus the following:
+The constants can be ignored. Only the variables need to be considered. The structure of data required by `page4` function is thus the following:
 
 ```
 interface IPage4Properties {
@@ -697,7 +701,7 @@ Details of `IAreaDesc`, `IAreaData` and `IOccupancyDesc` have been discussed in 
 
 ### Gathering the Data
 
-The `heading`, `subheading`, `area` and `occupancy` properties are provided to the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110).
+The `heading`, `subheading`, `area` and `occupancy` properties are provided to the `generateDocument` function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110).
 
 - The mission details are fetched from the database by the controller. The `heading` is extracted by splitting the `name` of the mission.
 
@@ -707,7 +711,7 @@ The `categoryPieChart`, `statusPieChart` and `barChart` are generated by the [`S
 
 ## Generating Map Deliverables Page
 
-The map deliverables page(s) follow the fourth page of the report. There can be any number of such pages. **One map deliverable page is generated for each layer of the mission**. They get generated by the [`reportMapPage`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportMapPage.ts#L16) function.
+The map deliverables page(s) follow the fourth page of the report. There can be any number of such pages. **One map deliverable page is generated for each layer of the mission**. They get generated by the `reportMapPage` function.
 
 ### Identifying Major Components
 
@@ -726,7 +730,7 @@ The components are:
 
 ### Structure of Data Required
 
-The constants can be ignored. Only the variables need to be considered. The structure of data required by [`reportMapPage`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportMapPage.ts#L16) function is thus the following:
+The constants can be ignored. Only the variables need to be considered. The structure of data required by `reportMapPage` function is thus the following:
 
 ```
 interface IReportMapPageProperties {
@@ -742,7 +746,7 @@ interface IReportMapPageProperties {
 | subheading | string | Component(2)                                                            | Name of the deliverable shown in the map in this page                   |
 | imgBuffer  | Buffer | Image of the map with the deliverables marked on it, as a binary Buffer |
 
-Now, as mentioned above, there is one map page corresponding to each layer of the mission. The number of layers a mission can have is not fixed. Also, the `imgBuffer` is obtained from the [`ScreenshotGenerator`](#screenshot-or-image-generation-utilities) class whose methods are called from within the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function. The `ScreenshotGenerator` class requires [`mapData`](#mapdata) structure of data to generate map screenshots. Considering all of this, the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110) sends the following structure of data to the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function:
+Now, as mentioned above, there is one map page corresponding to each layer of the mission. The number of layers a mission can have is not fixed. Also, the `imgBuffer` is obtained from the [`ScreenshotGenerator`](#screenshot-or-image-generation-utilities) class whose methods are called from within the `generateDocument` function. The `ScreenshotGenerator` class requires [`mapData`](#mapdata) structure of data to generate map screenshots. Considering all of this, the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110) sends the following structure of data to the `generateDocument` function:
 
 ```
 {
@@ -773,7 +777,7 @@ Also, note that the `OVERVIEW` deliverable type is compulsory, all others are op
 
 ### Gathering the Data
 
-The `heading` and `subheading` properties are provided to the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110).
+The `heading` and `subheading` properties are provided to the `generateDocument` function by the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110).
 
 - The mission details are fetched from the database by the controller. The `heading` is extracted by splitting the `name` of the mission.
 
@@ -800,11 +804,11 @@ The `ScreenshotGenerator` returns the required `imgBuffer`, which is then used b
 }
 ```
 
-This data is of format [`mapData`](#mapdata) and is sent to the [`reportMapPage`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/reportMapPage.ts#L16) function to generate corresponding `map image page`.
+This data is of format [`mapData`](#mapdata) and is sent to the `reportMapPage` function to generate corresponding `map image page`.
 
 ## Final Structure of data sent from `reportController` to `generateDocument`
 
-Combining the requirements of all the different types of pages mentioned above, the final structure of the `reportData` to be sent from the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110) to the [`generateDocument`](https://github.com/Kesowa/Aru-Server/blob/dev/src/utils/reportUtils/report.ts#l12) function is:
+Combining the requirements of all the different types of pages mentioned above, the final structure of the `reportData` to be sent from the [`reportController`](https://github.com/Kesowa/Aru-Server/blob/dev/src/controllers/v1/reportController.ts#L110) to the `generateDocument` function is:
 
 ```
 interface IData {
