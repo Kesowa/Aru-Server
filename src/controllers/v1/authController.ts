@@ -4,11 +4,8 @@ import User from "../../models/user";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
-import { sessionModel } from "../../models/session";
 import { API_SERVER, PUBLIC_SERVER } from "../../constants";
 import PassReset from "../../models/passwordReset";
-import { tokenEncoder } from "../../utils/authUtils";
 import ejs from "ejs";
 import path from "path";
 import { GetPermissions } from "../../schemas/permission";
@@ -36,16 +33,13 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
         const isPasswordValid = await user.comparePassword(req.body.password);
 
         if (isPasswordValid) {
-          const deletedSession = await sessionModel.deleteMany({
-            owner: user._id,
-          });
-          const createdSession = await sessionModel.create({ owner: user._id });
 
-          const token = tokenEncoder({
-            session: createdSession._id.toJSON(),
-            ip: req.ip,
-            agent: req.headers["user-agent"],
-          });
+          req.session["user"] = {
+            id: user._id,
+            email: user.email,
+            tenant: user.tenantId,
+          };
+
           const data = user.toObject();
 
           data.password = "secret";
@@ -67,20 +61,16 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
                 message: "Client has expired",
               });
             } else {
-              res.cookie("email", user.email);
               res.json({
                 status: true,
                 message: "login sucessfully",
-                token,
                 data,
               });
             }
           } else {
-            res.cookie("email", user.email);
             res.json({
               status: true,
               message: "login sucessfully",
-              token,
               data,
             });
           }
@@ -104,6 +94,22 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
     }
   }
 };
+
+//++++++++++++++++++++++++++++++++ log out user +++++++++++++++++++++++++++++++++++++++++
+export const logoutUser = async (req: Request, res: AuthResponse) => {
+  if (req.session) {
+    req.session.destroy((err) => { if (err) req.log.error(err, "unable to destroy session!") });
+    res.clearCookie("connect.sid");
+    return res.json({
+      status: true,
+      message: "user session deleted",
+    });
+  }
+  res.json({
+    status: false,
+    message: "no session to delete",
+  });
+}
 
 //++++++++++++++++++++++++++++++++ get user details +++++++++++++++++++++++++++++++++++++++
 export const getUserDetails = async (req: Request, res: AuthResponse) => {
@@ -137,25 +143,12 @@ export const renderResetPasswordPage = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const token = req.params.token;
-    const hash = crypto
-      .pbkdf2Sync(token, "", 1000, 64, "sha512")
-      .toString("hex");
-    const user = await PassReset.findOne({ passwordResetToken: hash });
-
-    if (!user) {
-      res.send("Invalid Token");
-      return;
-    }
-
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/html");
-    res.render("pages/resetPassword", {
-      token: token,
-      message: "",
-    });
-  }
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "text/html");
+  res.render("pages/resetPassword", {
+    token: req.params.token,
+    message: "",
+  });
 };
 
 // send mail to reset password
@@ -164,47 +157,39 @@ export const sendForgotPasswordMail = async (
   res: AuthResponse
 ) => {
   const email = req.body.email;
+  const user = await User.findOne({ email: email }).lean();
 
-  try {
-    const user = await User.findOne({ email: email }).lean();
-
-    if (!user) {
-      return res.status(201).json({
-        status: false,
-        message: "Email is not registered",
-      });
-    }
-
-    const token = await generateResetPasswordToken(email);
-
-    const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
-
-    const html = await ejs.renderFile(
-      path.join(__dirname, "..", "..", "views", "mails", "resetPassword.ejs"),
-      {
-        resetPasswordUrl: resetPasswordUrl,
-      },
-      { async: true }
-    );
-
-    await sendMail(
-      email,
-      "Password Reset Request || Kesowa Infinite Ventures Pvt. Ltd",
-      "",
-      html,
-      ""
-    );
-
-    return res.status(201).json({
-      status: true,
-      message: "Check Your Mail To Reset Password",
-    });
-  } catch (error) {
+  if (!user) {
     return res.status(201).json({
       status: false,
-      message: "Something Went Wrong! Please try again",
+      message: "Email is not registered",
     });
   }
+
+  const token = await generateResetPasswordToken(email);
+
+  const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${encodeURIComponent(token)}`;
+
+  const html = await ejs.renderFile(
+    path.join(__dirname, "..", "..", "views", "mails", "resetPassword.ejs"),
+    {
+      resetPasswordUrl: resetPasswordUrl,
+    },
+    { async: true }
+  );
+
+  await sendMail(
+    email,
+    "Password Reset Request || Kesowa Infinite Ventures Pvt. Ltd",
+    "",
+    html,
+    ""
+  );
+
+  return res.status(201).json({
+    status: true,
+    message: "Check Your Mail To Reset Password",
+  });
 };
 
 // reset password
@@ -230,14 +215,11 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const hash = crypto
-      .pbkdf2Sync(token, "", 1000, 64, "sha512")
-      .toString("hex");
+    const body = decodeURIComponent(token).split(';', 2);
+    const pass = await PassReset.findOne({ email: body[0]});
+    const isToken = await bcrypt.compare(body[1], pass.passwordResetToken);
 
-    const pass = await PassReset.findOne({ passwordResetToken: hash });
-
-    if (!pass) {
+    if (!isToken) {
       res.render("pages/resetPassword", {
         token: token,
         message: "Invalid Token",
@@ -245,52 +227,19 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
       return;
     }
 
-    const user = await User.findOneAndUpdate(
+    await User.findOneAndUpdate(
       { email: pass.email },
-      { $set: { password: hashedPassword } }
+      { $set: { password: await bcrypt.hash(password, 10) } }
     );
-    const deletedSession = await sessionModel.deleteMany({ owner: user._id });
+
     await pass.delete();
+    req.session.destroy(err => {
+      if (err) {
+        req.log.error(err, "failed to delete session");
+      }
+      res.clearCookie("connect.sid");
+    });
     res.redirect(PUBLIC_SERVER);
   }
 };
 
-// router
-// .route("/reset_password")
-// .get((req: Request, res: AuthResponse, next:  NextFunction) => {
-//   res.statusCode = 200;
-//   res.setHeader("Content-Type", "text/html");
-//   res.render("resetPassword", {
-//     success: req.flash("success"),
-//     error: req.flash("error")
-//   });
-// })
-// .post((req: Request, res: AuthResponse, next:  NextFunction) => {
-//   const email = req.body.username;
-//   users
-//     .findOne({ email: email })
-//     .then(user => {
-//       if (user) {
-//         resetPassword(user, req)
-//           .then(info => {
-//             if (info) {
-//               req.log.info(info);
-//               return res.render("token", {
-//                 success: req.flash("success"),
-//                 error: req.flash("error"),
-//                 user: user
-//               });
-//             }
-//           })
-//           .catch(err => {
-//             req.log.error(err);
-//           });
-//       } else {
-//         req.flash("error", "User not found");
-//         return res.redirect("reset_password");
-//       }
-//     })
-//     .catch(err => {
-//       req.log.error(err);
-//     });
-// })
