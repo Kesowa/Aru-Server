@@ -3,6 +3,7 @@ import { param, query } from "express-validator";
 import {
   inferVodViolence,
   fetchAimlTasks,
+  inferLayerProcessing,
 } from "../../controllers/v1/aimlController";
 import { isAuthenticated } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
@@ -25,6 +26,14 @@ router.get(
   validator,
   isAuthenticated,
   RobustRunner(fetchAimlTasks)
+);
+
+router.post(
+  "/layer/:layerId/treecount/infer",
+  isAuthenticated,
+  param("layerId").isMongoId(),
+  validator,
+  RobustRunner(inferLayerProcessing)
 );
 
 export default router;
