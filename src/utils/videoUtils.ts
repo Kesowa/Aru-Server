@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-export const VODEvents = new EventEmitter();
 import * as pathUtils from "./pathUtils";
 import path from "path";
 import DJISRTParser from "dji_srt_parser";
@@ -8,9 +7,29 @@ import VOD from "../models/vod";
 import { missionSpecificSocket } from "../socket";
 import { deleteObj, readToString, stat, uploadString } from "./objectStorage";
 import { IVOD } from "../schemas/VOD";
+import { Connection } from "amqplib";
+
+export const VODEvents = new EventEmitter();
 
 export const REQ_QUEUE = "vod.transcode.req";
 export const RES_QUEUE = "vod.transcode.res";
+
+export async function Setup(conn: Connection) {
+  const reqChannel = await conn.createChannel();
+  await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
+  const resChannel = await conn.createChannel();
+  await resChannel.assertQueue(RES_QUEUE, { durable: true });
+  VODEvents.on(REQ_QUEUE, function (req) {
+    reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
+      persistent: true,
+      contentType: "application/json",
+    });
+  });
+  resChannel.consume(RES_QUEUE, function (msg) {
+    resChannel.ack(msg);
+    VODEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
+  });
+}
 
 export type ProcessVideoData = IVOD;
 
