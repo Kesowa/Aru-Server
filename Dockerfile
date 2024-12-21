@@ -1,7 +1,6 @@
 FROM node:18.20-bookworm-slim@sha256:cbfb3c9830932b7b1c2738abf47c66568fc7b06cf782d803e7ddff52b2fc835d
 WORKDIR /app
 
-ADD ./ffmpeg.tar.gz /bin
 ADD ./dji_bin.tar.gz /bin
 ADD ./dji_lib.tar.gz /lib
 COPY package*.json ./
