@@ -29,7 +29,7 @@ router.get(
 );
 
 router.post(
-  "/layer/:layerId/treecount/infer",
+  "/layer/:layerId/:inferType/infer",
   isAuthenticated,
   param("layerId").isMongoId(),
   validator,

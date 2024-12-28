@@ -137,6 +137,9 @@ export const receiveInfer = async (
         break;
       case "thermal":
         break;
+      case "rooftopsegmentation":
+        await receiveDeepforest(data);
+        break;
     }
   } else {
     data.status = "failed";
@@ -155,7 +158,7 @@ async function receiveDeepforest(task: IAimlTask) {
     icon: "MarkerIcon",
   });
   const forestLayer = await Layer.create({
-    name: sourceLayer.name + ": Deepforest",
+    name: sourceLayer.name + `: ${task.infer}`,
     type: "Vector",
     vector: vectorProps.GREEN_VERGE,
     color: vectorLayer.flagColor,
