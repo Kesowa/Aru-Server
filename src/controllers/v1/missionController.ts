@@ -365,7 +365,13 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
             catch (err) {
               req.log.error(err, "Failed to delete video original");
             }
-          if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
+          if (doc.thumbnail) {
+            try {
+              await deletePublicFileUsingPath(doc.thumbnail);
+            } catch (err) {
+              req.log.error(err, "Failed to delete video thumbnail");
+            }
+          }
         }
       }
       if (deletedDocumetnsData.length) {
