@@ -22,17 +22,17 @@ export async function Setup(conn: Connection) {
     await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
     const resChannel = await conn.createChannel();
     await resChannel.assertQueue(RES_QUEUE, { durable: true });
-    InferEvents.on(REQ_QUEUE, function (req) {
+    InferEvents.on(REQ_QUEUE, function(req) {
       reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
         persistent: true,
         contentType: "application/json",
       });
     });
-    resChannel.consume(RES_QUEUE, function (msg) {
+    resChannel.consume(RES_QUEUE, function(msg) {
       resChannel.ack(msg);
       InferEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
     });
-    InferEvents.on(RES_QUEUE, function (res: InferResponse | InferProgress) {
+    InferEvents.on(RES_QUEUE, function(res: InferResponse | InferProgress) {
       if ((res as InferProgress).progress !== undefined) {
         const progress = res as InferProgress;
 
@@ -133,12 +133,12 @@ export const receiveInfer = async (
       case "violence":
         break;
       case "deepforest":
-        await receiveDeepforest(data);
+        await receiveVectorData(data);
         break;
       case "thermal":
         break;
-      case "rooftopsegmentation":
-        await receiveDeepforest(data);
+      case "rooftopseg":
+        await receiveVectorData(data);
         break;
     }
   } else {
@@ -148,7 +148,18 @@ export const receiveInfer = async (
   }
 };
 
-async function receiveDeepforest(task: IAimlTask) {
+function inferToVec(infer: inferTypes) {
+  switch (infer) {
+    case "deepforest":
+      return vectorProps.GREEN_VERGE
+    case "thermal":
+      return vectorProps.ELECTRIC_TRANSFORMER
+    case "rooftopseg":
+      return vectorProps.BUILDING_FOOTPRINT
+  }
+}
+
+async function receiveVectorData(task: IAimlTask) {
   const sourceLayer = await Layer.findOne({
     tenantId: task.tenant,
     _id: task.doc,
@@ -157,10 +168,10 @@ async function receiveDeepforest(task: IAimlTask) {
     color: "#7ed321",
     icon: "MarkerIcon",
   });
-  const forestLayer = await Layer.create({
+  const dataLayer = await Layer.create({
     name: sourceLayer.name + `: ${task.infer}`,
     type: "Vector",
-    vector: vectorProps.GREEN_VERGE,
+    vector: inferToVec(task.infer),
     color: vectorLayer.flagColor,
     layerpath: vectorLayer.geojsonPath,
     fileSize: vectorLayer.size,
@@ -171,5 +182,5 @@ async function receiveDeepforest(task: IAimlTask) {
     createdBy: task.createdBy,
     updatedBy: task.updatedBy,
   });
-  return forestLayer;
+  return dataLayer;
 }
