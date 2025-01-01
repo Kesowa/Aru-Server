@@ -1,6 +1,10 @@
 import express from "express";
 import { body, param } from "express-validator";
-import { logoutUser, loginUser, getUserDetails } from "../../controllers/v1/authController";
+import {
+  logoutUser,
+  loginUser,
+  getUserDetails,
+} from "../../controllers/v1/authController";
 import {
   renderResetPasswordPage,
   sendForgotPasswordMail,
@@ -31,10 +35,7 @@ router.post(
 );
 
 //++++++++++++++++++++ user logout Api +++++++++++++++++++++++++++++
-router.post(
-  "/logout",
-  RobustRunner(logoutUser)
-);
+router.post("/logout", RobustRunner(logoutUser));
 
 //++++++++++++++++++++ user user details Api +++++++++++++++++++++++++++++
 router.get(

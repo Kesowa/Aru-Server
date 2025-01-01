@@ -22,17 +22,17 @@ export async function Setup(conn: Connection) {
     await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
     const resChannel = await conn.createChannel();
     await resChannel.assertQueue(RES_QUEUE, { durable: true });
-    InferEvents.on(REQ_QUEUE, function(req) {
+    InferEvents.on(REQ_QUEUE, function (req) {
       reqChannel.sendToQueue(REQ_QUEUE, Buffer.from(JSON.stringify(req)), {
         persistent: true,
         contentType: "application/json",
       });
     });
-    resChannel.consume(RES_QUEUE, function(msg) {
+    resChannel.consume(RES_QUEUE, function (msg) {
       resChannel.ack(msg);
       InferEvents.emit(RES_QUEUE, JSON.parse(msg.content.toString()));
     });
-    InferEvents.on(RES_QUEUE, function(res: InferResponse | InferProgress) {
+    InferEvents.on(RES_QUEUE, function (res: InferResponse | InferProgress) {
       if ((res as InferProgress).progress !== undefined) {
         const progress = res as InferProgress;
 
@@ -151,11 +151,11 @@ export const receiveInfer = async (
 function inferToVec(infer: inferTypes) {
   switch (infer) {
     case "deepforest":
-      return vectorProps.GREEN_VERGE
+      return vectorProps.GREEN_VERGE;
     case "thermal":
-      return vectorProps.ELECTRIC_TRANSFORMER
+      return vectorProps.ELECTRIC_TRANSFORMER;
     case "rooftopseg":
-      return vectorProps.BUILDING_FOOTPRINT
+      return vectorProps.BUILDING_FOOTPRINT;
   }
 }
 

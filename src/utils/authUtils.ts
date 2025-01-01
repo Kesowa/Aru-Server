@@ -27,7 +27,7 @@ const Authenticator = async (session: Session) => {
   if (!sessionData.success) {
     return InvalidAuth.INVALID_USER;
   }
-  const { id, email, tenant, } = sessionData.data;
+  const { id, email, tenant } = sessionData.data;
   const user = await User.findById(id).populate("tenantId").lean();
 
   if (user) {

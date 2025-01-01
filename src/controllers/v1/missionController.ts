@@ -354,15 +354,13 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           const doc = deletedVodData[i];
           try {
             await deleteHlsVodUsingIndex(doc.videoPath);
-          }
-          catch (err) {
+          } catch (err) {
             req.log.error(err, "Failed to delete video HLS");
           }
           if (doc.originalFile)
             try {
               await deletePublicFileUsingPath(doc.originalFile);
-            }
-            catch (err) {
+            } catch (err) {
               req.log.error(err, "Failed to delete video original");
             }
           if (doc.thumbnail) {
@@ -464,8 +462,9 @@ export const fetchAllMissionsForTenant = async (
 
     let sortBy: string;
     if (sort && sort.toString().split(":")[0] !== "flight") {
-      sortBy = `${sort.toString().split(":")[1] === "descend" ? "-" : ""}${sort.toString().split(":")[0]
-        }`;
+      sortBy = `${sort.toString().split(":")[1] === "descend" ? "-" : ""}${
+        sort.toString().split(":")[0]
+      }`;
     } else {
       sortBy = "-createdAt";
     }

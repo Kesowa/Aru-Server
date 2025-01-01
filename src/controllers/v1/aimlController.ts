@@ -107,7 +107,7 @@ export const inferLayerProcessing = async (
   res: AuthResponse
 ) => {
   logger.info(req, "SENT INFERENCE REQUEST");
-  
+
   const { layerId, inferType } = req.params;
 
   const layer = await Layer.findOne({
