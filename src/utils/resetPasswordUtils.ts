@@ -12,6 +12,5 @@ export async function generateResetPasswordToken(email: string) {
     { upsert: true }
   );
 
-  return email+';'+token;
+  return email + ";" + token;
 }
-

@@ -144,10 +144,10 @@ export default function app(mongo: Connection) {
     pinoHttp({
       logger,
 
-      genReqId: function(req, _) {
-        return (req.ip);
+      genReqId: function (req, _) {
+        return req.ip;
       },
-      customLogLevel: function(_, res, err) {
+      customLogLevel: function (_, res, err) {
         if (res.statusCode >= 400 && res.statusCode < 500) {
           return "warn";
         } else if (res.statusCode >= 500 || err) {
@@ -216,7 +216,7 @@ export default function app(mongo: Connection) {
   app.use("/apis/v1/report", reportApis);
 
   // 404 route
-  app.use(function(req, res, next) {
+  app.use(function (req, res, next) {
     // if (req.url.startsWith("/socket.io")) return next();
     if (res.headersSent) return;
     req.log.warn("Trying to handle route, god help us all.");

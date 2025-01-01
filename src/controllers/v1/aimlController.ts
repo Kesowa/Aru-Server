@@ -103,12 +103,15 @@ export const inferVodViolence = async (
 };
 
 export const inferLayerProcessing = async (
-  req: Request<{ layerId: string }>,
+  req: Request<{ layerId: string; inferType: string }>,
   res: AuthResponse
 ) => {
   logger.info(req, "SENT INFERENCE REQUEST");
+
+  const { layerId, inferType } = req.params;
+
   const layer = await Layer.findOne({
-    _id: req.params.layerId,
+    _id: layerId,
     tenantId: res.locals.user.tenantId._id,
   });
   if (layer === null) {
@@ -122,6 +125,7 @@ export const inferLayerProcessing = async (
   const oldTask = await aimlModel.findOne({
     doc: layer._id,
     docModel: "layer",
+    infer: inferType,
     tenant: res.locals.user.tenantId._id,
   });
   let hadFailed = false;
@@ -162,7 +166,7 @@ export const inferLayerProcessing = async (
         doc: layer._id,
         docModel: "layer",
         status: "started",
-        infer: "deepforest",
+        infer: inferType,
         createdBy: res.locals.user._id,
         updatedBy: res.locals.user._id,
         tenant: res.locals.user.tenantId._id,
@@ -170,7 +174,7 @@ export const inferLayerProcessing = async (
       });
 
   try {
-    await sendInfer(layer.layerpath, "deepforest", {
+    await sendInfer(layer.layerpath, inferType, {
       mission_id: newTask.doc._id.toString(),
       tenant_id: newTask.tenant.toString(),
       user_id: newTask.createdBy.toString(),

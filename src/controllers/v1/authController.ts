@@ -33,7 +33,6 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
         const isPasswordValid = await user.comparePassword(req.body.password);
 
         if (isPasswordValid) {
-
           req.session["user"] = {
             id: user._id,
             email: user.email,
@@ -98,7 +97,9 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
 //++++++++++++++++++++++++++++++++ log out user +++++++++++++++++++++++++++++++++++++++++
 export const logoutUser = async (req: Request, res: AuthResponse) => {
   if (req.session) {
-    req.session.destroy((err) => { if (err) req.log.error(err, "unable to destroy session!") });
+    req.session.destroy((err) => {
+      if (err) req.log.error(err, "unable to destroy session!");
+    });
     res.clearCookie("connect.sid");
     return res.json({
       status: true,
@@ -109,7 +110,7 @@ export const logoutUser = async (req: Request, res: AuthResponse) => {
     status: false,
     message: "no session to delete",
   });
-}
+};
 
 //++++++++++++++++++++++++++++++++ get user details +++++++++++++++++++++++++++++++++++++++
 export const getUserDetails = async (req: Request, res: AuthResponse) => {
@@ -168,7 +169,9 @@ export const sendForgotPasswordMail = async (
 
   const token = await generateResetPasswordToken(email);
 
-  const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${encodeURIComponent(token)}`;
+  const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${encodeURIComponent(
+    token
+  )}`;
 
   const html = await ejs.renderFile(
     path.join(__dirname, "..", "..", "views", "mails", "resetPassword.ejs"),
@@ -215,8 +218,8 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
       return;
     }
 
-    const body = decodeURIComponent(token).split(';', 2);
-    const pass = await PassReset.findOne({ email: body[0]});
+    const body = decodeURIComponent(token).split(";", 2);
+    const pass = await PassReset.findOne({ email: body[0] });
     const isToken = await bcrypt.compare(body[1], pass.passwordResetToken);
 
     if (!isToken) {
@@ -233,7 +236,7 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
     );
 
     await pass.delete();
-    req.session.destroy(err => {
+    req.session.destroy((err) => {
       if (err) {
         req.log.error(err, "failed to delete session");
       }
@@ -242,4 +245,3 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
     res.redirect(PUBLIC_SERVER);
   }
 };
-

@@ -6,7 +6,12 @@ export type docTypes = typeof docModels[number];
 const status = <const>["started", "completed", "failed"];
 export type statusType = typeof status[number];
 
-export const inferences = <const>["violence", "deepforest", "thermal"];
+export const inferences = <const>[
+  "violence",
+  "deepforest",
+  "thermal",
+  "rooftopseg",
+];
 export type inferTypes = typeof inferences[number];
 
 type TaskTemp<docModel, inference, data> = {
@@ -25,7 +30,7 @@ type TaskTemp<docModel, inference, data> = {
 
 export type IAimlTask =
   | TaskTemp<"vod", "violence", string>
-  | TaskTemp<"layer", "deepforest", string>
+  | TaskTemp<"layer", "deepforest" | "rooftopseg" | "thermal", string>
   | TaskTemp<
       "alert" | "document",
       "thermal",
