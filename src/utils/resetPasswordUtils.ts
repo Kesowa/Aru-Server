@@ -1,22 +1,17 @@
 import crypto from "crypto";
 import PassReset from "../models/passwordReset";
+import bcrypt from "bcrypt";
 
-export async function generateResetPasswordToken(email) {
-  const token = crypto.randomBytes(50).toString("hex");
+export async function generateResetPasswordToken(email: string) {
+  const token = crypto.randomBytes(50).toString("base64url");
+  const hash = await bcrypt.hash(token, 10);
 
-  const hash = crypto.pbkdf2Sync(token, "", 1000, 64, "sha512").toString("hex");
+  await PassReset.updateOne(
+    { email: email },
+    { passwordResetToken: hash, $inc: { retries: 1 } },
+    { upsert: true }
+  );
 
-  try {
-    await PassReset.updateOne(
-      { email: email },
-      { passwordResetToken: hash, $inc: { retries: 1 } },
-      { upsert: true }
-    );
-
-    return token;
-  } catch (error) {
-    console.error(error);
-  }
+  return email+';'+token;
 }
 
-// , tokenExpiry: Date.now() + 3600000

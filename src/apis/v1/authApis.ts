@@ -1,6 +1,6 @@
 import express from "express";
 import { body, param } from "express-validator";
-import { loginUser, getUserDetails } from "../../controllers/v1/authController";
+import { logoutUser, loginUser, getUserDetails } from "../../controllers/v1/authController";
 import {
   renderResetPasswordPage,
   sendForgotPasswordMail,
@@ -8,7 +8,15 @@ import {
 } from "../../controllers/v1/authController";
 import { isAuthenticated, shouldLinkSend } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
+import rateLimit from "express-rate-limit";
 const router = express.Router();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 50,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
 
 //++++++++++++++++++++ user login Api +++++++++++++++++++++++++++++
 router.post(
@@ -18,7 +26,14 @@ router.post(
     .isLength({ min: 5 })
     .withMessage("Password must be at least 5 chars long."),
   validator,
+  limiter,
   RobustRunner(loginUser)
+);
+
+//++++++++++++++++++++ user logout Api +++++++++++++++++++++++++++++
+router.post(
+  "/logout",
+  RobustRunner(logoutUser)
 );
 
 //++++++++++++++++++++ user user details Api +++++++++++++++++++++++++++++
@@ -42,6 +57,7 @@ router.post(
   body("password2").isString().isLength({ min: 5 }),
   param("token").notEmpty().isString().trim(),
   validator,
+  limiter,
   RobustRunner(resetPassword)
 );
 

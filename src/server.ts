@@ -7,6 +7,7 @@ import { ioHandler } from "./socket";
 import { Setup as VodSetup } from "./utils/videoUtils";
 import { Setup as ZipSetup } from "./utils/cesium";
 import { Setup as InferSetup } from "./utils/inferUtils";
+import { Setup as ReportSetup } from "./utils/reportUtils";
 
 import mongoose from "mongoose";
 import {
@@ -16,15 +17,10 @@ import {
 } from "./constants";
 
 const worker = async () => {
-  await mongoose.connect(MONGODB_CONNECTION_STRING);
+  const mongodb = await mongoose.connect(MONGODB_CONNECTION_STRING);
+
   //create http server
-  const server = http.createServer(
-    {
-      requestTimeout: 0,
-      connectionsCheckingInterval: 60 * 60 * 1e3,
-    },
-    app
-  );
+  const server = http.createServer(app(mongodb.connection));
 
   //create socket server
   const io = new Server(server, {
@@ -45,6 +41,9 @@ const worker = async () => {
 
   // Inference Microservice
   await InferSetup(amqpConnection);
+
+  // Report Microservice
+  await ReportSetup(amqpConnection);
 
   io.adapter(createAdapter({ amqpConnection: () => amqpConnection }));
   //handle socket.io

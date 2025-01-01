@@ -2,8 +2,8 @@ import express from "express";
 
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import {
+  generateBlockReport,
   generatePlotReport,
-  generateReport,
 } from "../../controllers/v1/reportController";
 import { body } from "express-validator";
 import { validator } from "../../utils/requestHelpers";
@@ -17,7 +17,7 @@ router.post(
   body("missionId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.UPLOAD_DOCUMENT),
-  generateReport
+  generateBlockReport
 );
 
 router.post(
