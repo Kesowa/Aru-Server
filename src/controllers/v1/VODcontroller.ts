@@ -337,9 +337,9 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
     if (doc) {
       // check if processed vod
       if (
-        doc.videoPath && 
-        doc.videoPath !== "/processing.m3u8" && 
-        doc.thumbnail && 
+        doc.videoPath &&
+        doc.videoPath !== "/processing.m3u8" &&
+        doc.thumbnail &&
         doc.thumbnail !== "/processing.png"
       ) {
         await doc.deleteFiles();
@@ -385,9 +385,9 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
       for (let index = 0; index < docs.length; index++) {
         const doc = docs[index];
         if (
-          doc.videoPath && 
-          doc.videoPath !== "/processing.m3u8" && 
-          doc.thumbnail && 
+          doc.videoPath &&
+          doc.videoPath !== "/processing.m3u8" &&
+          doc.thumbnail &&
           doc.thumbnail !== "/processing.png"
         ) {
           await doc.deleteFiles();
@@ -397,8 +397,7 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
             missionSpecificSocket
               .to(String(doc.missionID))
               .emit("VOD_REMOVED", doc);
-          }
-          else errors.push(doc._id.toString());
+          } else errors.push(doc._id.toString());
         } else {
           errors.push(doc._id.toString());
         }

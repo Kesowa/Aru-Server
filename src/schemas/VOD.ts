@@ -159,7 +159,13 @@ VODSchema.post(
     );
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allVodSize: -this.fileSize, actualVodCount: -1 } }
+      {
+        $inc: {
+          actualSize: -this.fileSize,
+          allVodSize: -this.fileSize,
+          actualVodCount: -1,
+        },
+      }
     );
   }
 );
