@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 import { Types } from "ts-openapi";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
+import { deleteHlsVodUsingIndex } from "../utils/videoUtils";
+import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+interface IVODMethods {
+  deleteFiles(): Promise<void>;
+}
+export type VODModel = mongoose.Model<IVOD, {}, IVODMethods>;
 export interface IVOD {
   _id: mongoose.Types.ObjectId;
   flightID: mongoose.Types.ObjectId; // index
@@ -151,8 +157,17 @@ VODSchema.post(
     );
     await Tenant.updateOne(
       { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allVodSize: -this.fileSize } }
+      { $inc: { actualSize: -this.fileSize, allVodSize: -this.fileSize, actualVodCount: -1 } }
     );
   }
 );
+VODSchema.methods.deleteFiles = async function () {
+  const doc = this as IVOD;
+  // delete index files
+  await deleteHlsVodUsingIndex(doc.videoPath);
+  // delete video file
+  if (doc.originalFile) await deletePublicFileUsingPath(doc.originalFile);
+  // delete thumbnail
+  if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
+};
 export default VODSchema;
