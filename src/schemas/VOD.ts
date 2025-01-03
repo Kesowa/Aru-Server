@@ -135,14 +135,16 @@ VODSchema.index(
   { sparse: true }
 );
 VODSchema.pre("save", async function () {
-  await Mission.updateOne(
-    { _id: this.missionID },
-    { $inc: { size: this.fileSize } }
-  );
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize, allVodSize: this.fileSize } }
-  );
+  if (this.isNew) {
+    await Mission.updateOne(
+      { _id: this.missionID },
+      { $inc: { size: this.fileSize } }
+    );
+    await Tenant.updateOne(
+      { _id: this.tenantId },
+      { $inc: { actualSize: this.fileSize, allVodSize: this.fileSize, actualVodCount: 1 } }
+    );
+  }
 });
 VODSchema.post(
   "remove",

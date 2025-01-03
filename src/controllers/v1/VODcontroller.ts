@@ -54,15 +54,6 @@ export const saveVOD = async (
       fileSize: vodSize,
     });
     const dbsave = await VODdoc.save();
-    const tenant = await Tenant.findOne({ _id: tenantId });
-    if (dbsave && tenant.actualVodCount >= 0) {
-      await Tenant.updateOne(
-        { _id: tenantId },
-        { $inc: { actualVodCount: 1 } }
-      );
-      // tenant.actualVodCount = Number(tenant.actualVodCount) + 1;
-      // await tenant.save();
-    }
     return res.json({
       status: true,
       message: `VOD saved with ${dbsave._id.toString()}`,
@@ -352,7 +343,7 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
         doc.thumbnail !== "/processing.png"
       ) {
         await doc.deleteFiles();
-        const resp = await VOD.findByIdAndDelete(doc._id);
+        const resp = await doc.remove();
         if (resp) {
           missionSpecificSocket
             .to(String(resp.missionID))
@@ -400,7 +391,7 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
           doc.thumbnail !== "/processing.png"
         ) {
           await doc.deleteFiles();
-          const res2 = await VOD.findByIdAndDelete(doc._id);
+          const res2 = await doc.remove();
           if (res2) {
             deleted.push(doc._id.toString());
             missionSpecificSocket
