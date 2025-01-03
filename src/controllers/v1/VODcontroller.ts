@@ -3,7 +3,6 @@ import { SortOrder, Types } from "mongoose";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { transcodeVideo } from "../../utils/videoUtils";
-import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
 import { IMission } from "../../schemas/mission";
