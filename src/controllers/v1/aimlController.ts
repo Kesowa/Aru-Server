@@ -9,12 +9,15 @@ import { sendInfer } from "../../utils/inferUtils";
 import { logger } from "../../app";
 
 export const inferVodViolence = async (
-  req: Request<{ vodId: string }>,
+  req: Request<{ vodId: string; inferType: string }>,
   res: AuthResponse
 ) => {
   req.log.info(`Processing VOD with ID: ${req.params.vodId}`);
+
+  const { vodId, inferType } = req.params;
+
   const vod = await VOD.findOne({
-    _id: req.params.vodId,
+    _id: vodId,
     tenantId: res.locals.user.tenantId._id,
   });
   if (vod === null || !vod.originalFile) {
@@ -27,6 +30,7 @@ export const inferVodViolence = async (
   const oldTask = await aimlModel.findOne({
     doc: vod._id,
     docModel: "vod",
+    infer: inferType,
     tenant: res.locals.user.tenantId._id,
   });
   let hadFailed = false;
@@ -69,14 +73,14 @@ export const inferVodViolence = async (
         doc: vod._id,
         docModel: "vod",
         status: "started",
-        infer: "violence",
+        infer: inferType,
         createdBy: res.locals.user._id,
         updatedBy: res.locals.user._id,
         tenant: res.locals.user.tenantId._id,
         data: "null",
       });
   try {
-    await sendInfer(mp4, "violence", {
+    await sendInfer(mp4, inferType,{
       mission_id: newTask.doc._id.toString(),
       tenant_id: newTask.tenant.toString(),
       user_id: newTask.createdBy.toString(),

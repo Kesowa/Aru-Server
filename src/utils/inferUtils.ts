@@ -132,6 +132,8 @@ export const receiveInfer = async (
     switch (infer) {
       case "violence":
         break;
+      case "people-count":
+        break;
       case "deepforest":
         await receiveVectorData(data);
         break;
