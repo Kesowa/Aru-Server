@@ -128,6 +128,23 @@ services:
       - AMQP_ADDR=amqp://rabbitmq:5672/%2f
       - RUST_LOG=debug
 
+  report:
+    image: report:latest
+    profiles:
+      - report
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_CONNECTION_STRING=amqp://rabbitmq
+      - CLIENT_URL=http://localhost:3000
+      - ARU_INSTANCE=nkda
+      - TITILER_PUBLIC=https://cog.kesowa.com
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET_NAME=aru
+      - S3_ENDPOINT=minio
+
   ai_deploy:
     image: infer:latest
     profiles:
