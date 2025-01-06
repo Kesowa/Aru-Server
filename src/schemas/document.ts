@@ -2,6 +2,16 @@ import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
+import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
+import path from "path";
+import { deletePublicFileUsingPath, deletePublicFolderUsingPath } from "../utils/fileDeleteUtils";
+
+interface IDocumentMethods {
+  create(): Promise<IDocument>;
+  delete(): Promise<void>;
+}
+
+export type DocumentModel = mongoose.Model<IDocument, {}, IDocumentMethods>;
 
 export interface IDocument {
   _id: mongoose.Types.ObjectId;
@@ -104,31 +114,56 @@ documentSchema.index({
   tenantId: 1,
   folderName: 1,
 });
-documentSchema.pre("save", async function () {
+documentSchema.methods.create = async function () {
+  const doc = this as IDocument & mongoose.Document;
+  // generate thumbnails for images
+  if (
+    (doc.folderName == "rawPhotos" || doc.folderName == "photos") &&
+    (doc.fileType == "image/jpeg" ||
+      doc.fileType == "image/png")
+  ) {
+    const thumbs = await saveThumbnails(doc.filePath);
+    doc.fileSize += thumbs.size;
+    await doc.save();
+  }
+  // update size details
   await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize, allDocumentsSize: this.fileSize } }
+    { _id: doc.tenantId },
+    { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } }
   );
   await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: this.fileSize } }
+    { _id: doc.missionId },
+    { $inc: { size: doc.fileSize } }
   );
-});
-documentSchema.post(
-  "remove",
-  async function (this: {
-    tenantId: mongoose.Types.ObjectId;
-    fileSize: number;
-    missionId: mongoose.Types.ObjectId;
-  }) {
-    await Tenant.updateOne(
-      { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allDocumentsSize: -this.fileSize } }
-    );
-    await Mission.updateOne(
-      { _id: this.missionId },
-      { $inc: { size: -this.fileSize } }
-    );
+  // save the document
+  return await doc.save();
+};
+documentSchema.methods.delete = async function () {
+  const doc = this as IDocument & mongoose.Document;
+  // delete thumbnails for images
+  if (
+    (doc.folderName == "rawPhotos" || doc.folderName == "photos") &&
+    (doc.fileType == "image/jpeg" ||
+      doc.fileType == "image/png")
+  ) {
+    await deleteThumbnails(doc.filePath);
   }
-);
+  // delete actual files / folders related to document
+  if (doc.fileType == "pointCloud") {
+    await deletePublicFolderUsingPath(path.parse(doc.filePath).dir);
+  } else {
+    await deletePublicFileUsingPath(doc.filePath);
+  }
+  // update size details
+  await Tenant.updateOne(
+    { _id: doc.tenantId },
+    { $inc: { actualSize: -doc.fileSize, allDocumentsSize: -doc.fileSize } }
+  );
+  await Mission.updateOne(
+    { _id: doc.missionId },
+    { $inc: { size: -doc.fileSize } }
+  );
+  // delete the document
+  await doc.deleteOne();
+};
 export default documentSchema;

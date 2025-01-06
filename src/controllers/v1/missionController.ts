@@ -261,7 +261,7 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       const deletedLayerData = await Layer.find({ missionId: req.body._id });
       const deletedAlertData = await Alert.find({ missionId: req.body._id });
       const deletedVodData = await VOD.find({ missionID: req.body._id });
-      const deletedDocumetnsData = await Document.find({
+      const deletedDocumentsData = await Document.find({
         missionId: req.body._id,
       });
       const deletedFlight = await Flight.deleteMany({
@@ -274,9 +274,6 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
         missionId: req.body._id,
       });
       const deletedVod = await VOD.deleteMany({ missionID: req.body._id });
-      const deletedDocumetns = await Document.deleteMany({
-        missionId: req.body._id,
-      });
 
       const tenant: any = await Tenant.findOne({
         _id: res.locals.user.tenantId,
@@ -372,19 +369,8 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           }
         }
       }
-      if (deletedDocumetnsData.length) {
-        for (let i = 0; i < deletedDocumetnsData.length; i++) {
-          await deletePublicFileUsingPath(deletedDocumetnsData[i].filePath);
-          const fileName = path.parse(deletedDocumetnsData[i].filePath).base;
-          await deleteDirFileUsingName(
-            Directory.GEOJSON_IMAGES,
-            "1x_" + fileName
-          );
-          await deleteDirFileUsingName(
-            Directory.GEOJSON_IMAGES,
-            "2x_" + fileName
-          );
-        }
+      for (const d of deletedDocumentsData) {
+        await d.delete();
       }
       if (
         deletedMission ||

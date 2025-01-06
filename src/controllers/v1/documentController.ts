@@ -4,15 +4,10 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import path from "path";
 import { missionSpecificSocket } from "../../socket";
-import {
-  deletePublicFileUsingPath,
-  deletePublicFolderUsingPath,
-} from "../../utils/fileDeleteUtils";
 import { Directory, DirPath } from "../../constants";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
-import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
+import { saveThumbnails } from "../../utils/imageUtils";
 import { createArchive, permPath } from "../../utils/dataUtils";
 import UploadTask from "../../models/uploadTask";
 
@@ -50,16 +45,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
     });
-    if (
-      (req.body.folderName == "rawPhotos" || req.body.folderName == "photos") &&
-      (fileDoc.metadata.mimetype == "image/jpeg" ||
-        fileDoc.metadata.mimetype == "image/png")
-    ) {
-      req.log.debug("Uploading Thumbnails");
-      const thumbs = await saveThumbnails(doc.filePath);
-      doc.fileSize = thumbs.size;
-    }
-    const savedDoc = await doc.save();
+    const savedDoc = await doc.create();
     missionSpecificSocket
       .to(savedDoc.missionId.toString())
       .emit("DOCUMENT_CREATED", savedDoc);
@@ -80,50 +66,20 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
 
 export const deleteDocument = async (req: Request, res: AuthResponse) => {
   {
-    const data = await Document.findOneAndDelete({
+    const data = await Document.findOne({
       _id: req.query.id,
       tenantId: res.locals.user.tenantId._id,
     });
-    if (data.fileType == "pointCloud") {
-      const folderName = path.parse(data.filePath).dir;
-      await deletePublicFolderUsingPath(folderName);
-      const d = await data.delete();
-      if (d) {
-        res.status(200).json({
-          status: true,
-          message: "Document Deleted",
-          data: data,
-        });
-        missionSpecificSocket
-          .to(data.missionId.toString())
-          .emit("DOCUMENT_DELETED", data);
-      } else {
-        res.status(200).json({
-          status: false,
-          message: "Failed to delete documents",
-        });
-      }
-    } else if (data) {
-      if (data.folderName == "rawPhotos" || data.folderName == "photos") {
-        await deleteThumbnails(data.filePath);
-      }
-
-      await deletePublicFileUsingPath(data.filePath);
-      if (data) {
-        res.status(200).json({
-          status: true,
-          message: "Document Deleted",
-          data: data,
-        });
-        missionSpecificSocket
-          .to(data.missionId.toString())
-          .emit("DOCUMENT_DELETED", data);
-      } else {
-        res.status(200).json({
-          status: false,
-          message: "Failed to delete documents",
-        });
-      }
+    if (data) {
+      await data.delete();
+      res.status(200).json({
+        status: true,
+        message: "Document Deleted",
+        data: data,
+      });
+      missionSpecificSocket
+        .to(data.missionId.toString())
+        .emit("DOCUMENT_DELETED", data);
     } else {
       res.json({
         status: false,
@@ -138,7 +94,6 @@ export const deletemultipleDocument = async (
   res: AuthResponse
 ) => {
   {
-    let flag = 0;
     const documents = await Document.find(
       {
         _id: { $in: req.body.id },
@@ -148,31 +103,18 @@ export const deletemultipleDocument = async (
         filePath: 1,
         folderName: 1,
         fileSize: 1,
+        fileType: 1,
+        tenantId: 1,
+        missionId: 1,
       }
     );
-    for (let i = 0; i < documents.length; i++) {
-      const d = documents[i];
-      if (d.folderName == "rawPhotos" || d.folderName == "photos") {
-        await deleteThumbnails(d.filePath);
-      }
-
-      await deletePublicFileUsingPath(d.filePath);
-      const doc = await d.delete();
-      if (doc) {
-        flag = 1;
-      }
+    for (const d of documents) {
+      await d.delete();
     }
-    if (flag == 1) {
-      res.status(200).json({
-        status: true,
-        message: "Documents deleted",
-      });
-    } else {
-      res.status(500).json({
-        status: false,
-        message: "Failed to delete documents",
-      });
-    }
+    res.status(200).json({
+      status: true,
+      message: "Documents deleted",
+    });
   }
 };
 
