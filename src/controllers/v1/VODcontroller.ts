@@ -294,7 +294,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     });
     locationID = location._id;
   }
-  const vod = await (new VOD({
+  const vod = await new VOD({
     videoName: fileDoc.metadata.originalName,
     missionID: missionID,
     flightID: flightID,
@@ -305,7 +305,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     tenantId: res.locals.user.tenantId._id,
     isSRT: telemetryData ? true : false,
     fileSize: fileDoc.metadata.filesize,
-  })).create();
+  }).create();
   await transcodeVideo(fullPath, {
     location_id: locationID ?? null,
     mission_id: missionID,

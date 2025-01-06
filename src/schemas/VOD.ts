@@ -136,7 +136,7 @@ VODSchema.index(
   { sparse: true }
 );
 VODSchema.methods.create = async function () {
-  const doc = this as (IVOD & mongoose.Document);
+  const doc = this as IVOD & mongoose.Document;
   // update size details
   await Mission.updateOne(
     { _id: doc.missionID },
@@ -154,9 +154,9 @@ VODSchema.methods.create = async function () {
   );
   // save document
   return await doc.save();
-}
+};
 VODSchema.methods.delete = async function () {
-  const doc = this as (IVOD & mongoose.Document);
+  const doc = this as IVOD & mongoose.Document;
   // delete index files
   await deleteHlsVodUsingIndex(doc.videoPath);
   // delete video file
