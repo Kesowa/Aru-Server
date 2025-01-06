@@ -32,7 +32,6 @@ import { Directory } from "../../constants";
 import moment from "moment";
 import { saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
-import { deleteHlsVodUsingIndex } from "../../utils/videoUtils";
 
 //create flight controller
 type CreateMission = {
