@@ -52,7 +52,7 @@ export const saveVOD = async (
       videoName: req.body.filename,
       fileSize: vodSize,
     });
-    const dbsave = await VODdoc.save();
+    const dbsave = await VODdoc.create();
     return res.json({
       status: true,
       message: `VOD saved with ${dbsave._id.toString()}`,
@@ -294,7 +294,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     });
     locationID = location._id;
   }
-  const vod = await VOD.create({
+  const vod = await (new VOD({
     videoName: fileDoc.metadata.originalName,
     missionID: missionID,
     flightID: flightID,
@@ -305,7 +305,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     tenantId: res.locals.user.tenantId._id,
     isSRT: telemetryData ? true : false,
     fileSize: fileDoc.metadata.filesize,
-  });
+  })).create();
   await transcodeVideo(fullPath, {
     location_id: locationID ?? null,
     mission_id: missionID,
@@ -341,7 +341,7 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
         doc.thumbnail &&
         doc.thumbnail !== "/processing.png"
       ) {
-        await doc.deleteFiles();
+        await doc.delete();
         const resp = await doc.remove();
         if (resp) {
           missionSpecificSocket
@@ -389,7 +389,7 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
           doc.thumbnail &&
           doc.thumbnail !== "/processing.png"
         ) {
-          await doc.deleteFiles();
+          await doc.delete();
           const res2 = await doc.remove();
           if (res2) {
             deleted.push(doc._id.toString());
