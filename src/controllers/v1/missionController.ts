@@ -273,7 +273,6 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       const deletedAlert = await Alert.deleteMany({
         missionId: req.body._id,
       });
-      const deletedVod = await VOD.deleteMany({ missionID: req.body._id });
       const deletedDocumetns = await Document.deleteMany({
         missionId: req.body._id,
       });
@@ -301,13 +300,6 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           { $inc: { actualLayerCount: -deletedLayerData.length } }
         );
         // tenant.actualLayerCount = Number(tenant.actualLayerCount) - deletedLayerData.length;
-      }
-      if (deletedVodData.length && tenant.actualVodCount) {
-        await Tenant.updateOne(
-          { _id: res.locals.user.tenantId },
-          { $inc: { actualVodCount: -deletedVodData.length } }
-        );
-        // tenant.actualVodCount = Number(tenant.actualVodCount) - deletedVodData.length;
       }
       // await tenant.save();
       if (deletedLayerData.length) {
@@ -349,28 +341,8 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           await deletePublicFileUsingPath(deletedAlertData[i].image);
         }
       }
-      if (deletedVodData.length) {
-        for (let i = 0; i < deletedVodData.length; i++) {
-          const doc = deletedVodData[i];
-          try {
-            await deleteHlsVodUsingIndex(doc.videoPath);
-          } catch (err) {
-            req.log.error(err, "Failed to delete video HLS");
-          }
-          if (doc.originalFile)
-            try {
-              await deletePublicFileUsingPath(doc.originalFile);
-            } catch (err) {
-              req.log.error(err, "Failed to delete video original");
-            }
-          if (doc.thumbnail) {
-            try {
-              await deletePublicFileUsingPath(doc.thumbnail);
-            } catch (err) {
-              req.log.error(err, "Failed to delete video thumbnail");
-            }
-          }
-        }
+      for (const vod of deletedVodData) {
+        await vod.delete();
       }
       if (deletedDocumetnsData.length) {
         for (let i = 0; i < deletedDocumetnsData.length; i++) {
@@ -389,7 +361,6 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       if (
         deletedMission ||
         deletedLayer ||
-        deletedVod ||
         deletedAlert ||
         deletedDocumetns
       ) {
