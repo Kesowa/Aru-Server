@@ -4,7 +4,10 @@ import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
 import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
 import path from "path";
-import { deletePublicFileUsingPath, deletePublicFolderUsingPath } from "../utils/fileDeleteUtils";
+import {
+  deletePublicFileUsingPath,
+  deletePublicFolderUsingPath,
+} from "../utils/fileDeleteUtils";
 
 interface IDocumentMethods {
   create(): Promise<IDocument>;
@@ -119,8 +122,7 @@ documentSchema.methods.create = async function () {
   // generate thumbnails for images
   if (
     (doc.folderName == "rawPhotos" || doc.folderName == "photos") &&
-    (doc.fileType == "image/jpeg" ||
-      doc.fileType == "image/png")
+    (doc.fileType == "image/jpeg" || doc.fileType == "image/png")
   ) {
     const thumbs = await saveThumbnails(doc.filePath);
     doc.fileSize += thumbs.size;
@@ -143,8 +145,7 @@ documentSchema.methods.delete = async function () {
   // delete thumbnails for images
   if (
     (doc.folderName == "rawPhotos" || doc.folderName == "photos") &&
-    (doc.fileType == "image/jpeg" ||
-      doc.fileType == "image/png")
+    (doc.fileType == "image/jpeg" || doc.fileType == "image/png")
   ) {
     await deleteThumbnails(doc.filePath);
   }
