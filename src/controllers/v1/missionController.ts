@@ -358,12 +358,7 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           );
         }
       }
-      if (
-        deletedMission ||
-        deletedLayer ||
-        deletedAlert ||
-        deletedDocumetns
-      ) {
+      if (deletedMission || deletedLayer || deletedAlert || deletedDocumetns) {
         const tenantId = res.locals.user.tenantId._id || "";
         notificationSocket.to(tenantId.toString()).emit("MISSION_DELETED", {
           id: deletedMission?._id,
