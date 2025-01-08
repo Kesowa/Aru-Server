@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 import { Types } from "ts-openapi";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
+import { deleteHlsVodUsingIndex } from "../utils/videoUtils";
+import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+interface IVODMethods {
+  create(): Promise<IVOD>;
+  delete(): Promise<void>;
+}
+export type VODModel = mongoose.Model<IVOD, {}, IVODMethods>;
 export interface IVOD {
   _id: mongoose.Types.ObjectId;
   flightID: mongoose.Types.ObjectId; // index
@@ -128,31 +135,50 @@ VODSchema.index(
   },
   { sparse: true }
 );
-VODSchema.pre("save", async function () {
+VODSchema.methods.create = async function () {
+  const doc = this as IVOD & mongoose.Document;
+  // update size details
   await Mission.updateOne(
-    { _id: this.missionID },
-    { $inc: { size: this.fileSize } }
+    { _id: doc.missionID },
+    { $inc: { size: doc.fileSize } }
   );
   await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize, allVodSize: this.fileSize } }
+    { _id: doc.tenantId },
+    {
+      $inc: {
+        actualSize: doc.fileSize,
+        allVodSize: doc.fileSize,
+        actualVodCount: 1,
+      },
+    }
   );
-});
-VODSchema.post(
-  "remove",
-  async function (this: {
-    missionID: mongoose.Types.ObjectId;
-    fileSize: number;
-    tenantId: mongoose.Types.ObjectId;
-  }) {
-    await Mission.updateOne(
-      { _id: this.missionID },
-      { $inc: { size: -this.fileSize } }
-    );
-    await Tenant.updateOne(
-      { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allVodSize: -this.fileSize } }
-    );
-  }
-);
+  // save document
+  return await doc.save();
+};
+VODSchema.methods.delete = async function () {
+  const doc = this as IVOD & mongoose.Document;
+  // delete index files
+  await deleteHlsVodUsingIndex(doc.videoPath);
+  // delete video file
+  if (doc.originalFile) await deletePublicFileUsingPath(doc.originalFile);
+  // delete thumbnail
+  if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
+  // update size details
+  await Mission.updateOne(
+    { _id: doc.missionID },
+    { $inc: { size: -doc.fileSize } }
+  );
+  await Tenant.updateOne(
+    { _id: doc.tenantId },
+    {
+      $inc: {
+        actualSize: -doc.fileSize,
+        allVodSize: -doc.fileSize,
+        actualVodCount: -1,
+      },
+    }
+  );
+  // delete document
+  await doc.deleteOne();
+};
 export default VODSchema;

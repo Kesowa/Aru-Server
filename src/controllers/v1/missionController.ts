@@ -32,7 +32,6 @@ import { Directory } from "../../constants";
 import moment from "moment";
 import { saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
-import { deleteHlsVodUsingIndex } from "../../utils/videoUtils";
 
 //create flight controller
 type CreateMission = {
@@ -274,6 +273,9 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
         missionId: req.body._id,
       });
       const deletedVod = await VOD.deleteMany({ missionID: req.body._id });
+      const deletedDocumetns = await Document.deleteMany({
+        missionId: req.body._id,
+      });
 
       const tenant: any = await Tenant.findOne({
         _id: res.locals.user.tenantId,
@@ -298,13 +300,6 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           { $inc: { actualLayerCount: -deletedLayerData.length } }
         );
         // tenant.actualLayerCount = Number(tenant.actualLayerCount) - deletedLayerData.length;
-      }
-      if (deletedVodData.length && tenant.actualVodCount) {
-        await Tenant.updateOne(
-          { _id: res.locals.user.tenantId },
-          { $inc: { actualVodCount: -deletedVodData.length } }
-        );
-        // tenant.actualVodCount = Number(tenant.actualVodCount) - deletedVodData.length;
       }
       // await tenant.save();
       if (deletedLayerData.length) {
@@ -346,39 +341,13 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
           await deletePublicFileUsingPath(deletedAlertData[i].image);
         }
       }
-      if (deletedVodData.length) {
-        for (let i = 0; i < deletedVodData.length; i++) {
-          const doc = deletedVodData[i];
-          try {
-            await deleteHlsVodUsingIndex(doc.videoPath);
-          } catch (err) {
-            req.log.error(err, "Failed to delete video HLS");
-          }
-          if (doc.originalFile)
-            try {
-              await deletePublicFileUsingPath(doc.originalFile);
-            } catch (err) {
-              req.log.error(err, "Failed to delete video original");
-            }
-          if (doc.thumbnail) {
-            try {
-              await deletePublicFileUsingPath(doc.thumbnail);
-            } catch (err) {
-              req.log.error(err, "Failed to delete video thumbnail");
-            }
-          }
-        }
+      for (const vod of deletedVodData) {
+        await vod.delete();
       }
       for (const d of deletedDocumentsData) {
         await d.delete();
       }
-      if (
-        deletedMission ||
-        deletedLayer ||
-        deletedVod ||
-        deletedAlert ||
-        deletedDocumetns
-      ) {
+      if (deletedMission || deletedLayer || deletedAlert || deletedDocumetns) {
         const tenantId = res.locals.user.tenantId._id || "";
         notificationSocket.to(tenantId.toString()).emit("MISSION_DELETED", {
           id: deletedMission?._id,
