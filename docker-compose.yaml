@@ -32,8 +32,6 @@ services:
     mem_limit: 2g
     memswap_limit: 4g
     cpus: 1.5
-    networks:
-      - aru
 
   mongodb:
     image: mongo@sha256:06cd2e814b2641d4c7ac6b093e870fe72c1ddbc7c6ddaaef16d4cb5a61c0ee6b
@@ -50,8 +48,6 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-    networks:
-      - aru
 
   titiler:
     environment:
@@ -64,8 +60,6 @@ services:
     mem_limit: 256m
     memswap_limit: 256m
     cpus: 0.5
-    networks:
-      - aru
 
   minio:
     image: minio/minio@sha256:c7175077d39a8cc10c9fd611cdcc68b6a5b365793e9ac6f4198ffff1ef0fe555
@@ -81,8 +75,6 @@ services:
     ports:
       - 9001:9001
       - 9000:80
-    networks:
-      - aru
 
   createbuckets:
     image: minio/mc
@@ -103,11 +95,9 @@ services:
         /usr/bin/mc cp /assets/userAvatars/*.png myminio/aru/images/userAvatars/
         exit 0;
       "
-    networks:
-      - aru
 
   vod:
-    image: vod:1.0.0
+    image: vod:latest
     profiles:
       - vod
     depends_on:
@@ -138,6 +128,23 @@ services:
       - AMQP_ADDR=amqp://rabbitmq:5672/%2f
       - RUST_LOG=debug
 
+  report:
+    image: report:latest
+    profiles:
+      - report
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_CONNECTION_STRING=amqp://rabbitmq
+      - CLIENT_URL=http://localhost:3000
+      - ARU_INSTANCE=nkda
+      - TITILER_PUBLIC=https://cog.kesowa.com
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET_NAME=aru
+      - S3_ENDPOINT=minio
+
   ai_deploy:
     image: infer:latest
     profiles:
@@ -166,12 +173,10 @@ services:
       retries: 3
     ports:
       - 5672:5672
-    networks:
-      - aru
     # mem_limit: 128m
     # memswap_limit: 128m
 
 networks:
-  aru:
+  default:
     name: aru
     external: false
