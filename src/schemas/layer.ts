@@ -4,6 +4,19 @@ import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
 import { rasterProps } from "./rasterprops";
 import { vectorProps } from "./vectorprops";
+import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+import LayerFiles from "../models/layerFiles";
+import LayerGroup from "../models/layerGroup";
+import { delete3DTiles } from "../utils/cesium";
+import { deleteFeatureSearchIndex } from "../utils/dataUtils";
+
+interface ILayerMethods {
+  create(): Promise<ILayer>;
+  updateFile(newPath: string, newSize: number): Promise<ILayer>;
+  delete(): Promise<void>;
+}
+
+export type LayerModel = mongoose.Model<ILayer, {}, ILayerMethods>;
 export interface ILayer {
   _id: mongoose.Types.ObjectId;
   type: "Vector" | "Raster"; // index
@@ -210,31 +223,96 @@ layerSchema.index({
   type: 1,
   isPublic: 1,
 });
-layerSchema.pre("save", async function () {
+layerSchema.methods.create = async function () {
+  const doc = this as ILayer & mongoose.Document;
+  // update size details
   await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize, allLayerSize: this.fileSize } }
+    { _id: doc.tenantId },
+    { $inc: { actualSize: doc.fileSize, allLayerSize: doc.fileSize, actualLayerCount: 1 } }
   );
   await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: this.fileSize } }
+    { _id: doc.missionId },
+    { $inc: { size: doc.fileSize } }
   );
-});
-layerSchema.post(
-  "remove",
-  async function (this: {
-    tenantId: mongoose.Types.ObjectId;
-    missionId: mongoose.Types.ObjectId;
-    fileSize: number;
-  }) {
-    await Tenant.updateOne(
-      { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allLayerSize: -this.fileSize } }
+  // save the document
+  return await doc.save();
+};
+layerSchema.methods.updateFile = async function (newPath: string, newSize: number) {
+  const doc = this as ILayer & mongoose.Document;
+  const oldSize = doc.fileSize;
+  const oldPath = doc.layerpath;
+  // update the layer
+  doc.layerpath = newPath;
+  doc.fileSize = newSize;
+  await doc.save();
+  // update size details
+  await Tenant.updateOne(
+    { _id: doc.tenantId },
+    { $inc: { actualSize: doc.fileSize - oldSize, allLayerSize: doc.fileSize - oldSize } }
+  );
+  await Mission.updateOne(
+    { _id: doc.missionId },
+    { $inc: { size: doc.fileSize - oldSize } }
+  );
+  // delete old file
+  await deletePublicFileUsingPath(oldPath);
+  return doc;
+};
+layerSchema.methods.delete = async function () {
+  const doc = this as ILayer & mongoose.Document;
+
+  // delete layer associated files
+  if (doc.type == "Vector") {
+    // delete and update layerFiles
+    const files = await LayerFiles.find({
+      layerId: doc._id,
+    });
+    for (const f of files) {
+      await f.delete();
+    }
+    await LayerFiles.updateMany(
+      { layers: doc._id },
+      { $pull: { layers: doc._id } }
     );
-    await Mission.updateOne(
-      { _id: this.missionId },
-      { $inc: { size: -this.fileSize } }
+    // delete geojson
+    await deletePublicFileUsingPath(doc.layerpath);
+  } else {
+    // delete extra files for cesium 3D layer
+    if (
+      doc.raster == rasterProps.CESIUM_3D &&
+      typeof doc.metadata === "string"
+    ) {
+      await delete3DTiles(doc.metadata);
+    }
+    // delete raster file
+    await deletePublicFileUsingPath(doc.layerpath);
+  }
+
+  // delete search index for public layers
+  if (doc.isPublic) {
+    await deleteFeatureSearchIndex(doc.layerpath);
+  }
+
+  // update layer group
+  if (doc.layerGroupId) {
+    await LayerGroup.updateOne(
+      { _id: doc._id, tenantId: doc.tenantId },
+      { $pull: { layers: doc._id } },
+      { useFindAndModify: false }
     );
   }
-);
+  
+  // update size details
+  await Tenant.updateOne(
+    { _id: doc.tenantId },
+    { $inc: { actualSize: -doc.fileSize, allLayerSize: -doc.fileSize } }
+  );
+  await Mission.updateOne(
+    { _id: doc.missionId },
+    { $inc: { size: -doc.fileSize } }
+  );
+  
+  // delete the document
+  await doc.deleteOne();
+};
 export default layerSchema;

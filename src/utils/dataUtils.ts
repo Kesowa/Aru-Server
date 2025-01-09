@@ -20,6 +20,7 @@ import {
   uploadString,
 } from "./objectStorage";
 import Fuse from "fuse.js";
+import { deletePublicFileUsingPath } from "./fileDeleteUtils";
 
 const getFlagColor = (geojson: GeoJson) => {
   const colorSet = new Set(
@@ -268,5 +269,11 @@ export const saveFeatureSearchIndex = async (layerPath: string) => {
   );
   const searchIndex = Fuse.createIndex<any>(keys, geojsonData.features);
   await uploadString(searchIndexPath, JSON.stringify(searchIndex.toJSON()));
+  return pathUtils.docPath(Directory.VECTOR, filename);
+};
+export const deleteFeatureSearchIndex = async (layerPath: string) => {
+  const filename = "index_" + path.parse(layerPath).name + ".json";
+  const searchIndexPath = path.dirname(layerPath) + "/" + filename;
+  await deletePublicFileUsingPath(searchIndexPath);
   return pathUtils.docPath(Directory.VECTOR, filename);
 };
