@@ -35,7 +35,6 @@ import {
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D } from "../../utils/pointcloud";
-import { delete3DTiles } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { randomUUID } from "crypto";
 

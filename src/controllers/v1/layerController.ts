@@ -27,7 +27,6 @@ import exifr from "exifr";
 import path, { basename } from "path";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
 import Flight from "../../models/flight";
-import LayerGroup from "../../models/layerGroup";
 import { featureType, vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
 import type { IPackage } from "../../schemas/package";
@@ -38,10 +37,9 @@ import {
   TITILER_SERVER,
   TITILER_STATIC,
 } from "../../constants";
-import { type HydratedDocument, Types } from "mongoose";
+import { Types } from "mongoose";
 import type { ILayerFile } from "../../schemas/layerFiles";
 import { checkFileExists } from "../../utils/fileUtils";
-import type { ILayer } from "../../schemas/layer";
 import type { ITenant } from "../../schemas/tenant";
 import { saveThumbnails } from "../../utils/imageUtils";
 import {
@@ -55,7 +53,7 @@ import {
   saveVectorLayer,
 } from "../../utils/dataUtils";
 import { LazToTiles3D } from "../../utils/pointcloud";
-import { decompressZip, delete3DTiles } from "../../utils/cesium";
+import { decompressZip } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { readToBuffer } from "../../utils/objectStorage";
 import { randomUUID } from "crypto";
