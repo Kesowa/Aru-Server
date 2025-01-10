@@ -16,9 +16,7 @@ import Tenant from "../../models/tenant";
 import ObjectsToCsv from "objects-to-csv";
 import layerFiles from "../../models/layerFiles";
 import layerGroupModel from "../../models/layerGroup";
-import {
-  deletePublicFileUsingPath,
-} from "../../utils/fileDeleteUtils";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IMissionType } from "../../schemas/missonType";

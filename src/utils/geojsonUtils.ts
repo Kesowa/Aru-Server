@@ -91,7 +91,11 @@ export async function modGeoJson(
     }
   }
   const newPath = parse(pathh).dir + randomUUID() + ".geojson";
-  const { filepath, size } = await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
+  const { filepath, size } = await saveFile(
+    Directory.ROOT,
+    newPath,
+    JSON.stringify(geojson)
+  );
   return { filepath, size };
 }
 
@@ -110,7 +114,11 @@ export async function featureAddition(
   Object.assign(editObject.feature.properties, { sys_id: sys_id });
   geojson.features.push(editObject.feature);
   const newPath = parse(pathh).dir + randomUUID() + ".geojson";
-  const { filepath, size } = await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
+  const { filepath, size } = await saveFile(
+    Directory.ROOT,
+    newPath,
+    JSON.stringify(geojson)
+  );
   await Layer.updateOne(
     { _id: editObject.id },
     { featureCount: geojson.features.length }
@@ -130,7 +138,11 @@ export async function editGeoJsonForAll(
     editObject.feature.properties
   );
   const newPath = parse(pathh).dir + "/" + randomUUID() + ".geojson";
-  const { filepath, size } = await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
+  const { filepath, size } = await saveFile(
+    Directory.ROOT,
+    newPath,
+    JSON.stringify(geojson)
+  );
   return { filepath, size };
 }
 
@@ -141,7 +153,11 @@ export async function deleteGeoJsonFeature(
 ) {
   geojson.features.splice(deleteObject.featureIndex, 1);
   const newPath = parse(pathh).dir + randomUUID() + ".geojson";
-  const { filepath, size } = await saveFile(Directory.ROOT, newPath, JSON.stringify(geojson));
+  const { filepath, size } = await saveFile(
+    Directory.ROOT,
+    newPath,
+    JSON.stringify(geojson)
+  );
   await Layer.updateOne(
     { _id: deleteObject.id },
     { featureCount: geojson.features.length }

@@ -4,9 +4,7 @@ import LayerGroup from "../../models/layerGroup";
 import Layer from "../../models/layer";
 import Tenant from "../../models/tenant";
 import layerFiles from "../../models/layerFiles";
-import {
-  deletePublicFileUsingPath,
-} from "../../utils/fileDeleteUtils";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { ILayer } from "../../schemas/layer";
 
 export const createLayerGroup = async (req: Request, res: AuthResponse) => {

@@ -8,9 +8,7 @@ import { missionSpecificSocket } from "../../socket";
 import { ObjectId } from "bson";
 import ObjectsToCsv from "objects-to-csv";
 import Mission from "../../models/mission";
-import {
-  deletePublicFileUsingPath,
-} from "../../utils/fileDeleteUtils";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import {
   modGeoJson,
   readGeoJson,
@@ -359,7 +357,11 @@ export const addFeature = async (req: Request, res: AuthResponse) => {
               message: "file path not exist! ",
             });
           }
-          const { filepath: newPath, size } = await featureAddition(docpath, req.body, geojson);
+          const { filepath: newPath, size } = await featureAddition(
+            docpath,
+            req.body,
+            geojson
+          );
           if (data.isPublic) {
             // for public layer, re-generate search index after feature editing
             await saveFeatureSearchIndex(newPath); // save new search index
@@ -413,7 +415,11 @@ export const editGeoJson = async (
             message: "file path not exist! ",
           });
         }
-        const { filepath: newPath, size } = await editGeoJsonForAll(docpath, req.body, geojson);
+        const { filepath: newPath, size } = await editGeoJsonForAll(
+          docpath,
+          req.body,
+          geojson
+        );
         if (data.isPublic) {
           // for public layer, re-generate search index after feature editing
           await saveFeatureSearchIndex(newPath); // save new search index
@@ -480,8 +486,12 @@ export const deleteGeoJson = async (
           message: "file path not exist! ",
         });
       }
-      const { filepath: newPath, size } = await deleteGeoJsonFeature(docpath, req.body, geojson);
-      const savedDoc =  await data.updateFile(newPath, size);
+      const { filepath: newPath, size } = await deleteGeoJsonFeature(
+        docpath,
+        req.body,
+        geojson
+      );
+      const savedDoc = await data.updateFile(newPath, size);
       if (data.isPublic) {
         // for public layer, re-generate search index after feature editing
         await saveFeatureSearchIndex(newPath); // save new search index
@@ -673,7 +683,12 @@ export const changecolorbyID = async (req: Request, res: AuthResponse) => {
         message: "file path not exist! ",
       });
     }
-    const { filepath: newPath, size } = await modGeoJson(icon, color, geojson, docpath);
+    const { filepath: newPath, size } = await modGeoJson(
+      icon,
+      color,
+      geojson,
+      docpath
+    );
     doc.color = req.body.color as string;
     await doc.save();
     if (doc.isPublic) {
@@ -724,7 +739,7 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
     const vectorLayer = await saveVectorLayer(req.body.geoJSON, {
       inheritColor: true,
     });
-    const layer = await (new Layer({
+    const layer = await new Layer({
       name: req.body.name,
       type: "Vector",
       vector: req.body.vectorType,
@@ -737,7 +752,7 @@ export const createVectorLayer = async (req: Request, res: AuthResponse) => {
       layerpath: vectorLayer.geojsonPath,
       featureCount: vectorLayer.featureCount,
       captureDate: new Date(),
-    })).create();
+    }).create();
 
     if (layer) {
       res.status(201).json({
@@ -2052,7 +2067,7 @@ export const picktoMapUseForLayerCreate = async (
       });
     }
 
-    const savedDoc1 = await (new Layer({
+    const savedDoc1 = await new Layer({
       name: req.body.missionId ? req.body.name : "Base - " + req.body.name,
       type: "Vector",
       vector: req.body.vectorType,
@@ -2067,7 +2082,7 @@ export const picktoMapUseForLayerCreate = async (
       featureCount: features.length,
       isBase: req.body.missionId ? false : true,
       missionId: req.body.missionId ?? null,
-    })).create();
+    }).create();
 
     if (savedDoc1) {
       let flag = false;
@@ -2150,7 +2165,12 @@ export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
         const docpath = DirPath(Directory.ROOT, docs[i].layerpath);
         const geoJSON = await readGeoJson(docpath);
         if (geoJSON) {
-          const { filepath: newPath, size } = await modGeoJson(null, null, geoJSON, docpath);
+          const { filepath: newPath, size } = await modGeoJson(
+            null,
+            null,
+            geoJSON,
+            docpath
+          );
           if (docs[i].isPublic) {
             // for public layer, re-generate search index after feature editing
             await saveFeatureSearchIndex(newPath); // save new search index
@@ -2210,7 +2230,12 @@ export const sys_id_Inject_to_layerfiles = async (
           });
         }
 
-        const { filepath: newPath, size } = await modGeoJson(null, null, gjson, p); // add sys_ids to geojson
+        const { filepath: newPath, size } = await modGeoJson(
+          null,
+          null,
+          gjson,
+          p
+        ); // add sys_ids to geojson
 
         if (docs.isPublic) {
           // for public layer, re-generate search index after feature editing
@@ -2222,7 +2247,9 @@ export const sys_id_Inject_to_layerfiles = async (
 
         if (newPath) {
           // update new sys_ids in layerfiles
-          const modifiedGjson = await readGeoJson(DirPath(Directory.ROOT, newPath));
+          const modifiedGjson = await readGeoJson(
+            DirPath(Directory.ROOT, newPath)
+          );
           for (let j = 0; j < modifiedGjson.features.length; j++) {
             await layerFiles.updateMany(
               {
@@ -2261,14 +2288,14 @@ export const flagFeature = async (
   }>,
   res: AuthResponse
 ) => {
-  const doc = await Layer.findOne(
-    {
-      tenantId: res.locals.user.tenantId._id,
-      _id: req.params.layerID,
-    }
-  );
+  const doc = await Layer.findOne({
+    tenantId: res.locals.user.tenantId._id,
+    _id: req.params.layerID,
+  });
   if (doc) {
-    doc.flaggedFeatures = doc.flaggedFeatures.filter(f => f != req.body.featureIndex); // both deletion and duplicate entry handled
+    doc.flaggedFeatures = doc.flaggedFeatures.filter(
+      (f) => f != req.body.featureIndex
+    ); // both deletion and duplicate entry handled
     if (req.body.flag) doc.flaggedFeatures.push(req.body.featureIndex);
 
     if (doc.flaggedFeatures.length === 0) doc.isFlagged = false;
@@ -2291,12 +2318,10 @@ export const flagLayer = async (
   req: Request<{ layerID: Types.ObjectId }>,
   res: AuthResponse
 ) => {
-  const doc = await Layer.findOne(
-    {
-      tenantId: res.locals.user.tenantId._id,
-      _id: req.params.layerID,
-    }
-  );
+  const doc = await Layer.findOne({
+    tenantId: res.locals.user.tenantId._id,
+    _id: req.params.layerID,
+  });
   if (doc) {
     doc.isFlagged = req.body.flag as boolean;
     if (req.body.flag === false) doc.flaggedFeatures = [];

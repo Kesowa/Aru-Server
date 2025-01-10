@@ -7,9 +7,7 @@ import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import Tenant from "../../models/tenant";
 
 import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
-import {
-  deleteDirFileUsingName,
-} from "../../utils/fileDeleteUtils";
+import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 import { ObjectId } from "bson";
 import layerFiles from "../../models/layerFiles";
 import { featureType, vectorProps } from "../../schemas/vectorprops";
@@ -721,7 +719,7 @@ export const updateBaseLayerByAttr = async (
     const layerIds = layerData.map((layer) => layer._id);
 
     baseLayer.featureCount = clonedGeojson.featureCount;
-    baseLayer.layers = [ ...baseLayer.layers, ...layerIds ];
+    baseLayer.layers = [...baseLayer.layers, ...layerIds];
     await baseLayer.save();
 
     await baseLayer.updateFile(clonedGeojson.path, clonedGeojson.size);
@@ -962,7 +960,10 @@ export const updateBaseLayerByUploadedFile = async (
 
     baseLayer.featureCount = bgjson.features.length;
     await baseLayer.save();
-    const updatedBaseLayer = await baseLayer.updateFile(pathUtils.docPath(Directory.VECTOR, layername), size);
+    const updatedBaseLayer = await baseLayer.updateFile(
+      pathUtils.docPath(Directory.VECTOR, layername),
+      size
+    );
 
     await deleteDirFileUsingName(Directory.ROOT, req.body.filePath);
 
@@ -1336,7 +1337,7 @@ export const createBaseVectorLayer = async (
     const vectorLayer = await saveVectorLayer(req.body.geoJSON, {
       inheritColor: true,
     });
-    const layer = await (new Layer({
+    const layer = await new Layer({
       name: req.body.name,
       type: "Vector",
       vector: req.body.vectorType,
@@ -1350,7 +1351,7 @@ export const createBaseVectorLayer = async (
       featureCount: vectorLayer.featureCount,
       captureDate: new Date(),
       isBase: true,
-    })).create();
+    }).create();
 
     if (layer) {
       res.status(201).json({

@@ -228,7 +228,13 @@ layerSchema.methods.create = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: doc.fileSize, allLayerSize: doc.fileSize, actualLayerCount: 1 } }
+    {
+      $inc: {
+        actualSize: doc.fileSize,
+        allLayerSize: doc.fileSize,
+        actualLayerCount: 1,
+      },
+    }
   );
   await Mission.updateOne(
     { _id: doc.missionId },
@@ -237,7 +243,10 @@ layerSchema.methods.create = async function () {
   // save the document
   return await doc.save();
 };
-layerSchema.methods.updateFile = async function (newPath: string, newSize: number) {
+layerSchema.methods.updateFile = async function (
+  newPath: string,
+  newSize: number
+) {
   const doc = this as ILayer & mongoose.Document;
   const oldSize = doc.fileSize;
   const oldPath = doc.layerpath;
@@ -248,7 +257,12 @@ layerSchema.methods.updateFile = async function (newPath: string, newSize: numbe
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: doc.fileSize - oldSize, allLayerSize: doc.fileSize - oldSize } }
+    {
+      $inc: {
+        actualSize: doc.fileSize - oldSize,
+        allLayerSize: doc.fileSize - oldSize,
+      },
+    }
   );
   await Mission.updateOne(
     { _id: doc.missionId },
@@ -301,7 +315,7 @@ layerSchema.methods.delete = async function () {
       { useFindAndModify: false }
     );
   }
-  
+
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
@@ -311,7 +325,7 @@ layerSchema.methods.delete = async function () {
     { _id: doc.missionId },
     { $inc: { size: -doc.fileSize } }
   );
-  
+
   // delete the document
   await doc.deleteOne();
 };
