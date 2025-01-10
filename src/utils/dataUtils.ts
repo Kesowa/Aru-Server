@@ -84,8 +84,10 @@ export const saveVectorLayer = async (
   } else {
     flagColor = getFlagColor(geojsonData);
   }
+  const featureTypes = new Set<GeoJson["type"]>();
   geojsonData.features.forEach((feature) => {
     feature.properties.sys_id = new ObjectId().toHexString();
+    featureTypes.add(feature.type);
   });
   const stringData = JSON.stringify(geojsonData);
   await uploadString(targetPath, stringData);
@@ -95,6 +97,7 @@ export const saveVectorLayer = async (
     featureCount: geojsonData.features.length,
     flagColor,
     properties: geojsonData.features[0]?.properties,
+    featureTypes: Array.from(featureTypes.values()),
   };
 };
 
