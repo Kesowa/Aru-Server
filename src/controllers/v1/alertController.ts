@@ -5,18 +5,17 @@ import { notificationSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import { Types } from "mongoose";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
-import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IFlight } from "../../schemas/flight";
 import { ARU_INSTANCE, Directory, Instance } from "../../constants";
-import path from "path";
 import { WiproInterface } from "../../utils/wipro";
 import { readCoords, saveThumbnails } from "../../utils/imageUtils";
 import * as pathUtils from "../../utils/pathUtils";
 import UploadTask from "../../models/uploadTask";
 import { permPath } from "../../utils/dataUtils";
+import Mission from "../../models/mission";
 
 // Create Alert Controlller
 type CreateAlert = {
@@ -54,7 +53,6 @@ export const createAlert = async (
       Directory.ALERT_IMAGES,
       fileDoc.metadata.objectkey
     );
-    const thumbs = await saveThumbnails(fullPath);
     const newAlert = new Alert({
       locationName,
       location: {
@@ -70,11 +68,11 @@ export const createAlert = async (
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: fileDoc.metadata.filesize + thumbs.size,
+      fileSize: fileDoc.metadata.filesize,
       image: fullPath,
     });
 
-    const data = await newAlert.save();
+    const data = await newAlert.create();
     if (ARU_INSTANCE == Instance.NKDA) {
       await WiproInterface.SendAlert(data, req.ip, req.log);
     }
@@ -735,9 +733,19 @@ export const convertImageToThumbnail = async (
     ],
   });
   if (result.length) {
-    for (let i = 0; i < result.length; i++) {
-      await saveThumbnails(
-        pathUtils.docPath(pathUtils.Directory.ROOT, result[i].image)
+    for (const doc of result) {
+      const oldSize = doc.fileSize;
+      const thumbs = await saveThumbnails(doc.image);
+      doc.fileSize += thumbs.size;
+      await doc.save();
+      // update size details
+      await Tenant.updateOne(
+        { _id: doc.tenantId },
+        { $inc: { actualSize: doc.fileSize - oldSize, allAlertSize: doc.fileSize - oldSize } }
+      );
+      await Mission.updateOne(
+        { _id: doc.missionId },
+        { $inc: { size: doc.fileSize - oldSize } }
       );
     }
     res.status(200).json({
@@ -754,57 +762,30 @@ export const convertImageToThumbnail = async (
 
 export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
   {
-    const data = req.body.id;
-    let flag = 0;
+    const data = await Alert.find(
+      {
+        _id: { $in: req.body.id },
+        tenantId: res.locals.user.tenantId._id,
+      },
+      {
+        image: 1,
+        fileSize: 1,
+        tenantId: 1,
+        missionId: 1,
+      }
+    );
     if (data.length) {
-      for (let i = 0; i < data.length; i++) {
-        const d = await Alert.findOne(
-          {
-            _id: data[i],
-            tenantId: res.locals.user.tenantId._id,
-          },
-          {
-            image: 1,
-            fileSize: 1,
-          }
-        );
-        if (d) {
-          const doc = await d.delete();
-          const fileName = path.parse(d.image).base;
-          await deleteDirFileUsingName(Directory.ALERT_IMAGES, fileName);
-          await deleteDirFileUsingName(
-            Directory.ALERT_IMAGES,
-            "1x_" + fileName
-          );
-          const tenant = await Tenant.findOne({
-            _id: res.locals.user.tenantId,
-          });
-          if (doc && tenant.actualAlertCount >= 0) {
-            await Tenant.updateOne(
-              { _id: res.locals.user.tenantId },
-              { $inc: { actualAlertCount: -1 } }
-            );
-          }
-          if (doc) {
-            flag = 1;
-          }
-        }
+      for (const d of data) {
+        await d.delete();
       }
-      if (flag == 1) {
-        res.status(200).json({
-          status: true,
-          message: "Alerts deleted successfully!",
-        });
-      } else {
-        res.status(200).json({
-          status: false,
-          message: "Failed to delete alerts",
-        });
-      }
+      res.status(200).json({
+        status: true,
+        message: "Alerts deleted successfully!",
+      });
     } else {
-      res.status(403).json({
+      res.status(404).json({
         status: false,
-        message: "Please send the alert Id",
+        message: "No alert found to delete",
       });
     }
   }
@@ -823,7 +804,6 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       imgDoc.metadata.objectkey
     );
 
-    const thumbs = await saveThumbnails(fullPath);
     const ff = await readCoords(fullPath);
 
     const { locationName, missionId, locationId, flightId, pcount, type } =
@@ -844,18 +824,11 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
       note: req.body.note ? req.body.note : "",
       onSite: req.body.onSite,
       type,
-      fileSize: imgDoc.metadata.filesize + thumbs.size,
+      fileSize: imgDoc.metadata.filesize,
       image: fullPath,
     });
 
-    const data = await newAlert.save();
-    const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
-    if (data && tenant.actualAlertCount >= 0) {
-      await Tenant.updateOne(
-        { _id: res.locals.user.tenantId },
-        { $inc: { actualAlertCount: 1 } }
-      );
-    }
+    const data = await newAlert.create();
     await imgDoc.delete();
     res.status(201).json({
       status: true,

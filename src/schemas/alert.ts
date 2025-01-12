@@ -2,6 +2,15 @@ import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
+import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
+import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+
+interface IAlertMethods {
+  create(): Promise<IAlert>;
+  delete(): Promise<void>;
+}
+
+export type AlertModel = mongoose.Model<IAlert, {}, IAlertMethods>;
 
 export interface IAlert {
   _id: mongoose.Types.ObjectId;
@@ -145,31 +154,41 @@ alertSchema.index({
   type: 1,
 });
 alertSchema.index({ locationId: 1 }, { sparse: true });
-alertSchema.pre<IAlert>("save", async function () {
+alertSchema.methods.create = async function () {
+  const doc = this as IAlert & mongoose.Document;
+  // generate thumbnails
+  const thumbs = await saveThumbnails(doc.image);
+  doc.fileSize += thumbs.size;
+  await doc.save();
+  // update size details
   await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize, allAlertSize: this.fileSize } }
+    { _id: doc.tenantId },
+    { $inc: { actualSize: doc.fileSize, allAlertSize: doc.fileSize, actualAlertCount: 1 } }
   );
   await Mission.updateOne(
-    { _id: this.missionId },
-    { $inc: { size: this.fileSize } }
+    { _id: doc.missionId },
+    { $inc: { size: doc.fileSize } }
   );
-});
-alertSchema.post(
-  "remove",
-  async function (this: {
-    tenantId: mongoose.Types.ObjectId;
-    fileSize: number;
-    missionId: mongoose.Types.ObjectId;
-  }) {
-    await Tenant.updateOne(
-      { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allAlertSize: -this.fileSize } }
-    );
-    await Mission.updateOne(
-      { _id: this.missionId },
-      { $inc: { size: -this.fileSize } }
-    );
-  }
-);
+  // save the document
+  return await doc.save();
+};
+alertSchema.methods.delete = async function () {
+  const doc = this as IAlert & mongoose.Document;
+  // delete thumbnails
+  await deleteThumbnails(doc.image);
+  // }
+  // delete actual file
+  await deletePublicFileUsingPath(doc.image);
+  // update size details
+  await Tenant.updateOne(
+    { _id: doc.tenantId },
+    { $inc: { actualSize: -doc.fileSize, allAlertSize: -doc.fileSize, actualAlertCount: -1 } }
+  );
+  await Mission.updateOne(
+    { _id: doc.missionId },
+    { $inc: { size: -doc.fileSize } }
+  );
+  // delete the document
+  await doc.deleteOne();
+};
 export default alertSchema;
