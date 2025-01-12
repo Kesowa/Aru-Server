@@ -14,6 +14,7 @@ import { minioClient } from "../../utils/objectStorage";
 import { IPackage } from "../../schemas/package";
 import { randomUUID } from "crypto";
 import uploadModel from "../../models/uploadTask";
+import { InvalidPackage } from "../../schemas/tenant";
 
 //check if email is available for registration
 export const checkIfEmailIdIsAvailable = async (
@@ -72,6 +73,7 @@ export const createUploadUrl = async (
   const tenantPackage = await Tenant.findOne({
     _id: res.locals.user.tenantId,
   }).populate<{ activePackage: IPackage }>("activePackage");
+  if (!tenantPackage.activePackage) throw new InvalidPackage(res.locals.user.tenantId._id);
   if (
     tenantPackage.activePackage.storage - tenantPackage.storageUsed <
     sizeInMb

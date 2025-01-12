@@ -182,7 +182,6 @@ alertSchema.methods.delete = async function () {
   const doc = this as IAlert & mongoose.Document;
   // delete thumbnails
   await deleteThumbnails(doc.image);
-  // }
   // delete actual file
   await deletePublicFileUsingPath(doc.image);
   // update size details
