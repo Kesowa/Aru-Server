@@ -13,7 +13,6 @@ import Alert from "../../models/alert";
 import Document from "../../models/document";
 import VOD from "../../models/vod";
 import Tenant from "../../models/tenant";
-import ObjectsToCsv from "objects-to-csv";
 import layerFiles from "../../models/layerFiles";
 import layerGroupModel from "../../models/layerGroup";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
@@ -24,10 +23,8 @@ import { IInvite } from "../../schemas/invite";
 import { ILocation } from "../../schemas/location";
 import MissionType from "../../models/missionType";
 import Location from "../../models/location";
-import { Directory } from "../../constants";
 import moment from "moment";
-import { saveFile } from "../../utils/dataUtils";
-import { randomUUID } from "crypto";
+import { saveCSV } from "../../utils/dataUtils";
 
 //create flight controller
 type CreateMission = {
@@ -1100,13 +1097,8 @@ export const getMissionCsvForTenantOrUser = async (
       })
       .lean();
     if (result.length) {
-      const csv = new ObjectsToCsv(result);
-      const csvData = await csv.toString();
-      const { filepath } = await saveFile(
-        Directory.TEMP,
-        randomUUID() + ".csv",
-        csvData
-      );
+      const filename = "missions-" + String(req.body.userId || res.locals.user.tenantId._id) + ".csv";
+      const { filepath } = await saveCSV(filename, result, "", res.locals.user.tenantId._id, res.locals.user._id);
       return res.status(200).json({
         status: true,
         message: "Successfully csv file created!",

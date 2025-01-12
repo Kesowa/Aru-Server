@@ -6,7 +6,6 @@ import layerFiles from "../../models/layerFiles";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { ObjectId } from "bson";
-import ObjectsToCsv from "objects-to-csv";
 import Mission from "../../models/mission";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import {
@@ -45,8 +44,8 @@ import {
   deleteFeatureSearchIndex,
   permPath,
   saveAsKML,
+  saveCSV,
   saveFeatureSearchIndex,
-  saveFile,
   saveGeojson,
   saveVectorLayer,
 } from "../../utils/dataUtils";
@@ -55,6 +54,7 @@ import { decompressZip } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { readToBuffer } from "../../utils/objectStorage";
 import { randomUUID } from "crypto";
+import Document from "../../models/document";
 
 // ********* create ***********
 
@@ -1279,13 +1279,8 @@ export const getFeatureCsvByLayerIdx = async (
           clone.push(omit(geoArray[j], ["sys_id", "icon", "color"]));
         }
       }
-      const csv = new ObjectsToCsv(clone);
-      const csvData = await csv.toString();
-      const { filepath } = await saveFile(
-        Directory.TEMP,
-        randomUUID() + ".csv",
-        csvData
-      );
+      const filename = "features-" + String(result._id) + ".csv";
+      const { filepath } = await saveCSV(filename, clone, result.missionId, res.locals.user.tenantId._id, res.locals.user._id);
       res.json({
         status: true,
         message: "csv file created successfully!",

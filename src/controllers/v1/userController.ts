@@ -3,16 +3,15 @@ import Tenant from "../../models/tenant";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
-import ObjectsToCsv from "objects-to-csv";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
-import crypto, { randomUUID } from "crypto";
+import crypto from "crypto";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { IUser } from "../../schemas/user";
 import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
 import { getFileSize } from "../../utils/fileUtils";
 import UploadTask from "../../models/uploadTask";
-import { permPath, saveFile } from "../../utils/dataUtils";
+import { permPath, saveCSV } from "../../utils/dataUtils";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
 
 import { PERMS } from "../../schemas/permission";
@@ -262,13 +261,8 @@ export const userCsv = async (req: Request, res: AuthResponse) => {
       { _id: 0, name: 1, email: 1, phoneNo: 1, userType: 1 }
     ).lean();
     if (data.length) {
-      const csv = new ObjectsToCsv(data);
-      const csvData = await csv.toString();
-      const { filepath } = await saveFile(
-        Directory.TEMP,
-        randomUUID() + ".csv",
-        csvData
-      );
+      const filename = "users-" + String(res.locals.user.tenantId._id) + ".csv";
+      const { filepath } = await saveCSV(filename, data, "", res.locals.user.tenantId._id, res.locals.user._id);
       res.json({
         status: true,
         message: "Users CSV generated sucessfully.",

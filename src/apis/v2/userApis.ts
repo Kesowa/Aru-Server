@@ -5,10 +5,7 @@ import User from "../../models/user";
 import { UserType } from "../../schemas/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUsers } from "../../utils/authUtils";
-import ObjectsToCsv from "objects-to-csv";
-import { Directory } from "../../constants";
-import { saveFile } from "../../utils/dataUtils";
-import { randomUUID } from "crypto";
+import { saveCSV } from "../../utils/dataUtils";
 
 const userApi = Router();
 
@@ -56,13 +53,8 @@ userApi.get(
     };
 
     if (genCSV && data.length) {
-      const csv = new ObjectsToCsv(data);
-      const csvData = await csv.toString();
-      const { filepath } = await saveFile(
-        Directory.TEMP,
-        randomUUID() + ".csv",
-        csvData
-      );
+      const filename = "users-" + String(res.locals.user.tenantId._id) + ".csv";
+      const { filepath } = await saveCSV(filename, data, "", res.locals.user.tenantId._id, res.locals.user._id);
       resp.csvPath = filepath;
     }
 

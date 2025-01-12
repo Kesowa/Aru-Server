@@ -21,6 +21,9 @@ import {
 } from "./objectStorage";
 import Fuse from "fuse.js";
 import { deletePublicFileUsingPath } from "./fileDeleteUtils";
+import ObjectsToCsv from "objects-to-csv";
+import Document from "../models/document";
+import { Types } from "mongoose";
 
 const getFlagColor = (geojson: GeoJson) => {
   const colorSet = new Set(
@@ -230,6 +233,38 @@ export const saveAsKML = async (geojson: GeoJson) => {
   const kmlPath = pathUtils.docPath(Directory.TEMP, randomUUID() + ".kml");
   await uploadString(kmlPath, kmlData);
   return kmlPath;
+};
+
+export const saveCSV = async (
+  filename: string, 
+  data: any, 
+  missionId: Types.ObjectId | string,
+  tenantId: Types.ObjectId | string, 
+  userId: Types.ObjectId | string,
+) => {
+  const exists = await Document.findOne({ name: filename });
+  if (exists) await exists.delete();
+  const csv = new ObjectsToCsv(data);
+  const csvData = await csv.toString();
+  const { filepath, size } = await saveFile(
+    Directory.CSV,
+    filename,
+    csvData
+  );
+  const csvDoc = new Document({
+    name: filename,
+    modDate: new Date(),
+    fileSize: size,
+    fileType: "csv",
+    folderName: "root1234",
+    filePath: filepath,
+    missionId,
+    tenantId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+  await csvDoc.create();
+  return { filepath, size };
 };
 
 export const createArchive = async (files: pathUtils.DocPath[]) => {
