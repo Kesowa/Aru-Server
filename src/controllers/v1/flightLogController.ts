@@ -53,7 +53,7 @@ export const createFlightLog = async (req: Request, res: AuthResponse) => {
         fileSize: fileDoc.metadata.filesize,
         tenantId: res.locals.user.tenantId._id,
       });
-      const savedDoc = await newLog.save();
+      const savedDoc = await newLog.create();
       await fileDoc.delete();
       res.status(201).json({
         status: true,
@@ -100,7 +100,7 @@ export const fetchLatestFlightlogDataByMissionId = async (
     if (req.query.missionID != undefined) {
       const missionId = new Types.ObjectId(String(req.query.missionID));
       const data = await flightLog
-        .findOne({
+        .find({
           missionID: missionId,
           tenantId: res.locals.user.tenantId._id,
         })
@@ -109,11 +109,11 @@ export const fetchLatestFlightlogDataByMissionId = async (
           time: "desc",
         })
         .limit(1);
-      if (data) {
+      if (data.length > 0) {
         res.json({
           status: true,
           message: "fetched flight logs",
-          data: data,
+          data: data[0],
         });
         return;
       } else {
@@ -127,7 +127,7 @@ export const fetchLatestFlightlogDataByMissionId = async (
       const locationId = new Types.ObjectId(String(req.query.locationID));
       if (locationId != undefined) {
         const data = await flightLog
-          .findOne({
+          .find({
             locationID: locationId,
             tenantId: res.locals.user.tenantId._id,
           })
@@ -136,11 +136,11 @@ export const fetchLatestFlightlogDataByMissionId = async (
             time: "desc",
           })
           .limit(1);
-        if (data) {
+        if (data.length > 0) {
           res.json({
             status: true,
             message: "fetched flight logs",
-            data: data,
+            data: data[0],
           });
         } else {
           res.status(404).json({
@@ -160,7 +160,7 @@ export const fetchLatestFlightlogByLocationId = async (
   {
     const locationId = new Types.ObjectId(String(req.query.id));
     const data = await flightLog
-      .findOne({
+      .find({
         locationID: locationId,
         tenantId: res.locals.user.tenantId._id,
       })
@@ -169,11 +169,11 @@ export const fetchLatestFlightlogByLocationId = async (
         time: "desc",
       })
       .limit(1);
-    if (data) {
+    if (data.length > 0) {
       res.json({
         status: true,
         message: "fetched flight logs",
-        data: data,
+        data: data[0],
       });
     } else {
       res.status(404).json({
