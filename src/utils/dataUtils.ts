@@ -288,8 +288,31 @@ export const saveCSV = async (
   return { filepath, size };
 };
 
-export const createArchive = async (files: pathUtils.DocPath[]) => {
-  return await archive(files);
+export const createArchive = async (
+  filename: string, 
+  files: pathUtils.DocPath[],
+  missionId: Types.ObjectId | string,
+  tenantId: Types.ObjectId | string,
+  userId: Types.ObjectId | string
+) => {
+  const exists = await Document.findOne({ name: filename });
+  if (exists) await exists.delete();
+  const archivePath = await archive(files);
+  const { size } = await stat(archivePath);
+  const archiveDoc = new Document({
+    name: filename,
+    modDate: new Date(),
+    fileSize: size,
+    fileType: "csv",
+    folderName: "root1234",
+    filePath: archivePath,
+    missionId,
+    tenantId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+  await archiveDoc.create();
+  return archivePath;
 };
 
 export const saveFile = async (

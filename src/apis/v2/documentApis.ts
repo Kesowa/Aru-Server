@@ -6,6 +6,7 @@ import Document from "../../models/document";
 import { DocumentType } from "../../schemas/document";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { missionSpecificSocket } from "../../socket";
+import { createArchive } from "../../utils/dataUtils";
 
 const documentApi = Router();
 
@@ -57,13 +58,6 @@ documentApi.get(
       .populate(populate)
       .lean();
 
-    if (zip) {
-      missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-      missionSpecificSocket
-        .to(missionId)
-        .emit("DOCUMENT_ZIP_COMPLETED", "unimplemented");
-    }
-
     res.json({
       data,
       pagination: {
@@ -72,6 +66,21 @@ documentApi.get(
         count: data.length,
       },
     });
+
+    if (zip) {
+      const filename = "allDocuments-" + missionId +".zip";
+      missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
+      const zipFile = await createArchive(
+        filename, 
+        data.map((d) => d.filePath),
+        missionId,
+        res.locals.user.tenantId._id,
+        res.locals.user._id
+      );
+      missionSpecificSocket
+        .to(missionId)
+        .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
+    }
   }
 );
 
