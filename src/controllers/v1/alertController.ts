@@ -12,7 +12,6 @@ import { IFlight } from "../../schemas/flight";
 import { ARU_INSTANCE, Directory, Instance } from "../../constants";
 import { WiproInterface } from "../../utils/wipro";
 import { readCoords, saveThumbnails } from "../../utils/imageUtils";
-import * as pathUtils from "../../utils/pathUtils";
 import UploadTask from "../../models/uploadTask";
 import { permPath } from "../../utils/dataUtils";
 import Mission from "../../models/mission";
