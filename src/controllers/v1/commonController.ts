@@ -73,7 +73,8 @@ export const createUploadUrl = async (
   const tenantPackage = await Tenant.findOne({
     _id: res.locals.user.tenantId,
   }).populate<{ activePackage: IPackage }>("activePackage");
-  if (!tenantPackage.activePackage) throw new InvalidPackage(res.locals.user.tenantId._id);
+  if (!tenantPackage.activePackage)
+    throw new InvalidPackage(res.locals.user.tenantId._id);
   if (
     tenantPackage.activePackage.storage - tenantPackage.storageUsed <
     sizeInMb
