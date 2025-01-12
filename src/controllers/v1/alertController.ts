@@ -740,7 +740,12 @@ export const convertImageToThumbnail = async (
       // update size details
       await Tenant.updateOne(
         { _id: doc.tenantId },
-        { $inc: { actualSize: doc.fileSize - oldSize, allAlertSize: doc.fileSize - oldSize } }
+        {
+          $inc: {
+            actualSize: doc.fileSize - oldSize,
+            allAlertSize: doc.fileSize - oldSize,
+          },
+        }
       );
       await Mission.updateOne(
         { _id: doc.missionId },

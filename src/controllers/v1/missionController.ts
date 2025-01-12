@@ -237,7 +237,6 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       res.locals.user.userType === "tenant-root" ||
       toBeDeleted.user.toString() === res.locals.user._id.toString()
     ) {
-
       const deletedMission = await Mission.findByIdAndDelete(req.body._id);
       const deletedLayerData = await Layer.find({ missionId: req.body._id });
       const deletedAlertData = await Alert.find({ missionId: req.body._id });

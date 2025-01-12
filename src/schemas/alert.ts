@@ -163,7 +163,13 @@ alertSchema.methods.create = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: doc.fileSize, allAlertSize: doc.fileSize, actualAlertCount: 1 } }
+    {
+      $inc: {
+        actualSize: doc.fileSize,
+        allAlertSize: doc.fileSize,
+        actualAlertCount: 1,
+      },
+    }
   );
   await Mission.updateOne(
     { _id: doc.missionId },
@@ -182,7 +188,13 @@ alertSchema.methods.delete = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: -doc.fileSize, allAlertSize: -doc.fileSize, actualAlertCount: -1 } }
+    {
+      $inc: {
+        actualSize: -doc.fileSize,
+        allAlertSize: -doc.fileSize,
+        actualAlertCount: -1,
+      },
+    }
   );
   await Mission.updateOne(
     { _id: doc.missionId },
