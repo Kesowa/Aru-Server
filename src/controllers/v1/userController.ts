@@ -57,6 +57,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
         );
         await saveThumbnails(fullPath);
         userr.avatar = fullPath;
+        await fileDoc.delete();
       }
       const dd = await userr.save();
       const tenant = await Tenant.findOne({
@@ -125,6 +126,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
         );
         await saveThumbnails(fullPath);
         user.avatar = fullPath;
+        await fileDoc.delete();
       }
       const dd = await User.findOneAndUpdate(
         { _id: existingUsertWithEmail._id },
@@ -321,6 +323,7 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
             req.log.error(err, "failed to delete thumbnails");
           }
           await doc.save();
+          await fileDoc.delete();
         }
       }
 

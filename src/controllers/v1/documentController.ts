@@ -46,6 +46,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       updatedBy: res.locals.user._id,
     });
     const savedDoc = await doc.create();
+    await fileDoc.delete();
     missionSpecificSocket
       .to(savedDoc.missionId.toString())
       .emit("DOCUMENT_CREATED", savedDoc);

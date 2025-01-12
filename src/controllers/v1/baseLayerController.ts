@@ -813,7 +813,7 @@ export const uploadLayerToUpdateBaseLayer = async (
 
     const pattr: any = [];
 
-    for (const [attr] of Object.entries<any>(bgjson.features[0].properties)) {
+    for (const [attr] of Object.entries<any>(geojson.features[0].properties)) {
       if (attr !== "Nth") {
         pattr.push(attr);
       }
@@ -830,12 +830,18 @@ export const uploadLayerToUpdateBaseLayer = async (
       });
     }
 
+    // updating the geojson of baselayer to the one uploaded
+    const fullPath = await permPath(Directory.VECTOR, fileDoc.metadata.objectkey);
+    const size = fileDoc.metadata.filesize;
+    await baseLayer.updateFile(fullPath, size);
+    await fileDoc.delete();
+
     res.json({
       success: true,
       data: {
         primeAttributes: pattr,
         layerAttributes: layerAttr,
-        filePath: fileDoc.metadata.objectkey,
+        filePath: fullPath,
         baseLayer: req.body.baseLayer,
       },
     });
@@ -1147,6 +1153,7 @@ export const createBaseRasterfromUpload = async (
       layerpath: newPath,
     });
     const savedDoc = await layer.create();
+    await fileDoc.delete();
     if (savedDoc) {
       res.status(201).json({
         status: true,
@@ -1211,6 +1218,7 @@ export const updateBaseLayerRasterUpload = async (
   const fullPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
   const size = fileDoc.metadata.filesize;
   const newDoc = await doc.updateFile(fullPath, size);
+  await fileDoc.delete();
   if (newDoc) {
     res.status(200).json({
       status: true,

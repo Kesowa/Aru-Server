@@ -54,6 +54,7 @@ export const createFlightLog = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId._id,
       });
       const savedDoc = await newLog.save();
+      await fileDoc.delete();
       res.status(201).json({
         status: true,
         message: "Sucessfully saved the document",

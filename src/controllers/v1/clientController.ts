@@ -87,6 +87,7 @@ export const createClientformissionGroup = async (
             );
             await saveThumbnails(fullPath);
             modClient.avatar = fullPath;
+            await fileDoc.delete();
           }
           await User.findOneAndUpdate({ _id: existingClient._id }, modClient, {
             upsert: true,
@@ -154,6 +155,7 @@ export const createClientformissionGroup = async (
             );
             await saveThumbnails(fullPath);
             newClient.avatar = fullPath;
+            await fileDoc.delete();
           }
           const createDoc = await newClient.save();
           const tenant = await Tenant.findOne(
@@ -354,6 +356,7 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
           );
           await saveThumbnails(fullPath);
           modDoc.avatar = fullPath;
+          await fileDoc.delete();
         }
         await modDoc.save();
       }

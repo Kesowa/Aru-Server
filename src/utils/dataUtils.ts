@@ -67,6 +67,7 @@ export const saveVectorLayer = async (
       const fileData = await readToBuffer(layer);
       geojsonData = await shp2json(fileData);
     }
+    await deleteObj(layer);
   } else {
     geojsonData = layer;
   }
