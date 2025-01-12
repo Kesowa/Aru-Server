@@ -675,8 +675,15 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
         savedResult.push(d);
       }
 
-      const filename = "clients-" + String(res.locals.user.tenantId._id) + ".csv";
-      const { filepath } = await saveCSV(filename, savedResult, "", res.locals.user.tenantId._id, res.locals.user._id);
+      const filename =
+        "clients-" + String(res.locals.user.tenantId._id) + ".csv";
+      const { filepath } = await saveCSV(
+        filename,
+        savedResult,
+        "",
+        res.locals.user.tenantId._id,
+        res.locals.user._id
+      );
       return res.status(200).json({
         status: true,
         message: "Client CSV generated successfully!",

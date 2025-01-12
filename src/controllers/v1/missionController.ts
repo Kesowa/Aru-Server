@@ -1097,8 +1097,17 @@ export const getMissionCsvForTenantOrUser = async (
       })
       .lean();
     if (result.length) {
-      const filename = "missions-" + String(req.body.userId || res.locals.user.tenantId._id) + ".csv";
-      const { filepath } = await saveCSV(filename, result, "", res.locals.user.tenantId._id, res.locals.user._id);
+      const filename =
+        "missions-" +
+        String(req.body.userId || res.locals.user.tenantId._id) +
+        ".csv";
+      const { filepath } = await saveCSV(
+        filename,
+        result,
+        "",
+        res.locals.user.tenantId._id,
+        res.locals.user._id
+      );
       return res.status(200).json({
         status: true,
         message: "Successfully csv file created!",

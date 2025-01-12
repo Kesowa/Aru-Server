@@ -492,7 +492,13 @@ export const generatePlotReport = async (
           }
         });
         const filename = "report-errors-" + missionId + ".csv";
-        const { filepath } = await saveCSV(filename, rows, missionId, res.locals.user.tenantId._id, res.locals.user._id);
+        const { filepath } = await saveCSV(
+          filename,
+          rows,
+          missionId,
+          res.locals.user.tenantId._id,
+          res.locals.user._id
+        );
         return res.json({
           status: false,
           message: "Missing properties in features",

@@ -54,7 +54,13 @@ userApi.get(
 
     if (genCSV && data.length) {
       const filename = "users-" + String(res.locals.user.tenantId._id) + ".csv";
-      const { filepath } = await saveCSV(filename, data, "", res.locals.user.tenantId._id, res.locals.user._id);
+      const { filepath } = await saveCSV(
+        filename,
+        data,
+        "",
+        res.locals.user.tenantId._id,
+        res.locals.user._id
+      );
       resp.csvPath = filepath;
     }
 

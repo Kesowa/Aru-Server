@@ -73,5 +73,5 @@ export const UploadTaskSchema = new Schema<UploadTask>(
 
 UploadTaskSchema.index({ tenant: 1, docModel: 1, doc: 1 });
 
-// NOTE: delete method explicitly not required, as using permPath function copies and deletes temp file, 
+// NOTE: delete method explicitly not required, as using permPath function copies and deletes temp file,
 //       and updates path of database doc to copied file

@@ -230,11 +230,11 @@ export const saveMultiGeojson = async (
 };
 
 export const saveAsKML = async (
-  filename: string, 
+  filename: string,
   geojson: GeoJson,
   missionId: Types.ObjectId | string,
-  tenantId: Types.ObjectId | string, 
-  userId: Types.ObjectId | string,
+  tenantId: Types.ObjectId | string,
+  userId: Types.ObjectId | string
 ) => {
   const exists = await Document.findOne({ name: filename });
   if (exists) await exists.delete();
@@ -261,21 +261,17 @@ export const saveAsKML = async (
 };
 
 export const saveCSV = async (
-  filename: string, 
-  data: any, 
+  filename: string,
+  data: any,
   missionId: Types.ObjectId | string,
-  tenantId: Types.ObjectId | string, 
-  userId: Types.ObjectId | string,
+  tenantId: Types.ObjectId | string,
+  userId: Types.ObjectId | string
 ) => {
   const exists = await Document.findOne({ name: filename });
   if (exists) await exists.delete();
   const csv = new ObjectsToCsv(data);
   const csvData = await csv.toString();
-  const { filepath, size } = await saveFile(
-    Directory.CSV,
-    filename,
-    csvData
-  );
+  const { filepath, size } = await saveFile(Directory.CSV, filename, csvData);
   const csvDoc = new Document({
     name: filename,
     modDate: new Date(),

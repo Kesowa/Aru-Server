@@ -831,7 +831,10 @@ export const uploadLayerToUpdateBaseLayer = async (
     }
 
     // updating the geojson of baselayer to the one uploaded
-    const fullPath = await permPath(Directory.VECTOR, fileDoc.metadata.objectkey);
+    const fullPath = await permPath(
+      Directory.VECTOR,
+      fileDoc.metadata.objectkey
+    );
     const size = fileDoc.metadata.filesize;
     await baseLayer.updateFile(fullPath, size);
     await fileDoc.delete();

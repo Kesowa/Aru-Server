@@ -1280,7 +1280,13 @@ export const getFeatureCsvByLayerIdx = async (
         }
       }
       const filename = "features-" + String(result._id) + ".csv";
-      const { filepath } = await saveCSV(filename, clone, result.missionId, res.locals.user.tenantId._id, res.locals.user._id);
+      const { filepath } = await saveCSV(
+        filename,
+        clone,
+        result.missionId,
+        res.locals.user.tenantId._id,
+        res.locals.user._id
+      );
       res.json({
         status: true,
         message: "csv file created successfully!",
@@ -1847,9 +1853,9 @@ export const downloadassetbyIDtoKml = async (
     const geojson = await readGeoJson(DirPath(Directory.ROOT, doc.layerpath));
     const filename = String(doc._id) + ".kml";
     const { filepath: downloadlink } = await saveAsKML(
-      filename, 
-      geojson, 
-      doc.missionId, 
+      filename,
+      geojson,
+      doc.missionId,
       res.locals.user.tenantId._id,
       res.locals.user._id
     );
