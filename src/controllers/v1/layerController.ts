@@ -1842,7 +1842,14 @@ export const downloadassetbyIDtoKml = async (
       tenantId: res.locals.user.tenantId._id,
     });
     const geojson = await readGeoJson(DirPath(Directory.ROOT, doc.layerpath));
-    const downloadlink = await saveAsKML(geojson);
+    const filename = String(doc._id) + ".kml";
+    const { filepath: downloadlink } = await saveAsKML(
+      filename, 
+      geojson, 
+      doc.missionId, 
+      res.locals.user.tenantId._id,
+      res.locals.user._id
+    );
     res.json({
       status: true,
       message: `Download Link generated for LayerID: ${id}`,

@@ -228,11 +228,35 @@ export const saveMultiGeojson = async (
   return { path: geojsonPath, size, featureCount };
 };
 
-export const saveAsKML = async (geojson: GeoJson) => {
+export const saveAsKML = async (
+  filename: string, 
+  geojson: GeoJson,
+  missionId: Types.ObjectId | string,
+  tenantId: Types.ObjectId | string, 
+  userId: Types.ObjectId | string,
+) => {
+  const exists = await Document.findOne({ name: filename });
+  if (exists) await exists.delete();
   const kmlData = String(tokml(geojson));
-  const kmlPath = pathUtils.docPath(Directory.TEMP, randomUUID() + ".kml");
-  await uploadString(kmlPath, kmlData);
-  return kmlPath;
+  const { filepath, size } = await saveFile(
+    Directory.VECTOR,
+    filename,
+    kmlData
+  );
+  const kmlDoc = new Document({
+    name: filename,
+    modDate: new Date(),
+    fileSize: size,
+    fileType: "csv",
+    folderName: "root1234",
+    filePath: filepath,
+    missionId,
+    tenantId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+  await kmlDoc.create();
+  return { filepath, size };
 };
 
 export const saveCSV = async (
