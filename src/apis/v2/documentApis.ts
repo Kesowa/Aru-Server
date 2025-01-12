@@ -68,10 +68,10 @@ documentApi.get(
     });
 
     if (zip) {
-      const filename = "allDocuments-" + missionId +".zip";
+      const filename = "allDocuments-" + missionId + ".zip";
       missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
       const zipFile = await createArchive(
-        filename, 
+        filename,
         data.map((d) => d.filePath),
         missionId,
         res.locals.user.tenantId._id,

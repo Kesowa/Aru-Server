@@ -239,7 +239,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
         const zipFile = await createArchive(
-          filename, 
+          filename,
           d.map((d) => d.filePath),
           missionId,
           res.locals.user.tenantId._id,
@@ -267,7 +267,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
         const archive = await createArchive(
-          filename, 
+          filename,
           d.map((layer) => layer.filePath),
           missionId,
           res.locals.user.tenantId._id,
@@ -353,7 +353,12 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
             // update size details
             await Tenant.updateOne(
               { _id: docs[i].tenantId },
-              { $inc: { actualSize: docs[i].fileSize - oldSize, allDocumentsSize: docs[i].fileSize - oldSize } }
+              {
+                $inc: {
+                  actualSize: docs[i].fileSize - oldSize,
+                  allDocumentsSize: docs[i].fileSize - oldSize,
+                },
+              }
             );
             await Mission.updateOne(
               { _id: docs[i].missionId },

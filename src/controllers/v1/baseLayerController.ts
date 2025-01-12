@@ -965,7 +965,7 @@ export const updateBaseLayerByUploadedFile = async (
 
     baseLayer.featureCount = bgjson.features.length;
     await baseLayer.save();
-    
+
     const newPath = pathUtils.docPath(Directory.VECTOR, layername);
 
     if (baseLayer.isPublic) {
@@ -974,10 +974,7 @@ export const updateBaseLayerByUploadedFile = async (
       await deleteFeatureSearchIndex(baseLayer.layerpath);
     }
 
-    const updatedBaseLayer = await baseLayer.updateFile(
-      newPath,
-      size
-    );
+    const updatedBaseLayer = await baseLayer.updateFile(newPath, size);
 
     await deleteDirFileUsingName(Directory.ROOT, req.body.filePath);
 

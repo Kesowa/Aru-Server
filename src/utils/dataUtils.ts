@@ -289,7 +289,7 @@ export const saveCSV = async (
 };
 
 export const createArchive = async (
-  filename: string, 
+  filename: string,
   files: pathUtils.DocPath[],
   missionId: Types.ObjectId | string,
   tenantId: Types.ObjectId | string,

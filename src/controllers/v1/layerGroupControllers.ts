@@ -126,7 +126,7 @@ export const deleteLayerGroup = async (req: Request, res: AuthResponse) => {
     });
     if (doc) {
       const layers = await Layer.find({
-        _id : { $in: doc.layers },
+        _id: { $in: doc.layers },
         tenantId: res.locals.user.tenantId._id,
       });
       for (const layer of layers) {
