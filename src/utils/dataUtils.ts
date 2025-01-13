@@ -87,8 +87,9 @@ export const saveVectorLayer = async (
   const featureTypes = new Set<GeoJson["type"]>();
   geojsonData.features.forEach((feature) => {
     feature.properties.sys_id = new ObjectId().toHexString();
-    featureTypes.add(feature.type);
+    featureTypes.add(feature.geometry.type);
   });
+  console.log({featureTypes});
   const stringData = JSON.stringify(geojsonData);
   await uploadString(targetPath, stringData);
   return {

@@ -29,38 +29,38 @@ export const createMixedLayerGroup = async (input: createMixedLayerGroupInput) =
   const geojsonData = JSON.parse(await readToString(input.geojson)) as GeoJson;
   const featureLayers = new Map(
     input.featureTypes.map(ft =>
-      [ft, { type: ft, name: input.name, features: [], }]
+      [ft, { type: "FeatureCollection", name: input.name, features: [], }]
     )
   );
-  geojsonData.features.forEach(f => featureLayers.get(f.type)?.features.push(f));
+  geojsonData.features.forEach(f => featureLayers.get(f.geometry.type)?.features.push(Object.assign(f, f.geometry.type == "Point" ? { properties: { color: f.properties["stroke"] } } : { properties: { color: f.properties["stroke"], icon: "MarkerIcon" } })));
   const layerGroup = await layerGroupModel.create({
     name: input.name,
     createdBy: input.userId,
     tenantId: input.tenantId,
     layers: []
   });
-  const layerPromises = Array.from(featureLayers.values())
-    .map(async layer => {
-       const vectorLayer = await saveVectorLayer(layer, { inheritColor: true });
-       const layerDoc = await layerModel.create({
-         name: input.name,
-         type: "Vector",
-         vector: vectorPropMap[layer.type],
-         color: vectorLayer.flagColor,
-         layerpath: vectorLayer.geojsonPath,
-         fileSize: vectorLayer.size,
-         featureCount: vectorLayer.featureCount,
-         layerGroupId: layerGroup._id,
-         captureDate: input.captureDate,
-         missionId: input.missionId,
-         tenantId: input.tenantId,
-         createdBy: input.userId,
-         updatedBy: input.userId,
-       });
-       await layerGroup.updateOne({ $addToSet: { layers: layerDoc._id }});
-       return layerDoc;
+  const layerPromises = Array.from(featureLayers.entries())
+    .map(async ([layerType, layer]) => {
+      const vectorLayer = await saveVectorLayer(layer, { inheritColor: true });
+      const layerDoc = await layerModel.create({
+        name: input.name,
+        type: "Vector",
+        vector: vectorPropMap[layerType],
+        color: vectorLayer.flagColor,
+        layerpath: vectorLayer.geojsonPath,
+        fileSize: vectorLayer.size,
+        featureCount: vectorLayer.featureCount,
+        layerGroupId: layerGroup._id,
+        captureDate: input.captureDate,
+        missionId: input.missionId,
+        tenantId: input.tenantId,
+        createdBy: input.userId,
+        updatedBy: input.userId,
+      });
+      await layerGroup.updateOne({ $addToSet: { layers: layerDoc._id } });
+      return layerDoc;
     });
-    const layers = await Promise.all(layerPromises);
-    await deleteObj(input.geojson);
-    return layers;
+  const layers = await Promise.all(layerPromises);
+  await deleteObj(input.geojson);
+  return layers;
 }

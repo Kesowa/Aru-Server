@@ -109,7 +109,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       const { name, type, vector, captureDate, missionId, layerGroupId } =
         req.body;
       if (featureTypes.length > 1) {
-        layer = await createMixedLayerGroup({
+        layer = (await createMixedLayerGroup({
           name,
           missionId,
           tenantId: res.locals.user.tenantId._id,
@@ -117,9 +117,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
           geojson: geojsonPath,
           featureTypes,
           captureDate,
-        })[0];
+        }))[0];
       } else {
-        layer = new Layer({
+        layer = await Layer.create({
           name,
           type,
           vector,
@@ -191,7 +191,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         Directory.RASTER,
         fileDoc.metadata.objectkey
       );
-      layer = new Layer({
+      layer = await Layer.create({
         name,
         type: "Raster",
         raster: rasterType,
@@ -215,7 +215,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       });
     }
     if (layer) {
-      const savedDoc = await layer.save();
+      const savedDoc = layer;
 
       if (layer.raster == rasterProps.CESIUM_3D) {
         // Extract zip, locate tileset, move to correct location
