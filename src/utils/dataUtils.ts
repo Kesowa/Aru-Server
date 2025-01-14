@@ -20,6 +20,7 @@ import {
   uploadString,
 } from "./objectStorage";
 import Fuse from "fuse.js";
+import { truncate } from "@turf/turf";
 
 const getFlagColor = (geojson: GeoJson) => {
   const colorSet = new Set(
@@ -87,6 +88,7 @@ export const saveVectorLayer = async (
   const featureTypes = new Set<GeoJson["type"]>();
   geojsonData.features.forEach((feature) => {
     feature.properties.sys_id = new ObjectId().toHexString();
+    feature.geometry.coordinates = truncate(feature, { coordinates: 2 }).geometry.coordinates;
     featureTypes.add(feature.geometry.type);
   });
   console.log({featureTypes});

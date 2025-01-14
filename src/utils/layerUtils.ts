@@ -32,7 +32,7 @@ export const createMixedLayerGroup = async (input: createMixedLayerGroupInput) =
       [ft, { type: "FeatureCollection", name: input.name, features: [], }]
     )
   );
-  geojsonData.features.forEach(f => featureLayers.get(f.geometry.type)?.features.push(Object.assign(f, f.geometry.type == "Point" ? { properties: { color: f.properties["stroke"] } } : { properties: { color: f.properties["stroke"], icon: "MarkerIcon" } })));
+  geojsonData.features.forEach(f => featureLayers.get(f.geometry.type)?.features.push(Object.assign(f, f.geometry.type == "Point" ? { properties: { ...f.properties, color: f.properties["stroke"] } } : { properties: { ...f.properties, color: f.properties["stroke"], icon: "MarkerIcon" } })));
   const layerGroup = await layerGroupModel.create({
     name: input.name,
     createdBy: input.userId,
