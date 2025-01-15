@@ -29,10 +29,23 @@ export const createMixedLayerGroup = async (input: createMixedLayerGroupInput) =
   const geojsonData = JSON.parse(await readToString(input.geojson)) as GeoJson;
   const featureLayers = new Map(
     input.featureTypes.map(ft =>
-      [ft, { type: "FeatureCollection", name: input.name, features: [], }]
+      [ft, {
+        type: "FeatureCollection",
+        name: input.name,
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+          }
+        },
+        features: [],
+      }]
     )
   );
-  geojsonData.features.forEach(f => featureLayers.get(f.geometry.type)?.features.push(Object.assign(f, f.geometry.type == "Point" ? { properties: { ...f.properties, color: f.properties["stroke"] } } : { properties: { ...f.properties, color: f.properties["stroke"], icon: "MarkerIcon" } })));
+  for (const feature of geojsonData.features) {
+    if (feature.properties["stroke"]) feature.properties.color = feature.properties["stroke"];
+    featureLayers.get(feature.geometry.type).features.push(feature);
+  }
   const layerGroup = await layerGroupModel.create({
     name: input.name,
     createdBy: input.userId,
@@ -41,7 +54,12 @@ export const createMixedLayerGroup = async (input: createMixedLayerGroupInput) =
   });
   const layerPromises = Array.from(featureLayers.entries())
     .map(async ([layerType, layer]) => {
-      const vectorLayer = await saveVectorLayer(layer, { inheritColor: true });
+      const vectorLayer = await saveVectorLayer(
+        layer,
+        layerType == "Point"
+        ? { inheritColor: true, icon: "MarkerIcon" }
+        : { inheritColor: true }
+      );
       const layerDoc = await layerModel.create({
         name: input.name,
         type: "Vector",
