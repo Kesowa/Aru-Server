@@ -94,7 +94,7 @@ export const deleteDir = async (dirKey: string) => {
     keyPath(dirKey),
     true
   );
-  entries.on("data", async function (obj) {
+  entries.on("data", async function(obj) {
     await deleteObj(obj.name);
   });
   await finished(entries);
@@ -108,16 +108,17 @@ export const archive = async (objKeys: string[]) => {
   const archive = archiver("zip", {
     zlib: { level: 9 }, // Sets the compression level.
   });
-  objKeys.forEach(async (objKey) => {
+  await Promise.all(objKeys.map(async (objKey) => {
     const stream = await minioClient.getObject(S3_BUCKET_NAME, keyPath(objKey));
     archive.append(stream, {
       name: objKey,
     });
-  });
+  })
+  );
   const archivePath = keyPath(docPath(Directory.TEMP, randomUUID() + ".zip"));
   await Promise.all([
-    await minioClient.putObject(S3_BUCKET_NAME, archivePath, archive),
-    await archive.finalize(),
+    minioClient.putObject(S3_BUCKET_NAME, archivePath, archive),
+    archive.finalize(),
   ]);
   return archivePath;
 };
