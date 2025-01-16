@@ -319,7 +319,13 @@ layerSchema.methods.delete = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: -doc.fileSize, allLayerSize: -doc.fileSize, actualLayerCount: -1 } }
+    {
+      $inc: {
+        actualSize: -doc.fileSize,
+        allLayerSize: -doc.fileSize,
+        actualLayerCount: -1,
+      },
+    }
   );
   await Mission.updateOne(
     { _id: doc.missionId },
