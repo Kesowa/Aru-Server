@@ -108,19 +108,21 @@ export const archive = async (objKeys: string[]) => {
   const archive = archiver("zip", {
     zlib: { level: 9 }, // Sets the compression level.
   });
-
-  for (const objKey of objKeys) {
-    const stream = await minioClient.getObject(S3_BUCKET_NAME, keyPath(objKey));
-    archive.append(stream, {
-      name: objKey,
-    });
-  }
-
+  await Promise.all(
+    objKeys.map(async (objKey) => {
+      const stream = await minioClient.getObject(
+        S3_BUCKET_NAME,
+        keyPath(objKey)
+      );
+      archive.append(stream, {
+        name: objKey,
+      });
+    })
+  );
   const archivePath = keyPath(docPath(Directory.TEMP, randomUUID() + ".zip"));
-
-  await archive.finalize();
-
-  await minioClient.putObject(S3_BUCKET_NAME, archivePath, archive);
-
+  await Promise.all([
+    minioClient.putObject(S3_BUCKET_NAME, archivePath, archive),
+    archive.finalize(),
+  ]);
   return archivePath;
 };
