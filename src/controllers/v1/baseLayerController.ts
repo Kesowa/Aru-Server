@@ -975,9 +975,7 @@ export const updateBaseLayerByUploadedFile = async (
     }
 
     const updatedBaseLayer = await baseLayer.updateFile(newPath, size);
-
     await deleteDirFileUsingName(Directory.ROOT, req.body.filePath);
-
     res.json({
       success: true,
       message: "Layer has been updated successfully",
