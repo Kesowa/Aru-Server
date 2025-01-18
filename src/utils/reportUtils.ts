@@ -196,7 +196,7 @@ export const generatePlotReport = async (req: PlotReportRequest) => {
     missionId: req.metadata.mission_id,
     name: req.metadata.filename,
   });
-  if (doc) doc.delete();
+  if (doc) await doc.delete();
   ReportEvents.emit(PLOT_REQ_QUEUE, req);
   logger.info(req, "SENT PLOT REPORT GENERATION REQUEST");
 };
@@ -207,7 +207,7 @@ export const generateBlockReport = async (req: BlockReportRequest) => {
     missionId: req.metadata.mission_id,
     name: req.metadata.filename,
   });
-  if (doc) doc.delete();
+  if (doc) await doc.delete();
   ReportEvents.emit(BLOCK_REQ_QUEUE, req);
   logger.info(req, "SENT BLOCK REPORT GENERATION REQUEST");
 };

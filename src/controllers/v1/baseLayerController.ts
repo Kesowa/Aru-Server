@@ -31,6 +31,7 @@ import {
   saveGeojson,
   saveMultiGeojson,
   saveVectorLayer,
+  deleteFeatureSearchIndex,
 } from "../../utils/dataUtils";
 import { LazToTiles3D } from "../../utils/pointcloud";
 import UploadTask from "../../models/uploadTask";
@@ -934,11 +935,6 @@ export const updateBaseLayerByUploadedFile = async (
       newFeatures.push(feature);
     }
 
-    if (baseLayer.isPublic) {
-      // for public layer, re-generate search index after feature editing
-      await saveFeatureSearchIndex(baseLayer.layerpath);
-    }
-
     bgjson.features = [...bgjson.features, ...newFeatures];
 
     const dataString = JSON.stringify(bgjson);
@@ -969,13 +965,17 @@ export const updateBaseLayerByUploadedFile = async (
 
     baseLayer.featureCount = bgjson.features.length;
     await baseLayer.save();
-    const updatedBaseLayer = await baseLayer.updateFile(
-      pathUtils.docPath(Directory.VECTOR, layername),
-      size
-    );
 
+    const newPath = pathUtils.docPath(Directory.VECTOR, layername);
+
+    if (baseLayer.isPublic) {
+      // for public layer, re-generate search index after feature editing
+      await saveFeatureSearchIndex(newPath);
+      await deleteFeatureSearchIndex(baseLayer.layerpath);
+    }
+
+    const updatedBaseLayer = await baseLayer.updateFile(newPath, size);
     await deleteDirFileUsingName(Directory.ROOT, req.body.filePath);
-
     res.json({
       success: true,
       message: "Layer has been updated successfully",

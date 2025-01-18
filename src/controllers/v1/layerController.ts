@@ -1815,7 +1815,8 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       missionId: req.query.missionId,
       tenantId: res.locals.user.tenantId._id,
     });
-    const missionId: any = req.query.missionId;
+    const missionId: string = String(req.query.missionId);
+    const filename = "allLayers-" + missionId + ".zip";
     if (d.length) {
       res.status(200).json({
         status: true,
@@ -1823,7 +1824,13 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
       });
       missionSpecificSocket.to(missionId).emit("LAYER_ZIP_START");
       try {
-        const archive = await createArchive(d.map((layer) => layer.layerpath));
+        const archive = await createArchive(
+          filename,
+          d.map((layer) => layer.layerpath),
+          missionId,
+          res.locals.user.tenantId._id,
+          res.locals.user._id
+        );
         missionSpecificSocket
           .to(missionId)
           .emit("LAYER_ZIP_COMPLETED", archive);
@@ -1869,20 +1876,32 @@ export const downloadassetbyIDtoKml = async (
 
 export const gen2x = async (req: Request, res: AuthResponse) => {
   {
-    const docs = await layerFiles.find<{ fileType: string; filePath: string }>(
+    const docs = await layerFiles.find(
       {
         tenantId: res.locals.user.tenantId,
       },
       {
         fileType: 1,
         filePath: 1,
+        fileSize: 1,
       }
     );
     if (docs.length) {
-      for (let i = 0; i < docs.length; i++) {
-        if (docs[i].fileType == "image/jpeg") {
-          await saveThumbnails(docs[i].filePath);
+      for (const doc of docs) {
+        if (doc.fileType == "image/jpeg" || doc.fileType == "image/png") {
+          const thumbs = await saveThumbnails(doc.filePath);
+          doc.fileSize += thumbs.size;
+          await doc.save();
         }
+        // update size details
+        await Tenant.updateOne(
+          { _id: doc.tenantId },
+          { $inc: { actualSize: doc.fileSize, allLayerFileSize: doc.fileSize } }
+        );
+        await Layer.updateOne(
+          { _id: doc.layerId },
+          { $inc: { fileSize: doc.fileSize } }
+        );
       }
       res.status(200).json({
         status: true,

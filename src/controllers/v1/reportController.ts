@@ -5,7 +5,6 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { vectorProps } from "../../schemas/vectorprops";
 import { DirPath, Directory } from "../../constants";
-import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
 import {
   entityCategories,
@@ -133,16 +132,9 @@ export const generateBlockReport = async (
           const filename = `block_report | ${
             blockFeature.properties.blockName || "blockName"
           }.docx`;
-          const reportExists = await Document.exists({
-            tenantId: res.locals.user.tenantId._id,
-            missionId,
-            name: filename,
-          });
-          if (reportExists) {
-            req.log.warn(
-              "block report exists, skipping. filename: " + filename
-            );
-          }
+
+          // If report exists, it will get deleted and new updated report will be generated
+          // Logic implemented in generateBlockReport function in reportUtils
 
           const processedLayerData: {
             area: number;
@@ -679,16 +671,10 @@ export const generatePlotReport = async (
             } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${
               plotFeature.properties.sys_id
             }.docx`;
-            const reportExists = await Document.exists({
-              tenantId: res.locals.user.tenantId._id,
-              missionId,
-              name: filename,
-            });
-            if (reportExists) {
-              req.log.warn(
-                "plot report exists, skipping. filename: " + filename
-              );
-            }
+
+            // If report exists, it will get deleted and new updated report will be generated
+            // Logic implemented in generatePlotReport function in reportUtils
+
             const plotProperties = plotFeature.properties;
 
             // ******************** PLOT DETAILS ***********************

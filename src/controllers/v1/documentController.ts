@@ -10,6 +10,7 @@ import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { createArchive, permPath } from "../../utils/dataUtils";
 import UploadTask from "../../models/uploadTask";
+import Tenant from "../../models/tenant";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
@@ -224,6 +225,7 @@ export const getImagesbymissionID = async (req: Request, res: AuthResponse) => {
 export const zipbymissionId = async (req: Request, res: AuthResponse) => {
   {
     const missionId = req.query.missionId as string;
+    const filename = "allDocuments-" + missionId + ".zip";
     if (req.query.folderName == "rawData") {
       const d = await Document.find({
         missionId: req.query.missionId,
@@ -236,7 +238,13 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const zipFile = await createArchive(d.map((d) => d.filePath));
+        const zipFile = await createArchive(
+          filename,
+          d.map((d) => d.filePath),
+          missionId,
+          res.locals.user.tenantId._id,
+          res.locals.user._id
+        );
         missionSpecificSocket
           .to(missionId)
           .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
@@ -258,7 +266,13 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const archive = await createArchive(d.map((layer) => layer.filePath));
+        const archive = await createArchive(
+          filename,
+          d.map((layer) => layer.filePath),
+          missionId,
+          res.locals.user.tenantId._id,
+          res.locals.user._id
+        );
         try {
           missionSpecificSocket
             .to(missionId)
@@ -285,7 +299,18 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
       });
       if (doc) {
-        await saveThumbnails(doc.filePath);
+        const thumbs = await saveThumbnails(doc.filePath);
+        doc.fileSize += thumbs.size;
+        await doc.save();
+        // update size details
+        await Tenant.updateOne(
+          { _id: doc.tenantId },
+          { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } }
+        );
+        await Mission.updateOne(
+          { _id: doc.missionId },
+          { $inc: { size: doc.fileSize } }
+        );
         res.status(200).json({
           status: true,
           message: `Successfully generated 2x files`,
@@ -322,12 +347,22 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
         if (await checkFileExists(newFilename)) {
           const size: number = await getFileSize(newFilename);
           if (size != docs[i].fileSize) {
-            await Document.updateOne(
+            const oldSize = docs[i].fileSize;
+            docs[i].fileSize = size;
+            await docs[i].save();
+            // update size details
+            await Tenant.updateOne(
+              { _id: docs[i].tenantId },
               {
-                _id: docs[i]._id,
-              },
-              { fileSize: size },
-              { upsert: true, useFindAndModify: false }
+                $inc: {
+                  actualSize: docs[i].fileSize - oldSize,
+                  allDocumentsSize: docs[i].fileSize - oldSize,
+                },
+              }
+            );
+            await Mission.updateOne(
+              { _id: docs[i].missionId },
+              { $inc: { size: docs[i].fileSize - oldSize } }
             );
           }
         } else {

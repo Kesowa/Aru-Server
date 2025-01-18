@@ -2,9 +2,6 @@ import { Request } from "express";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import LayerGroup from "../../models/layerGroup";
 import Layer from "../../models/layer";
-import Tenant from "../../models/tenant";
-import layerFiles from "../../models/layerFiles";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { ILayer } from "../../schemas/layer";
 
 export const createLayerGroup = async (req: Request, res: AuthResponse) => {
@@ -128,42 +125,12 @@ export const deleteLayerGroup = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (doc) {
-      for (let i = 0; i < doc.layers.length; i++) {
-        // await Layer.deleteMany({ layerGroupId : Types.ObjectId(req.query._id) ,tenantId: Types.ObjectId(res.locals.user.tenantId._id) });
-        const d = await Layer.findOne({
-          _id: doc.layers[i],
-          tenantId: res.locals.user.tenantId._id,
-        });
-        if (d) {
-          const conf = await deletePublicFileUsingPath(d.layerpath);
-          if (conf) {
-            req.log.info("Files deleted");
-          } else {
-            req.log.warn("Files does not exist");
-          }
-          const data = await d.delete();
-          const tenant = await Tenant.findOne({
-            _id: res.locals.user.tenantId,
-          });
-          if (tenant.actualLayerCount) {
-            tenant.actualLayerCount = Number(tenant.actualLayerCount) - 1;
-            await tenant.save();
-          }
-          const layerFileData = await layerFiles.find({
-            layerId: doc.layers[i],
-            tenantId: res.locals.user.tenantId._id,
-          });
-          for (const f of layerFileData) {
-            await f.delete();
-          }
-          // if (data) {
-          //   res.status(200).json({
-          //     status: true,
-          //     message: "Layer successfully deleted",
-          //     data: data,
-          //   });
-          // }
-        }
+      const layers = await Layer.find({
+        _id: { $in: doc.layers },
+        tenantId: res.locals.user.tenantId._id,
+      });
+      for (const layer of layers) {
+        await layer.delete();
       }
       return res.status(200).json({
         status: true,

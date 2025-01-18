@@ -42,12 +42,6 @@ export const createAlert = async (
     });
     const { locationName, missionId, locationId, flightId, pcount, type } =
       req.body;
-    if (req.body.location) {
-      req.body.location = {
-        lat: req.body.location.lat ? req.body.location.lat : 0,
-        long: req.body.location.long ? req.body.location.long : 0,
-      };
-    }
     const fullPath = await permPath(
       Directory.ALERT_IMAGES,
       fileDoc.metadata.objectkey
@@ -81,13 +75,6 @@ export const createAlert = async (
         ...data,
         createdBy: res.locals.user,
       });
-    const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
-    if (data && tenant.actualAlertCount >= 0) {
-      await Tenant.updateOne(
-        { _id: res.locals.user.tenantId },
-        { $inc: { actualAlertCount: 1 } }
-      );
-    }
     await fileDoc.delete();
     res.status(201).json({
       status: true,

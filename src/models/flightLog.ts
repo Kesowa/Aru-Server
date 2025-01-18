@@ -1,6 +1,12 @@
 import { model } from "mongoose";
-import flightLogSchema, { IFlightLog } from "../schemas/flightLog";
+import flightLogSchema, {
+  FlightLogModel,
+  IFlightLog,
+} from "../schemas/flightLog";
 
-const flightLog = model<IFlightLog>("flightLog", flightLogSchema);
+const flightLog = model<IFlightLog, FlightLogModel>(
+  "flightLog",
+  flightLogSchema
+);
 
 export default flightLog;
