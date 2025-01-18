@@ -6,7 +6,6 @@ import layerFiles from "../../models/layerFiles";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
 import { ObjectId } from "bson";
-import ObjectsToCsv from "objects-to-csv";
 import Mission from "../../models/mission";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import {
@@ -45,8 +44,8 @@ import {
   deleteFeatureSearchIndex,
   permPath,
   saveAsKML,
+  saveCSV,
   saveFeatureSearchIndex,
-  saveFile,
   saveGeojson,
   saveVectorLayer,
 } from "../../utils/dataUtils";
@@ -54,7 +53,6 @@ import { LazToTiles3D } from "../../utils/pointcloud";
 import { decompressZip } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { readToBuffer } from "../../utils/objectStorage";
-import { randomUUID } from "crypto";
 
 // ********* create ***********
 
@@ -197,6 +195,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
     }
     if (layer) {
       const savedDoc = await layer.create();
+      await fileDoc.delete();
 
       if (layer.raster == rasterProps.CESIUM_3D) {
         // Extract zip, locate tileset, move to correct location
@@ -547,6 +546,7 @@ export const uploadmultiplefile = async (req: Request, res: AuthResponse) => {
     });
 
     const savedDoc = await featureFile.create();
+    await fileDoc.delete();
     if (savedDoc) {
       res.status(201).json({
         status: true,
@@ -1279,12 +1279,13 @@ export const getFeatureCsvByLayerIdx = async (
           clone.push(omit(geoArray[j], ["sys_id", "icon", "color"]));
         }
       }
-      const csv = new ObjectsToCsv(clone);
-      const csvData = await csv.toString();
-      const { filepath } = await saveFile(
-        Directory.TEMP,
-        randomUUID() + ".csv",
-        csvData
+      const filename = "features-" + String(result._id) + ".csv";
+      const { filepath } = await saveCSV(
+        filename,
+        clone,
+        result.missionId,
+        res.locals.user.tenantId._id,
+        res.locals.user._id
       );
       res.json({
         status: true,
@@ -1322,6 +1323,7 @@ export const uploadfiletoLayer = async (req: Request, res: AuthResponse) => {
       updatedBy: res.locals.user._id,
     });
     const savedDoc = await layerfile.create();
+    await fileDoc.delete();
     if (savedDoc) {
       res.status(201).json({
         status: true,
@@ -1593,6 +1595,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           updatedBy: res.locals.user._id,
         });
         const savedDoc = await featureFile.create();
+        await fileDocs[j].delete();
         if (savedDoc) {
           message.data.push(savedDoc);
           flaggedIndex.push(closestPoint.properties.featureIndex);
@@ -1639,6 +1642,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
           updatedBy: res.locals.user._id,
         });
         const savedDoc = await featureFile.create();
+        await uploadFile.delete();
         if (savedDoc) {
           message.data.push(savedDoc);
           flaggedIndex.push(matchedFeatureIndex);
@@ -1847,7 +1851,14 @@ export const downloadassetbyIDtoKml = async (
       tenantId: res.locals.user.tenantId._id,
     });
     const geojson = await readGeoJson(DirPath(Directory.ROOT, doc.layerpath));
-    const downloadlink = await saveAsKML(geojson);
+    const filename = String(doc._id) + ".kml";
+    const { filepath: downloadlink } = await saveAsKML(
+      filename,
+      geojson,
+      doc.missionId,
+      res.locals.user.tenantId._id,
+      res.locals.user._id
+    );
     res.json({
       status: true,
       message: `Download Link generated for LayerID: ${id}`,
@@ -1965,6 +1976,7 @@ export const picktoMapUseForLayerCreate = async (
     }
   >[] = [];
   const allImageData: {
+    taskId: string;
     originalname: string;
     sys_id: string;
     mimetype: string;
@@ -2013,6 +2025,7 @@ export const picktoMapUseForLayerCreate = async (
         path: fileDocs[i].metadata.objectkey,
         coordinates: [long, lat],
         size: fileDocs[i].metadata.filesize,
+        taskId: fileDocs[i]._id.toString(),
       });
       if (alreadyRegistered) {
         continue;
@@ -2038,6 +2051,7 @@ export const picktoMapUseForLayerCreate = async (
     } else {
       await deletePublicFileUsingPath(fileDocs[i].metadata.objectkey);
       badImages.push(basename(fileDocs[i].metadata.objectkey));
+      await fileDocs[i].delete();
     }
   }
   if (features.length) {
@@ -2060,6 +2074,7 @@ export const picktoMapUseForLayerCreate = async (
     if (ress !== true) {
       for (let i = 0; i < allImageData.length; i++) {
         await deletePublicFileUsingPath(allImageData[i].path);
+        await UploadTask.findByIdAndDelete(allImageData[i].taskId);
       }
       return res.status(403).json({
         status: false,
@@ -2110,6 +2125,7 @@ export const picktoMapUseForLayerCreate = async (
           updatedBy: res.locals.user._id,
         });
         const savedDoc = await featureFile.create();
+        await UploadTask.findByIdAndDelete(allImageData[i].taskId);
         if (savedDoc) flag = true;
       }
       if (flag == true) {

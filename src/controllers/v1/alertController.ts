@@ -91,6 +91,7 @@ export const createAlert = async (
         { $inc: { actualAlertCount: 1 } }
       );
     }
+    await fileDoc.delete();
     res.status(201).json({
       status: true,
       message: "New alert created",
@@ -855,6 +856,7 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
         { $inc: { actualAlertCount: 1 } }
       );
     }
+    await imgDoc.delete();
     res.status(201).json({
       status: true,
       message: "New alert created",

@@ -29,9 +29,7 @@ import {
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
-import { saveFile } from "../../utils/dataUtils";
-import { randomUUID } from "crypto";
-import ObjectsToCsv from "objects-to-csv";
+import { saveCSV } from "../../utils/dataUtils";
 import { rasterProps } from "../../schemas/rasterprops";
 import {
   PlotPropertiesSchema,
@@ -493,12 +491,13 @@ export const generatePlotReport = async (
             });
           }
         });
-        const csv = new ObjectsToCsv(rows);
-        const csvData = await csv.toString();
-        const { filepath } = await saveFile(
-          Directory.TEMP,
-          randomUUID() + ".csv",
-          csvData
+        const filename = "report-errors-" + missionId + ".csv";
+        const { filepath } = await saveCSV(
+          filename,
+          rows,
+          missionId,
+          res.locals.user.tenantId._id,
+          res.locals.user._id
         );
         return res.json({
           status: false,
