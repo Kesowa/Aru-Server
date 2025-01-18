@@ -12,15 +12,11 @@ import {
 import Alert from "../../models/alert";
 import Document from "../../models/document";
 import VOD from "../../models/vod";
-import path from "path";
 import Tenant from "../../models/tenant";
 import ObjectsToCsv from "objects-to-csv";
 import layerFiles from "../../models/layerFiles";
 import layerGroupModel from "../../models/layerGroup";
-import {
-  deleteDirFileUsingName,
-  deletePublicFileUsingPath,
-} from "../../utils/fileDeleteUtils";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IMissionType } from "../../schemas/missonType";
@@ -309,23 +305,8 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
             layerId: deletedLayerData[i],
             tenantId: res.locals.user.tenantId._id,
           });
-          if (layerFileData.length) {
-            for (let j = 0; j < layerFileData.length; j++) {
-              await deletePublicFileUsingPath(layerFileData[j].filePath);
-              const fileName = path.parse(layerFileData[j].filePath).base;
-              await deleteDirFileUsingName(
-                Directory.GEOJSON_IMAGES,
-                "1x_" + fileName
-              );
-              await deleteDirFileUsingName(
-                Directory.GEOJSON_IMAGES,
-                "2x_" + fileName
-              );
-            }
-            await layerFiles.deleteMany({
-              layerId: deletedLayerData[i],
-              tenantId: res.locals.user.tenantId._id,
-            });
+          for (const f of layerFileData) {
+            await f.delete();
           }
           const lg = deletedLayerData[i].layerGroupId;
           if (lg) {
