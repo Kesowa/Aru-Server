@@ -4,6 +4,7 @@ import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
 import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
 import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
+import Mission from "../models/mission";
 
 interface ILayerFileMethods {
   create(): Promise<ILayerFile>;
@@ -139,9 +140,12 @@ layerFilesSchema.methods.create = async function () {
     { _id: doc.tenantId },
     { $inc: { actualSize: doc.fileSize, allLayerFileSize: doc.fileSize } }
   );
-  await Layer.updateOne(
-    { _id: doc.layerId },
-    { $inc: { fileSize: doc.fileSize } }
+  const layerDoc = await Layer.findById(doc.layerId);
+  layerDoc.fileSize += doc.fileSize;
+  await layerDoc.save();
+  await Mission.updateOne(
+    { _id: layerDoc.missionId },
+    { $inc: { size: doc.fileSize } }
   );
   // save the document
   return await doc.save();
@@ -159,9 +163,12 @@ layerFilesSchema.methods.delete = async function () {
     { _id: doc.tenantId },
     { $inc: { actualSize: -doc.fileSize, allLayerFileSize: -doc.fileSize } }
   );
-  await Layer.updateOne(
-    { _id: doc.layerId },
-    { $inc: { fileSize: -doc.fileSize } }
+  const layerDoc = await Layer.findById(doc.layerId);
+  layerDoc.fileSize -= doc.fileSize;
+  await layerDoc.save();
+  await Mission.updateOne(
+    { _id: layerDoc.missionId },
+    { $inc: { size: -doc.fileSize } }
   );
   // delete the document
   await doc.deleteOne();

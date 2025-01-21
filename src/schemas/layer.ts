@@ -283,6 +283,7 @@ layerSchema.methods.delete = async function () {
     });
     for (const f of files) {
       await f.delete();
+      doc.fileSize -= f.fileSize;
     }
     await LayerFiles.updateMany(
       { layers: doc._id },

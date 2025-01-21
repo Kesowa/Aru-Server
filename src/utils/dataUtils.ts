@@ -247,7 +247,7 @@ export const saveAsKML = async (
   const kmlDoc = new Document({
     name: filename,
     modDate: new Date(),
-    fileSize: size,
+    fileSize: size / (1024 * 1024),
     fileType: "csv",
     folderName: "root1234",
     filePath: filepath,
@@ -275,7 +275,7 @@ export const saveCSV = async (
   const csvDoc = new Document({
     name: filename,
     modDate: new Date(),
-    fileSize: size,
+    fileSize: size / (1024 * 1024),
     fileType: "csv",
     folderName: "root1234",
     filePath: filepath,
@@ -302,7 +302,7 @@ export const createArchive = async (
   const archiveDoc = new Document({
     name: filename,
     modDate: new Date(),
-    fileSize: size,
+    fileSize: size / (1024 * 1024),
     fileType: "csv",
     folderName: "root1234",
     filePath: archivePath,

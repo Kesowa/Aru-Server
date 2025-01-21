@@ -358,7 +358,7 @@ router.post(
 router.patch(
   "/get-feature-csv-by-layerIndex",
   isAuthenticated,
-  body("featureIndex").notEmpty().isArray({ min: 1 }),
+  body("featureIndex").optional().notEmpty().isArray({ min: 1 }),
   body("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FEATURE_LIST, PERMS.LAYER_LIST),

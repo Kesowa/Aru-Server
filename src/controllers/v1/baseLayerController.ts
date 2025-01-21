@@ -939,7 +939,8 @@ export const updateBaseLayerByUploadedFile = async (
 
     const dataString = JSON.stringify(bgjson);
     const layername = randomUUID() + ".geojson";
-    const { size } = await saveFile(Directory.VECTOR, layername, dataString);
+    let { size } = await saveFile(Directory.VECTOR, layername, dataString);
+    size = size / (1024 * 1024);
 
     const docCount = await Tenant.findById(
       res.locals.user.tenantId._id

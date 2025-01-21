@@ -96,7 +96,7 @@ export async function modGeoJson(
     newPath,
     JSON.stringify(geojson)
   );
-  return { filepath, size };
+  return { filepath, size: size / (1024 * 1024) };
 }
 
 export async function featureAddition(
@@ -123,7 +123,7 @@ export async function featureAddition(
     { _id: editObject.id },
     { featureCount: geojson.features.length }
   );
-  return { filepath, size };
+  return { filepath, size: size / (1024 * 1024) };
 }
 
 export async function editGeoJsonForAll(
@@ -143,7 +143,7 @@ export async function editGeoJsonForAll(
     newPath,
     JSON.stringify(geojson)
   );
-  return { filepath, size };
+  return { filepath, size: size / (1024 * 1024) };
 }
 
 export async function deleteGeoJsonFeature(
@@ -162,5 +162,5 @@ export async function deleteGeoJsonFeature(
     { _id: deleteObject.id },
     { featureCount: geojson.features.length }
   );
-  return { filepath, size };
+  return { filepath, size: size / (1024 * 1024) };
 }
