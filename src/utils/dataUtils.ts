@@ -275,7 +275,7 @@ export const saveCSV = async (
   const csvDoc = new Document({
     name: filename,
     modDate: new Date(),
-    fileSize: size  / (1024 * 1024),
+    fileSize: size / (1024 * 1024),
     fileType: "csv",
     folderName: "root1234",
     filePath: filepath,
