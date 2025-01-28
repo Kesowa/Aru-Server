@@ -150,7 +150,7 @@ The block report generation process can be initiated from the aru web client fro
 - Go to `Missions`
 - Choose a mission from the list and click on it to open the mission data page
 - Go to `Report Generation` tab, and then to `Block` tab under it, and click `Generate Block Report`
-- This sends a request on the `/api/report/block` endpoint on the server, containing the `missionId`
+- This sends a request on the `/apis/v1/report/block` endpoint on the server, containing the `missionId`
 
 ### Server
 
