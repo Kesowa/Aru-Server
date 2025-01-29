@@ -178,13 +178,10 @@ The `tenant-root` users have full authority to view, modify or delete `tenant-st
 
 Note:
 1. Sign Up option is available only in our SaaS product hosted on `aru.kesowa.com`, it is not available on the `nkda` instance; or other tenant specific instances
-2. Currently, the sign up functionality is not fully functional, as tenant needs to pay and buy package to get registered, 
-but payment functionality; although implemented; has not been made functional on the platform yet.
+2. Currently, the sign up functionality is not fully functional, because:
+   - tenant needs to pay and buy package to get registered, but payment functionality; although implemented; has not been made functional on the platform yet
+   - well-defined packages and specifications for them have not been set up yet
 3. So, currently, `super-admin` users create the accounts for the `tenant-root` users, and share them their credentials over email.
-
-The below diagram describes the flow of events that are expected to occur during sign up, once payment is functional:
-
-<img src="" alt="Sign up sequence diagram" style="display: block; margin: 10px auto;">
 
 ## Security measures
 
