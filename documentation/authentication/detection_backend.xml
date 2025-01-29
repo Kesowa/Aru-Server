@@ -1,0 +1,159 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="26.0.10">
+  <diagram name="Page-1" id="e2ql1X_fU9W9NxT2DMQ1">
+    <mxGraphModel dx="1442" dy="716" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-1" target="ZyS4CuN50HFoA3fYXHm8-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-1" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;START&lt;/font&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.terminator;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-2" target="ZyS4CuN50HFoA3fYXHm8-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-2" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Request received on backend&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="200" y="120" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-3" target="ZyS4CuN50HFoA3fYXHm8-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-3" target="ZyS4CuN50HFoA3fYXHm8-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-3" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Is &quot;connect.sid&quot;&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;cookie present ?&lt;/font&gt;&lt;/div&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="440" y="100" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-4" target="ZyS4CuN50HFoA3fYXHm8-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-4" target="ZyS4CuN50HFoA3fYXHm8-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-4" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Is session with the id&lt;/font&gt;&lt;span style=&quot;font-size: 16px; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;present ?&lt;/span&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="920" y="100" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-5" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Extract session id from cookie&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="680" y="120" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-6" target="ZyS4CuN50HFoA3fYXHm8-21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1400" y="160" />
+              <mxPoint x="1400" y="440" />
+              <mxPoint x="350" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-6" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Extract user id, tenant id&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;and email from session&amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;and assign them to `req.session`&lt;/font&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="100" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-8" target="ZyS4CuN50HFoA3fYXHm8-21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1260" y="400" />
+              <mxPoint x="250" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-8" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;No data stored on `req.session`&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="260" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-5" target="ZyS4CuN50HFoA3fYXHm8-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-17" value="YES" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="620" y="120" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-18" value="YES" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1100" y="120" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-19" value="NO" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="550" y="230" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-20" value="NO" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="950" y="230" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-21" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Extract userId from `req.session`&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;(undefined or null if `req.session` has no data)&lt;/font&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="200" y="530" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeWidth=2;" edge="1" parent="1" target="ZyS4CuN50HFoA3fYXHm8-27">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="590" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-27">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-27" target="ZyS4CuN50HFoA3fYXHm8-38">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-27" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Is user with&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;the id&lt;/font&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); background-color: transparent; font-size: 16px;&quot;&gt;&amp;nbsp;present ?&lt;/span&gt;&lt;/div&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="440" y="530" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-28" target="ZyS4CuN50HFoA3fYXHm8-32">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-28" target="ZyS4CuN50HFoA3fYXHm8-38">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-28" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Has user&#39;s&amp;nbsp;&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;account expired?&lt;/span&gt;&lt;/div&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="680" y="530" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-31" value="YES" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="620" y="550" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-32" target="ZyS4CuN50HFoA3fYXHm8-36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-32" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Populate `customPermissions` field of user data&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="920" y="530" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-35" value="NO" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="860" y="550" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-36" target="ZyS4CuN50HFoA3fYXHm8-39">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-36" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Assign user data with populated permissions&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;to `res.locals.user`&lt;/font&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="550" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-38" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Send `401` unauthorized&amp;nbsp; response to frontend&amp;nbsp;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="540" y="730" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-39" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Execute protected controller logic&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="860" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-43" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;END&lt;/font&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.terminator;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="760" y="870" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-46" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-38" target="ZyS4CuN50HFoA3fYXHm8-43">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="690" y="950" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="640" y="900" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-39" target="ZyS4CuN50HFoA3fYXHm8-43">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-48" value="YES" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="780" y="660" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-49" value="NO" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="540" y="650" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-51" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;express-session middleware&lt;/font&gt;" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;width=240;height=30;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="60" width="1000" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-52" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;isAuthenticated middleware&lt;/font&gt;" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;width=240;height=30;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="460" width="1240" height="370" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

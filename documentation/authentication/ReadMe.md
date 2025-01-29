@@ -9,7 +9,7 @@ On the Aru platform, for authentication, a `session-based` approach is used on t
   - [Login functionality](#login-functionality)
   - [Session detection](#session-detection)
     - [On the backend](#on-the-backend)
-    - [On the backend](#on-the-backend-1)
+    - [On the frontend](#on-the-frontend)
   - [Logout functionality](#logout-functionality)
   - [Changing password](#changing-password)
   - [Account creation](#account-creation)
@@ -53,7 +53,7 @@ The `express-session` library is used for maintaining sessions on the backend, a
 
 The below diagram describes the logic for session detection on the backend:
 
-<img src="" alt="Session detection flow chart backend" style="display: block; margin: 10px auto;">
+<img src="detection_backend.svg" alt="Session detection flow chart backend" style="display: block; margin: 10px auto;">
 
 **Steps involved in detecting sessions on backend:**
 
@@ -79,7 +79,7 @@ The below diagram describes the logic for session detection on the backend:
   - After this, all controllers following the `isAuthenticated` middleware are able to access the currently logged in user's data from `res.locals.user`
 
 
-### On the backend
+### On the frontend
 
 The `AuthContext` context, a custom React context created using `React.createContext`, is used for maintaining sessions on the frontend; and a `PrivateWrapper` component is used for detecting them and showing the login form when no valid session is detected.
 
@@ -90,7 +90,7 @@ So, if a valid cookie is present on browser, it will always be sent with fronten
 
 The below diagram describes the logic for session detection on the frontend:
 
-<img src="" alt="Session detection flow chart frontend" style="display: block; margin: 10px auto;">
+<img src="detection_frontend.svg" alt="Session detection flow chart frontend" style="display: block; margin: 10px auto;">
 
 **Steps involved in detecting sessions on frontend:**
 
@@ -170,15 +170,30 @@ The below diagram describes the flow of events that occur during changing passwo
 
 ## Account creation
 
-- account creation:
-  - sign up => no current implementation
-  - tenant-root users and tenant organizations added by super-admins and credentials mailed to them
-  - tenant-staff and tenant-client user accounts created by tenant-root and email sent to them
+Only tenant organizations' admin user can sign up on Aru. That is, only `tenant-root` type users are created through sighup.
+
+The `tenant-staff` and `tenant-client` user accounts are created by `tenant-root` and they receive their credentials through email.
+
+The `tenant-root` users have full authority to view, modify or delete `tenant-staff` and `tenant-client` user accounts under them; including their passwords.
+
+Note:
+1. Sign Up option is available only in our SaaS product hosted on `aru.kesowa.com`, it is not available on the `nkda` instance; or other tenant specific instances
+2. Currently, the sign up functionality is not fully functional, as tenant needs to pay and buy package to get registered, 
+but payment functionality; although implemented; has not been made functional on the platform yet.
+3. So, currently, `super-admin` users create the accounts for the `tenant-root` users, and share them their credentials over email.
+
+The below diagram describes the flow of events that are expected to occur during sign up, once payment is functional:
+
+<img src="" alt="Sign up sequence diagram" style="display: block; margin: 10px auto;">
 
 ## Security measures
 
-- safety measures on user storage
-  - password hashed with bcrypt
-  - when returning clients or user list, password and sensitive credentials excluded from response (since clients can view other clients, staff can view other staff)
-  - stored on cookie, not accessible from javascript XSS scripts (is accessible from dev tools by manual checking but any attack script won't do that)
-  - `AxiosErrorHandler` => auto logout on `500` status error
+- Before storing into the MongoDB database, the passwords of users are hashed with bcrypt
+
+- When storing the session id in cookie using `express-session`, the `secure` option is set to `true`. Thus, the stored cookie is not accessible from any javascript scripts running on the browser. This further reduces the risk of XSS attacks.
+
+- Before returning user data to frontend through `/userdetails`, the password field is made `undefined` to ensure further safety.
+
+- Before returning list of `tenant-client` or `tenant-staff` user data to frontend for the user listing pages; all sensitive information including `password` are removed and excluded from the data; and only required information like `name`, `email`, active status, etc. are included.
+
+- Whenever there is a `500` status error on the backend and the response is received in frontend, an `AxiosErrorHandler` automatically logs out the user and terminates the session, thereby avoiding any unexpected scenario.
