@@ -80,7 +80,7 @@ export const inferVodViolence = async (
         data: "null",
       });
   try {
-    await sendInfer(mp4, inferType,{
+    await sendInfer(mp4, inferType, {
       mission_id: newTask.doc._id.toString(),
       tenant_id: newTask.tenant.toString(),
       user_id: newTask.createdBy.toString(),
