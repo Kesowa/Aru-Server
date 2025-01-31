@@ -10,7 +10,6 @@ import { IPackage } from "../../schemas/package";
 import { WiproInterface } from "../../utils/wipro";
 import { ARU_INSTANCE, Directory, Instance, MAP_KEY } from "../../constants";
 import { logger } from "../../app";
-import { saveThumbnails } from "../../utils/imageUtils";
 import { saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
 const geoMapApi = "https://maps.googleapis.com/maps/api/geocode/json";
@@ -83,8 +82,6 @@ const alertSocketController = (alertSocket: Namespace) => {
         data.image = details.filepath;
         data.locationName = mapResponse?.data?.results[0]?.formatted_address;
         data.createdBy = new Types.ObjectId("6099204ee930187488a1487b");
-        const thumbs = await saveThumbnails(data.image);
-        data.fileSize += thumbs.size;
         data.onSite = true;
         data.note = "Alert captured using net!";
         const alert = new Alert({ ...data });
@@ -98,7 +95,7 @@ const alertSocketController = (alertSocket: Namespace) => {
             Number(docCount.activePackage.storage)
           ) {
             alert
-              .save()
+              .create()
               .then(async (d) => {
                 console.log(`Alert saved with ${d._id}`);
                 // #region WIPRO
@@ -117,13 +114,6 @@ const alertSocketController = (alertSocket: Namespace) => {
               .catch((err) => {
                 console.error(err);
               });
-            const tenant = await Tenant.findOne({ _id: data.tenantId });
-            if (tenant.actualAlertCount >= 0) {
-              await Tenant.updateOne(
-                { _id: data.tenantId },
-                { $inc: { actualAlertCount: 1 } }
-              );
-            }
           } else {
             notificationSocket.to(data.tenantId).emit("ALERT_CREATED", {
               message: new Error(

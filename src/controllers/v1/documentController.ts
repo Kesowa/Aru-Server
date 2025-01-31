@@ -4,17 +4,13 @@ import { Types } from "mongoose";
 import Document from "../../models/document";
 
 import Mission from "../../models/mission";
-import path from "path";
 import { missionSpecificSocket } from "../../socket";
-import {
-  deletePublicFileUsingPath,
-  deletePublicFolderUsingPath,
-} from "../../utils/fileDeleteUtils";
 import { Directory, DirPath } from "../../constants";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
-import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
+import { saveThumbnails } from "../../utils/imageUtils";
 import { createArchive, permPath } from "../../utils/dataUtils";
 import UploadTask from "../../models/uploadTask";
+import Tenant from "../../models/tenant";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   {
@@ -50,16 +46,8 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
     });
-    if (
-      (req.body.folderName == "rawPhotos" || req.body.folderName == "photos") &&
-      (fileDoc.metadata.mimetype == "image/jpeg" ||
-        fileDoc.metadata.mimetype == "image/png")
-    ) {
-      req.log.debug("Uploading Thumbnails");
-      const thumbs = await saveThumbnails(doc.filePath);
-      doc.fileSize = thumbs.size;
-    }
-    const savedDoc = await doc.save();
+    const savedDoc = await doc.create();
+    await fileDoc.delete();
     missionSpecificSocket
       .to(savedDoc.missionId.toString())
       .emit("DOCUMENT_CREATED", savedDoc);
@@ -80,50 +68,20 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
 
 export const deleteDocument = async (req: Request, res: AuthResponse) => {
   {
-    const data = await Document.findOneAndDelete({
+    const data = await Document.findOne({
       _id: req.query.id,
       tenantId: res.locals.user.tenantId._id,
     });
-    if (data.fileType == "pointCloud") {
-      const folderName = path.parse(data.filePath).dir;
-      await deletePublicFolderUsingPath(folderName);
-      const d = await data.delete();
-      if (d) {
-        res.status(200).json({
-          status: true,
-          message: "Document Deleted",
-          data: data,
-        });
-        missionSpecificSocket
-          .to(data.missionId.toString())
-          .emit("DOCUMENT_DELETED", data);
-      } else {
-        res.status(200).json({
-          status: false,
-          message: "Failed to delete documents",
-        });
-      }
-    } else if (data) {
-      if (data.folderName == "rawPhotos" || data.folderName == "photos") {
-        await deleteThumbnails(data.filePath);
-      }
-
-      await deletePublicFileUsingPath(data.filePath);
-      if (data) {
-        res.status(200).json({
-          status: true,
-          message: "Document Deleted",
-          data: data,
-        });
-        missionSpecificSocket
-          .to(data.missionId.toString())
-          .emit("DOCUMENT_DELETED", data);
-      } else {
-        res.status(200).json({
-          status: false,
-          message: "Failed to delete documents",
-        });
-      }
+    if (data) {
+      await data.delete();
+      res.status(200).json({
+        status: true,
+        message: "Document Deleted",
+        data: data,
+      });
+      missionSpecificSocket
+        .to(data.missionId.toString())
+        .emit("DOCUMENT_DELETED", data);
     } else {
       res.json({
         status: false,
@@ -138,7 +96,6 @@ export const deletemultipleDocument = async (
   res: AuthResponse
 ) => {
   {
-    let flag = 0;
     const documents = await Document.find(
       {
         _id: { $in: req.body.id },
@@ -148,31 +105,18 @@ export const deletemultipleDocument = async (
         filePath: 1,
         folderName: 1,
         fileSize: 1,
+        fileType: 1,
+        tenantId: 1,
+        missionId: 1,
       }
     );
-    for (let i = 0; i < documents.length; i++) {
-      const d = documents[i];
-      if (d.folderName == "rawPhotos" || d.folderName == "photos") {
-        await deleteThumbnails(d.filePath);
-      }
-
-      await deletePublicFileUsingPath(d.filePath);
-      const doc = await d.delete();
-      if (doc) {
-        flag = 1;
-      }
+    for (const d of documents) {
+      await d.delete();
     }
-    if (flag == 1) {
-      res.status(200).json({
-        status: true,
-        message: "Documents deleted",
-      });
-    } else {
-      res.status(500).json({
-        status: false,
-        message: "Failed to delete documents",
-      });
-    }
+    res.status(200).json({
+      status: true,
+      message: "Documents deleted",
+    });
   }
 };
 
@@ -281,6 +225,7 @@ export const getImagesbymissionID = async (req: Request, res: AuthResponse) => {
 export const zipbymissionId = async (req: Request, res: AuthResponse) => {
   {
     const missionId = req.query.missionId as string;
+    const filename = "allDocuments-" + missionId + ".zip";
     if (req.query.folderName == "rawData") {
       const d = await Document.find({
         missionId: req.query.missionId,
@@ -293,7 +238,13 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const zipFile = await createArchive(d.map((d) => d.filePath));
+        const zipFile = await createArchive(
+          filename,
+          d.map((d) => d.filePath),
+          missionId,
+          res.locals.user.tenantId._id,
+          res.locals.user._id
+        );
         missionSpecificSocket
           .to(missionId)
           .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
@@ -315,7 +266,13 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
           message: "Zipping Started",
         });
         missionSpecificSocket.to(missionId).emit("DOCUMENT_ZIP_START");
-        const archive = await createArchive(d.map((layer) => layer.filePath));
+        const archive = await createArchive(
+          filename,
+          d.map((layer) => layer.filePath),
+          missionId,
+          res.locals.user.tenantId._id,
+          res.locals.user._id
+        );
         try {
           missionSpecificSocket
             .to(missionId)
@@ -342,7 +299,18 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
         tenantId: res.locals.user.tenantId,
       });
       if (doc) {
-        await saveThumbnails(doc.filePath);
+        const thumbs = await saveThumbnails(doc.filePath);
+        doc.fileSize += thumbs.size;
+        await doc.save();
+        // update size details
+        await Tenant.updateOne(
+          { _id: doc.tenantId },
+          { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } }
+        );
+        await Mission.updateOne(
+          { _id: doc.missionId },
+          { $inc: { size: doc.fileSize } }
+        );
         res.status(200).json({
           status: true,
           message: `Successfully generated 2x files`,
@@ -379,12 +347,22 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
         if (await checkFileExists(newFilename)) {
           const size: number = await getFileSize(newFilename);
           if (size != docs[i].fileSize) {
-            await Document.updateOne(
+            const oldSize = docs[i].fileSize;
+            docs[i].fileSize = size;
+            await docs[i].save();
+            // update size details
+            await Tenant.updateOne(
+              { _id: docs[i].tenantId },
               {
-                _id: docs[i]._id,
-              },
-              { fileSize: size },
-              { upsert: true, useFindAndModify: false }
+                $inc: {
+                  actualSize: docs[i].fileSize - oldSize,
+                  allDocumentsSize: docs[i].fileSize - oldSize,
+                },
+              }
+            );
+            await Mission.updateOne(
+              { _id: docs[i].missionId },
+              { $inc: { size: docs[i].fileSize - oldSize } }
             );
           }
         } else {

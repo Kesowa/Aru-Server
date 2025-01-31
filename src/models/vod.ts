@@ -1,6 +1,6 @@
 import { model } from "mongoose";
-import VODSchema, { IVOD } from "../schemas/VOD";
+import VODSchema, { IVOD, VODModel } from "../schemas/VOD";
 
-const VOD = model<IVOD>("VOD", VODSchema);
+const VOD = model<IVOD, VODModel>("VOD", VODSchema);
 
 export default VOD;

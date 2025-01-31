@@ -12,15 +12,7 @@ import {
 import Alert from "../../models/alert";
 import Document from "../../models/document";
 import VOD from "../../models/vod";
-import path from "path";
 import Tenant from "../../models/tenant";
-import ObjectsToCsv from "objects-to-csv";
-import layerFiles from "../../models/layerFiles";
-import layerGroupModel from "../../models/layerGroup";
-import {
-  deleteDirFileUsingName,
-  deletePublicFileUsingPath,
-} from "../../utils/fileDeleteUtils";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IMissionType } from "../../schemas/missonType";
@@ -28,11 +20,8 @@ import { IInvite } from "../../schemas/invite";
 import { ILocation } from "../../schemas/location";
 import MissionType from "../../models/missionType";
 import Location from "../../models/location";
-import { Directory } from "../../constants";
 import moment from "moment";
-import { saveFile } from "../../utils/dataUtils";
-import { randomUUID } from "crypto";
-import { deleteHlsVodUsingIndex } from "../../utils/videoUtils";
+import { saveCSV } from "../../utils/dataUtils";
 
 //create flight controller
 type CreateMission = {
@@ -248,34 +237,15 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       res.locals.user.userType === "tenant-root" ||
       toBeDeleted.user.toString() === res.locals.user._id.toString()
     ) {
-      // let vodInfo = await VOD.findOne({ missionID: req.body._id });
-      // let alertInfo = await Alert.findOne({ missionId: req.body._id });
-      // let docInfo = await Document.findOne({ missionId: req.body._id });
-      // let layerInfo = await  Layer.findOne({ missionId: req.body._id });
-
-      // if(vodInfo.length || alertInfo.length || docInfo.length || layerInfo.length){
-      //   //file cleanup code here
-      // }
-
       const deletedMission = await Mission.findByIdAndDelete(req.body._id);
       const deletedLayerData = await Layer.find({ missionId: req.body._id });
       const deletedAlertData = await Alert.find({ missionId: req.body._id });
       const deletedVodData = await VOD.find({ missionID: req.body._id });
-      const deletedDocumetnsData = await Document.find({
+      const deletedDocumentsData = await Document.find({
         missionId: req.body._id,
       });
       const deletedFlight = await Flight.deleteMany({
         mission: req.body._id,
-      });
-      const deletedLayer = await Layer.deleteMany({
-        missionId: req.body._id,
-      });
-      const deletedAlert = await Alert.deleteMany({
-        missionId: req.body._id,
-      });
-      const deletedVod = await VOD.deleteMany({ missionID: req.body._id });
-      const deletedDocumetns = await Document.deleteMany({
-        missionId: req.body._id,
       });
 
       const tenant: any = await Tenant.findOne({
@@ -288,111 +258,19 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
         );
         // tenant.actualMissionCount = Number(tenant.actualMissionCount) - 1;
       }
-      if (deletedAlertData.length && tenant.actualAlertCount) {
-        await Tenant.updateOne(
-          { _id: res.locals.user.tenantId },
-          { $inc: { actualAlertCount: -deletedAlertData.length } }
-        );
-        // tenant.actualAlertCount = Number(tenant.actualAlertCount) - deletedAlertData.length;
+      for (const layer of deletedLayerData) {
+        await layer.delete();
       }
-      if (deletedLayerData.length && tenant.actualLayerCount) {
-        await Tenant.updateOne(
-          { _id: res.locals.user.tenantId },
-          { $inc: { actualLayerCount: -deletedLayerData.length } }
-        );
-        // tenant.actualLayerCount = Number(tenant.actualLayerCount) - deletedLayerData.length;
+      for (const alert of deletedAlertData) {
+        await alert.delete();
       }
-      if (deletedVodData.length && tenant.actualVodCount) {
-        await Tenant.updateOne(
-          { _id: res.locals.user.tenantId },
-          { $inc: { actualVodCount: -deletedVodData.length } }
-        );
-        // tenant.actualVodCount = Number(tenant.actualVodCount) - deletedVodData.length;
+      for (const vod of deletedVodData) {
+        await vod.delete();
       }
-      // await tenant.save();
-      if (deletedLayerData.length) {
-        for (let i = 0; i < deletedLayerData.length; i++) {
-          await deletePublicFileUsingPath(deletedLayerData[i].layerpath);
-          const layerFileData = await layerFiles.find({
-            layerId: deletedLayerData[i],
-            tenantId: res.locals.user.tenantId._id,
-          });
-          if (layerFileData.length) {
-            for (let j = 0; j < layerFileData.length; j++) {
-              await deletePublicFileUsingPath(layerFileData[j].filePath);
-              const fileName = path.parse(layerFileData[j].filePath).base;
-              await deleteDirFileUsingName(
-                Directory.GEOJSON_IMAGES,
-                "1x_" + fileName
-              );
-              await deleteDirFileUsingName(
-                Directory.GEOJSON_IMAGES,
-                "2x_" + fileName
-              );
-            }
-            await layerFiles.deleteMany({
-              layerId: deletedLayerData[i],
-              tenantId: res.locals.user.tenantId._id,
-            });
-          }
-          const lg = deletedLayerData[i].layerGroupId;
-          if (lg) {
-            await layerGroupModel.findOneAndUpdate(
-              { _id: lg, tenantId: res.locals.user.tenantId },
-              { $pull: { layers: deletedLayerData[i]._id } }
-            );
-          }
-        }
+      for (const d of deletedDocumentsData) {
+        await d.delete();
       }
-      if (deletedAlertData.length) {
-        for (let i = 0; i < deletedAlertData.length; i++) {
-          await deletePublicFileUsingPath(deletedAlertData[i].image);
-        }
-      }
-      if (deletedVodData.length) {
-        for (let i = 0; i < deletedVodData.length; i++) {
-          const doc = deletedVodData[i];
-          try {
-            await deleteHlsVodUsingIndex(doc.videoPath);
-          } catch (err) {
-            req.log.error(err, "Failed to delete video HLS");
-          }
-          if (doc.originalFile)
-            try {
-              await deletePublicFileUsingPath(doc.originalFile);
-            } catch (err) {
-              req.log.error(err, "Failed to delete video original");
-            }
-          if (doc.thumbnail) {
-            try {
-              await deletePublicFileUsingPath(doc.thumbnail);
-            } catch (err) {
-              req.log.error(err, "Failed to delete video thumbnail");
-            }
-          }
-        }
-      }
-      if (deletedDocumetnsData.length) {
-        for (let i = 0; i < deletedDocumetnsData.length; i++) {
-          await deletePublicFileUsingPath(deletedDocumetnsData[i].filePath);
-          const fileName = path.parse(deletedDocumetnsData[i].filePath).base;
-          await deleteDirFileUsingName(
-            Directory.GEOJSON_IMAGES,
-            "1x_" + fileName
-          );
-          await deleteDirFileUsingName(
-            Directory.GEOJSON_IMAGES,
-            "2x_" + fileName
-          );
-        }
-      }
-      if (
-        deletedMission ||
-        deletedLayer ||
-        deletedVod ||
-        deletedAlert ||
-        deletedDocumetns
-      ) {
+      if (deletedMission) {
         const tenantId = res.locals.user.tenantId._id || "";
         notificationSocket.to(tenantId.toString()).emit("MISSION_DELETED", {
           id: deletedMission?._id,
@@ -1164,12 +1042,16 @@ export const getMissionCsvForTenantOrUser = async (
       })
       .lean();
     if (result.length) {
-      const csv = new ObjectsToCsv(result);
-      const csvData = await csv.toString();
-      const { filepath } = await saveFile(
-        Directory.TEMP,
-        randomUUID() + ".csv",
-        csvData
+      const filename =
+        "missions-" +
+        String(req.body.userId || res.locals.user.tenantId._id) +
+        ".csv";
+      const { filepath } = await saveCSV(
+        filename,
+        result,
+        "",
+        res.locals.user.tenantId._id,
+        res.locals.user._id
       );
       return res.status(200).json({
         status: true,

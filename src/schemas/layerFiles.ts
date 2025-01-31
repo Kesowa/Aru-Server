@@ -2,6 +2,16 @@ import mongoose from "mongoose";
 import Layer from "../models/layer";
 import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
+import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
+import Mission from "../models/mission";
+
+interface ILayerFileMethods {
+  create(): Promise<ILayerFile>;
+  delete(): Promise<void>;
+}
+
+export type LayerFileModel = mongoose.Model<ILayerFile, {}, ILayerFileMethods>;
 
 export interface ILayerFile {
   _id: mongoose.Types.ObjectId;
@@ -117,31 +127,50 @@ layerFilesSchema.index({
   isReview: 1,
 });
 layerFilesSchema.index({ sys_Id: 1 }, { sparse: true });
-layerFilesSchema.pre("save", async function () {
-  await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize, allLayerFileSize: this.fileSize } }
-  );
-  await Layer.updateOne(
-    { _id: this.layerId },
-    { $inc: { fileSize: this.fileSize } }
-  );
-});
-layerFilesSchema.post(
-  "remove",
-  async function (this: {
-    tenantId: mongoose.Types.ObjectId;
-    fileSize: number;
-    layerId: mongoose.Types.ObjectId;
-  }) {
-    await Tenant.updateOne(
-      { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize, allLayerFileSize: -this.fileSize } }
-    );
-    await Layer.updateOne(
-      { _id: this.layerId },
-      { $inc: { fileSize: -this.fileSize } }
-    );
+layerFilesSchema.methods.create = async function () {
+  const doc = this as ILayerFile & mongoose.Document;
+  // save thumbnails
+  if (doc.fileType == "image/jpeg" || doc.fileType == "image/png") {
+    const thumbs = await saveThumbnails(doc.filePath);
+    doc.fileSize += thumbs.size;
+    await doc.save();
   }
-);
+  // update size details
+  await Tenant.updateOne(
+    { _id: doc.tenantId },
+    { $inc: { actualSize: doc.fileSize, allLayerFileSize: doc.fileSize } }
+  );
+  const layerDoc = await Layer.findById(doc.layerId);
+  layerDoc.fileSize += doc.fileSize;
+  await layerDoc.save();
+  await Mission.updateOne(
+    { _id: layerDoc.missionId },
+    { $inc: { size: doc.fileSize } }
+  );
+  // save the document
+  return await doc.save();
+};
+layerFilesSchema.methods.delete = async function () {
+  const doc = this as ILayerFile & mongoose.Document;
+  // delete thumbnails
+  if (doc.fileType == "image/jpeg" || doc.fileType == "image/png") {
+    await deleteThumbnails(doc.filePath);
+  }
+  // delete actual file
+  await deletePublicFileUsingPath(doc.filePath);
+  // update size details
+  await Tenant.updateOne(
+    { _id: doc.tenantId },
+    { $inc: { actualSize: -doc.fileSize, allLayerFileSize: -doc.fileSize } }
+  );
+  const layerDoc = await Layer.findById(doc.layerId);
+  layerDoc.fileSize -= doc.fileSize;
+  await layerDoc.save();
+  await Mission.updateOne(
+    { _id: layerDoc.missionId },
+    { $inc: { size: -doc.fileSize } }
+  );
+  // delete the document
+  await doc.deleteOne();
+};
 export default layerFilesSchema;

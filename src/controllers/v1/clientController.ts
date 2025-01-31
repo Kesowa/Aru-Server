@@ -7,8 +7,7 @@ import bcrypt from "bcrypt";
 import Flight from "../../models/flight";
 import Tenant from "../../models/tenant";
 import path from "path";
-import ObjectsToCsv from "objects-to-csv";
-import crypto, { randomUUID } from "crypto";
+import crypto from "crypto";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 import { sendMail } from "../../utils/emailUtil";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
@@ -26,7 +25,7 @@ import { SortOrder } from "mongoose";
 import { getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
 import { iv } from "../../utils/authUtils";
-import { permPath, saveFile } from "../../utils/dataUtils";
+import { permPath, saveCSV } from "../../utils/dataUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
 import UploadTask from "../../models/uploadTask";
 import { PERMS, TENANT_CLIENT_PERMS } from "../../schemas/permission";
@@ -88,6 +87,7 @@ export const createClientformissionGroup = async (
             );
             await saveThumbnails(fullPath);
             modClient.avatar = fullPath;
+            await fileDoc.delete();
           }
           await User.findOneAndUpdate({ _id: existingClient._id }, modClient, {
             upsert: true,
@@ -155,6 +155,7 @@ export const createClientformissionGroup = async (
             );
             await saveThumbnails(fullPath);
             newClient.avatar = fullPath;
+            await fileDoc.delete();
           }
           const createDoc = await newClient.save();
           const tenant = await Tenant.findOne(
@@ -355,6 +356,7 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
           );
           await saveThumbnails(fullPath);
           modDoc.avatar = fullPath;
+          await fileDoc.delete();
         }
         await modDoc.save();
       }
@@ -673,12 +675,14 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
         savedResult.push(d);
       }
 
-      const csv = new ObjectsToCsv(savedResult);
-      const csvData = await csv.toString();
-      const { filepath } = await saveFile(
-        Directory.TEMP,
-        randomUUID() + ".csv",
-        csvData
+      const filename =
+        "clients-" + String(res.locals.user.tenantId._id) + ".csv";
+      const { filepath } = await saveCSV(
+        filename,
+        savedResult,
+        "",
+        res.locals.user.tenantId._id,
+        res.locals.user._id
       );
       return res.status(200).json({
         status: true,

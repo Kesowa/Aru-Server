@@ -191,21 +191,23 @@ export type ReportResponse = {
 };
 
 export const generatePlotReport = async (req: PlotReportRequest) => {
-  await Document.findOneAndDelete({
+  const doc = await Document.findOne({
     tenantId: req.metadata.tenant_id,
     missionId: req.metadata.mission_id,
     name: req.metadata.filename,
   });
+  if (doc) await doc.delete();
   ReportEvents.emit(PLOT_REQ_QUEUE, req);
   logger.info(req, "SENT PLOT REPORT GENERATION REQUEST");
 };
 
 export const generateBlockReport = async (req: BlockReportRequest) => {
-  await Document.findOneAndDelete({
+  const doc = await Document.findOne({
     tenantId: req.metadata.tenant_id,
     missionId: req.metadata.mission_id,
     name: req.metadata.filename,
   });
+  if (doc) await doc.delete();
   ReportEvents.emit(BLOCK_REQ_QUEUE, req);
   logger.info(req, "SENT BLOCK REPORT GENERATION REQUEST");
 };
@@ -224,7 +226,7 @@ export const receiveReport = async (res: ReportResponse) => {
       createdBy: res.metadata.user_id,
       updatedBy: res.metadata.user_id,
     });
-    const savedDoc = await docDB.save();
+    const savedDoc = await docDB.create();
 
     logger.info("Report Generation Complete");
 

@@ -2,8 +2,7 @@ import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
 import VOD from "../../models/vod";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { deleteHlsVodUsingIndex, transcodeVideo } from "../../utils/videoUtils";
-import Tenant from "../../models/tenant";
+import { transcodeVideo } from "../../utils/videoUtils";
 import { missionSpecificSocket } from "../../socket";
 import { IFlight } from "../../schemas/flight";
 import { IMission } from "../../schemas/mission";
@@ -14,7 +13,6 @@ import * as pathUtils from "../../utils/pathUtils";
 import Location from "../../models/location";
 import UploadTask from "../../models/uploadTask";
 import { permPath } from "../../utils/dataUtils";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 
 export const saveVOD = async (
   req: Request<
@@ -54,16 +52,7 @@ export const saveVOD = async (
       videoName: req.body.filename,
       fileSize: vodSize,
     });
-    const dbsave = await VODdoc.save();
-    const tenant = await Tenant.findOne({ _id: tenantId });
-    if (dbsave && tenant.actualVodCount >= 0) {
-      await Tenant.updateOne(
-        { _id: tenantId },
-        { $inc: { actualVodCount: 1 } }
-      );
-      // tenant.actualVodCount = Number(tenant.actualVodCount) + 1;
-      // await tenant.save();
-    }
+    const dbsave = await VODdoc.create();
     return res.json({
       status: true,
       message: `VOD saved with ${dbsave._id.toString()}`,
@@ -305,7 +294,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     });
     locationID = location._id;
   }
-  const vod = await VOD.create({
+  const vod = await new VOD({
     videoName: fileDoc.metadata.originalName,
     missionID: missionID,
     flightID: flightID,
@@ -316,7 +305,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     tenantId: res.locals.user.tenantId._id,
     isSRT: telemetryData ? true : false,
     fileSize: fileDoc.metadata.filesize,
-  });
+  }).create();
   await transcodeVideo(fullPath, {
     location_id: locationID ?? null,
     mission_id: missionID,
@@ -345,39 +334,32 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId._id,
     });
     if (doc) {
-      await deleteHlsVodUsingIndex(doc.videoPath);
-      if (doc.originalFile) await deletePublicFileUsingPath(doc.originalFile);
-      if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
+      // check if processed vod
+      if (
+        doc.videoPath &&
+        doc.videoPath !== "/processing.m3u8" &&
+        doc.thumbnail &&
+        doc.thumbnail !== "/processing.png"
+      ) {
+        await doc.delete();
+        missionSpecificSocket
+          .to(String(doc.missionID))
+          .emit("VOD_REMOVED", doc);
+        res.status(200).json({
+          status: true,
+          message: "Successfully deleted _id:" + Id.toString(),
+          data: doc,
+        });
+      } else {
+        res.status(400).json({
+          status: false,
+          message: "Cannot delete un-processed VOD",
+        });
+      }
     } else {
       res.status(404).json({
         status: false,
-        message: "VOD Files of _id:" + Id + " doesnt exist",
-      });
-      return;
-    }
-    const resp = await doc.delete();
-    const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
-    if (resp && tenant.actualVodCount) {
-      await Tenant.updateOne(
-        { _id: res.locals.user.tenantId },
-        { $inc: { actualVodCount: -1 } }
-      );
-      // tenant.actualVodCount = Number(tenant.actualVodCount) - 1;
-      // await tenant.save();
-    }
-    if (resp) {
-      missionSpecificSocket
-        .to(String(resp.missionID))
-        .emit("VOD_REMOVED", resp);
-      res.status(200).json({
-        status: true,
-        message: "Successfully deleted _id:" + Id,
-        data: resp,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "VOD of _id:" + Id + " doesnt exist",
+        message: "VOD of _id:" + Id.toString() + " doesnt exist",
       });
     }
   }
@@ -393,25 +375,24 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
     if (docs && docs.length > 0) {
       for (let index = 0; index < docs.length; index++) {
         const doc = docs[index];
-        await deleteHlsVodUsingIndex(doc.videoPath);
-        if (doc.originalFile) await deletePublicFileUsingPath(doc.originalFile);
-        if (doc.thumbnail) await deletePublicFileUsingPath(doc.thumbnail);
-        const res2 = await VOD.findByIdAndDelete(doc._id);
-        if (res2) {
-          deleted.push(doc._id.toString());
-          await Tenant.updateOne(
-            { _id: res2.tenantId },
-            {
-              $inc: {
-                actualVodCount: -1,
-                actualSize: -doc.fileSize,
-              },
-            }
-          );
+        if (
+          doc.videoPath &&
+          doc.videoPath !== "/processing.m3u8" &&
+          doc.thumbnail &&
+          doc.thumbnail !== "/processing.png"
+        ) {
+          try {
+            await doc.delete();
+            deleted.push(doc._id.toString());
+            missionSpecificSocket
+              .to(String(doc.missionID))
+              .emit("VOD_REMOVED", doc);
+          } catch (error) {
+            errors.push(doc._id.toString());
+          }
+        } else {
+          errors.push(doc._id.toString());
         }
-        missionSpecificSocket
-          .to(String(doc.missionID))
-          .emit("VOD_REMOVED", doc);
       }
       return res.json({
         status: true,
