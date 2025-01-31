@@ -7,58 +7,62 @@ import { vectorProps } from "../schemas/vectorprops";
 import { Types } from "mongoose";
 
 type createMixedLayerGroupInput = {
-  name: string,
-  missionId?: Types.ObjectId,
-  tenantId: Types.ObjectId,
-  userId: Types.ObjectId,
-  geojson: string,
-  featureTypes: string[],
-  captureDate: Date,
-}
+  name: string;
+  missionId?: Types.ObjectId;
+  tenantId: Types.ObjectId;
+  userId: Types.ObjectId;
+  geojson: string;
+  featureTypes: string[];
+  captureDate: Date;
+};
 
 const vectorPropMap = {
-  "Point": vectorProps.LANDMARK,
-  "Polygon": vectorProps.AREA_BOUNDARY,
-  "LineString": vectorProps.BOUNDARY_WALL,
-  "MultiPoint": vectorProps.LANDMARK,
-  "MultiPolygon": vectorProps.AREA_BOUNDARY,
-  "MultiLineString": vectorProps.BOUNDARY_WALL,
-}
+  Point: vectorProps.LANDMARK,
+  Polygon: vectorProps.AREA_BOUNDARY,
+  LineString: vectorProps.BOUNDARY_WALL,
+  MultiPoint: vectorProps.LANDMARK,
+  MultiPolygon: vectorProps.AREA_BOUNDARY,
+  MultiLineString: vectorProps.BOUNDARY_WALL,
+};
 
-export const createMixedLayerGroup = async (input: createMixedLayerGroupInput) => {
+export const createMixedLayerGroup = async (
+  input: createMixedLayerGroupInput
+) => {
   const geojsonData = JSON.parse(await readToString(input.geojson)) as GeoJson;
   const featureLayers = new Map(
-    input.featureTypes.map(ft =>
-      [ft, {
+    input.featureTypes.map((ft) => [
+      ft,
+      {
         type: "FeatureCollection",
         name: input.name,
-        "crs": {
-          "type": "name",
-          "properties": {
-            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
-          }
+        crs: {
+          type: "name",
+          properties: {
+            name: "urn:ogc:def:crs:OGC:1.3:CRS84",
+          },
         },
         features: [],
-      }]
-    )
+      },
+    ])
   );
   for (const feature of geojsonData.features) {
-    if (feature.properties["stroke"]) feature.properties.color = feature.properties["stroke"];
+    if (feature.properties["stroke"])
+      feature.properties.color = feature.properties["stroke"];
     featureLayers.get(feature.geometry.type).features.push(feature);
   }
   const layerGroup = await layerGroupModel.create({
     name: input.name,
     createdBy: input.userId,
     tenantId: input.tenantId,
-    layers: []
+    layers: [],
   });
-  const layerPromises = Array.from(featureLayers.entries())
-    .map(async ([layerType, layer]) => {
+  const layerPromises = Array.from(featureLayers.entries()).map(
+    async ([layerType, layer]) => {
       const vectorLayer = await saveVectorLayer(
         layer,
         layerType == "Point"
-        ? { inheritColor: true, icon: "MarkerIcon" }
-        : { inheritColor: true }
+          ? { inheritColor: true, icon: "MarkerIcon" }
+          : { inheritColor: true }
       );
       const layerDoc = await layerModel.create({
         name: input.name,
@@ -77,8 +81,9 @@ export const createMixedLayerGroup = async (input: createMixedLayerGroupInput) =
       });
       await layerGroup.updateOne({ $addToSet: { layers: layerDoc._id } });
       return layerDoc;
-    });
+    }
+  );
   const layers = await Promise.all(layerPromises);
   await deleteObj(input.geojson);
   return layers;
-}
+};

@@ -103,15 +103,17 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       const { name, type, vector, captureDate, missionId, layerGroupId } =
         req.body;
       if (featureTypes.length > 1) {
-        layer = (await createMixedLayerGroup({
-          name,
-          missionId,
-          tenantId: res.locals.user.tenantId._id,
-          userId: res.locals.user._id,
-          geojson: geojsonPath,
-          featureTypes,
-          captureDate,
-        }))[0];
+        layer = (
+          await createMixedLayerGroup({
+            name,
+            missionId,
+            tenantId: res.locals.user.tenantId._id,
+            userId: res.locals.user._id,
+            geojson: geojsonPath,
+            featureTypes,
+            captureDate,
+          })
+        )[0];
       } else {
         layer = await Layer.create({
           name,
@@ -1218,8 +1220,9 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         } else {
           return res.json({
             status: true,
-            message: `Your data must be less than equal to ${ar.length - 1
-              } and data index should start from 0`,
+            message: `Your data must be less than equal to ${
+              ar.length - 1
+            } and data index should start from 0`,
             data: ar,
             count: ar.length,
             flaggedFeatures: flaggedFeatures,
@@ -2352,8 +2355,9 @@ export const flagFeature = async (
     await doc.save();
     res.status(200).json({
       status: true,
-      message: `feature ${req.body.flag ? "flagged" : "unflagged"
-        } successfully`,
+      message: `feature ${
+        req.body.flag ? "flagged" : "unflagged"
+      } successfully`,
     });
   } else {
     res.status(404).json({
