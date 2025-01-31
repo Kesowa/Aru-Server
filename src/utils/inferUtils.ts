@@ -168,7 +168,7 @@ async function receiveVectorData(task: IAimlTask) {
     color: "#7ed321",
     icon: "MarkerIcon",
   });
-  const dataLayer = await Layer.create({
+  const dataLayer = await new Layer({
     name: sourceLayer.name + `: ${task.infer}`,
     type: "Vector",
     vector: inferToVec(task.infer),
@@ -181,6 +181,6 @@ async function receiveVectorData(task: IAimlTask) {
     tenantId: sourceLayer.tenantId,
     createdBy: task.createdBy,
     updatedBy: task.updatedBy,
-  });
+  }).create();
   return dataLayer;
 }

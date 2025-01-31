@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import layerSchema, { ILayer } from "../schemas/layer";
+import layerSchema, { ILayer, LayerModel } from "../schemas/layer";
 
-const layer = mongoose.model<ILayer>("layer", layerSchema);
+const layer = mongoose.model<ILayer, LayerModel>("layer", layerSchema);
 export default layer;

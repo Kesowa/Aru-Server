@@ -21,6 +21,10 @@ import {
 } from "./objectStorage";
 import Fuse from "fuse.js";
 import { truncate } from "@turf/turf";
+import { deletePublicFileUsingPath } from "./fileDeleteUtils";
+import ObjectsToCsv from "objects-to-csv";
+import Document from "../models/document";
+import { Types } from "mongoose";
 
 const getFlagColor = (geojson: GeoJson) => {
   const colorSet = new Set(
@@ -64,6 +68,7 @@ export const saveVectorLayer = async (
       const fileData = await readToBuffer(layer);
       geojsonData = await shp2json(fileData);
     }
+    await deleteObj(layer);
   } else {
     geojsonData = layer;
   }
@@ -230,15 +235,90 @@ export const saveMultiGeojson = async (
   return { path: geojsonPath, size, featureCount };
 };
 
-export const saveAsKML = async (geojson: GeoJson) => {
+export const saveAsKML = async (
+  filename: string,
+  geojson: GeoJson,
+  missionId: Types.ObjectId | string,
+  tenantId: Types.ObjectId | string,
+  userId: Types.ObjectId | string
+) => {
+  const exists = await Document.findOne({ name: filename });
+  if (exists) await exists.delete();
   const kmlData = String(tokml(geojson));
-  const kmlPath = pathUtils.docPath(Directory.TEMP, randomUUID() + ".kml");
-  await uploadString(kmlPath, kmlData);
-  return kmlPath;
+  const { filepath, size } = await saveFile(
+    Directory.VECTOR,
+    filename,
+    kmlData
+  );
+  const kmlDoc = new Document({
+    name: filename,
+    modDate: new Date(),
+    fileSize: size / (1024 * 1024),
+    fileType: "csv",
+    folderName: "root1234",
+    filePath: filepath,
+    missionId,
+    tenantId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+  await kmlDoc.create();
+  return { filepath, size };
 };
 
-export const createArchive = async (files: pathUtils.DocPath[]) => {
-  return await archive(files);
+export const saveCSV = async (
+  filename: string,
+  data: any,
+  missionId: Types.ObjectId | string,
+  tenantId: Types.ObjectId | string,
+  userId: Types.ObjectId | string
+) => {
+  const exists = await Document.findOne({ name: filename });
+  if (exists) await exists.delete();
+  const csv = new ObjectsToCsv(data);
+  const csvData = await csv.toString();
+  const { filepath, size } = await saveFile(Directory.CSV, filename, csvData);
+  const csvDoc = new Document({
+    name: filename,
+    modDate: new Date(),
+    fileSize: size / (1024 * 1024),
+    fileType: "csv",
+    folderName: "root1234",
+    filePath: filepath,
+    missionId,
+    tenantId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+  await csvDoc.create();
+  return { filepath, size };
+};
+
+export const createArchive = async (
+  filename: string,
+  files: pathUtils.DocPath[],
+  missionId: Types.ObjectId | string,
+  tenantId: Types.ObjectId | string,
+  userId: Types.ObjectId | string
+) => {
+  const exists = await Document.findOne({ name: filename });
+  if (exists) await exists.delete();
+  const archivePath = await archive(files);
+  const { size } = await stat(archivePath);
+  const archiveDoc = new Document({
+    name: filename,
+    modDate: new Date(),
+    fileSize: size / (1024 * 1024),
+    fileType: "csv",
+    folderName: "root1234",
+    filePath: archivePath,
+    missionId,
+    tenantId,
+    createdBy: userId,
+    updatedBy: userId,
+  });
+  await archiveDoc.create();
+  return archivePath;
 };
 
 export const saveFile = async (
@@ -274,5 +354,11 @@ export const saveFeatureSearchIndex = async (layerPath: string) => {
   );
   const searchIndex = Fuse.createIndex<any>(keys, geojsonData.features);
   await uploadString(searchIndexPath, JSON.stringify(searchIndex.toJSON()));
+  return pathUtils.docPath(Directory.VECTOR, filename);
+};
+export const deleteFeatureSearchIndex = async (layerPath: string) => {
+  const filename = "index_" + path.parse(layerPath).name + ".json";
+  const searchIndexPath = path.dirname(layerPath) + "/" + filename;
+  await deletePublicFileUsingPath(searchIndexPath);
   return pathUtils.docPath(Directory.VECTOR, filename);
 };

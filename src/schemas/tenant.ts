@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
-import Tenant from "../models/tenant";
-import { IPackage } from "./package";
 export interface ITenant {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -334,18 +332,6 @@ export class InvalidPackage extends Error {
   }
 }
 
-tenantschema.pre("updateOne", async function () {
-  const query = this as any;
-  const size = query._update["$inc"]?.actualSize as number;
-  const id = query.getQuery()._id as mongoose.Types.ObjectId;
-  console.log("TENANT SIZE AND ID", size, id);
-  if (!(size && id)) return;
-  const tenantDoc = await Tenant.findById(id).populate<{
-    activePackage: IPackage;
-  }>("activePackage");
-  if (tenantDoc?.activePackage == null) throw new InvalidPackage(id);
-  if (tenantDoc.activePackage.storage < Number(tenantDoc.actualSize) + size) {
-    throw new SizeLimitExceeded(tenantDoc, size);
-  }
-});
+// NOTE: Package size exceeding check already done when creating uploadTask in commonController
+
 export default tenantschema;

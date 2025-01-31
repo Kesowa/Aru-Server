@@ -62,6 +62,7 @@ export const updateOrganisationInfo = async (
       );
       await saveThumbnails(fullPath); // Generate and save thumbnails (optional)
       updateData.avatar = fullPath; // Set the full path as the avatar field
+      await fileDoc.delete();
     }
     const tenant = await Tenant.findByIdAndUpdate(
       res.locals.user.tenantId,
