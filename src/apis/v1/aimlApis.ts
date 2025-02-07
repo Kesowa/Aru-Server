@@ -11,7 +11,7 @@ import { RobustRunner, validator } from "../../utils/requestHelpers";
 const router = Router();
 
 router.post(
-  "/vod/:vodId/violence/infer",
+  "/vod/:vodId/:inferType/infer",
   isAuthenticated,
   param("vodId").isMongoId(),
   validator,
