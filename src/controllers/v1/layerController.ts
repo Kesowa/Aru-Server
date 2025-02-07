@@ -53,6 +53,7 @@ import { LazToTiles3D } from "../../utils/pointcloud";
 import { decompressZip } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
 import { readToBuffer } from "../../utils/objectStorage";
+import { createMixedLayerGroup } from "../../utils/layerUtils";
 
 // ********* create ***********
 
@@ -70,6 +71,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       let size = 0;
       let featureCount = 0;
       let flagColor = "";
+      let featureTypes = [];
       try {
         const vectorLayer = await saveVectorLayer(fileDoc.metadata.objectkey, {
           icon: req.body.icon,
@@ -89,6 +91,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         size = vectorLayer.size;
         featureCount = vectorLayer.featureCount;
         flagColor = vectorLayer.flagColor;
+        featureTypes = vectorLayer.featureTypes;
       } catch (error) {
         req.log.error(error, "vector layer conversion failed");
         res.status(500).json({
@@ -99,21 +102,35 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       }
       const { name, type, vector, captureDate, missionId, layerGroupId } =
         req.body;
-      layer = new Layer({
-        name,
-        type,
-        vector,
-        color: flagColor,
-        layerpath: geojsonPath,
-        fileSize: size,
-        featureCount: featureCount,
-        layerGroupId,
-        captureDate,
-        missionId,
-        tenantId: res.locals.user.tenantId,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
-      });
+      if (featureTypes.length > 1) {
+        layer = (
+          await createMixedLayerGroup({
+            name,
+            missionId,
+            tenantId: res.locals.user.tenantId._id,
+            userId: res.locals.user._id,
+            geojson: geojsonPath,
+            featureTypes,
+            captureDate,
+          })
+        )[0];
+      } else {
+        layer = await Layer.create({
+          name,
+          type,
+          vector,
+          color: flagColor,
+          layerpath: geojsonPath,
+          fileSize: size,
+          featureCount: featureCount,
+          layerGroupId,
+          captureDate,
+          missionId,
+          tenantId: res.locals.user.tenantId,
+          createdBy: res.locals.user._id,
+          updatedBy: res.locals.user._id,
+        });
+      }
     } else if (req.params.type == "Raster") {
       //----------TITILER API HAS CHANGED-------------------
       //  Metadata api has been removed
@@ -170,7 +187,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         Directory.RASTER,
         fileDoc.metadata.objectkey
       );
-      layer = new Layer({
+      layer = await Layer.create({
         name,
         type: "Raster",
         raster: rasterType,
@@ -194,6 +211,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       });
     }
     if (layer) {
+      const savedDoc = layer;
       const savedDoc = await layer.create();
       await fileDoc.delete();
 

@@ -20,6 +20,7 @@ import {
   uploadString,
 } from "./objectStorage";
 import Fuse from "fuse.js";
+import { truncate } from "@turf/turf";
 import { deletePublicFileUsingPath } from "./fileDeleteUtils";
 import ObjectsToCsv from "objects-to-csv";
 import Document from "../models/document";
@@ -89,9 +90,15 @@ export const saveVectorLayer = async (
   } else {
     flagColor = getFlagColor(geojsonData);
   }
+  const featureTypes = new Set<GeoJson["type"]>();
   geojsonData.features.forEach((feature) => {
     feature.properties.sys_id = new ObjectId().toHexString();
+    feature.geometry.coordinates = truncate(feature, {
+      coordinates: 2,
+    }).geometry.coordinates;
+    featureTypes.add(feature.geometry.type);
   });
+  console.log({ featureTypes });
   const stringData = JSON.stringify(geojsonData);
   await uploadString(targetPath, stringData);
   return {
@@ -100,6 +107,7 @@ export const saveVectorLayer = async (
     featureCount: geojsonData.features.length,
     flagColor,
     properties: geojsonData.features[0]?.properties,
+    featureTypes: Array.from(featureTypes.values()),
   };
 };
 
