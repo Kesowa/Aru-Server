@@ -187,7 +187,7 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         Directory.RASTER,
         fileDoc.metadata.objectkey
       );
-      layer = await Layer.create({
+      layer = new Layer({
         name,
         type: "Raster",
         raster: rasterType,
@@ -211,7 +211,6 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
       });
     }
     if (layer) {
-      const savedDoc = layer;
       const savedDoc = await layer.create();
       await fileDoc.delete();
 
