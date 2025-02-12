@@ -27,7 +27,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: 16
+          node-version: 20
           cache: 'npm'
 
       - name: Install Node.js dependencies
@@ -36,10 +36,4 @@ jobs:
       # Install your linters here
 
       - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          # Enable your linters here
-          auto_fix: true
-          eslint: true
-          prettier: true
-          eslint_extensions: js,ts          
+        run: npm run lint
