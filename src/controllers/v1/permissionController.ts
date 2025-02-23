@@ -26,13 +26,11 @@ export const fetchTenantPermissions = async (
   _req: Request,
   res: AuthResponse
 ) => {
-  {
-    res.json({
-      status: true,
-      message: "Permissions fetched sucessfully.",
-      data: Object.values(PERMS),
-    });
-  }
+  res.json({
+    status: true,
+    message: "Permissions fetched sucessfully.",
+    data: Object.values(PERMS),
+  });
 };
 
 export const fetchPermissions = async (req: Request, res: AuthResponse) => {

@@ -9,42 +9,40 @@ export const createLocation = async (
   req: Request<{}, {}, GeometryObj & { properties: { name: string } }>,
   res: AuthResponse
 ) => {
-  {
-    const newLocation = await Location.create({
-      geometry: {
-        type: req.body.type,
-        coordinates: req.body.coordinates,
-      },
-      properties: req.body.properties,
-      tenantId: res.locals.user.tenantId._id,
+  const newLocation = await Location.create({
+    geometry: {
+      type: req.body.type,
+      coordinates: req.body.coordinates,
+    },
+    properties: req.body.properties,
+    tenantId: res.locals.user.tenantId._id,
+  });
+  const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
+  if (newLocation && tenant.actualLocationCount >= 0) {
+    await Tenant.updateOne(
+      { _id: res.locals.user.tenantId },
+      { $inc: { actualLocationCount: 1 } }
+    );
+    // tenant.actualLocationCount = Number(tenant.actualLocationCount) + 1;
+    // await tenant.save();
+  }
+  if (newLocation) {
+    const message = `New Location saved with ObjectId: ${newLocation._id}`;
+    req.log.info(message);
+    notificationSocket
+      .to(res.locals.user.tenantId._id.toString())
+      .emit("CREATE_LOCATION", newLocation);
+    res.status(201).json({
+      status: true,
+      message: message,
+      data: newLocation,
     });
-    const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId });
-    if (newLocation && tenant.actualLocationCount >= 0) {
-      await Tenant.updateOne(
-        { _id: res.locals.user.tenantId },
-        { $inc: { actualLocationCount: 1 } }
-      );
-      // tenant.actualLocationCount = Number(tenant.actualLocationCount) + 1;
-      // await tenant.save();
-    }
-    if (newLocation) {
-      const message = `New Location saved with ObjectId: ${newLocation._id}`;
-      req.log.info(message);
-      notificationSocket
-        .to(res.locals.user.tenantId._id.toString())
-        .emit("CREATE_LOCATION", newLocation);
-      res.status(201).json({
-        status: true,
-        message: message,
-        data: newLocation,
-      });
-    } else {
-      const message = "An error occured while saving Location";
-      res.status(500).json({
-        status: false,
-        message: message,
-      });
-    }
+  } else {
+    const message = "An error occured while saving Location";
+    res.status(500).json({
+      status: false,
+      message: message,
+    });
   }
 };
 
@@ -97,23 +95,21 @@ export const getLocation = async (req: Request, res: AuthResponse) => {
 };
 
 export const getLocationByID = async (req: Request, res: AuthResponse) => {
-  {
-    const doc = await Location.findOne({
-      _id: req.query.id,
-      tenantId: res.locals.user.tenantId._id,
+  const doc = await Location.findOne({
+    _id: req.query.id,
+    tenantId: res.locals.user.tenantId._id,
+  });
+  if (doc) {
+    res.status(200).json({
+      status: true,
+      message: `Successfully Fetched ${req.query.id}`,
+      data: doc,
     });
-    if (doc) {
-      res.status(200).json({
-        status: true,
-        message: `Successfully Fetched ${req.query.id}`,
-        data: doc,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: `Data not found`,
-      });
-    }
+  } else {
+    res.status(404).json({
+      status: false,
+      message: `Data not found`,
+    });
   }
 };
 
@@ -171,43 +167,41 @@ export const getwithinLocationByID = async (
 };
 
 export const updateLocation = async (req: Request, res: AuthResponse) => {
-  {
-    const id = new Types.ObjectId(String(req.body.id));
-    const findDoc = await Location.findOneAndUpdate(
-      {
-        _id: id,
-        tenantId: res.locals.user.tenantId._id,
+  const id = new Types.ObjectId(String(req.body.id));
+  const findDoc = await Location.findOneAndUpdate(
+    {
+      _id: id,
+      tenantId: res.locals.user.tenantId._id,
+    },
+    {
+      $set: {
+        geometry: req.body.geometry,
+        properties: req.body.properties,
       },
-      {
-        $set: {
-          geometry: req.body.geometry,
-          properties: req.body.properties,
-        },
-      },
-      {
-        new: true,
-      }
-    );
-    if (findDoc) {
-      const message = `Location Id : ${findDoc._id} updated`;
-
-      req.log.info(message);
-      notificationSocket
-        .to(res.locals.user.tenantId._id.toString())
-        .emit("UPDATE_LOCATION", findDoc);
-      res.json({
-        status: true,
-        message: message,
-        data: findDoc,
-      });
-    } else {
-      const message = "Location not found";
-      req.log.info(message);
-      res.status(404).json({
-        status: true,
-        message: message,
-      });
+    },
+    {
+      new: true,
     }
+  );
+  if (findDoc) {
+    const message = `Location Id : ${findDoc._id} updated`;
+
+    req.log.info(message);
+    notificationSocket
+      .to(res.locals.user.tenantId._id.toString())
+      .emit("UPDATE_LOCATION", findDoc);
+    res.json({
+      status: true,
+      message: message,
+      data: findDoc,
+    });
+  } else {
+    const message = "Location not found";
+    req.log.info(message);
+    res.status(404).json({
+      status: true,
+      message: message,
+    });
   }
 };
 
@@ -258,26 +252,24 @@ export const deleteLocation = async (req: Request, res: AuthResponse) => {
 
 // get location for lat,long
 export const getLocationByLatLong = async (req: Request, res: AuthResponse) => {
-  {
-    const lat = req.query.lat;
-    const long = req.query.long;
-    const location = await Location.findOne({
-      tenantId: res.locals.user.tenantId._id,
-      "geometry.coordinates.lat": lat,
-      "geometry.coordinates.lng": long,
+  const lat = req.query.lat;
+  const long = req.query.long;
+  const location = await Location.findOne({
+    tenantId: res.locals.user.tenantId._id,
+    "geometry.coordinates.lat": lat,
+    "geometry.coordinates.lng": long,
+  });
+  if (location) {
+    res.json({
+      status: true,
+      message: "fetch successfully location data",
+      data: location,
     });
-    if (location) {
-      res.json({
-        status: true,
-        message: "fetch successfully location data",
-        data: location,
-      });
-      return;
-    }
-
-    res.status(404).json({
-      status: false,
-      message: "Cordinate does not exist in locations",
-    });
+    return;
   }
+
+  res.status(404).json({
+    status: false,
+    message: "Cordinate does not exist in locations",
+  });
 };
