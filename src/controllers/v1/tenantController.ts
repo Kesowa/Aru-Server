@@ -1,10 +1,9 @@
 import { Request } from "express";
 import Tenant from "../../models/tenant";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { createTenantLevelrootUser } from "../../utils/tenantUtils";
+import { createTenantLevelrootUser, addPackageToTenant } from "../../utils/tenantUtils";
 import User from "../../models/user";
 import Package from "../../models/package";
-import { addPackageToTenant } from "../../utils/tenantUtils";
 import Mission from "../../models/mission";
 import Alert from "../../models/alert";
 import VOD from "../../models/vod";
@@ -92,7 +91,7 @@ export const createTenantPublicApi = async (
 
   if (!(existingTenantWithEmail || existingUserWithEmail)) {
     const verificationNumber = Math.floor(100000 + Math.random() * 900000);
-    const data = await newTenant.findOneAndUpdate(
+    await newTenant.findOneAndUpdate(
       { email: req.body.email },
       {
         name: req.body.name,
@@ -275,7 +274,7 @@ export const addInitialPackageByAdmin = async (
   req: Request,
   res: AuthResponse
 ) => {
-  const newTenant = await addPackageToTenant(
+  await addPackageToTenant(
     req.body.tenantId,
     req.body.packageId
   );
@@ -449,11 +448,11 @@ export const tenantpublicmaprefupdate = async (
 ) => {
   const docs = await Tenant.find();
   if (docs.length) {
-    for (let i = 0; i < docs.length; i++) {
-      if (docs[i].publicMapRef != null || docs[i].publicMapRef == undefined) {
+    for (const tenant of docs) {
+      if (tenant.publicMapRef != null || tenant.publicMapRef == undefined) {
         await Tenant.updateOne(
-          { _id: docs[i]._id },
-          { publicMapRef: docs[i].publicMapRef }
+          { _id: tenant._id },
+          { publicMapRef: tenant.publicMapRef }
         );
       }
     }

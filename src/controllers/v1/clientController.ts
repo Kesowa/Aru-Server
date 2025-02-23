@@ -57,8 +57,6 @@ export const createClientformissionGroup = async (
       if (existingClient) {
         const temppass = crypto.randomBytes(10).toString("hex");
         const date2 = new Date(req.body.expiryDate);
-        // let docPath = DirPath(Directory.DEFAULT, req.body.avatar);
-        // let size: number = await getFileSize(docPath);
 
         const { name, email, phoneNo, userGroupId, userType, country, city } =
           req.body;
@@ -93,12 +91,6 @@ export const createClientformissionGroup = async (
           useFindAndModify: false,
         });
         const modDoc = await User.findOne({ _id: existingClient._id });
-        // let tenant: any = await Tenant.findOne({ _id: res.locals.user.tenantId });
-        // if (modDoc && tenant.actualClientCount >= 0) {
-        //   await Tenant.updateOne({ _id: res.locals.user.tenantId},{ $inc: { actualClientCount: 1 } })
-        //   // tenant.actualClientCount = Number(tenant.actualClientCount) + 1;
-        //   // await tenant.save();
-        // }
 
         const token = await generateResetPasswordToken(email);
         const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
@@ -170,8 +162,6 @@ export const createClientformissionGroup = async (
             { _id: res.locals.user.tenantId },
             { $inc: { actualClientCount: 1 } }
           );
-          // tenant.actualClientCount = Number(tenant.actualClientCount) + 1;
-          // await tenant.save();
         }
         const token = await generateResetPasswordToken(email);
         const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${token}`;
@@ -222,7 +212,6 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
   } else sort.createdAt = -1;
   const d: Array<any> = [];
   const ar: Array<any> = [];
-  //let tempResult:Array<any>=[];
   let result: any;
   let resultt: any;
   let data: any;
@@ -273,8 +262,8 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
   const q: number = req.query.limit ? Number(req.query.limit) : 10;
   const p: number = req.query.page ? Number(req.query.page) * q : 0;
   if (result.length) {
-    for (let i = 0; i < result.length; i++) {
-      ar.push(result[i]);
+    for (const m of result) {
+      ar.push(m);
     }
     if (ar.length) {
       if (p * q + q < ar.length + 1) {
@@ -326,10 +315,6 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
     req.body.password = await bcrypt.hash(req.body.password, 10);
   if (req.body.expiryDate) req.body.expiryDatee = req.body.expiryDate;
   if (result) {
-    let bSavePath;
-    if (req.body.avatar) {
-      bSavePath = result.avatar;
-    }
     const doc = await User.findOneAndUpdate(
       { _id: req.body.id, tenantId: res.locals.user.tenantId },
       req.body,
@@ -373,7 +358,7 @@ export const clientReactivationMail = async (
   client: { email: string; name: string }
 ) => {
   const cipher = crypto.createCipheriv(
-    "aes192",
+    "aes192", // TODO: Use "aes-256-gcm" for better security
     Buffer.from(SECRET_KEY, "base64"),
     iv
   );
@@ -550,19 +535,19 @@ export const insertClientforMission = async (
     let clientArr: any = [];
     clientArr = req.body.clientId;
     if (req.body.clientId.length > 0) {
-      for (let i = 0; i < clientArr.length; i++) {
+      for (const clientId of clientArr) {
         const result: Array<any> = await User.find(
           {
-            _id: clientArr[i],
+            _id: clientId,
             tenantId: res.locals.user.tenantId,
           },
           { _id: 1 }
         );
         if (result.length) {
-          if (arr.includes(clientArr[i])) {
-            faultArray.push(clientArr[i]);
+          if (arr.includes(clientId)) {
+            faultArray.push(clientId);
           } else {
-            arr.push(clientArr[i]);
+            arr.push(clientId);
           }
         } else {
           return res.status(400).json({
@@ -577,8 +562,8 @@ export const insertClientforMission = async (
       );
       if (save) {
         const data: any = [];
-        for (let i = 0; i < arr.length; i++) {
-          data.push(await User.findOne({ _id: arr[i] }));
+        for (const clientId of arr) {
+          data.push(await User.findOne({ _id: clientId }));
         }
         return res.status(200).json({
           status: true,
@@ -651,11 +636,11 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
     .lean();
   const savedResult: any = [];
   if (result.length) {
-    for (let i = 0; i < result.length; i++) {
+    for (const client of result) {
       const d = {
-        name: result[i].name,
-        email: result[i].email,
-        phoneNumber: result[i].phoneNo,
+        name: client.name,
+        email: client.email,
+        phoneNumber: client.phoneNo,
       };
       savedResult.push(d);
     }
@@ -680,39 +665,6 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       message: "Data does not exist!",
     });
 };
-
-// export let getListClient = async(req: Request,res: AuthResponse,next:NextFunction)=>{
-//     try {
-//         let result:Array<any> = await User.find({tenantId:res.locals.user.tenantId, userType:'tenant-client'}).sort({createdAt:-1}).populate({path:"createdBy",select:"name"}).lean();
-
-//         let newResult = await Promise.all(result.map(async (client) => {
-//             let count = await Mission.aggregate(getNumberOfMissions(client._id));
-
-//             return {
-//                 ...client,
-//                 count
-//             }
-//         }))
-
-//         if(result.length){
-//             return res.status(200).json({
-//                 status:true,
-//                 message:"Data fetched successfully!",
-//                 data:newResult
-//             })
-
-//         }else return res.status(200).json({
-//             status:false,
-//             message:"Data does not exist!"
-//         })
-//     } catch (error) {
-//         req.log.error(error);
-//         return res.status(500).json({
-//             status:false,
-//             message:"Server error!"
-//         })
-//     }
-// }
 
 export const getListClient = async (req: Request, res: AuthResponse) => {
   const page = Number(req.query.page) - 1;
@@ -757,13 +709,11 @@ export const devApiClientArr = async (req: Request, res: AuthResponse) => {
     }
   );
   if (docs.length) {
-    for (let i = 0; i < docs.length; i++) {
-      if (!(docs[i].clientId instanceof Array) && docs[i].clientId != null) {
-        // docs[i].clientId = [docs[i].clientId];
-        // docs[i].save();
+    for (const mission of docs) {
+      if (!(mission.clientId instanceof Array) && mission.clientId != null) {
         await Mission.updateOne(
-          { _id: docs[i]._id },
-          { $set: { clientId: [docs[i].clientId] } }
+          { _id: mission._id },
+          { $set: { clientId: [mission.clientId] } }
         );
         req.log.info("updated");
       } else {

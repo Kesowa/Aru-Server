@@ -37,7 +37,7 @@ import { LazToTiles3D } from "../../utils/pointcloud";
 import UploadTask from "../../models/uploadTask";
 import { randomUUID } from "crypto";
 
-interface missionMapVal {
+interface MissionMapVal {
   missionId: mongoose.Types.ObjectId;
   missionName: string;
   layers: [
@@ -48,7 +48,7 @@ interface missionMapVal {
     }
   ];
 }
-interface attrMapVal {
+interface AttrMapVal {
   key: string;
   value: unknown;
   layerMatches: [
@@ -427,10 +427,10 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
     // Scope for optimization:
     // The below for loop could be completely removed and lesser docs would be read if we could use { vector: { $in: match3.type } },
     // but we can't as initially vector is just an id before populate() is done
-    for (let i = 0; i < result.length; i++) {
-      for (let j = 0; j < match3.type.length; j++) {
-        if (featureType[result[i].vector] == match3.type[j]) {
-          d.push(result[i]);
+    for (const layer of result) {
+      for (const t of match3.type) {
+        if (featureType[layer.vector] == t) {
+          d.push(layer);
         }
       }
     }
@@ -445,10 +445,10 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
       },
       vector: { $exists: true },
     }).sort(sort);
-    for (let i = 0; i < result.length; i++) {
-      for (let j = 0; j < match2.name.length; j++) {
-        if (result[i].vector == match2.name[j]) {
-          d.push(result[i]);
+    for (const layer of result) {
+      for (const name of match2.name) {
+        if (layer.vector == name) {
+          d.push(layer);
         }
       }
     }
@@ -463,10 +463,10 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
       },
       raster: { $exists: true },
     }).sort(sort);
-    for (let i = 0; i < result.length; i++) {
-      for (let j = 0; j < match.name.length; j++) {
-        if (result[i].raster == match.name[j]) {
-          d.push(result[i]);
+    for (const layer of result) {
+      for (const name of match.name) {
+        if (layer.raster == name) {
+          d.push(layer);
         }
       }
     }
@@ -551,8 +551,8 @@ export const getMetadataForUpdatingBaseLayer = async (
       };
     });
 
-    const missionMap: Map<string, missionMapVal> = new Map();
-    const attrMap: Map<string, attrMapVal> = new Map();
+    const missionMap: Map<string, MissionMapVal> = new Map();
+    const attrMap: Map<string, AttrMapVal> = new Map();
 
     const bgjson = await readGeoJson(
       DirPath(Directory.ROOT, baseLayerData.layerpath)
@@ -633,14 +633,13 @@ export const getMetadataForUpdatingBaseLayer = async (
                 .layerMatches.filter(
                   (l) => l.layerId.toString() !== layer._id.toString()
                 );
+              let layerMatches;
+              if (lm.length === 0) layerMatches = "No Other Mathces";
+              else if (lm.length === layerData.length - 1) layerMatches = "Matches With All";
+              else layerMatches = lm;
               return {
                 ...attrMap.get(f),
-                layerMatches:
-                  lm.length === 0
-                    ? "No Other Mathces"
-                    : lm.length === layerData.length - 1
-                    ? "Matches With All"
-                    : lm,
+                layerMatches
               };
             }),
           };
@@ -1083,8 +1082,6 @@ export const createBaseRasterfromUpload = async (
   //----------TITILER API HAS CHANGED-------------------
   //  Metadata api has been removed
   // instead there is statistics api and info api
-  // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-  //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
   let minP = 0;
   let maxP = 1;
   const { name, raster, captureDate } = req.body;
@@ -1100,7 +1097,6 @@ export const createBaseRasterfromUpload = async (
   let metadata = {};
   if (rasterType == rasterProps.DEM) {
     let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}/${fileDoc.metadata.objectkey}`;
-    //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
     let response = await fetch(metaDataURL, {
       method: "GET",
     });
@@ -1185,10 +1181,7 @@ export const updateBaseLayerRasterUpload = async (
   //----------TITILER API HAS CHANGED-------------------
   //  Metadata api has been removed
   // instead there is statistics api and info api
-  // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-  //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
   const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
-  //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
   const response = await fetch(metaDataURL, {
     method: "GET",
   });
@@ -1196,10 +1189,6 @@ export const updateBaseLayerRasterUpload = async (
   //-------handle for detail:not found----
   const minP = metadata["1"]["min"];
   const maxP = metadata["1"]["max"];
-  // let center = {
-  //   lat: (metadata["bounds"][1] + metadata["bounds"][3]) / 2,
-  //   lng: (metadata["bounds"][0] + metadata["bounds"][2]) / 2,
-  // };
   doc.minp = minP;
   doc.maxp = maxP;
   await doc.save();
@@ -1280,34 +1269,34 @@ export const isBaseupdateDev = async (req: Request, res: AuthResponse) => {
     }
   );
   if (docs.length) {
-    for (let i = 0; i < docs.length; i++) {
-      if (docs[i].isBase != true && docs[i].missionId != null) {
-        docs[i].isBase = false;
+    for (const doc of docs) {
+      if ((!doc.isBase) && doc.missionId != null) {
+        doc.isBase = false;
         await Layer.updateOne(
-          { _id: docs[i]._id },
-          { isBase: docs[i].isBase }
+          { _id: doc._id },
+          { isBase: doc.isBase }
         );
       }
       if (
-        docs[i].isBase != true &&
-        docs[i].missionId == null &&
-        docs[i].type == "Vector"
+        (!doc.isBase) &&
+        doc.missionId == null &&
+        doc.type == "Vector"
       ) {
-        docs[i].isBase = false;
+        doc.isBase = false;
         await Layer.updateOne(
-          { _id: docs[i]._id },
-          { isBase: docs[i].isBase }
+          { _id: doc._id },
+          { isBase: doc.isBase }
         );
       }
       if (
-        docs[i].isBase != true &&
-        docs[i].missionId == null &&
-        docs[i].type == "Raster"
+        (!doc.isBase) &&
+        doc.missionId == null &&
+        doc.type == "Raster"
       ) {
-        docs[i].isBase = false;
+        doc.isBase = false;
         await Layer.updateOne(
-          { _id: docs[i]._id },
-          { isBase: docs[i].isBase }
+          { _id: doc._id },
+          { isBase: doc.isBase }
         );
       }
     }
@@ -1471,37 +1460,37 @@ export const isPublicupdateDev = async (req: Request, res: AuthResponse) => {
     }
   );
   if (docs.length) {
-    for (let i = 0; i < docs.length; i++) {
-      if (docs[i].isPublic != true && docs[i].missionId != null) {
-        docs[i].isPublic = false;
-        docs[i].publicMapRef = null;
+    for (const doc of docs) {
+      if ((!doc.isPublic) && doc.missionId != null) {
+        doc.isPublic = false;
+        doc.publicMapRef = null;
         await Layer.updateOne(
-          { _id: docs[i]._id },
-          { isPublic: docs[i].isPublic, publicMapRef: docs[i].publicMapRef }
+          { _id: doc._id },
+          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef }
         );
       }
       if (
-        docs[i].isPublic != true &&
-        docs[i].missionId == null &&
-        docs[i].type == "Vector"
+        (!doc.isPublic) &&
+        doc.missionId == null &&
+        doc.type == "Vector"
       ) {
-        docs[i].isPublic = false;
-        docs[i].publicMapRef = null;
+        doc.isPublic = false;
+        doc.publicMapRef = null;
         await Layer.updateOne(
-          { _id: docs[i]._id },
-          { isPublic: docs[i].isPublic, publicMapRef: docs[i].publicMapRef }
+          { _id: doc._id },
+          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef }
         );
       }
       if (
-        docs[i].isPublic != true &&
-        docs[i].missionId == null &&
-        docs[i].type == "Raster"
+        (!doc.isPublic) &&
+        doc.missionId == null &&
+        doc.type == "Raster"
       ) {
-        docs[i].isPublic = false;
-        docs[i].publicMapRef = null;
+        doc.isPublic = false;
+        doc.publicMapRef = null;
         await Layer.updateOne(
-          { _id: docs[i]._id },
-          { isPublic: docs[i].isPublic, publicMapRef: docs[i].publicMapRef }
+          { _id: doc._id },
+          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef }
         );
       }
     }
@@ -1573,7 +1562,6 @@ export const GetAlertLocationGeojson = async (
     endDate
   );
   res.json(geojson);
-  return;
 };
 
 const getVideoLocationGeojson = async (
@@ -1667,5 +1655,4 @@ export const GetVideoLocationGeojson = async (
     endDate
   );
   res.json(geojson);
-  return;
 };

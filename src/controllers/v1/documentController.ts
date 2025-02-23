@@ -327,31 +327,31 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
     }
   );
   if (docs.length) {
-    for (let i = 0; i < docs.length; i++) {
-      const newFilename = DirPath(Directory.ROOT, docs[i].filePath);
+    for (const doc of docs) {
+      const newFilename = DirPath(Directory.ROOT, doc.filePath);
       if (await checkFileExists(newFilename)) {
         const size: number = await getFileSize(newFilename);
-        if (size != docs[i].fileSize) {
-          const oldSize = docs[i].fileSize;
-          docs[i].fileSize = size;
-          await docs[i].save();
+        if (size != doc.fileSize) {
+          const oldSize = doc.fileSize;
+          doc.fileSize = size;
+          await doc.save();
           // update size details
           await Tenant.updateOne(
-            { _id: docs[i].tenantId },
+            { _id: doc.tenantId },
             {
               $inc: {
-                actualSize: docs[i].fileSize - oldSize,
-                allDocumentsSize: docs[i].fileSize - oldSize,
+                actualSize: doc.fileSize - oldSize,
+                allDocumentsSize: doc.fileSize - oldSize,
               },
             }
           );
           await Mission.updateOne(
-            { _id: docs[i].missionId },
-            { $inc: { size: docs[i].fileSize - oldSize } }
+            { _id: doc.missionId },
+            { $inc: { size: doc.fileSize - oldSize } }
           );
         }
       } else {
-        await docs[i].delete();
+        await doc.delete();
       }
     }
     return res.status(200).json({
@@ -391,7 +391,7 @@ export const updateDoc = async (req: Request, res: AuthResponse) => {
 };
 
 export const updateMultiDoc = async (req: Request, res: AuthResponse) => {
-  const Ids: String[] = req.body.Id.map((id: any) => String(id));
+  const Ids: string[] = req.body.Id.map((id: any) => String(id));
   const updatedDoc = await Document.updateMany(
     { _id: { $in: Ids }, tenantId: res.locals.user.tenantId._id },
     { $set: req.body.update },

@@ -34,7 +34,7 @@ type CreateMission = {
   flights: {
     "0": {
       flightDetails: {
-        locationId: string | "none";
+        locationId: string;
         date: string;
         time: string;
         flightName: string;
@@ -95,8 +95,6 @@ export const createMission = async (
       { _id: res.locals.user.tenantId },
       { $inc: { actualMissionCount: 1 } }
     );
-    // tenant.actualMissionCount = Number(tenant.actualMissionCount) + 1;
-    // await tenant.save();
   }
   // Mission id to store with flight
   const missionId = mission._id;
@@ -239,7 +237,7 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
     const deletedDocumentsData = await Document.find({
       missionId: req.body._id,
     });
-    const deletedFlight = await Flight.deleteMany({
+    await Flight.deleteMany({
       mission: req.body._id,
     });
 
@@ -251,7 +249,6 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
         { _id: res.locals.user.tenantId },
         { $inc: { actualMissionCount: -1 } }
       );
-      // tenant.actualMissionCount = Number(tenant.actualMissionCount) - 1;
     }
     for (const layer of deletedLayerData) {
       await layer.delete();
@@ -338,7 +335,7 @@ export const fetchAllMissionsForTenant = async (
     sortBy = "-createdAt";
   }
 
-  let total: Number;
+  let total: number;
 
   const page = Number(req.query.page);
   const limit = Number(req.query.limit);
@@ -504,11 +501,6 @@ export const fetchMissionById = async (req: Request, res: AuthResponse) => {
     return;
   }
   mission.clientId = flatten(mission.clientId);
-  //#typeErrorFixed
-  // mission.clientId = Array.isArray(mission.clientId) ? mission.clientId : [mission.clientId]
-  // const clients = await User.find({_id: {$in: [...mission.clientId]}}, {name: 1, avatar: 1});
-  // mission.clientId = clients;
-  // mission.invites = await inviteModel.find({missionID: mission._id, valid: true}, {email: 1});
 
   const flight = await Flight.findOne({
     mission: missionId,
@@ -547,7 +539,7 @@ export const fetchAllMissionByPilotOrNull = async (
   res: AuthResponse
 ) => {
   const status = req.query.status;
-  const qdate = req.query.date; //new Date(String(req.query.date));
+  const qdate = req.query.date;
   const startDate = req.query.startDate;
   const endDate = req.query.endDate;
   const page = req.query.page;
@@ -774,7 +766,7 @@ export const missionStatusUpdate = async (req: Request, res: AuthResponse) => {
   }).populate<{ missionType: IMissionType }>("missionType");
   if (findDoc) {
     findDoc.status = status;
-    const savedDoc = await findDoc.save();
+    await findDoc.save();
     switch (status) {
       case "Completed":
         notificationSocket
@@ -801,7 +793,7 @@ export const missionStatusUpdate = async (req: Request, res: AuthResponse) => {
         });
     }
   } else {
-    throw `MissionID : ${missionID} doesn't exist`;
+    throw new Error(`MissionID : ${missionID} doesn't exist`);
   }
 };
 
@@ -866,12 +858,12 @@ export const fetchMissionsByLocationMapref = async (
 
   const result: any[] = [];
 
-  for (let i = 0; i < data.length; i++) {
+  for (const flight of data) {
     result.push({
-      MissionName: data[i].mission.name,
-      missionID: data[i].mission._id,
-      "flight-center-point": data[i].centerPoints,
-      orderDate: data[i].createdAt,
+      MissionName: flight.mission.name,
+      missionID: flight.mission._id,
+      "flight-center-point": flight.centerPoints,
+      orderDate: flight.createdAt,
     });
   }
   if (data) {
@@ -902,7 +894,6 @@ export const fetchMissionByLocationID = async (
       tenantID.toString()
     )
   );
-  // const data = await Flight.find({missionID:missionID, locationID:locationID, tenant:res.locals.user.tenantId._id});
   if (data.length) {
     res.json({
       status: true,
@@ -1062,7 +1053,7 @@ export const convertClientIdToArray = async (
       },
     ]
   );
-  const nextResult = await Mission.updateMany(
+  await Mission.updateMany(
     {
       clientId: { $exists: true, $type: "array" },
     },
@@ -1183,7 +1174,6 @@ export const GetAlertLocationGeojson = async (
     new Types.ObjectId(req.params.missionID)
   );
   res.json(geojson);
-  return;
 };
 
 const getVideoLocationGeojson = async (
@@ -1285,5 +1275,4 @@ export const GetVideoLocationGeojson = async (
     new Types.ObjectId(req.params.missionID)
   );
   res.json(geojson);
-  return;
 };

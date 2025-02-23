@@ -55,13 +55,11 @@ export const createAsset = async (
       message: "Successfully saved the asset",
       data: savePromise,
     });
-    return;
   } else {
     res.status(501).json({
       status: false,
       message: "Failed to save the asset",
     });
-    return;
   }
 };
 
@@ -154,7 +152,7 @@ export const removeAsset = async (req: Request, res: AuthResponse) => {
 export const toggleAsset = async (req: Request, res: AuthResponse) => {
   const assetID = req.body.assetID;
   const toUpdate = {
-    isActive: req.body.isActive === true ? true : false,
+    isActive: req.body.isActive === true,
   };
   const toggledAsset = await Asset.findOneAndUpdate(
     { _id: assetID, tenantID: res.locals.user.tenantId._id },

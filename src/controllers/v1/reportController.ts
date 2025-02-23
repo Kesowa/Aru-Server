@@ -20,8 +20,6 @@ import {
   plotCategories,
   privatePlotCategories,
   publicPlotCategories,
-} from "../../utils/reportUtils";
-import {
   generatePlotReport as generatePlotReportDocument,
   generateBlockReport as generateBlockReportDocument,
 } from "../../utils/reportUtils";
@@ -453,7 +451,7 @@ export const generatePlotReport = async (
           "Feature Indices": "N/A",
         });
       });
-      Object.keys(errors.plots).map((key) => {
+      Object.keys(errors.plots).forEach((key) => {
         if (errors.plots[key].length > 0) {
           rows.push({
             "Error Location": "Plot Layer",
@@ -462,7 +460,7 @@ export const generatePlotReport = async (
           });
         }
       });
-      Object.keys(errors.blocks).map((key) => {
+      Object.keys(errors.blocks).forEach((key) => {
         if (errors.blocks[key].length > 0) {
           rows.push({
             "Error Location": "Action Area Layer",
@@ -471,7 +469,7 @@ export const generatePlotReport = async (
           });
         }
       });
-      Object.keys(errors.buildings).map((key) => {
+      Object.keys(errors.buildings).forEach((key) => {
         if (errors.buildings[key].length > 0) {
           rows.push({
             "Error Location": "Building Footprint Layer",
@@ -603,10 +601,6 @@ export const generatePlotReport = async (
       turf.featureCollection(canopyGeojson.features)
     );
 
-    const combinedBuildings = turf.combine(
-      turf.featureCollection(buildingsGeojson.features)
-    );
-
     const garbageCollectionGeojson = turf.featureCollection(
       (
         await readGeoJson(
@@ -676,9 +670,6 @@ export const generatePlotReport = async (
 
           // ******************** PLOT DETAILS ***********************
 
-          // // front view image
-          // const plotLayerFile = await layerFiles.findOne({ layerId: plotLayerId });
-          // const frontViewImageBuffer = await fs.readFile(DirPath(Directory.DEFAULT, plotLayerFile.filePath));
           const plotArea = turf.area(plotFeature);
 
           // ******************** BUILDING DETAILS ************************
@@ -771,8 +762,6 @@ export const generatePlotReport = async (
               ? null
               : blockProperties.averageIncentives, // must be numeric
           };
-
-          // req.log.info(data);
 
           await generatePlotReportDocument({
             ...data,

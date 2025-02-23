@@ -134,8 +134,6 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
     //----------TITILER API HAS CHANGED-------------------
     //  Metadata api has been removed
     // instead there is statistics api and info api
-    // let metaDataURL = `http://192.168.8.20:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
-    //let metaDataURL = `http://localhost:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
     const { name, raster, captureDate, missionId, layerGroupId } = req.body;
     const rasterType = raster as rasterProps;
     if (!Object.values(rasterProps).includes(rasterType)) {
@@ -151,12 +149,11 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
     let metadata = {};
     if (rasterType == rasterProps.DEM) {
       let metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}/${fileDoc.metadata.objectkey}`;
-      //let metaDataURL = `http://172.31.6.26:8000/cog/metadata?url=http://localhost:5011${tif_loc}`;
       req.log.info("fetching metadata from titiler");
       let response = await fetch(metaDataURL, {
         method: "GET",
       });
-      req.log.info(response), "getResponse data :  ";
+      req.log.info(response, "getResponse data :  ");
       let metadata = await response.json();
       req.log.info(metadata, "get metadata data :  ");
       //-------handle for detail:not found----
@@ -306,7 +303,7 @@ export const deleteLayer = async (req: Request, res: AuthResponse) => {
     tenantId: res.locals.user.tenantId._id,
   });
   if (d) {
-    if (d.isBase == true) {
+    if (d.isBase) {
       return res.status(200).json({
         status: false,
         message: "Cannot delete layer which is being used by Base Layer",
@@ -329,9 +326,9 @@ export const deleteLayer = async (req: Request, res: AuthResponse) => {
 
 export const deleteMultipleLayers = async (req: Request, res: AuthResponse) => {
   const layers = req.body.layers;
-  for (let i = 0; i < layers.length; i++) {
+  for (const layerId of layers) {
     const d = await Layer.findOne({
-      _id: layers[i],
+      _id: layerId,
       tenantId: res.locals.user.tenantId._id,
     });
     if (d) {
@@ -431,8 +428,8 @@ export const editGeoJson = async (
         await deleteFeatureSearchIndex(data.layerpath); // delete old search index
       }
       let updatedColor: string = geojson.features[0].properties.color;
-      for (let i = 0; i < geojson.features.length; i++) {
-        if (geojson.features[i].properties.color != updatedColor) {
+      for (const feature of geojson.features) {
+        if (feature.properties.color != updatedColor) {
           updatedColor = "multicolor";
           break;
         }
@@ -624,7 +621,6 @@ export const getrasterdetailsbyID = async (req: Request, res: AuthResponse) => {
     tenantId: res.locals.user.tenantId._id,
   });
   if (doc.type == "Raster") {
-    const docpath = DirPath(Directory.ROOT, doc.layerpath);
     const fname = doc.layerpath.split(/[\\\/]/)[2];
     if (fname) {
       result.push({
@@ -965,51 +961,48 @@ export const filterLayer = async (
           status: false,
           message: "Data doesn't exist!",
         });
-      for (let i = 0; i < result.length; i++) {
-        if (result[i].vector || result[i].raster) {
-          d.set(result[i]._id.toHexString(), result[i]);
+      for (const layer of result) {
+        if (layer.vector || layer.raster) {
+          d.set(layer._id.toHexString(), layer);
         }
       }
-    } else {
-      if (req.body.type[0] === "Raster") {
-        const result = await Layer.find({
-          type: req.body.type,
-          missionId: req.body.missionId,
-          createdAt: {
-            $gte: startTime,
-            $lte: endTime,
-          },
-        }).sort(sort);
-        if (!result.length)
-          return res.json({
-            status: false,
-            message: "Data doesn't exist!",
-          });
-        for (let i = 0; i < result.length; i++) {
-          if (result[i].raster) {
-            d.set(result[i]._id.toHexString(), result[i]);
-          }
+    } else if (req.body.type[0] === "Raster") {
+      const result = await Layer.find({
+        type: req.body.type,
+        missionId: req.body.missionId,
+        createdAt: {
+          $gte: startTime,
+          $lte: endTime,
+        },
+      }).sort(sort);
+      if (!result.length)
+        return res.json({
+          status: false,
+          message: "Data doesn't exist!",
+        });
+      for (const layer of result) {
+        if (layer.raster) {
+          d.set(layer._id.toHexString(), layer);
         }
-      } else {
-        if (req.body.type[0] === "Vector") {
-          const result = await Layer.find({
-            type: req.body.type,
-            missionId: req.body.missionId,
-            createdAt: {
-              $gte: startTime,
-              $lte: endTime,
-            },
-          }).sort(sort);
-          if (!result.length)
-            return res.json({
-              status: false,
-              message: "Data doesn't exist!",
-            });
-          for (let i = 0; i < result.length; i++) {
-            if (result[i].vector) {
-              d.set(result[i]._id.toHexString(), result[i]);
-            }
-          }
+      }
+    }
+    else if (req.body.type[0] === "Vector") {
+      const result = await Layer.find({
+        type: req.body.type,
+        missionId: req.body.missionId,
+        createdAt: {
+          $gte: startTime,
+          $lte: endTime,
+        },
+      }).sort(sort);
+      if (!result.length)
+        return res.json({
+          status: false,
+          message: "Data doesn't exist!",
+        });
+      for (const layer of result) {
+        if (layer.vector) {
+          d.set(layer._id.toHexString(), layer);
         }
       }
     }
@@ -1034,9 +1027,9 @@ export const filterLayer = async (
         status: false,
         message: "Data doesn't exist!",
       });
-    for (let i = 0; i < result.length; i++) {
-      if (result[i].vector || result[i].raster) {
-        d.set(result[i]._id.toHexString(), result[i]);
+    for (const layer of result) {
+      if (layer.vector || layer.raster) {
+        d.set(layer._id.toHexString(), layer);
       }
     }
   }
@@ -1049,11 +1042,11 @@ export const filterLayer = async (
         $lte: endTime,
       },
     }).sort(sort);
-    for (let i = 0; i < result.length; i++) {
-      for (let j = 0; j < match3.type.length; j++) {
-        if (result[i].vector) {
-          if (featureType[result[i].vector] == match3.type[j]) {
-            d.set(result[i]._id.toHexString(), result[i]);
+    for (const layer of result) {
+      for (const t of match3.type) {
+        if (layer.vector) {
+          if (featureType[layer.vector] == t) {
+            d.set(layer._id.toHexString(), layer);
           }
         }
       }
@@ -1068,11 +1061,11 @@ export const filterLayer = async (
         $lte: endTime,
       },
     }).sort(sort);
-    for (let i = 0; i < result.length; i++) {
-      for (let j = 0; j < match2.name.length; j++) {
-        if (result[i].vector) {
-          if (result[i].vector == match2.name[j]) {
-            d.set(result[i]._id.toHexString(), result[i]);
+    for (const layer of result) {
+      for (const name of match2.name) {
+        if (layer.vector) {
+          if (layer.vector == name) {
+            d.set(layer._id.toHexString(), layer);
           }
         }
       }
@@ -1087,11 +1080,11 @@ export const filterLayer = async (
         $lte: endTime,
       },
     }).sort(sort);
-    for (let i = 0; i < result.length; i++) {
-      for (let j = 0; j < match.name.length; j++) {
-        if (result[i].raster) {
-          if (result[i].raster == match.name[j]) {
-            d.set(result[i]._id.toHexString(), result[i]);
+    for (const layer of result) {
+      for (const name of match.name) {
+        if (layer.raster) {
+          if (layer.raster == name) {
+            d.set(layer._id.toHexString(), layer);
           }
         }
       }
@@ -1124,11 +1117,10 @@ export const getFeatureByLayerId = async (req: Request, res: AuthResponse) => {
         message: "file path not exist!",
       });
     }
-    const flaggedFeatures =
-      result.flaggedFeatures !== undefined ? result.flaggedFeatures : [];
+    const flaggedFeatures = result.flaggedFeatures ?? [];
     const filterFlagged = (data) => {
       const isFlagged = req.body.isFlagged;
-      if (isFlagged !== undefined && flaggedFeatures.length >= 0) {
+      if (isFlagged !== undefined && flaggedFeatures.length > 0) {
         return data.filter((e, idx) => {
           if (isFlagged) {
             return flaggedFeatures.includes(idx);
@@ -1242,13 +1234,13 @@ export const getFeatureCsvByLayerIdx = async (
     const clone: any = [];
     if (req.body.featureIndex) {
       if (req.body.featureIndex.length <= geojson.features.length) {
-        for (let i = 0; i < req.body.featureIndex.length; i++) {
+        for (const idx of req.body.featureIndex) {
           geoArray.push(
-            geojson.features[req.body.featureIndex[i]].properties
+            geojson.features[idx].properties
           );
         }
-        for (let j = 0; j < geoArray.length; j++) {
-          clone.push(omit(geoArray[j], ["sys_id", "icon", "color"]));
+        for (const properties of geoArray) {
+          clone.push(omit(properties, ["sys_id", "icon", "color"]));
         }
       } else
         return res.json({
@@ -1256,11 +1248,11 @@ export const getFeatureCsvByLayerIdx = async (
           message: ` client requirement geojson features exceeds the exist geojson features count!${geojson.features.length} `,
         });
     } else {
-      for (let i = 0; i < geojson.features.length; i++) {
-        geoArray.push(geojson.features[i].properties);
+      for (const feature of geojson.features) {
+        geoArray.push(feature.properties);
       }
-      for (let j = 0; j < geoArray.length; j++) {
-        clone.push(omit(geoArray[j], ["sys_id", "icon", "color"]));
+      for (const properties of geoArray) {
+        clone.push(omit(properties, ["sys_id", "icon", "color"]));
       }
     }
     const filename = "features-" + String(result._id) + ".csv";
@@ -1557,9 +1549,7 @@ export const autoAssignImage = async (req: Request, res: AuthResponse) => {
         fileSize: fileDocs[j].metadata.filesize,
         //! too complex
         featureLabel: layerDoc.layerLabel
-          ? findex.properties[layerDoc.layerLabel]
-            ? findex.properties[layerDoc.layerLabel]
-            : null
+          ? (findex.properties[layerDoc.layerLabel] ?? null)
           : null,
         centerPoints: centerPoints2,
         fileType: fileDocs[j].metadata.mimetype,
@@ -1713,12 +1703,12 @@ export const imageReviewforLayerFileId = async (
   if (layerDoc) {
     const docpath = DirPath(Directory.ROOT, layerDoc.layerpath);
     const geojson = await readGeoJson(docpath);
-    for (let i = 0; i < req.body.check.length; i++) {
+    for (const element of req.body.check) {
       const doc = await layerFiles.findOne({
-        _id: req.body.check[i]._id,
+        _id: element._id,
         tenantId: res.locals.user.tenantId,
       });
-      const sys_Id: any = req.body.check[i].sys_Id;
+      const sys_Id: any = element.sys_Id;
       for (let j = 0; j < geojson.features.length; j++) {
         if (geojson.features[j].properties.sys_id == sys_Id) {
           const centerPoints2 = {
@@ -1729,13 +1719,11 @@ export const imageReviewforLayerFileId = async (
             doc.isReview = true;
             if (
               String(doc.sys_Id) !=
-              String(req.body.check[i].sys_Id || doc.sys_Id == null)
+              String(element.sys_Id || doc.sys_Id == null)
             ) {
               doc.sys_Id = geojson.features[j].properties.sys_id;
               doc.featureLabel = layerDoc.layerLabel
-                ? geojson.features[j].properties[layerDoc.layerLabel]
-                  ? geojson.features[j].properties[layerDoc.layerLabel]
-                  : j
+                ? (geojson.features[j].properties[layerDoc.layerLabel] ?? j)
                 : j;
               doc.centerPoints = centerPoints2;
             }
@@ -1982,14 +1970,14 @@ export const picktoMapUseForLayerCreate = async (
       // check if image location already exists
       const imagePoint = turf.point([long, lat]);
       let alreadyRegistered = false;
-      for (let j = 0; j < features.length; j++) {
-        const featurePoint = turf.point(features[j].geometry.coordinates);
+      for (const feature of features) {
+        const featurePoint = turf.point(feature.geometry.coordinates);
         const distance =
           turf.distance(imagePoint, featurePoint, { units: "kilometers" }) *
           1000;
         if (distance < snapRadius) {
           // if image exists, share sys_id
-          sys_id = features[j].properties.sys_id;
+          sys_id = feature.properties.sys_id;
           alreadyRegistered = true;
           break;
         }
@@ -2048,9 +2036,9 @@ export const picktoMapUseForLayerCreate = async (
       docCount.activePackage.storage - Number(docCount.actualSize) >
       result.size;
     if (ress !== true) {
-      for (let i = 0; i < allImageData.length; i++) {
-        await deletePublicFileUsingPath(allImageData[i].path);
-        await UploadTask.findByIdAndDelete(allImageData[i].taskId);
+      for (const imageData of allImageData) {
+        await deletePublicFileUsingPath(imageData.path);
+        await UploadTask.findByIdAndDelete(imageData.taskId);
       }
       return res.status(403).json({
         status: false,
@@ -2071,40 +2059,40 @@ export const picktoMapUseForLayerCreate = async (
       layerLabel: "sys_id",
       captureDate: new Date(),
       featureCount: features.length,
-      isBase: req.body.missionId ? false : true,
+      isBase: !req.body.missionId,
       missionId: req.body.missionId ?? null,
     }).create();
 
     if (savedDoc1) {
       let flag = false;
-      for (let i = 0; i < allImageData.length; i++) {
+      for (const imageData of allImageData) {
         const centerPoints2 = {
-          lng: allImageData[i].coordinates[0],
-          lat: allImageData[i].coordinates[1],
+          lng: imageData.coordinates[0],
+          lat: imageData.coordinates[1],
         };
         const filePath = await permPath(
           Directory.GEOJSON_IMAGES,
-          allImageData[i].path
+          imageData.path
         );
         const featureFile = new layerFiles({
-          name: allImageData[i].originalname,
+          name: imageData.originalname,
           layerId: savedDoc1._id,
           filePath: filePath,
-          fileSize: allImageData[i].size,
-          featureLabel: allImageData[i].sys_id,
+          fileSize: imageData.size,
+          featureLabel: imageData.sys_id,
           centerPoints: centerPoints2,
-          fileType: allImageData[i].mimetype,
-          sys_Id: allImageData[i].sys_id,
+          fileType: imageData.mimetype,
+          sys_Id: imageData.sys_id,
           isReview: true,
           tenantId: res.locals.user.tenantId,
           createdBy: res.locals.user._id,
           updatedBy: res.locals.user._id,
         });
         const savedDoc = await featureFile.create();
-        await UploadTask.findByIdAndDelete(allImageData[i].taskId);
+        await UploadTask.findByIdAndDelete(imageData.taskId);
         if (savedDoc) flag = true;
       }
-      if (flag == true) {
+      if (flag) {
         req.log.info("successfully created layer from images:", savedDoc1.name);
         const data = { badImages, result: savedDoc1 };
         missionSpecificSocket
@@ -2152,8 +2140,8 @@ export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
     }
   );
   if (docs.length) {
-    for (let i = 0; i < docs.length; i++) {
-      const docpath = DirPath(Directory.ROOT, docs[i].layerpath);
+    for (const layer of docs) {
+      const docpath = DirPath(Directory.ROOT, layer.layerpath);
       const geoJSON = await readGeoJson(docpath);
       if (geoJSON) {
         const { filepath: newPath, size } = await modGeoJson(
@@ -2162,29 +2150,17 @@ export const sys_id_Inject = async (req: Request, res: AuthResponse) => {
           geoJSON,
           docpath
         );
-        if (docs[i].isPublic) {
+        if (layer.isPublic) {
           // for public layer, re-generate search index after feature editing
           await saveFeatureSearchIndex(newPath); // save new search index
-          await deleteFeatureSearchIndex(docs[i].layerpath); // delete old search index
+          await deleteFeatureSearchIndex(layer.layerpath); // delete old search index
         }
-        await docs[i].updateFile(newPath, size);
+        await layer.updateFile(newPath, size);
       } else {
         req.log.warn("Geojson Not found");
       }
     }
     res.send("Ok");
-  }
-};
-
-// this is just dead code
-export const sysId_mapping = async (req: Request, res: AuthResponse) => {
-  const docs = await Layer.find({ tenantId: res.locals.user.tenantId });
-  if (docs.length) {
-  } else {
-    res.status(200).json({
-      status: false,
-      message: "No layer documents found",
-    });
   }
 };
 
@@ -2237,14 +2213,14 @@ export const sys_id_Inject_to_layerfiles = async (
         const modifiedGjson = await readGeoJson(
           DirPath(Directory.ROOT, newPath)
         );
-        for (let j = 0; j < modifiedGjson.features.length; j++) {
+        for (const feature of modifiedGjson.features) {
           await layerFiles.updateMany(
             {
               layerId: docs._id,
               featureLabel:
-                modifiedGjson.features[j].properties[docs.layerLabel],
+                feature.properties[docs.layerLabel],
             },
-            { sys_Id: modifiedGjson.features[j].properties.sys_id }
+            { sys_Id: feature.properties.sys_id }
           );
           req.log.info("Modified Doc");
         }
@@ -2365,5 +2341,4 @@ export const publicLayerByMissionId = async (
     mission: publicMission,
     data: layers,
   });
-  return;
 };

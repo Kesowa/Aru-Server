@@ -12,7 +12,7 @@ export const createLayerGroup = async (req: Request, res: AuthResponse) => {
     layers: req.body.layers,
   });
   const saveDoc = await doc.save();
-  const layeraddGroups = await Layer.updateMany(
+  await Layer.updateMany(
     {
       _id: { $in: req.body.layers },
       tenantId: res.locals.user.tenantId,
@@ -150,7 +150,7 @@ export const deleteLayerId = async (req: Request, res: AuthResponse) => {
       tenantId: res.locals.user.tenantId,
     });
     if (docExist) {
-      const updatedLayerGroup = await LayerGroup.updateOne(
+      await LayerGroup.updateOne(
         {
           _id: req.body._id,
           layers: { $in: req.body.layers },
@@ -162,7 +162,7 @@ export const deleteLayerId = async (req: Request, res: AuthResponse) => {
           },
         }
       );
-      const updatedLayers = await Layer.updateMany(
+      await Layer.updateMany(
         {
           _id: { $in: req.body.layers },
           layerGroupId: docExist._id,

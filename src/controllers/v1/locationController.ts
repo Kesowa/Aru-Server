@@ -23,8 +23,6 @@ export const createLocation = async (
       { _id: res.locals.user.tenantId },
       { $inc: { actualLocationCount: 1 } }
     );
-    // tenant.actualLocationCount = Number(tenant.actualLocationCount) + 1;
-    // await tenant.save();
   }
   if (newLocation) {
     const message = `New Location saved with ObjectId: ${newLocation._id}`;
@@ -218,8 +216,6 @@ export const deleteLocation = async (req: Request, res: AuthResponse) => {
         { _id: res.locals.user.tenantId },
         { $inc: { actualLocationCount: -1 } }
       );
-      // tenant.actualLocationCount = Number(tenant.actualLocationCount) - 1;
-      // await tenant.save();
     }
     if (deletedDoc) {
       const message = `Sucessfully deleted doc with id: ${id}`;

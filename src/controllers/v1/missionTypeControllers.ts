@@ -41,7 +41,7 @@ export const editMissionType = async (req: Request, res: AuthResponse) => {
 
 //dellete mission type
 export const deleteMissionType = async (req: Request, res: AuthResponse) => {
-  const missionType = await MissionType.deleteOne({ _id: req.body._id });
+  await MissionType.deleteOne({ _id: req.body._id });
 
   res.json({
     status: true,

@@ -70,7 +70,7 @@ const SortToNum = (qry: string) => {
 };
 
 export const getVODByID = async (req: Request, res: AuthResponse) => {
-  const Ids: String[] = req.body.Id.map((id: any) => String(id));
+  const Ids: string[] = req.body.Id.map((id: any) => String(id));
   const query = {
     _id: { $in: [...Ids] },
     tenantId: res.locals.user.tenantId._id,
@@ -289,7 +289,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     thumbnail: "/processing.png",
     originalFile: fullPath,
     tenantId: res.locals.user.tenantId._id,
-    isSRT: telemetryData ? true : false,
+    isSRT: !!telemetryData,
     fileSize: fileDoc.metadata.filesize,
   }).create();
   await transcodeVideo(fullPath, {
@@ -351,13 +351,12 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
 
 //Delete Multiple VOD Entries
 export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
-  const Ids: String[] = req.body.Id.map((id: any) => String(id));
+  const Ids: string[] = req.body.Id.map((id: any) => String(id));
   const docs = await VOD.find({ _id: { $in: [...Ids] } });
-  const errors: String[] = [];
-  const deleted: String[] = [];
+  const errors: string[] = [];
+  const deleted: string[] = [];
   if (docs && docs.length > 0) {
-    for (let index = 0; index < docs.length; index++) {
-      const doc = docs[index];
+    for (const doc of docs) {
       if (
         doc.videoPath &&
         doc.videoPath !== "/processing.m3u8" &&
@@ -468,7 +467,7 @@ export const updateVOD = async (req: Request, res: AuthResponse) => {
 };
 
 export const updateMultiVOD = async (req: Request, res: AuthResponse) => {
-  const Ids: String[] = req.body.Id.map((id: any) => String(id));
+  const Ids: string[] = req.body.Id.map((id: any) => String(id));
   const updatedDoc = await VOD.updateMany(
     { _id: { $in: Ids }, tenantId: res.locals.user.tenantId._id },
     { $set: req.body.update },

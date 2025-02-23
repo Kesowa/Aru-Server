@@ -8,8 +8,7 @@ import { sendMail } from "../../utils/emailUtil";
 import crypto from "crypto";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { IUser } from "../../schemas/user";
-import { API_SERVER, Directory, DirPath, DUMMY_TENANT } from "../../constants";
-import { getFileSize } from "../../utils/fileUtils";
+import { API_SERVER, Directory, DUMMY_TENANT } from "../../constants";
 import UploadTask from "../../models/uploadTask";
 import { permPath, saveCSV } from "../../utils/dataUtils";
 import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
@@ -98,7 +97,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
     });
   } else if (
     existingUsertWithEmail &&
-    existingUsertWithEmail.isActive == false
+    (!existingUsertWithEmail.isActive)
   ) {
     const temppass = crypto.randomBytes(10).toString("hex");
     const user = {
@@ -342,10 +341,7 @@ export const UserDelete = async (req: Request, res: AuthResponse) => {
     tenantId: res.locals.user.tenantId,
   });
   if (doc) {
-    let size = 0;
     try {
-      const docPath = DirPath(Directory.ROOT, doc.avatar);
-      size = await getFileSize(docPath);
       await deletePublicFileUsingPath(doc.avatar);
       await deleteThumbnails(doc.avatar);
     } catch (error) {
@@ -356,7 +352,6 @@ export const UserDelete = async (req: Request, res: AuthResponse) => {
 
     doc.tenantId = DUMMY_TENANT; //dummy tenant id;
     const d = await doc.save();
-    // let d = await User.findOneAndDelete({ _id: req.query.id, tenantId: res.locals.user.tenantId });
     const tenant = await Tenant.findOne({
       _id: res.locals.user.tenantId,
     });
@@ -365,8 +360,6 @@ export const UserDelete = async (req: Request, res: AuthResponse) => {
         { _id: res.locals.user.tenantId },
         { $inc: { actualUserCount: -1 } }
       );
-      // tenant.actualUserCount = Number(tenant.actualUserCount) - 1;
-      // await tenant.save();
     }
     return res.status(200).json({
       status: true,
@@ -415,9 +408,9 @@ export const testTerms = async (req: Request, res: AuthResponse) => {
   if (flag == "go") {
     const docs: any = await User.find({ tenantId: res.locals.user.tenantId });
     if (docs.length) {
-      for (let i = 0; i < docs.length; i++) {
-        docs[i].isTermsAccepted = false;
-        await docs[i].save();
+      for (const user of docs) {
+        user.isTermsAccepted = false;
+        await user.save();
       }
       return res.status(200).json({
         status: true,

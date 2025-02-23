@@ -94,9 +94,9 @@ export const editPackageForId = async (req: Request, res: AuthResponse) => {
       useFindAndModify: false,
     }).lean();
     const result = await Package.findOne({ _id: req.body._id });
-    if (req.body.poster && doc) {
-      const a = new String(String(req.body.poster)).valueOf();
-      const b = new String(String(bSavePath)).valueOf();
+    if (req.body.poster) {
+      const a = String(req.body.poster);
+      const b = String(bSavePath);
       if (a !== b) {
         copyFiled(
           req.body.poster,

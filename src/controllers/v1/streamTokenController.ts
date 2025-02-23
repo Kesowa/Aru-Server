@@ -42,8 +42,8 @@ export const streamKeyGen = async (
     locationID: locationID,
   });
 
-  const dbSavePromise = await newStreamKey.save();
-  const resp: streamResponse = {
+  await newStreamKey.save();
+  const resp: StreamResponse = {
     token: token,
     flightID: flightID,
     missionID: missionID,
@@ -67,7 +67,7 @@ export const streamTokenValidator = async (req: Request, res: AuthResponse) => {
     }
   );
   if (streamKey) {
-    const message = `token[${req.body.name}] is authorised`;
+    // const message = `token[${req.body.name}] is authorised`;
     // res.locals.log = logger(req, res, message, 200);
     // #region WIPRO
     if (ARU_INSTANCE == Instance.NKDA) {
@@ -89,12 +89,6 @@ export const streamTokenValidator = async (req: Request, res: AuthResponse) => {
 
 export const getActiveStreams = async (req: Request, res: AuthResponse) => {
   const tenantId = res.locals.user.tenantId._id;
-  // if (tenantId != String(res.locals.user.tenantId._id)) {
-  //     res.status(401).json({
-  //         message:"mismatced the tenantId with user's tenantId"
-  //     });
-  //     return;
-  // }
   const activeStreams = await streamKeyModel.find(
     { tenantID: tenantId, isActive: true },
     "streamKey createdAt createdBy missionID flightID"
@@ -181,10 +175,10 @@ export const generateToken = (
 
 //Key Generation Interface
 
-interface streamResponse {
-  token: String | null;
-  message: String;
+interface StreamResponse {
+  token: string | null;
+  message: string;
   status: number;
-  flightID: String;
-  missionID: String;
+  flightID: string;
+  missionID: string;
 }

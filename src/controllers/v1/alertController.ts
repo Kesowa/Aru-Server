@@ -351,12 +351,12 @@ export const fetchAllAlertsByMissionMapref = async (
     match: { tenantId: res.locals.user.tenantId._id },
   });
   const result: any[] = [];
-  for (let i = 0; i < data.length; i++) {
+  for (const alert of data) {
     result.push({
-      alertID: data[i]._id,
-      alertImage: data[i].image,
-      coordinated: data[i].location,
-      missionName: data[i].missionId.name,
+      alertID: alert._id,
+      alertImage: alert.image,
+      coordinated: alert.location,
+      missionName: alert.missionId.name,
     });
   }
   if (result.length) {
@@ -376,15 +376,10 @@ export const fetchAllAlertsByMissionMapref = async (
 //test api for injecting custom locationID,flightID and missionID on to specified no of alerts.
 
 export const testApiinject = async (req: Request, res: AuthResponse) => {
-  // let missionId = Types.ObjectId(String(req.body.id));
   const data = await Alert.find({});
   // .limit(req.body.limit);
   const savedDoc = await Promise.all(
     data.map(async (d) => {
-      // d.createdBy = req.body.userId;
-      // d.locationId = req.body.locationId;
-      //d.missionId = req.body.missionId;
-      //d.flightId = req.body.flightId;
       d.tenantId = req.body.tenantId;
       return await d.save();
     })
@@ -409,9 +404,7 @@ export const fetchAllAlertByLocationIdAndTime = async (
 ) => {
   const timeStr = String(req.query.time);
   const time = Number(timeStr.split(" ")[0]);
-  //let time = Number(req.body.time.split(" ")[0]);
   const timeType = timeStr.split(" ")[1];
-  //let timeType = String(req.body.time.split(" ")[1]).toLowerCase();
 
   const endTime = new Date();
   let startTime: Date;
@@ -437,7 +430,7 @@ export const fetchAllAlertByLocationIdAndTime = async (
       break;
 
     default:
-      throw `Invalid time ${req.query.time.toString()}`;
+      throw new Error(`Invalid time ${req.query.time.toString()}`);
   }
   const data = await Alert.find(
     {
@@ -459,11 +452,11 @@ export const fetchAllAlertByLocationIdAndTime = async (
 
   const result: any[] = [];
 
-  for (let i = 0; i < data.length; i++) {
+  for (const alert of data) {
     result.push({
-      alertID: data[i]._id,
-      alertImage: data[i].image,
-      coordinates: data[i].location,
+      alertID: alert._id,
+      alertImage: alert.image,
+      coordinates: alert.location,
     });
   }
   if (data.length) {
@@ -543,7 +536,7 @@ export const fetchAllAlertByTenantId = async (
         break;
 
       default:
-        throw `Invalid time ${req.query.time.toString()}`;
+        throw new Error(`Invalid time ${req.query.time.toString()}`);
     }
     data = await Alert.find(
       {
@@ -572,11 +565,11 @@ export const fetchAllAlertByTenantId = async (
 
   const result: any[] = [];
 
-  for (let i = 0; i < data.length; i++) {
+  for (const alert of data) {
     result.push({
-      alertID: data[i]._id,
-      alertImage: data[i].image,
-      coordinates: data[i].location,
+      alertID: alert._id,
+      alertImage: alert.image,
+      coordinates: alert.location,
     });
   }
 
@@ -646,7 +639,7 @@ export const advancedAlertResultByTenantId = async (
         break;
 
       default:
-        throw `Invalid time ${time.toString()}`;
+        throw new Error(`Invalid time ${time.toString()}`);
     }
     createdAt = {
       $gte: startTime,
@@ -824,7 +817,7 @@ export const updateAlert = async (req: Request, res: AuthResponse) => {
 };
 
 export const updateMultiAlert = async (req: Request, res: AuthResponse) => {
-  const Ids: String[] = req.body.Id.map((id: any) => String(id));
+  const Ids: string[] = req.body.Id.map((id: any) => String(id));
 
   const updatedDoc = await Alert.updateMany(
     { _id: { $in: Ids }, tenantId: res.locals.user.tenantId._id },

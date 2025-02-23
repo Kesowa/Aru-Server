@@ -1,14 +1,13 @@
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { Request } from "express";
-import { isValidObjectId, Types } from "mongoose";
+import { isValidObjectId, Types, Model } from "mongoose";
 import Mission from "../../models/mission";
 import Document from "../../models/document";
 import Alert from "../../models/alert";
-import { Model } from "mongoose";
 
 // add models with missionId and fileSize here
 const ModelMap = new Array<
-  [string, Model<any & { fileSize: number; missionId: Types.ObjectId }>]
+  [string, Model<any>]
 >();
 ModelMap.push(["document", Document]);
 ModelMap.push(["alert", Alert]);
@@ -42,7 +41,6 @@ export const getMemoryUsage = async (req: Request, res: AuthResponse) => {
     return [label, memory?.totalSize];
   });
   const resolved = await Promise.all(mongoPromises);
-  // const dataMap = new Map<string, number>(resolved);
   return res.json({
     status: true,
     message: "mission data usage",

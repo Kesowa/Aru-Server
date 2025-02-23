@@ -277,7 +277,7 @@ export const handleWebhook = async (
     });
     return;
   } else {
-    paymentRecord.status == "unknown";
+    paymentRecord.status = "unknown";
     await paymentRecord.save();
     res.status(500).json({
       status: true,
