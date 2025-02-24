@@ -54,7 +54,7 @@ export const TenantType = {
   _id: Types.String(),
   name: Types.String(),
   phoneNo: Types.String(),
-  // tenantRoot: any, // TODO: no "any" type found in ts-openspi
+  // tenantRoot: any, // no "any" type found in ts-openspi
   email: Types.String(), // index
   contactPerson: Types.String(),
   registrationNumber: Types.String(),

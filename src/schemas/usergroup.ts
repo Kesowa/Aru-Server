@@ -9,7 +9,7 @@ export interface IUserGroup {
   tenantId: mongoose.Types.ObjectId; // index
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
-  isActive: Boolean;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
