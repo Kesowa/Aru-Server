@@ -31,8 +31,6 @@ const alertSocketController = (alertSocket: Namespace) => {
      * and also the socket id of the socket initiating the work.
      */
 
-    //console.log(`Socket : ${socket.id}`);
-
     socket.on("AI_START", (data: AIRequest) => {
       data.threshold = 5;
       console.log(`Start event Received`);

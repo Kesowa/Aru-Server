@@ -2,9 +2,6 @@ import { Namespace, Socket } from "socket.io";
 
 export const notificationIoController = (io: Namespace) => {
   io.use(joinRoomByTenantID);
-  io.on("connect", (socket: Socket) => {
-    //console.log(socket.rooms);
-  });
 };
 
 const joinRoomByTenantID = (socket: Socket, next: (err?: any) => void) => {
