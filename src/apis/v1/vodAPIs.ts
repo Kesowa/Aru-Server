@@ -136,14 +136,6 @@ router.delete(
   RobustRunner(removeMultiVOD)
 );
 
-// router.patch(
-//   "/insert-tenantID",
-//   isAuthenticated,
-//   body("tenantID").notEmpty().isMongoId(),
-//   validator,
-//   RobustRunner(testApiinjectTenantID)
-// );
-
 router.patch(
   "/edit-by-ID",
   isAuthenticated,

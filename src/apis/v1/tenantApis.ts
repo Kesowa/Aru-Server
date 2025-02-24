@@ -27,14 +27,6 @@ import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
-//++++++++++++++++++++ package poster upload Api++++++++++++++++++++++++
-// router.post(
-//   "/upload-avatar",
-//   isAuthenticated,
-//   body("avatar").notEmpty().isMongoId(),
-//   RobustRunner(uploadFile)
-// );
-
 //++++++++++++++++++++ Tenant creation Api +++++++++++++++++++++++++++++
 router.post(
   "/create",

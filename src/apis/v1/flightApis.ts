@@ -87,20 +87,6 @@ router.post(
   RobustRunner(fetchAllFlightByMissionId)
 );
 
-//++++++++++++++++++++ fetch all mission (Development purpose only) ++++++++++++++++++++++++
-// router.get(
-//   "/all-flights",
-//   isAuthenticated,
-//   canListMission,
-//   RobustRunner(fetchAllFlights)
-// );
-
-// router.get(
-//   "/flightswithoutmission",
-//   isAuthenticated,
-//   RobustRunner(fetchFlightsWithoutMission)
-// );
-
 router.get(
   "/get-flight-by-location-ID",
   isAuthenticated,

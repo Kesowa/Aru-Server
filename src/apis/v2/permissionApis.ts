@@ -21,9 +21,8 @@ permissionApi.get(
     },
     res: AuthResponse
   ) => {
-    const { limit, offset, orderBy, asc, populate } = req.query;
+    const { limit, offset } = req.query;
     if (["super-admin", "tenant-root"].includes(res.locals.user.userType)) {
-      const isTenant = res.locals.user.userType === "tenant-root";
       const data = Object.values(PERMS);
       res.json({
         data,

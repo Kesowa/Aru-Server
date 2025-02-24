@@ -100,13 +100,13 @@ router.get(
     .matches(/(^[a-zA-Z]+):(ascend|descend)/), // ex: "createdAt:descend"
   query("page").exists().isNumeric().toInt(),
   query("limit").exists().isNumeric().toInt(),
-  query("searchFilters").optional().isString(), // TODO: didn't quite understand the format
+  query("searchFilters").optional().isString(), // didn't quite understand the format
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
   RobustRunner(fetchAllMissionsForTenant)
 );
 
-// TODO: Duplicate Route. Same logic for "/mission-by-userid", and "id" param not even used in controller
+// Duplicate Route. Same logic for "/mission-by-userid", and "id" param not even used in controller
 router.get(
   "/get/user/:id",
   isAuthenticated,
@@ -211,20 +211,7 @@ router.post(
   PermissionGuard(PERMS.MISSION_TYPE_UPDATE, PERMS.MISSION_UPDATE),
   RobustRunner(insertMissionTypeById)
 );
-// router.post(
-//   "/insert-missionType-for-tenantId",
-//   isAuthenticated,
-//   body("missionType").notEmpty().isMongoId(),
-//   validator,
-//   RobustRunner(insertMissionTypeBytenantId)
-// );
 
-// router.patch(
-//   "/convert-clientId-to-array",
-//   isAuthenticated,
-//   onlySuperAdminAccess,
-//   RobustRunner(convertClientIdToArray)
-// );
 router.get(
   "/memory-usage/:id",
   isAuthenticated,
