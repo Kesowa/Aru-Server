@@ -63,15 +63,13 @@ describe("/organisation API", () => {
   });
 
   test("POST /resend-otp-for-email-change", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("request-otp-for-email-change"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          email: faker.internet.email(),
-        })
-        .expect(200);
-    }
+    await request(app)
+      .post(full_url("request-otp-for-email-change"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        email: faker.internet.email(),
+      })
+      .expect(200);
     const res = await request(app)
       .post(full_url("resend-otp-for-email-change"))
       .set("Authorization", `Bearer ${token}`)

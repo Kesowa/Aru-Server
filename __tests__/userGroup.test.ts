@@ -25,16 +25,14 @@ describe("/usergroup API", () => {
   });
 
   test("GET /tenant-usergroup-list", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("tenant-usergroup-create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: randomUUID(),
-          permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
-        })
-        .expect(201);
-    }
+    await request(app)
+      .post(full_url("tenant-usergroup-create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: randomUUID(),
+        permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("tenant-usergroup-list"))
       .set("Authorization", `Bearer ${token}`)
@@ -50,7 +48,7 @@ describe("/usergroup API", () => {
   test("PATCH /tenant-usergroup-edit", async () => {
     const created_groups: any[] = [];
     {
-      const res = await request(app)
+      await request(app)
         .post(full_url("tenant-usergroup-create"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -85,7 +83,7 @@ describe("/usergroup API", () => {
   test("DELETE /tenant-usergroup-delete", async () => {
     const created_groups: any[] = [];
     {
-      const res = await request(app)
+      await request(app)
         .post(full_url("tenant-usergroup-create"))
         .set("Authorization", `Bearer ${token}`)
         .send({

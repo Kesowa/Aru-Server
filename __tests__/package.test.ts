@@ -69,7 +69,7 @@ describe("/package API", () => {
         .expect(201);
       filePath = res1.body.file;
 
-      const res = await request(app)
+      await request(app)
         .post(full_url("create"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -111,7 +111,7 @@ describe("/package API", () => {
         .expect(201);
       filePath = res1.body.file;
 
-      const res = await request(app)
+      await request(app)
         .post(full_url("create"))
         .set("Authorization", `Bearer ${token}`)
         .send({

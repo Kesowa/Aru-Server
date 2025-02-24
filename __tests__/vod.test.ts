@@ -59,16 +59,14 @@ describe("/vod API", () => {
 
   // Not for use in production
   test.skip("PATCH /test-vod-inject", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("save-vod-manual"))
-        .set("Authorization", `Bearer ${token}`)
-        .field("locationID", "6123317cdaacac04cdb2d805") // exists in db
-        .field("missionID", "61f3b1e65f915a05cb8885ec") // exists in db
-        .field("flightID", "6267dd4b2a2d394080a20849") // exists in db
-        .attach("video", "/server/assets/video.mp4") // doesn't yet exist
-        .expect(200);
-    }
+    await request(app)
+      .post(full_url("save-vod-manual"))
+      .set("Authorization", `Bearer ${token}`)
+      .field("locationID", "6123317cdaacac04cdb2d805") // exists in db
+      .field("missionID", "61f3b1e65f915a05cb8885ec") // exists in db
+      .field("flightID", "6267dd4b2a2d394080a20849") // exists in db
+      .attach("video", "/server/assets/video.mp4") // doesn't yet exist
+      .expect(200);
     const res = await request(app)
       .patch(full_url("test-vod-inject"))
       .set("Authorization", `Bearer ${token}`)

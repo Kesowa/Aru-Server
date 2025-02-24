@@ -61,19 +61,17 @@ describe("/rasterProp API", () => {
   });
 
   test("GET /get-all-rasterProps", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "ORTHO",
-          bidx: Math.floor(Math.random() * 10),
-          bandExp: Math.floor(Math.random() * 1000),
-          colorMap: "RGB",
-          resamplingMethod: "abcdefg",
-        })
-        .expect(201);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "ORTHO",
+        bidx: Math.floor(Math.random() * 10),
+        bandExp: Math.floor(Math.random() * 1000),
+        colorMap: "RGB",
+        resamplingMethod: "abcdefg",
+      })
+      .expect(201);
 
     const res = await request(app)
       .get(full_url("get-all-rasterProps"))

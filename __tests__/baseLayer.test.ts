@@ -159,18 +159,6 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
-    // {
-    //     const res = await request(app)
-    //         .post(full_url("create-base-raster-upload/Raster"))
-    //         .set("Authorization", `Bearer ${token}`)
-    //         .field("name", Date())
-    //         .field("type", "Raster")
-    //         .field("raster", "60c3138f4764fb024a3c1a59")
-    //         .field("captureDate", "2022-07-29")
-    //         .attach("file", "/server/assets/Ortho_25cm.tif")
-    //         .expect(201);
-    //     created_layers.push(res.body.data);
-    // }
     const res = await request(app)
       .get(full_url("fetch/All"))
       .set("Authorization", `Bearer ${token}`)
@@ -192,17 +180,6 @@ describe("/baselayer API", () => {
       message: "BaseLayers fetched successfully",
       data: expect.any(Array),
     });
-
-    // const res3 = await request(app)
-    //     .get(full_url("/fetch/Raster"))
-    //     .set("Authorization", `Bearer ${token}`)
-    //     .expect(200);
-
-    // expect(res3.body).toMatchObject({
-    //     status: true,
-    //     message: "BaseLayers fetched successfully",
-    //     data: expect.any(Array)
-    // });
   });
 
   test("POST /filter-base-layer", async () => {
@@ -554,7 +531,6 @@ describe("/baselayer API", () => {
       message: "New Base Layer Created Successfully",
       data: expect.any(Object),
     });
-    // created_layers.push(res.body.data);
   }, 15000);
   const created_layer_ids: string[] = [];
   test("POST /create-base-raster-import-mission", async () => {
@@ -638,7 +614,6 @@ describe("/baselayer API", () => {
         layers: created_layer_ids,
       })
       .expect(200);
-    // console.warn(res.body);
     expect(res.body).toMatchObject({
       status: true,
       message: "Raster layer updated sucessfully",

@@ -71,7 +71,6 @@ describe("/alert API", () => {
       .field("pcount", 5)
       .field("type", "Manual")
       .expect(201);
-    // console.error("MANUAL UPLOAD", res.body);
     expect(res.body).toMatchObject({
       status: true,
       message: "New alert created",
@@ -402,7 +401,7 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res = await request(app)
+    await request(app)
       .get(full_url("get-alerts-by-tenantid-advanced-result"))
       .set("Authorization", `Bearer ${token}`)
       .query({

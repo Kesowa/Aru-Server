@@ -7,7 +7,7 @@ beforeAll(async () => (token = await Login()));
 const full_url = CurriedUrl("pilot");
 
 describe("/pilot API", () => {
-  // TODO: Endpint returns no response
+  // Endpoint returns no response
   // test("POST /login", async () => {
   //     const res = await request(app)
   //         .post(full_url("login"))

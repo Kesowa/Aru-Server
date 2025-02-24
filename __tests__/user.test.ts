@@ -51,20 +51,16 @@ describe("/user API", () => {
   });
 
   test("GET /fetch-all-user", async () => {
-    const created_users: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create-tenant-user"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          ...fakeUser,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-        })
-        .expect(201);
-      created_users.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create-tenant-user"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        ...fakeUser,
+        name: faker.name.fullName(),
+        phoneNo: faker.phone.number("8#########"),
+        email: faker.internet.email(),
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("fetch-all-user"))
       .set("Authorization", `Bearer ${token}`)
@@ -78,20 +74,16 @@ describe("/user API", () => {
   });
 
   test("GET /generate-userList-csv", async () => {
-    const created_users: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create-tenant-user"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          ...fakeUser,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-        })
-        .expect(201);
-      created_users.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create-tenant-user"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        ...fakeUser,
+        name: faker.name.fullName(),
+        phoneNo: faker.phone.number("8#########"),
+        email: faker.internet.email(),
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("generate-userList-csv"))
       .set("Authorization", `Bearer ${token}`)
@@ -140,20 +132,16 @@ describe("/user API", () => {
   });
 
   test("PATCH /terms-conditions-check", async () => {
-    const created_users: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create-tenant-user"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          ...fakeUser,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-        })
-        .expect(201);
-      created_users.push(res.body.tenantId);
-    }
+    await request(app)
+      .post(full_url("create-tenant-user"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        ...fakeUser,
+        name: faker.name.fullName(),
+        phoneNo: faker.phone.number("8#########"),
+        email: faker.internet.email(),
+      })
+      .expect(201);
     const res = await request(app)
       .patch(full_url("terms-conditions-check"))
       .set("Authorization", `Bearer ${token}`)
@@ -170,20 +158,16 @@ describe("/user API", () => {
   });
 
   test("POST /terms-insert", async () => {
-    const created_users: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create-tenant-user"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          ...fakeUser,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-        })
-        .expect(201);
-      created_users.push(res.body.tenantId);
-    }
+    await request(app)
+      .post(full_url("create-tenant-user"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        ...fakeUser,
+        name: faker.name.fullName(),
+        phoneNo: faker.phone.number("8#########"),
+        email: faker.internet.email(),
+      })
+      .expect(201);
     const res = await request(app)
       .post(full_url("terms-insert"))
       .set("Authorization", `Bearer ${token}`)
