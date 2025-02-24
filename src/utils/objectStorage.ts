@@ -67,8 +67,7 @@ export const downloadTemp = async (objKey: string) => {
 
 export const uploadDir = async (src: string, dest: string) => {
   const entries = await readdir(src, { withFileTypes: true, recursive: true });
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
+  for (const entry of entries) {
     if (entry.isDirectory()) continue;
     const relativePath = relative(src, entry.parentPath);
     const objKey = join(dest, relativePath);

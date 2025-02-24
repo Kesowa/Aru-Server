@@ -135,12 +135,10 @@ export const receiveInfer = async (
       case "people-count":
         break;
       case "deepforest":
+      case "rooftopseg":
         await receiveVectorData(data);
         break;
       case "thermal":
-        break;
-      case "rooftopseg":
-        await receiveVectorData(data);
         break;
     }
   } else {
