@@ -201,8 +201,6 @@ export default function app(mongo: Connection) {
   app.use("/apis/v1/manufacturer", manufacturerApis);
   app.use("/apis/v1/location", locationApis);
   app.use("/apis/v1/flightlog", flightLogApis);
-  // app.use("/apis/v1/rasterProp", rasterPropsApis);
-  // app.use("/apis/v1/vectorProp", vectorPropsApis);
   app.use("/apis/v1/layer", layerApis);
   app.use("/apis/v1/document", documentApis);
   app.use("/apis/v1/client", clientApis);
@@ -217,7 +215,6 @@ export default function app(mongo: Connection) {
 
   // 404 route
   app.use(function (req, res, next) {
-    // if (req.url.startsWith("/socket.io")) return next();
     if (res.headersSent) return;
     req.log.warn("Trying to handle route, god help us all.");
     if (req.url.split("/").includes("raster")) {
