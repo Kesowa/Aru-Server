@@ -15,8 +15,8 @@ const streamers: Array<SocketUserObject> = [];
 const Drons: Array<SocketUserObject> = [];
 let messg: any;
 
-const senderStreams = new Map<string, any>();
-const clientConsumers = new Map<string, any>();
+// const senderStreams = new Map<string, any>();
+// const clientConsumers = new Map<string, any>();
 const drones = new Map<string, any>();
 
 export const mavstatIoController = async (io: Namespace) => {
@@ -50,7 +50,7 @@ export const mavstatIoController = async (io: Namespace) => {
         if (assetData) {
           const mav = "mavdrone" + String(assetData.tenantID);
           console.log(mav, assetData.assetInfo[0].UIN, mission);
-          clientConsumers.delete(mission);
+          // clientConsumers.delete(mission);
         }
       }
     });
@@ -193,10 +193,10 @@ const joinRoomByStreamKey = async (
 //     }
 // }
 
-function handleTrackEvent(e: any, peer: any, missionId: string) {
-  console.log(`track handled for missionId : ${missionId}`);
-  senderStreams.set(missionId, e.streams[0]);
-}
+// function handleTrackEvent(e: any, peer: any, missionId: string) {
+//   console.log(`track handled for missionId : ${missionId}`);
+//   senderStreams.set(missionId, e.streams[0]);
+// }
 
 server.on("error", (err) => {
   console.log(`server error:\n${err.stack}`);

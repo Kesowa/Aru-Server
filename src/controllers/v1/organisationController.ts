@@ -6,6 +6,7 @@ import { permPath } from "../../utils/dataUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { Directory } from "../../constants";
 import UploadTask from "../../models/uploadTask";
+import { randomBytes } from "crypto";
 
 //check if email is available for registration
 export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {
@@ -106,7 +107,7 @@ export const updateOrganisationEmailGetOTP = async (
               message: "This email id is already taken by some other client.",
             });
           } else {
-            const OTP = Math.floor(100000 + Math.random() * 900000);
+            const OTP = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
             thisTenant.modefiedEmailRequested = req.body.email;
             thisTenant.modefiedEmailRequestedOTPs = [OTP];
             await thisTenant.save();
@@ -152,7 +153,7 @@ export const updateOrganisationEmailResendOTP = async (
   if (res.locals.user.tenantId) {
     const thisTenant = await Tenant.findById(res.locals.user.tenantId);
     if (thisTenant) {
-      const OTP = Math.floor(100000 + Math.random() * 900000);
+      const OTP = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
       if (
         thisTenant.modefiedEmailRequested &&
         thisTenant.modefiedEmailRequestedOTPs

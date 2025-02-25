@@ -20,6 +20,7 @@ import { IPackage } from "../../schemas/package";
 import newTenant from "../../models/newTenant";
 import { findCount, findSize } from "../../utils/mongoUtils";
 import { Types } from "mongoose";
+import { randomBytes } from "crypto";
 
 //create tenant account
 export const createTenant = async (req: Request, res: AuthResponse) => {
@@ -90,7 +91,7 @@ export const createTenantPublicApi = async (
   // }
 
   if (!(existingTenantWithEmail || existingUserWithEmail)) {
-    const verificationNumber = Math.floor(100000 + Math.random() * 900000);
+    const verificationNumber = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
     await newTenant.findOneAndUpdate(
       { email: req.body.email },
       {
@@ -162,7 +163,7 @@ export const verifyTenant = async (req: Request, res: AuthResponse) => {
   if (tenantData.verificationCode === req.body.verificationCode) {
     const tenantObj = tenantData.toObject();
 
-    tenantObj.verificationCode = Math.random();
+    tenantObj.verificationCode = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
     tenantObj.isVerified = true;
     // tenantObj._id = undefined;
 

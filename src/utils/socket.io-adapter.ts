@@ -99,7 +99,7 @@ export class AmqpAdapter extends Adapter {
     ack: (...args: any[]) => void
   ): Promise<void> {
     await this.broadcast(packet, opts);
-    // todo: shim to handle broadcast with ack until I have time to implement it for real
+    // shim to handle broadcast with ack until I have time to implement it for real
     clientCountCallback(1);
     ack();
   }

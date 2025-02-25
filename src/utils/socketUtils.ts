@@ -4,7 +4,7 @@ export interface SocketUserObject {
   id: string;
 }
 
-export interface sIDMap {
+export interface SIDMap {
   client_sid: string;
   AI_sid: string;
   flightID: string;
@@ -33,7 +33,7 @@ export interface AIResponse {
   streamKey: string;
 }
 
-export interface droneStat {
+export interface DroneStat {
   index: number;
   flightID: string;
   location: {

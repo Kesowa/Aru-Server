@@ -358,7 +358,7 @@ export const clientReactivationMail = async (
   client: { email: string; name: string }
 ) => {
   const cipher = crypto.createCipheriv(
-    "aes192", // TODO: Use "aes-256-gcm" for better security
+    "aes-256-gcm",
     Buffer.from(SECRET_KEY, "base64"),
     iv
   );
@@ -459,7 +459,7 @@ export const deleteCientforTenant = async (
 
 export const reactivateClient = async (req: Request, res: AuthResponse) => {
   const decipher = crypto.createDecipheriv(
-    "aes192",
+    "aes-256-gcm",
     Buffer.from(SECRET_KEY, "base64"),
     iv
   );

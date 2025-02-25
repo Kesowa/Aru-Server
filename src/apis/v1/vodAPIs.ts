@@ -75,7 +75,7 @@ router.get(
     .isString()
     .notEmpty()
     .trim()
-    .matches(/([a-z]+):([a-z]+)/i), // ex: "createdAt:desc"
+    .matches(/^[a-zA-Z]{1,20}:[a-zA-Z]{1,5}$/i), // ex: "createdAt:desc"
   query("limit").default(200).isInt({ min: 1, max: 500 }).toInt(),
   query("isFlagged").optional().isBoolean().toBoolean(),
   validator,

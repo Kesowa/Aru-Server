@@ -1,5 +1,5 @@
 import { Namespace, Socket } from "socket.io";
-import { SocketUserObject, addUser, droneStat } from "../../utils/socketUtils";
+import { SocketUserObject, addUser, DroneStat } from "../../utils/socketUtils";
 import fs from "fs";
 import { Directory } from "../../constants";
 import { ExtendedError } from "socket.io/dist/namespace";
@@ -38,13 +38,13 @@ class TelemetryLogger {
     console.info("Temp log created for streamkey", streamKey);
     return log_stream;
   }
-  private write(logFile: fs.WriteStream, data: droneStat) {
+  private write(logFile: fs.WriteStream, data: DroneStat) {
     logFile.write(
       `index, location.lat, location.long, battery, timestamp, compass, altitude, velocity\n
       ${data.index}, ${data.location.long}, ${data.location.lat}, ${data.battery}, ${data.timestamp}, ${data.compass}, ${data.altitude}, ${data.velocity}\n`
     );
   }
-  public log(streamKey: string, data: droneStat) {
+  public log(streamKey: string, data: DroneStat) {
     let logFile: fs.WriteStream;
     const tmp = this.logFiles.get(streamKey);
     if (tmp) {
@@ -116,7 +116,7 @@ class TelemetryLogger {
 
 const OneLoggerToRuleThemAll = new TelemetryLogger();
 
-export let stat: droneStat;
+export let stat: DroneStat;
 export const droneLocationIoController = (io: Namespace) => {
   //Auth middleware
   io.use(Auth);
@@ -125,7 +125,7 @@ export const droneLocationIoController = (io: Namespace) => {
   io.use(joinRoomByStreamKey);
 
   io.on("connect", (socket: Socket) => {
-    socket.on("DRONE_STAT", (droneStatData: droneStat) => {
+    socket.on("DRONE_STAT", (droneStatData: DroneStat) => {
       const streamKey = droneStatData?.streamKey;
       if (streamKey) {
         OneLoggerToRuleThemAll.log(streamKey, droneStatData);

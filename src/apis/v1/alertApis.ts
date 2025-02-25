@@ -164,7 +164,7 @@ router.get(
   // REGEX
   query("time")
     .optional()
-    .matches(/\d+\s[a-zA-Z]+/), // ex: "2 days"
+    .matches(/^\d{1,4}\s[a-zA-Z]{1,10}$/), // ex: "2 days"
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertByTenantId)
@@ -179,7 +179,7 @@ router.get(
   // REGEX
   query("time")
     .optional()
-    .matches(/\d+\s[a-zA-Z]+/), // ex: "2 days"
+    .matches(/^\d{1,4}\s[a-zA-Z]{1,10}$/), // ex: "2 days"
   query("user").optional().isString(),
   query("page").isNumeric().toInt(),
   query("limit").isNumeric().toInt(),

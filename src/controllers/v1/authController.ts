@@ -40,8 +40,6 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
 
         const data = user.toObject();
 
-        data.password = "secret";
-
         Object.assign(data, {
           customPermissions: await GetPermissions(
             user.userGroupId,

@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto";
+
 export function* mapIter<T, U>(
   iterable: Iterable<T>,
   proj: (item: T) => U
@@ -22,7 +24,7 @@ export function randomString(length = 8) {
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
   for (let i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+    text += possible.charAt(randomBytes(4).readUInt32BE(0) % possible.length);
   }
 
   return text;

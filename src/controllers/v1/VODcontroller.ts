@@ -40,7 +40,7 @@ export const saveVOD = async (
         .catch(console.error);
     }, 10_000);
   }
-  const vodSize = 1; // !TODO
+  const vodSize = 1; // Size gets updated after processing is completed
   const VODdoc = new VOD({
     flightID: flightID,
     missionID: missionID,

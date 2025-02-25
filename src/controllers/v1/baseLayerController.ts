@@ -1050,10 +1050,10 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
           isBase: false,
           name: layer.name.replace(/"Base - "/, ""),
         });
-        return layer;
+      } else {
+        // otherwise delete it fully
+        await layer.delete();
       }
-      // otherwise delete it fully
-      await layer.delete();
       return layer;
     })
   );
