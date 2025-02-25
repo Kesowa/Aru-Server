@@ -51,7 +51,7 @@ export interface DroneStat {
   roll: number;
 }
 
-export interface mavStat {
+export interface MavStat {
   location: {
     lat: number;
     long: number;
