@@ -67,7 +67,7 @@ export const createAlert = async (
 
     const data = await newAlert.create();
     if (ARU_INSTANCE == Instance.NKDA) {
-      await WiproInterface.SendAlert(data, req.ip, req.log);
+      WiproInterface.SendAlert(data, req.ip, req.log);
     }
     notificationSocket
       .to(String(res.locals.user.tenantId._id))

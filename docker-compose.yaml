@@ -97,7 +97,7 @@ services:
       "
 
   vod:
-    image: vod:latest
+    image: ghcr.io/kesowa/vod
     profiles:
       - vod
     depends_on:
