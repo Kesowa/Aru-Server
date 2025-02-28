@@ -21,20 +21,6 @@ export const fetchAllPermissions = async (_req: Request, res: AuthResponse) => {
   });
 };
 
-//fetch tenant permissions
-export const fetchTenantPermissions = async (
-  _req: Request,
-  res: AuthResponse
-) => {
-  {
-    res.json({
-      status: true,
-      message: "Permissions fetched sucessfully.",
-      data: Object.values(PERMS),
-    });
-  }
-};
-
 export const fetchPermissions = async (req: Request, res: AuthResponse) => {
   let permissions: PERMS[];
   switch (res.locals.user.userType) {

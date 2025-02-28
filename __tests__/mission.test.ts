@@ -50,41 +50,37 @@ describe("/mission API", () => {
   });
 
   test("POST /mission-by-userid", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: randomUUID(),
+        description: randomUUID(),
+        deliverables: ["Live Feed", "Thermal"],
+        assetId: "none",
+        flights: [
+          {
+            flightDetails: {
+              locationId: "6123317cdaacac04cdb2d805",
+              flightName: randomUUID(),
+              date: "2022-09-15",
+              time: "05:30:00 PM",
+              duration: "1hr",
+              centerPoints: {
+                lat: 22.55,
+                lng: 88.48,
               },
+              geoLocation: randomUUID(),
             },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
+          },
+        ],
+        missionType: "60cc7d408fb1793e8c76d4a3",
+        clientId: [
+          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
+          "614ec3dcd44bea14a721326a", // Kesowa super-admin
+        ],
+      })
+      .expect(201);
     const res = await request(app)
       .post(full_url("mission-by-userid"))
       .set("Authorization", `Bearer ${token}`)
@@ -143,7 +139,7 @@ describe("/mission API", () => {
         sort: "createdAt:descend",
         page: "1",
         limit: "10",
-        // searchFilters: "" // TODO: Didn't understand format properly
+        // searchFilters: "" // Didn't understand format properly
       })
       .expect(200);
 
@@ -155,41 +151,37 @@ describe("/mission API", () => {
   });
 
   test("GET /get/user/:id", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: randomUUID(),
+        description: randomUUID(),
+        deliverables: ["Live Feed", "Thermal"],
+        assetId: "none",
+        flights: [
+          {
+            flightDetails: {
+              locationId: "6123317cdaacac04cdb2d805",
+              flightName: randomUUID(),
+              date: "2022-09-15",
+              time: "05:30:00 PM",
+              duration: "1hr",
+              centerPoints: {
+                lat: 22.55,
+                lng: 88.48,
               },
+              geoLocation: randomUUID(),
             },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
+          },
+        ],
+        missionType: "60cc7d408fb1793e8c76d4a3",
+        clientId: [
+          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
+          "614ec3dcd44bea14a721326a", // Kesowa super-admin
+        ],
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("get/user/608e7b3ae11f711a34fb0476"))
       .set("Authorization", `Bearer ${token}`)
@@ -252,41 +244,37 @@ describe("/mission API", () => {
 
   // FIXED: Check commit for more info
   test("GET /filtered-mission", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: randomUUID(),
+        description: randomUUID(),
+        deliverables: ["Live Feed", "Thermal"],
+        assetId: "none",
+        flights: [
+          {
+            flightDetails: {
+              locationId: "6123317cdaacac04cdb2d805",
+              flightName: randomUUID(),
+              date: "2022-09-15",
+              time: "05:30:00 PM",
+              duration: "1hr",
+              centerPoints: {
+                lat: 22.55,
+                lng: 88.48,
               },
+              geoLocation: randomUUID(),
             },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
+          },
+        ],
+        missionType: "60cc7d408fb1793e8c76d4a3",
+        clientId: [
+          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
+          "614ec3dcd44bea14a721326a", // Kesowa super-admin
+        ],
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("filtered-mission"))
       .set("Authorization", `Bearer ${token}`)
@@ -308,42 +296,38 @@ describe("/mission API", () => {
   });
 
   test("GET /autocomplete", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: "New Text Mission",
-          description:
-            "This mission's data is hard coded sothat given query is found",
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "New Text Mission",
+        description:
+          "This mission's data is hard coded sothat given query is found",
+        deliverables: ["Live Feed", "Thermal"],
+        assetId: "none",
+        flights: [
+          {
+            flightDetails: {
+              locationId: "6123317cdaacac04cdb2d805",
+              flightName: randomUUID(),
+              date: "2022-09-15",
+              time: "05:30:00 PM",
+              duration: "1hr",
+              centerPoints: {
+                lat: 22.55,
+                lng: 88.48,
               },
+              geoLocation: randomUUID(),
             },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
+          },
+        ],
+        missionType: "60cc7d408fb1793e8c76d4a3",
+        clientId: [
+          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
+          "614ec3dcd44bea14a721326a", // Kesowa super-admin
+        ],
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("autocomplete"))
       .set("Authorization", `Bearer ${token}`)
@@ -360,7 +344,6 @@ describe("/mission API", () => {
   });
 
   test("GET /get-total-number-of-mission-by-locationID", async () => {
-    const created_missions: any[] = [];
     const created_flights: any[] = [];
     {
       const res = await request(app)
@@ -394,7 +377,6 @@ describe("/mission API", () => {
           ],
         })
         .expect(201);
-      created_missions.push(res.body.data.mission);
       created_flights.push(res.body.data.flight);
     }
     const res = await request(app)
@@ -413,7 +395,6 @@ describe("/mission API", () => {
   });
 
   test("GET /get-missions-by-location-mapref", async () => {
-    const created_missions: any[] = [];
     const created_flights: any[] = [];
     {
       const res = await request(app)
@@ -447,7 +428,6 @@ describe("/mission API", () => {
           ],
         })
         .expect(201);
-      created_missions.push(res.body.data.mission);
       created_flights.push(res.body.data.flight);
     }
     const res = await request(app)
@@ -834,41 +814,37 @@ describe("/mission API", () => {
   });
 
   test("POST /insert-missionType-for-tenantId", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: randomUUID(),
+        description: randomUUID(),
+        deliverables: ["Live Feed", "Thermal"],
+        assetId: "none",
+        flights: [
+          {
+            flightDetails: {
+              locationId: "6123317cdaacac04cdb2d805",
+              flightName: randomUUID(),
+              date: "2022-09-15",
+              time: "05:30:00 PM",
+              duration: "1hr",
+              centerPoints: {
+                lat: 22.55,
+                lng: 88.48,
               },
+              geoLocation: randomUUID(),
             },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
+          },
+        ],
+        missionType: "60cc7d408fb1793e8c76d4a3",
+        clientId: [
+          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
+          "614ec3dcd44bea14a721326a", // Kesowa super-admin
+        ],
+      })
+      .expect(201);
     const res = await request(app)
       .post(full_url("insert-missionType-for-tenantId"))
       .set("Authorization", `Bearer ${token}`)
@@ -934,58 +910,3 @@ describe("/mission API", () => {
     });
   });
 });
-
-// FIXED: This endpoint is redundant, no need to test
-// describe("/mission API Super", () => {
-//     beforeAll(async () => token = await LoginSuper());
-//     // TODO: Fails, Unauthorized, even with super-admin user
-//     test("PATCH /convert-clientId-to-array", async () => {
-//         const created_missions: any[] = [];
-//         {
-//             const res = await request(app)
-//             .post(full_url("create"))
-//             .set("Authorization", `Bearer ${token}`)
-//             .send({
-//                 name: randomUUID(),
-//                 description: randomUUID(),
-//                 deliverables: [
-//                     "Live Feed",
-//                     "Thermal"
-//                 ],
-//                 assetId: "none",
-//                 flights: [
-//                     {
-//                         flightDetails: {
-//                             locationId: "6123317cdaacac04cdb2d805",
-//                             flightName: randomUUID(),
-//                             date: "2022-09-15",
-//                             time: "05:30:00 PM",
-//                             duration: "1hr",
-//                             centerPoints: {
-//                                 lat: 22.55,
-//                                 lng: 88.48
-//                             },
-//                             geoLocation: randomUUID()
-//                         }
-//                     }
-//                 ],
-//                 missionType: "60cc7d408fb1793e8c76d4a3",
-//                 clientId: [
-//                     "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-//                     "614ec3dcd44bea14a721326a"  // Kesowa super-admin
-//                 ]
-//             })
-//             .expect(201);
-//             created_missions.push(res.body.data.mission);
-//         }
-//         const res = await request(app)
-//             .patch(full_url("convert-clientId-to-array"))
-//             .set("Authorization", `Bearer ${token}`)
-//             .expect(200);
-
-//         expect(res.body).toMatchObject({
-//             status: true,
-//             message: expect.any(String)
-//         });
-//     })
-// })

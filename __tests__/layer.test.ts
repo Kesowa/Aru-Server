@@ -459,7 +459,6 @@ describe("/layer API", () => {
 
   test("GET /fetch-to-be-reviwed-files", async () => {
     const created_layers: any[] = [];
-    const created_layerFiles: any[] = [];
     {
       const res = await request(app)
         .post(full_url("create/Vector"))
@@ -476,13 +475,12 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
 
-      const res2 = await request(app)
+      await request(app)
         .post(full_url("upload-file-to-layer"))
         .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
-      created_layerFiles.push(res2.body.data);
     }
     const res = await request(app)
       .get(full_url("fetch-to-be-reviwed-files"))
@@ -500,23 +498,19 @@ describe("/layer API", () => {
   });
 
   test("POST /filter-layer", async () => {
-    const created_layers: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
-        .attach("file", "/server/assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create/Vector"))
+      .set("Authorization", `Bearer ${token}`)
+      .attach("file", "/server/assets/poles.geojson")
+      .field("name", randomUUID())
+      .field("type", "Vector")
+      .field("vector", "60c3a3c5ca0cbe039fce0d64")
+      .field("captureDate", "2022-08-22T06:54:35.486+00:00")
+      .field("missionId", "61f3b1e65f915a05cb8885ec")
+      .field("color", "#00FF00")
+      .field("icon", "MarkerIcon")
+      .field("inHeritOriginalColorFromFile", "false")
+      .expect(201);
     const res = await request(app)
       .post(full_url("filter-layer"))
       .set("Authorization", `Bearer ${token}`)
@@ -849,23 +843,19 @@ describe("/layer API", () => {
   });
 
   test("PATCH /add-isReview-to-layerFiles", async () => {
-    const created_layers: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
-        .attach("file", "/server/assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create/Vector"))
+      .set("Authorization", `Bearer ${token}`)
+      .attach("file", "/server/assets/poles.geojson")
+      .field("name", randomUUID())
+      .field("type", "Vector")
+      .field("vector", "60c3a3c5ca0cbe039fce0d64")
+      .field("captureDate", "2022-08-22T06:54:35.486+00:00")
+      .field("missionId", "61f3b1e65f915a05cb8885ec")
+      .field("color", "#00FF00")
+      .field("icon", "MarkerIcon")
+      .field("inHeritOriginalColorFromFile", "false")
+      .expect(201);
     const res = await request(app)
       .patch(full_url("add-isReview-to-layerFiles"))
       .set("Authorization", `Bearer ${token}`)
@@ -878,23 +868,19 @@ describe("/layer API", () => {
   });
 
   test("PATCH /gen_2x_layerfiles", async () => {
-    const created_layers: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
-        .attach("file", "/server/assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create/Vector"))
+      .set("Authorization", `Bearer ${token}`)
+      .attach("file", "/server/assets/poles.geojson")
+      .field("name", randomUUID())
+      .field("type", "Vector")
+      .field("vector", "60c3a3c5ca0cbe039fce0d64")
+      .field("captureDate", "2022-08-22T06:54:35.486+00:00")
+      .field("missionId", "61f3b1e65f915a05cb8885ec")
+      .field("color", "#00FF00")
+      .field("icon", "MarkerIcon")
+      .field("inHeritOriginalColorFromFile", "false")
+      .expect(201);
     const res = await request(app)
       .patch(full_url("gen_2x_layerfiles"))
       .set("Authorization", `Bearer ${token}`)

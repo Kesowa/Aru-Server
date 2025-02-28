@@ -87,17 +87,6 @@ router.get(
   zipbymissionId
 );
 
-// router.patch(
-//   "/gen_2x_documents",
-//   isAuthenticated,
-//   body("filePath").isString().trim(),
-//   body("folderName").isString().trim(),
-//   validator,
-//   gen2x
-// );
-
-// router.patch("/update-size-for-exist-doc", isAuthenticated, updateSizeExistDoc);
-
 router.patch(
   "/update-doc-by-ID",
   isAuthenticated,

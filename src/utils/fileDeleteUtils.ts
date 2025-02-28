@@ -17,7 +17,7 @@ export const deletePublicFolderUsingPath = async (folderName: string) => {
   if (
     folderName == "" ||
     folderName == "/" ||
-    folderName in Object.values(Directory)
+    Object.values(Directory).includes(folderName as Directory)
   )
     return false;
   await deleteDir(folderName);

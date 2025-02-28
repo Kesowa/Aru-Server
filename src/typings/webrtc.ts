@@ -270,7 +270,7 @@ declare module "wrtc" {
     getFingerprints(): RTCDtlsFingerprint[];
   }
 
-  var RTCCertificate: {
+  let RTCCertificate: {
     prototype: RTCCertificate;
     new (): RTCCertificate;
   };
@@ -308,7 +308,7 @@ declare module "wrtc" {
     ): void;
   }
 
-  var RTCDTMFSender: {
+  let RTCDTMFSender: {
     prototype: RTCDTMFSender;
     new (): RTCDTMFSender;
   };
@@ -318,7 +318,7 @@ declare module "wrtc" {
     readonly tone: string;
   }
 
-  var RTCDTMFToneChangeEvent: {
+  let RTCDTMFToneChangeEvent: {
     prototype: RTCDTMFToneChangeEvent;
     new (
       type: string,
@@ -380,7 +380,7 @@ declare module "wrtc" {
     ): void;
   }
 
-  var RTCDataChannel: {
+  let RTCDataChannel: {
     prototype: RTCDataChannel;
     new (): RTCDataChannel;
   };
@@ -389,7 +389,7 @@ declare module "wrtc" {
     readonly channel: RTCDataChannel;
   }
 
-  var RTCDataChannelEvent: {
+  let RTCDataChannelEvent: {
     prototype: RTCDataChannelEvent;
     new (
       type: string,
@@ -436,7 +436,7 @@ declare module "wrtc" {
     ): void;
   }
 
-  var RTCDtlsTransport: {
+  let RTCDtlsTransport: {
     prototype: RTCDtlsTransport;
     new (): RTCDtlsTransport;
   };
@@ -447,7 +447,7 @@ declare module "wrtc" {
     getMetadata(): RTCEncodedAudioFrameMetadata;
   }
 
-  var RTCEncodedAudioFrame: {
+  let RTCEncodedAudioFrame: {
     prototype: RTCEncodedAudioFrame;
     new (): RTCEncodedAudioFrame;
   };
@@ -459,7 +459,7 @@ declare module "wrtc" {
     getMetadata(): RTCEncodedVideoFrameMetadata;
   }
 
-  var RTCEncodedVideoFrame: {
+  let RTCEncodedVideoFrame: {
     prototype: RTCEncodedVideoFrame;
     new (): RTCEncodedVideoFrame;
   };
@@ -472,7 +472,7 @@ declare module "wrtc" {
     readonly sentAlert: number | null;
   }
 
-  var RTCError: {
+  let RTCError: {
     prototype: RTCError;
     new (init: RTCErrorInit, message?: string): RTCError;
   };
@@ -481,7 +481,7 @@ declare module "wrtc" {
     readonly error: RTCError;
   }
 
-  var RTCErrorEvent: {
+  let RTCErrorEvent: {
     prototype: RTCErrorEvent;
     new (type: string, eventInitDict: RTCErrorEventInit): RTCErrorEvent;
   };
@@ -505,7 +505,7 @@ declare module "wrtc" {
     toJSON(): RTCIceCandidateInit;
   }
 
-  var RTCIceCandidate: {
+  let RTCIceCandidate: {
     prototype: RTCIceCandidate;
     new (candidateInitDict?: RTCIceCandidateInit): RTCIceCandidate;
   };
@@ -543,7 +543,7 @@ declare module "wrtc" {
     ): void;
   }
 
-  var RTCIceTransport: {
+  let RTCIceTransport: {
     prototype: RTCIceTransport;
     new (): RTCIceTransport;
   };
@@ -679,7 +679,7 @@ declare module "wrtc" {
     ): void;
   }
 
-  var RTCPeerConnection: {
+  let RTCPeerConnection: {
     prototype: RTCPeerConnection;
     new (configuration?: RTCConfiguration): RTCPeerConnection;
     generateCertificate(
@@ -695,7 +695,7 @@ declare module "wrtc" {
     readonly url: string;
   }
 
-  var RTCPeerConnectionIceErrorEvent: {
+  let RTCPeerConnectionIceErrorEvent: {
     prototype: RTCPeerConnectionIceErrorEvent;
     new (
       type: string,
@@ -708,7 +708,7 @@ declare module "wrtc" {
     readonly candidate: RTCIceCandidate | null;
   }
 
-  var RTCPeerConnectionIceEvent: {
+  let RTCPeerConnectionIceEvent: {
     prototype: RTCPeerConnectionIceEvent;
     new (
       type: string,
@@ -726,7 +726,7 @@ declare module "wrtc" {
     getSynchronizationSources(): RTCRtpSynchronizationSource[];
   }
 
-  var RTCRtpReceiver: {
+  let RTCRtpReceiver: {
     prototype: RTCRtpReceiver;
     new (): RTCRtpReceiver;
     getCapabilities(kind: string): RTCRtpCapabilities | null;
@@ -744,7 +744,7 @@ declare module "wrtc" {
     setStreams(...streams: MediaStream[]): void;
   }
 
-  var RTCRtpSender: {
+  let RTCRtpSender: {
     prototype: RTCRtpSender;
     new (): RTCRtpSender;
     getCapabilities(kind: string): RTCRtpCapabilities | null;
@@ -760,7 +760,7 @@ declare module "wrtc" {
     stop(): void;
   }
 
-  var RTCRtpTransceiver: {
+  let RTCRtpTransceiver: {
     prototype: RTCRtpTransceiver;
     new (): RTCRtpTransceiver;
   };
@@ -803,7 +803,7 @@ declare module "wrtc" {
     ): void;
   }
 
-  var RTCSctpTransport: {
+  let RTCSctpTransport: {
     prototype: RTCSctpTransport;
     new (): RTCSctpTransport;
   };
@@ -815,7 +815,7 @@ declare module "wrtc" {
     toJSON(): any;
   }
 
-  var RTCSessionDescription: {
+  let RTCSessionDescription: {
     prototype: RTCSessionDescription;
     new (descriptionInitDict: RTCSessionDescriptionInit): RTCSessionDescription;
   };
@@ -827,7 +827,7 @@ declare module "wrtc" {
     ): void;
   }
 
-  var RTCStatsReport: {
+  let RTCStatsReport: {
     prototype: RTCStatsReport;
     new (): RTCStatsReport;
   };
@@ -839,18 +839,14 @@ declare module "wrtc" {
     readonly transceiver: RTCRtpTransceiver;
   }
 
-  var RTCTrackEvent: {
+  let RTCTrackEvent: {
     prototype: RTCTrackEvent;
     new (type: string, eventInitDict: RTCTrackEventInit): RTCTrackEvent;
   };
 
-  export interface RTCPeerConnectionErrorCallback {
-    (error: DOMException): void;
-  }
+  export type RTCPeerConnectionErrorCallback = (error: DOMException) => void;
 
-  export interface RTCSessionDescriptionCallback {
-    (description: RTCSessionDescriptionInit): void;
-  }
+  export type RTCSessionDescriptionCallback = (description: RTCSessionDescriptionInit) => void;
 
   type RTCBundlePolicy = "balanced" | "max-bundle" | "max-compat";
   type RTCDataChannelState = "closed" | "closing" | "connecting" | "open";

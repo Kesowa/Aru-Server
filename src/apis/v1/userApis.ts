@@ -68,7 +68,6 @@ router.get(
   RobustRunner(fetchUserOfTenantById)
 );
 
-// TODO: Add other fields as optional to edit-user route. Everything else donee
 router.patch(
   "/edit-user",
   isAuthenticated,

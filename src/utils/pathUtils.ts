@@ -18,6 +18,7 @@ export type DocPath = string;
 export enum Directory {
   POINT_CLOUD = "raster",
   CESIUM_3D = "raster",
+  RASTER = "raster",
   CSV = "csv",
   DOCUMENTS = "documents",
   FLIGHT_LOGS = "flight_logs",
@@ -28,7 +29,6 @@ export enum Directory {
   USER_AVATARS = "images/userAvatars",
   TENANT_LOGOS = "images/tenantLogos",
   LAYER_FILES = "layerFiles",
-  RASTER = "raster",
   TEMP = "temp",
   VECTOR = "vector",
   ZIP = "zip",

@@ -13,59 +13,49 @@ import { GetPermissions } from "../../schemas/permission";
 //++++++++++++++++++++++++++ user login +++++++++++++++++++++++++++++++++++++++
 
 export const loginUser = async (req: Request, res: AuthResponse) => {
-  {
-    const user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      return res.status(404).json({
-        status: false,
-        message: "User doesn't exist",
-      });
-    }
-    if (!user.isActive) {
-      return res.status(401).json({
-        status: false,
-        message: "User is not active",
-      });
-    }
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return res.status(404).json({
+      status: false,
+      message: "User doesn't exist",
+    });
+  }
+  if (!user.isActive) {
+    return res.status(401).json({
+      status: false,
+      message: "User is not active",
+    });
+  }
 
-    if (user) {
-      if (user.userType != "standalone-user") {
-        const isPasswordValid = await user.comparePassword(req.body.password);
+  if (user) {
+    if (user.userType != "standalone-user") {
+      const isPasswordValid = await user.comparePassword(req.body.password);
 
-        if (isPasswordValid) {
-          req.session["user"] = {
-            id: user._id,
-            email: user.email,
-            tenant: user.tenantId,
-          };
+      if (isPasswordValid) {
+        req.session["user"] = {
+          id: user._id,
+          email: user.email,
+          tenant: user.tenantId,
+        };
 
-          const data = user.toObject();
+        const data = user.toObject();
 
-          data.password = "secret";
-
-          Object.assign(data, {
-            customPermissions: await GetPermissions(
-              user.userGroupId,
-              user.userType,
-              user.tenantId
-            ),
-            password: undefined,
-          });
-          if (user.userType == "tenant-client") {
-            const date1 = new Date(user.expiryDatee);
-            const date2 = new Date(Date.now());
-            if (date2 > date1) {
-              return res.status(401).json({
-                status: false,
-                message: "Client has expired",
-              });
-            } else {
-              res.json({
-                status: true,
-                message: "login sucessfully",
-                data,
-              });
-            }
+        Object.assign(data, {
+          customPermissions: await GetPermissions(
+            user.userGroupId,
+            user.userType,
+            user.tenantId
+          ),
+          password: undefined,
+        });
+        if (user.userType == "tenant-client") {
+          const date1 = new Date(user.expiryDatee);
+          const date2 = new Date(Date.now());
+          if (date2 > date1) {
+            return res.status(401).json({
+              status: false,
+              message: "Client has expired",
+            });
           } else {
             res.json({
               status: true,
@@ -75,22 +65,28 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
           }
         } else {
           res.json({
-            status: false,
-            message: "invalid password.",
+            status: true,
+            message: "login sucessfully",
+            data,
           });
         }
       } else {
         res.json({
           status: false,
-          message: "The credentials you are trying to log-in with are expired!",
+          message: "invalid password.",
         });
       }
     } else {
       res.json({
         status: false,
-        message: "email does not exist.",
+        message: "The credentials you are trying to log-in with are expired!",
       });
     }
+  } else {
+    res.json({
+      status: false,
+      message: "email does not exist.",
+    });
   }
 };
 
@@ -198,50 +194,48 @@ export const sendForgotPasswordMail = async (
 // reset password
 
 export const resetPassword = async (req: Request, res: AuthResponse) => {
-  {
-    const password = req.body.password;
-    const password2 = req.body.password2;
-    const token = req.params.token;
-    if (!password || !password2) {
-      res.render("pages/resetPassword", {
-        token: token,
-        message: "Please Enter Both Fields",
-      });
-      return;
-    }
-
-    if (password !== password2) {
-      res.render("pages/resetPassword", {
-        token: token,
-        message: "Password doesn't match",
-      });
-      return;
-    }
-
-    const body = decodeURIComponent(token).split(";", 2);
-    const pass = await PassReset.findOne({ email: body[0] });
-    const isToken = await bcrypt.compare(body[1], pass.passwordResetToken);
-
-    if (!isToken) {
-      res.render("pages/resetPassword", {
-        token: token,
-        message: "Invalid Token",
-      });
-      return;
-    }
-
-    await User.findOneAndUpdate(
-      { email: pass.email },
-      { $set: { password: await bcrypt.hash(password, 10) } }
-    );
-
-    await pass.delete();
-    req.session.destroy((err) => {
-      if (err) {
-        req.log.error(err, "failed to delete session");
-      }
-      res.clearCookie("connect.sid");
+  const password = req.body.password;
+  const password2 = req.body.password2;
+  const token = req.params.token;
+  if (!password || !password2) {
+    res.render("pages/resetPassword", {
+      token: token,
+      message: "Please Enter Both Fields",
     });
-    res.redirect(PUBLIC_SERVER);
+    return;
   }
+
+  if (password !== password2) {
+    res.render("pages/resetPassword", {
+      token: token,
+      message: "Password doesn't match",
+    });
+    return;
+  }
+
+  const body = decodeURIComponent(token).split(";", 2);
+  const pass = await PassReset.findOne({ email: body[0] });
+  const isToken = await bcrypt.compare(body[1], pass.passwordResetToken);
+
+  if (!isToken) {
+    res.render("pages/resetPassword", {
+      token: token,
+      message: "Invalid Token",
+    });
+    return;
+  }
+
+  await User.findOneAndUpdate(
+    { email: pass.email },
+    { $set: { password: await bcrypt.hash(password, 10) } }
+  );
+
+  await pass.delete();
+  req.session.destroy((err) => {
+    if (err) {
+      req.log.error(err, "failed to delete session");
+    }
+    res.clearCookie("connect.sid");
+  });
+  res.redirect(PUBLIC_SERVER);
 };

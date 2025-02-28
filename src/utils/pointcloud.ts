@@ -23,7 +23,7 @@ async function LazToLas(absLaz: string, absLas: string) {
 }
 
 async function LasToTiles3D(absLas: string, absTileDir: string) {
-  if ((await fs.stat(absTileDir)).isDirectory() != true)
+  if (!(await fs.stat(absTileDir)).isDirectory())
     await fs.mkdir(absTileDir);
   await asyncExec(
     `gocesiumtiler -a grid -grid-max-size 5 -grid-min-size 1 -i "${absLas}" -o "${absTileDir}" -srid 32633`

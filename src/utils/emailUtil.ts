@@ -20,9 +20,9 @@ const transporter = nodemailer.createTransport({
 export const sendMail = async (
   emailTo: string,
   subject: string,
-  text: any | null,
-  html: any | null,
-  file: any | null
+  text: any,
+  html: any,
+  file: any
 ) => {
   try {
     const defaultmailOption = {
@@ -48,7 +48,6 @@ export const sendMail = async (
         ...defaultmailOption,
       };
     }
-    //console.log(mailOption);
     const resp = await transporter.sendMail(mailOption);
     console.log(resp);
   } catch (err) {

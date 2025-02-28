@@ -35,7 +35,6 @@ describe("/webrtc API", () => {
     const stream = new webrtc.MediaStream();
     stream.getTracks((track) => fakePeer.addTrack(track, stream));
     const offer = await fakePeer.createOffer();
-    // console.error(offer);
     await fakePeer.setLocalDescription(offer);
 
     const res = await request(app)
@@ -79,7 +78,5 @@ describe("/webrtc API", () => {
     expect(res.body).toMatchObject({
       message: "No stream found with the supplied missionId",
     });
-
-    // await fakePeer.setRemoteDescription(res.body.sdp);
   });
 });

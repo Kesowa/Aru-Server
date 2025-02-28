@@ -107,7 +107,7 @@ describe("/tenant API", () => {
         .expect(201);
       filePath = res.body.file;
 
-      const res2 = await request(app)
+      await request(app)
         .post(full_url("register-tenant"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -135,47 +135,6 @@ describe("/tenant API", () => {
     });
   });
 
-  // test("POST /verify-tenant", async () => {
-  //     let filePath:string = "";
-  //     const testEmail = faker.internet.email();
-  //     {
-  //         const res = await request(app)
-  //         .post(full_url("upload-avatar"))
-  //         .set("Authorization", `Bearer ${token}`)
-  //         .attach("avatar", "/server/assets/image.png")
-  //         .expect(201);
-  //         filePath = res.body.file;
-
-  //         const res2 = await request(app)
-  //         .post(full_url("register-tenant"))
-  //         .set("Authorization", `Bearer ${token}`)
-  //         .send({
-  //             ...fakeTenant,
-  //             name: faker.name.fullName(),
-  //             phoneNo: faker.phone.number("8#########"),
-  //             email: testEmail,
-  //             package: "608e7a7ee11f711a34fb0474", // exists in db
-  //             avatar: filePath,
-  //             password: randomUUID(),
-  //         })
-  //         .expect(200);
-  //     }
-  //     const res = await request(app)
-  //         .post(full_url("verify-tenant"))
-  //         .set("Authorization", `Bearer ${token}`)
-  //         .send({
-  //             email: testEmail,
-  //             verificationCode: Math.floor(Math.random()%1000000)
-  //         })
-  //         .expect(200);
-
-  //     expect(res.body).toMatchObject({
-  //         status: true,
-  //         message: "Tenant Created Successfully",
-  //         data: expect.any(Object)
-  //     });
-  // });
-
   test("GET /fetch-active-package-public", async () => {
     const res = await request(app)
       .get(full_url("fetch-active-package-public"))
@@ -191,7 +150,6 @@ describe("/tenant API", () => {
 
   test("GET /fetchall", async () => {
     let filePath: string = "";
-    const created_tenants: string[] = [];
     {
       const res = await request(app)
         .post(full_url("upload-avatar"))
@@ -200,7 +158,7 @@ describe("/tenant API", () => {
         .expect(201);
       filePath = res.body.file;
 
-      const res2 = await request(app)
+      await request(app)
         .post(full_url("create"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -212,7 +170,6 @@ describe("/tenant API", () => {
           avatar: filePath,
         })
         .expect(201);
-      created_tenants.push(res2.body.tenantId);
     }
     const res = await request(app)
       .get(full_url("fetchall"))
@@ -349,7 +306,6 @@ describe("/tenant API", () => {
 
   test("PATCH /add-all-count-to-tenant", async () => {
     let filePath: string = "";
-    const created_tenants: string[] = [];
     {
       const res = await request(app)
         .post(full_url("upload-avatar"))
@@ -358,7 +314,7 @@ describe("/tenant API", () => {
         .expect(201);
       filePath = res.body.file;
 
-      const res2 = await request(app)
+      await request(app)
         .post(full_url("create"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -370,7 +326,6 @@ describe("/tenant API", () => {
           avatar: filePath,
         })
         .expect(201);
-      created_tenants.push(res2.body.tenantId);
     }
     const res = await request(app)
       .patch(full_url("add-all-count-to-tenant"))
@@ -385,7 +340,6 @@ describe("/tenant API", () => {
 
   test("POST /add-actualSize-to-tenant", async () => {
     let filePath: string = "";
-    const created_tenants: string[] = [];
     {
       const res = await request(app)
         .post(full_url("upload-avatar"))
@@ -394,7 +348,7 @@ describe("/tenant API", () => {
         .expect(201);
       filePath = res.body.file;
 
-      const res2 = await request(app)
+      await request(app)
         .post(full_url("create"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -406,7 +360,6 @@ describe("/tenant API", () => {
           avatar: filePath,
         })
         .expect(201);
-      created_tenants.push(res2.body.tenantId);
     }
     const res = await request(app)
       .post(full_url("add-actualSize-to-tenant"))
@@ -421,7 +374,6 @@ describe("/tenant API", () => {
 
   test("GET /get-tenant-stats", async () => {
     let filePath: string = "";
-    const created_tenants: string[] = [];
     {
       const res = await request(app)
         .post(full_url("upload-avatar"))
@@ -430,7 +382,7 @@ describe("/tenant API", () => {
         .expect(201);
       filePath = res.body.file;
 
-      const res2 = await request(app)
+      await request(app)
         .post(full_url("create"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -442,7 +394,6 @@ describe("/tenant API", () => {
           avatar: filePath,
         })
         .expect(201);
-      created_tenants.push(res2.body.tenantId);
     }
     const res = await request(app)
       .get(full_url("get-tenant-stats"))
@@ -458,7 +409,6 @@ describe("/tenant API", () => {
 
   test("PATCH /updatepublicMapRef", async () => {
     let filePath: string = "";
-    const created_tenants: string[] = [];
     {
       const res = await request(app)
         .post(full_url("upload-avatar"))
@@ -467,7 +417,7 @@ describe("/tenant API", () => {
         .expect(201);
       filePath = res.body.file;
 
-      const res2 = await request(app)
+      await request(app)
         .post(full_url("create"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -479,7 +429,6 @@ describe("/tenant API", () => {
           avatar: filePath,
         })
         .expect(201);
-      created_tenants.push(res2.body.tenantId);
     }
     const res = await request(app)
       .patch(full_url("updatepublicMapRef"))

@@ -74,7 +74,6 @@ export const saveVectorLayer = async (
   }
   if (!geojsonData) return null;
 
-  let flagColor = "multiColor";
   geojsonData.features.forEach(
     (feature) =>
       (feature.properties = {
@@ -85,11 +84,8 @@ export const saveVectorLayer = async (
           : options.color,
       })
   );
-  if (options.inheritColor == false) {
-    flagColor = options.color;
-  } else {
-    flagColor = getFlagColor(geojsonData);
-  }
+  let flagColor = (!options.inheritColor) ? options.color : getFlagColor(geojsonData);
+
   const featureTypes = new Set<GeoJson["type"]>();
   geojsonData.features.forEach((feature) => {
     feature.properties.sys_id = new ObjectId().toHexString();

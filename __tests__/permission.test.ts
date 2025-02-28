@@ -33,23 +33,21 @@ describe("/admin/permission API", () => {
   });
 
   test("GET /admin-permission-list", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: randomUUID(),
-          isFrontendRoute: true,
-          isVisibleToTenant: true,
-          isVisibleToSuperAdmin: true,
-          isPilot: true,
-          isSideNavOption: true,
-          frontendRoute: "/dashboard/" + randomUUID(),
-          sideNavOptionIcon: randomUUID(),
-          sideNavOptionLabel: randomUUID(),
-        })
-        .expect(201);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: randomUUID(),
+        isFrontendRoute: true,
+        isVisibleToTenant: true,
+        isVisibleToSuperAdmin: true,
+        isPilot: true,
+        isSideNavOption: true,
+        frontendRoute: "/dashboard/" + randomUUID(),
+        sideNavOptionIcon: randomUUID(),
+        sideNavOptionLabel: randomUUID(),
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("admin-permission-list"))
       .set("Authorization", `Bearer ${token}`)

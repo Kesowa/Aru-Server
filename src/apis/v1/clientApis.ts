@@ -8,7 +8,6 @@ import {
   getListClient,
   removeClientfromMission,
   clientCsv,
-  // devApiClientArr,
   getClientByEmail,
   reactivateClient,
   getClientById,
@@ -128,13 +127,6 @@ router.get(
   PermissionGuard(PERMS.CLIENT_LIST),
   RobustRunner(clientCsv)
 );
-
-// router.patch(
-//   "/patch-api-clientarr",
-//   body("tenantId").notEmpty(),
-//   validator,
-//   RobustRunner(devApiClientArr)
-// );
 
 router.get(
   "/get-client-mission-details/:id",

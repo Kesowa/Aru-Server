@@ -6,23 +6,22 @@ import { permPath } from "../../utils/dataUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { Directory } from "../../constants";
 import UploadTask from "../../models/uploadTask";
+import { randomBytes } from "crypto";
 
 //check if email is available for registration
 export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {
-  {
-    if (res.locals.user.tenantId._id) {
-      const tenantData = await Tenant.findById(res.locals.user.tenantId._id);
-      res.json({
-        status: true,
-        message: "Tenant details fetched",
-        data: tenantData,
-      });
-    } else {
-      res.json({
-        status: false,
-        message: "You can not use this API.",
-      });
-    }
+  if (res.locals.user.tenantId._id) {
+    const tenantData = await Tenant.findById(res.locals.user.tenantId._id);
+    res.json({
+      status: true,
+      message: "Tenant details fetched",
+      data: tenantData,
+    });
+  } else {
+    res.json({
+      status: false,
+      message: "You can not use this API.",
+    });
   }
 };
 
@@ -108,7 +107,7 @@ export const updateOrganisationEmailGetOTP = async (
               message: "This email id is already taken by some other client.",
             });
           } else {
-            const OTP = Math.floor(100000 + Math.random() * 900000);
+            const OTP = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
             thisTenant.modefiedEmailRequested = req.body.email;
             thisTenant.modefiedEmailRequestedOTPs = [OTP];
             await thisTenant.save();
@@ -151,99 +150,95 @@ export const updateOrganisationEmailResendOTP = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    if (res.locals.user.tenantId) {
-      const thisTenant = await Tenant.findById(res.locals.user.tenantId);
-      if (thisTenant) {
-        const OTP = Math.floor(100000 + Math.random() * 900000);
-        if (
-          thisTenant.modefiedEmailRequested &&
-          thisTenant.modefiedEmailRequestedOTPs
-        ) {
-          thisTenant.modefiedEmailRequestedOTPs.push(OTP);
-          await thisTenant.save();
-          sendMail(
-            thisTenant.modefiedEmailRequested,
-            "OTP for email change",
-            `Please use the OTP ${OTP} to change your email id`,
-            null,
-            null
-          );
-          res.json({
-            status: true,
-            message: "OTP sent sucessfully.",
-          });
-        } else {
-          res.json({
-            status: false,
-            message: "No OTP requested",
-          });
-        }
+  if (res.locals.user.tenantId) {
+    const thisTenant = await Tenant.findById(res.locals.user.tenantId);
+    if (thisTenant) {
+      const OTP = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
+      if (
+        thisTenant.modefiedEmailRequested &&
+        thisTenant.modefiedEmailRequestedOTPs
+      ) {
+        thisTenant.modefiedEmailRequestedOTPs.push(OTP);
+        await thisTenant.save();
+        sendMail(
+          thisTenant.modefiedEmailRequested,
+          "OTP for email change",
+          `Please use the OTP ${OTP} to change your email id`,
+          null,
+          null
+        );
+        res.json({
+          status: true,
+          message: "OTP sent sucessfully.",
+        });
       } else {
         res.json({
           status: false,
-          message: "Tenant does not exist",
+          message: "No OTP requested",
         });
       }
     } else {
       res.json({
         status: false,
-        message: "You dont have permission to access this API.",
+        message: "Tenant does not exist",
       });
     }
+  } else {
+    res.json({
+      status: false,
+      message: "You dont have permission to access this API.",
+    });
   }
 };
 
 //validate email OTP
 export const validateOTPForEmail = async (req: Request, res: AuthResponse) => {
-  {
-    if (res.locals.user.tenantId) {
-      const thisTenant = await Tenant.findById(res.locals.user.tenantId);
-      if (thisTenant) {
-        if (
-          thisTenant.modefiedEmailRequested &&
-          thisTenant.modefiedEmailRequestedOTPs !== undefined
-        ) {
-          if (thisTenant.modefiedEmailRequestedOTPs.includes(req.body.otp)) {
-            thisTenant.email = thisTenant.modefiedEmailRequested.toString();
-            thisTenant.modefiedEmailRequested = undefined;
-            thisTenant.modefiedEmailRequestedOTPs = [];
-            await thisTenant.save();
-            sendMail(
-              thisTenant.email,
-              "Email id changed",
-              `Email id changed sucessfully. New email id ${thisTenant.email}`,
-              null,
-              null
-            );
-            res.json({
-              status: true,
-              message: "Email updated sucessfully.",
-              data: thisTenant,
-            });
-          } else {
-            res.json({
-              status: false,
-              message: "Invalid OTP.",
-            });
-          }
+  if (res.locals.user.tenantId) {
+    const thisTenant = await Tenant.findById(res.locals.user.tenantId);
+    if (thisTenant) {
+      if (
+        thisTenant.modefiedEmailRequested &&
+        thisTenant.modefiedEmailRequestedOTPs !== undefined
+      ) {
+        if (thisTenant.modefiedEmailRequestedOTPs.includes(req.body.otp)) {
+          thisTenant.email = thisTenant.modefiedEmailRequested.toString();
+          thisTenant.modefiedEmailRequested = undefined;
+          thisTenant.modefiedEmailRequestedOTPs = [];
+          await thisTenant.save();
+          sendMail(
+            thisTenant.email,
+            "Email id changed",
+            `Email id changed sucessfully. New email id ${thisTenant.email}`,
+            null,
+            null
+          );
+          res.json({
+            status: true,
+            message: "Email updated sucessfully.",
+            data: thisTenant,
+          });
         } else {
           res.json({
             status: false,
-            message: "Generate OTP first.",
+            message: "Invalid OTP.",
           });
         }
       } else {
         res.json({
           status: false,
-          message: "Tenant does not exist.",
+          message: "Generate OTP first.",
         });
       }
     } else {
       res.json({
         status: false,
-        message: "You can not use this API.",
+        message: "Tenant does not exist.",
       });
     }
+  } else {
+    res.json({
+      status: false,
+      message: "You can not use this API.",
+    });
   }
 };

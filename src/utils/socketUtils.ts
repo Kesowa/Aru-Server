@@ -1,13 +1,13 @@
 import { Types } from "mongoose";
 
 export interface SocketUserObject {
-  id: String;
+  id: string;
 }
 
-export interface sIDMap {
-  client_sid: String;
-  AI_sid: String;
-  flightID: String;
+export interface SIDMap {
+  client_sid: string;
+  AI_sid: string;
+  flightID: string;
 }
 
 export interface AIRequest {
@@ -18,22 +18,22 @@ export interface AIRequest {
   assetId: Types.ObjectId;
   locationId: Types.ObjectId;
   time: Date;
-  streamKey: String;
+  streamKey: string;
 }
 
 export interface AIResponse {
   createdBy: Types.ObjectId;
   pcount: number;
-  image: String;
+  image: string;
   missionId: Types.ObjectId;
   flightId: Types.ObjectId;
   tenantId: Types.ObjectId;
-  type: String;
+  type: string;
   timeStamp: Date;
-  streamKey: String;
+  streamKey: string;
 }
 
-export interface droneStat {
+export interface DroneStat {
   index: number;
   flightID: string;
   location: {
@@ -51,7 +51,7 @@ export interface droneStat {
   roll: number;
 }
 
-export interface mavStat {
+export interface MavStat {
   location: {
     lat: number;
     long: number;
@@ -84,7 +84,7 @@ export const removeUser = (
   }
 };
 
-export const searchUser = (userArray: Array<SocketUserObject>, id: String) => {
+export const searchUser = (userArray: Array<SocketUserObject>, id: string) => {
   const result = userArray.filter((u) => u.id === id);
   const toReturn = result.length > 0 ? result[0] : undefined;
   return toReturn;

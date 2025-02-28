@@ -58,34 +58,34 @@ export async function modGeoJson(
   pathh: string
 ) {
   if (color && icon) {
-    for (let i = 0; i < geojson.features.length; i++) {
+    for (const feature of geojson.features) {
       const sys_id = new ObjectId();
-      Object.assign(geojson.features[i].properties, {
+      Object.assign(feature.properties, {
         color: color,
         icon: icon,
         sys_id: sys_id.toHexString(),
       });
     }
   } else if (color) {
-    for (let i = 0; i < geojson.features.length; i++) {
+    for (const feature of geojson.features) {
       const sys_id = new ObjectId();
-      Object.assign(geojson.features[i].properties, {
+      Object.assign(feature.properties, {
         color: color,
         sys_id: sys_id.toHexString(),
       });
     }
   } else if (icon) {
-    for (let i = 0; i < geojson.features.length; i++) {
+    for (const feature of geojson.features) {
       const sys_id = new ObjectId();
-      Object.assign(geojson.features[i].properties, {
+      Object.assign(feature.properties, {
         icon: icon,
         sys_id: sys_id.toHexString(),
       });
     }
   } else {
-    for (let i = 0; i < geojson.features.length; i++) {
+    for (const feature of geojson.features) {
       const sys_id = new ObjectId();
-      Object.assign(geojson.features[i].properties, {
+      Object.assign(feature.properties, {
         sys_id: sys_id.toHexString(),
       });
     }

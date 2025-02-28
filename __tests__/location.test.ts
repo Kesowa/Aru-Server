@@ -78,21 +78,17 @@ describe("/location API", () => {
   });
 
   test("GET /get", async () => {
-    const created_locations: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          type: sampleGeometry.type,
-          coordinates: sampleGeometry.coordinates,
-          properties: {
-            name: randomUUID(),
-          },
-        })
-        .expect(201);
-      created_locations.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        type: sampleGeometry.type,
+        coordinates: sampleGeometry.coordinates,
+        properties: {
+          name: randomUUID(),
+        },
+      })
+      .expect(201);
 
     const res = await request(app)
       .get(full_url("get"))
@@ -139,21 +135,17 @@ describe("/location API", () => {
   });
 
   test("GET /get-locationID-By-lat-long", async () => {
-    const created_locations: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          type: "Point",
-          coordinates: [88, 22],
-          properties: {
-            name: randomUUID(),
-          },
-        })
-        .expect(201);
-      created_locations.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        type: "Point",
+        coordinates: [88, 22],
+        properties: {
+          name: randomUUID(),
+        },
+      })
+      .expect(201);
 
     const res = await request(app)
       .get(full_url("get-locationID-By-lat-long"))
@@ -188,7 +180,6 @@ describe("/location API", () => {
           },
         })
         .expect(201);
-      // console.error(resPoly.body);
       createdPolygon = resPoly.body.data._id;
     }
 

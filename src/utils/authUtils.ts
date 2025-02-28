@@ -27,7 +27,7 @@ const Authenticator = async (session: Session) => {
   if (!sessionData.success) {
     return InvalidAuth.INVALID_USER;
   }
-  const { id, email, tenant } = sessionData.data;
+  const { id } = sessionData.data;
   const user = await User.findById(id).populate("tenantId").lean();
 
   if (user) {
@@ -40,8 +40,6 @@ const Authenticator = async (session: Session) => {
     const doc = await Tenant.findOne({ _id: user.tenantId }).populate<{
       activePackage: IPackage;
     }>("activePackage");
-    // doc.actualSize = new Types.Decimal128("0");
-    // await doc.save();
     const date1 = new Date(doc.packageStartDate);
     const date2 = new Date(Date.now());
     const oneDay = 1000 * 60 * 60 * 24;
@@ -120,8 +118,6 @@ function genPermissionGuard(perm: permGuardType) {
       if (perm.userTypes.includes(res.locals.user.userType)) {
         authorized = true;
         req.log.info("User type authorized!");
-      } else {
-        authorized = false;
       }
     }
     if (perm.userGroups && perm.userGroups.length > 0 && !authorized) {
@@ -166,10 +162,8 @@ export const shouldLinkSend = async (
 
     if (isSent && isSent.retries >= 5) {
       throw new Error("You have reached the daily limit to change password");
-    } else {
-      if (isSent) {
-        throw new Error("Email already sent! Please check your email");
-      }
+    } else if (isSent) {
+      throw new Error("Email already sent! Please check your email");
     }
 
     next();
@@ -401,41 +395,6 @@ export const canListPilots = genPermissionGuard({
   userTypes: ["tenant-root"],
   perm: [PERMS.MISSION_LIST],
 });
-
-//Mapping Management Permissions
-
-// export const canListMappingMissions = genPermissionGuard({ //----------------needs further discussion
-//   userTypes:["tenant-root"],
-//   perm : [
-//     { permName: "name", value: "mapMission_list"},
-//     { permName: "name", value: "mission_list" },
-//     { permName: "name", value : "data_page"}
-//   ],
-// });
-
-// export const canCreateMappingMission = genPermissionGuard({ //--------------needs discussion
-//   userTypes:["tenant-root"],
-//   perm : [
-//     { permName : "name", value: "mapMission_create"},
-//     { permName: "name", value: "mapMission_edit"},
-//     { permName: "name", value: "mapMission_changeColor"},
-//     {permName: "name", value: "mapMission_addFeature"},
-//     {permName: "name", value: "mapMission_editGEOJSON"}
-//   ]
-// });
-
-// export const canDeleteMappingMission = genPermissionGuard({ //-----------------needs discussion
-//   perm : [
-//     { permName:"name", value: "mapMission_delete"}
-//   ]
-// });
-
-// export const canUploadFiletoLayer = genPermissionGuard({ //---------to be used later
-//   userTypes: ["tenant_root"],
-//   perm: [
-//     {permName : "name" , value: "canUploadFile_layer"}
-//   ]
-// });
 
 //---------------------Feature File upload perms----------
 export const canUploadFiletoGEOJSON = genPermissionGuard({

@@ -11,43 +11,41 @@ export const createUserGroupforTenant = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const existing_group = await UserGroup.findOne({
-      name: req.body.name,
-      tenantId: res.locals.user.tenantId._id,
+  const existing_group = await UserGroup.findOne({
+    name: req.body.name,
+    tenantId: res.locals.user.tenantId._id,
+  });
+  const permissions = Object.values(TENANT_STAFF_PERMS).filter((perm) =>
+    req.body.permissions.includes(perm)
+  );
+  if (existing_group) {
+    res.json({
+      status: false,
+      message: "Duplicate group name.",
     });
-    const permissions = Object.values(TENANT_STAFF_PERMS).filter((perm) =>
-      req.body.permissions.includes(perm)
-    );
-    if (existing_group) {
-      res.json({
-        status: false,
-        message: "Duplicate group name.",
-      });
-    } else {
-      const user_group = new UserGroup({
-        name: req.body.name,
-        permissions: permissions,
-        tenantId: res.locals.user.tenantId._id,
-        createdBy: res.locals.user._id,
-        updatedBy: res.locals.user._id,
-        isActive: true,
-      });
-      const ug = await user_group.save();
-      const tenant = await Tenant.findOne({
-        _id: res.locals.user.tenantId,
-      });
-      if (ug && tenant.actualUserGroupCount >= 0) {
-        await Tenant.updateOne(
-          { _id: res.locals.user.tenantId },
-          { $inc: { actualUserGroupCount: 1 } }
-        );
-      }
-      res.status(201).json({
-        status: true,
-        message: "User Group created sucessfully",
-      });
+  } else {
+    const user_group = new UserGroup({
+      name: req.body.name,
+      permissions: permissions,
+      tenantId: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      updatedBy: res.locals.user._id,
+      isActive: true,
+    });
+    const ug = await user_group.save();
+    const tenant = await Tenant.findOne({
+      _id: res.locals.user.tenantId,
+    });
+    if (ug && tenant.actualUserGroupCount >= 0) {
+      await Tenant.updateOne(
+        { _id: res.locals.user.tenantId },
+        { $inc: { actualUserGroupCount: 1 } }
+      );
     }
+    res.status(201).json({
+      status: true,
+      message: "User Group created sucessfully",
+    });
   }
 };
 
@@ -56,33 +54,29 @@ export const listUserGroupforTenant = async (
   req: Request<{}, {}, {}, { sort: string }>,
   res: AuthResponse
 ) => {
-  {
-    const [sortBy, order] = (req.query.sort || "name:desc").split(":");
-    const user_groups = await UserGroup.find({
-      tenantId: res.locals.user.tenantId._id,
-    }).sort({ [sortBy]: sanitizeSort(order) });
-    return res.json({
-      status: true,
-      message: "user groups fetched",
-      data: user_groups,
-    });
-  }
+  const [sortBy, order] = (req.query.sort || "name:desc").split(":");
+  const user_groups = await UserGroup.find({
+    tenantId: res.locals.user.tenantId._id,
+  }).sort({ [sortBy]: sanitizeSort(order) });
+  return res.json({
+    status: true,
+    message: "user groups fetched",
+    data: user_groups,
+  });
 };
 
 // Get User Group by ID
 export const getUserGroupbyID = async (req: Request, res: AuthResponse) => {
-  {
-    const userGroupID = req.query.id;
-    const user_group = await UserGroup.find({
-      _id: userGroupID,
-      tenantId: res.locals.user.tenantId._id,
-    });
-    res.json({
-      status: true,
-      message: "user group fetched",
-      data: user_group,
-    });
-  }
+  const userGroupID = req.query.id;
+  const user_group = await UserGroup.find({
+    _id: userGroupID,
+    tenantId: res.locals.user.tenantId._id,
+  });
+  res.json({
+    status: true,
+    message: "user group fetched",
+    data: user_group,
+  });
 };
 
 export const UserGroupforEdit = async (req: Request, res: AuthResponse) => {

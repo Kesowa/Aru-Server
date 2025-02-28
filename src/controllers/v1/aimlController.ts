@@ -20,7 +20,7 @@ export const inferVodViolence = async (
     _id: vodId,
     tenantId: res.locals.user.tenantId._id,
   });
-  if (vod === null || !vod.originalFile) {
+  if (!vod?.originalFile) {
     res.status(404).json({
       status: false,
       message: "vod not found",
@@ -59,11 +59,6 @@ export const inferVodViolence = async (
     }
     if (oldTask.status == "failed") {
       hadFailed = true;
-      // res.status(505).json({
-      //   status: false,
-      //   message: "task failed"
-      // });
-      // return;
     }
   }
   const mp4 = vod.originalFile;

@@ -26,18 +26,14 @@ describe("/vectorProp API", () => {
   });
 
   test("GET /get", async () => {
-    const created_props: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: randomUUID(),
-          type: "Point",
-        })
-        .expect(201);
-      created_props.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: randomUUID(),
+        type: "Point",
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("get"))
       .set("Authorization", `Bearer ${token}`)

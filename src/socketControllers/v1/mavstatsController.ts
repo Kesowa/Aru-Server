@@ -3,7 +3,6 @@ import { addUser, searchUser, SocketUserObject } from "../../utils/socketUtils";
 import Asset from "../../models/asset";
 import dgram from "dgram";
 const server = dgram.createSocket("udp4");
-// export let stat: mavStat;
 import { VODEvents } from "../../utils/videoUtils";
 import Flight from "../../models/flight";
 import { generateToken } from "../../controllers/v1/streamTokenController";
@@ -16,13 +15,10 @@ const streamers: Array<SocketUserObject> = [];
 const Drons: Array<SocketUserObject> = [];
 let messg: any;
 
-const senderStreams = new Map<string, any>();
-const clientConsumers = new Map<string, any>();
+// const senderStreams = new Map<string, any>();
+// const clientConsumers = new Map<string, any>();
 const drones = new Map<string, any>();
 
-// const base64 = await fs.promises.readFile("pem");
-// const cert1 = new x509.X509Certificate(base64)
-// console.log(cert1)
 export const mavstatIoController = async (io: Namespace) => {
   io.use(Auth);
   // io.set()
@@ -33,20 +29,6 @@ export const mavstatIoController = async (io: Namespace) => {
         if (searchUser(streamers, socket.id)) {
           const assetData = await Asset.findOne({ _id: payload.assetId });
           if (assetData) {
-            // let mav = "mavdrone" + String(assetData.tenantID)
-            // let peer : any;
-            // if(!clientConsumers.get(payload.missionId)) {
-            //     peer = await broadcaster(payload.missionId, payload.offer);
-            //     await sendAnswer(peer, socket);
-            // }
-
-            // const senderStream = senderStreams.get(payload.missionId);
-
-            // if(senderStream){
-            //     senderStream.getTracks().forEach((track: any) =>{
-            //         peer.addTrack(track, senderStream)
-            //     });
-            // } else {
             const droneSocket = drones.get(
               assetData.assetInfo[0].UIN.toString()
             );
@@ -64,15 +46,12 @@ export const mavstatIoController = async (io: Namespace) => {
       });
     socket.on("END_STREAM", async (mission, asset) => {
       if (searchUser(streamers, socket.id)) {
-        // removeUser(streamers,socket.id);
         const assetData = await Asset.findOne({ _id: asset });
         if (assetData) {
           const mav = "mavdrone" + String(assetData.tenantID);
           console.log(mav, assetData.assetInfo[0].UIN, mission);
-          clientConsumers.delete(mission);
-          // io.to(mav).emit("END_STREAM",(assetData.assetInfo[0].UIN,mission))
+          // clientConsumers.delete(mission);
         }
-        // io.to(socket.handshake.query.tenantId).emit('source',data);
       }
     });
 
@@ -214,10 +193,10 @@ const joinRoomByStreamKey = async (
 //     }
 // }
 
-function handleTrackEvent(e: any, peer: any, missionId: string) {
-  console.log(`track handled for missionId : ${missionId}`);
-  senderStreams.set(missionId, e.streams[0]);
-}
+// function handleTrackEvent(e: any, peer: any, missionId: string) {
+//   console.log(`track handled for missionId : ${missionId}`);
+//   senderStreams.set(missionId, e.streams[0]);
+// }
 
 server.on("error", (err) => {
   console.log(`server error:\n${err.stack}`);

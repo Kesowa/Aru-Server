@@ -21,7 +21,7 @@ class MockNamespace {
 beforeAll(async () => {
   ioHandler(new MockSocketServer() as unknown as Server);
   if (process.env.MONGODB_CONNECTION_STRING == undefined)
-    throw "mongodb connection string not defined!";
+    throw new Error("mongodb connection string not defined!");
   await mongoose.connect(process.env.MONGODB_CONNECTION_STRING);
 });
 afterAll(async () => {

@@ -38,29 +38,25 @@ describe("/manufacturer API", () => {
   });
 
   test("GET /get", async () => {
-    const created_manufacturers: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .set("userid", "608e7b3ae11f711a34fb0476") // NKDA tenant-root user stored using mongo-init
-        .send({
-          name: faker.company.name(),
-          address: faker.address.streetAddress(),
-          nationality: "Indian",
-          website: faker.internet.url(),
-          contacts: [
-            {
-              name: faker.name.fullName(),
-              designation: randomUUID(),
-              Mobile: faker.phone.number("8#########"),
-              email: faker.internet.email(),
-            },
-          ],
-        })
-        .expect(201);
-      created_manufacturers.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .set("userid", "608e7b3ae11f711a34fb0476") // NKDA tenant-root user stored using mongo-init
+      .send({
+        name: faker.company.name(),
+        address: faker.address.streetAddress(),
+        nationality: "Indian",
+        website: faker.internet.url(),
+        contacts: [
+          {
+            name: faker.name.fullName(),
+            designation: randomUUID(),
+            Mobile: faker.phone.number("8#########"),
+            email: faker.internet.email(),
+          },
+        ],
+      })
+      .expect(201);
 
     const res = await request(app)
       .get(full_url("get"))

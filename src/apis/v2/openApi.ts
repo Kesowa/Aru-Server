@@ -15,8 +15,8 @@ openApi.setServers([{ url: API_SERVER + "/apis/v2" }]);
 // set API license
 openApi.setLicense(
   "Apache License, Version 2.0", // API license name
-  "http://www.apache.org/licenses/LICENSE-2.0", // API license url
-  "http://dummy.io/terms/" // API terms of service
+  "https://www.apache.org/licenses/LICENSE-2.0", // API license url
+  "https://dummy.io/terms/" // API terms of service
 );
 
 openApi.declareSecurityScheme("bearerSecurity", bearerAuth());

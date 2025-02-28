@@ -213,10 +213,6 @@ router.patch(
   RobustRunner(updateBaseLayerRasterImport)
 );
 
-// router.patch("/updateisBase", isAuthenticated, RobustRunner(isBaseupdateDev));
-
-// router.patch('/inject_sysId',isAuthenticated,sys_id_Inject)
-
 // **************** Create base vector layer ********************
 router.post(
   "/create-base-vector-layer",
@@ -250,12 +246,6 @@ router.get(
   validator,
   RobustRunner(getallpublicbaselayer)
 );
-
-// router.patch(
-//   "/updateisPublic",
-//   isAuthenticated,
-//   RobustRunner(isPublicupdateDev)
-// );
 
 router.get(
   "/alerts",

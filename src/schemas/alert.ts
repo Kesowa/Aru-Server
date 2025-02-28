@@ -21,7 +21,7 @@ export interface IAlert {
   };
   isFlagged: boolean;
   isThreadExist: boolean;
-  commentCount: Number;
+  commentCount: number;
   locationName: string;
   fileSize: number;
   note: string;

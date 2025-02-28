@@ -7,7 +7,6 @@ import { mavstatIoController } from "./socketControllers/v1/mavstatsController";
 
 export let notificationSocket: Namespace;
 export let missionSpecificSocket: Namespace;
-// export let missionforPictoMap:Namespace;
 export const ioHandler = (io: Server) => {
   //to stream drone location
   const droneLocationStreamingIo = io.of("/stream/dronelocation");
@@ -26,8 +25,4 @@ export const ioHandler = (io: Server) => {
 
   const mavlinkStatIo = io.of("/stream/mavStats");
   mavstatIoController(mavlinkStatIo);
-
-  // const missionForPic = io.of('/mission/pic-map')
-  // missionforPictoMap = missionForPic
-  // missionIoController(missionforPictoMap);
 };

@@ -38,30 +38,26 @@ describe("/model API", () => {
   });
 
   test("GET /get", async () => {
-    const created_models: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .set("userid", "5f12572c3c19462d3673dbe9")
-        .send({
-          modelName: randomUUID(),
-          modelNumber: Math.floor(Math.random() * 100000).toString(),
-          assetClassID: "60ae07d5b4ed84014ad4ab28",
-          dimensions: {
-            length: Math.floor(Math.random() * 10),
-            breadth: Math.floor(Math.random() * 10),
-            height: Math.floor(Math.random() * 10),
-          },
-          manufacturerID: "615acf24e5324204d8b97c84",
-          website: randomUUID(),
-          props: {
-            payloads: randomUUID(),
-          },
-        })
-        .expect(201);
-      created_models.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .set("userid", "5f12572c3c19462d3673dbe9")
+      .send({
+        modelName: randomUUID(),
+        modelNumber: Math.floor(Math.random() * 100000).toString(),
+        assetClassID: "60ae07d5b4ed84014ad4ab28",
+        dimensions: {
+          length: Math.floor(Math.random() * 10),
+          breadth: Math.floor(Math.random() * 10),
+          height: Math.floor(Math.random() * 10),
+        },
+        manufacturerID: "615acf24e5324204d8b97c84",
+        website: randomUUID(),
+        props: {
+          payloads: randomUUID(),
+        },
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("get"))
       .set("Authorization", `Bearer ${token}`)

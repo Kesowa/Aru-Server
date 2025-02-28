@@ -21,11 +21,22 @@ export const checkIfEmailIdIsAvailable = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const [existingTenantWithEmail, existingUserWithEmail] = await Promise.all([
-      User.findOne({ email: req.body.email }),
-      Tenant.findOne({ email: req.body.email }),
-    ]);
+  const [existingTenantWithEmail, existingUserWithEmail] = await Promise.all([
+    User.findOne({ email: req.body.email }),
+    Tenant.findOne({ email: req.body.email }),
+  ]);
+  if (existingTenantWithEmail || existingUserWithEmail) {
+    res.json({
+      status: true,
+      message: "This email id is already taken.",
+      isAvailable: false,
+    });
+  } else {
+    const [existingTenantWithEmail, existingUserWithEmail] =
+      await Promise.all([
+        User.findOne({ email: req.body.email }, { _id: 1 }),
+        Tenant.findOne({ email: req.body.email }, { _id: 1 }),
+      ]);
     if (existingTenantWithEmail || existingUserWithEmail) {
       res.json({
         status: true,
@@ -33,24 +44,11 @@ export const checkIfEmailIdIsAvailable = async (
         isAvailable: false,
       });
     } else {
-      const [existingTenantWithEmail, existingUserWithEmail] =
-        await Promise.all([
-          User.findOne({ email: req.body.email }, { _id: 1 }),
-          Tenant.findOne({ email: req.body.email }, { _id: 1 }),
-        ]);
-      if (existingTenantWithEmail || existingUserWithEmail) {
-        res.json({
-          status: true,
-          message: "This email id is already taken.",
-          isAvailable: false,
-        });
-      } else {
-        res.json({
-          status: true,
-          message: "This email id is available.",
-          isAvailable: true,
-        });
-      }
+      res.json({
+        status: true,
+        message: "This email id is available.",
+        isAvailable: true,
+      });
     }
   }
 };
