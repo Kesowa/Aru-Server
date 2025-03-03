@@ -48,18 +48,30 @@ import {
   MODE,
   PUBLIC_SERVER,
   SECRET_KEY,
-  SEQ_API_KEY,
-  SEQ_SERVER_URL,
+  LOGGER_URL,
 } from "./constants";
 import cors from "cors";
 import routerV2 from "./apis/v2/routerV2";
 import rateLimit from "express-rate-limit";
 import { Connection } from "mongoose";
+import { LokiOptions } from "pino-loki/index";
 
-export let logger: Logger;
+const transport = pino.transport<LokiOptions>({
+  target: "pino-loki",
+  options: {
+    batching: true,
+    interval: 5,
+    host: LOGGER_URL,
+    // basicAuth: {}
+  }
+})
+
+export let logger: Logger = pino(transport);
 
 export default function app(mongo: Connection) {
   const app: Application = express();
+
+  console = {...console, ...logger};
 
   const limiter = rateLimit({
     windowMs: 5 * 60 * 1000,
@@ -93,34 +105,6 @@ export default function app(mongo: Connection) {
   app.set("views", path.join(__dirname, "views"));
   app.set("view engine", "ejs");
 
-  if (MODE == Mode.Prod) {
-    const seqConfig = {
-      serverUrl: SEQ_SERVER_URL,
-      apiKey: SEQ_API_KEY,
-    };
-
-    logger = pino({
-      name: ARU_INSTANCE,
-      transport: {
-        target: "@autotelic/pino-seq-transport",
-        options: {
-          loggerOpts: seqConfig,
-        },
-      },
-      redact: ["req.body.password", "req.headers.authorization"],
-    });
-  } else {
-    logger = pino({
-      name: ARU_INSTANCE,
-      transport: {
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-        },
-      },
-      redact: ["res.headers", "req.headers"],
-    });
-  }
 
   app.use(
     session({
@@ -144,10 +128,10 @@ export default function app(mongo: Connection) {
     pinoHttp({
       logger,
 
-      genReqId: function (req, _) {
+      genReqId: function(req, _) {
         return req.ip;
       },
-      customLogLevel: function (_, res, err) {
+      customLogLevel: function(_, res, err) {
         if (res.statusCode >= 400 && res.statusCode < 500) {
           return "warn";
         } else if (res.statusCode >= 500 || err) {
@@ -216,7 +200,7 @@ export default function app(mongo: Connection) {
   app.use("/apis/v1/report", reportApis);
 
   // 404 route
-  app.use(function (req, res, next) {
+  app.use(function(req, res, next) {
     // if (req.url.startsWith("/socket.io")) return next();
     if (res.headersSent) return;
     req.log.warn("Trying to handle route, god help us all.");
