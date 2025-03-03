@@ -43,35 +43,41 @@ import dataApis from "./apis/v1/dataApis";
 import reportApis from "./apis/v1/reportApis";
 
 import {
-  ARU_INSTANCE,
   Mode,
   MODE,
   PUBLIC_SERVER,
   SECRET_KEY,
   LOGGER_URL,
+  ARU_INSTANCE,
 } from "./constants";
 import cors from "cors";
 import routerV2 from "./apis/v2/routerV2";
 import rateLimit from "express-rate-limit";
 import { Connection } from "mongoose";
-import { LokiOptions } from "pino-loki/index";
 
-const transport = pino.transport<LokiOptions>({
-  target: "pino-loki",
-  options: {
-    batching: true,
-    interval: 5,
-    host: LOGGER_URL,
-    // basicAuth: {}
+export const logger: Logger = pino({
+  name: "ARU-" + ARU_INSTANCE,
+  redact: ["req.body.password", "req.headers.cookie", "req.body.token"],
+  transport: MODE == Mode.Prod ? {
+    target: "pino-loki",
+    options: {
+      batching: true,
+      interval: 5,
+      host: LOGGER_URL,
+      labels: {
+        name: "ARU-Server"
+      },
+    }
+  } : {
+    target: "pino-pretty",
+    options: {
+      colorize: true,
+    },
   }
-})
-
-export let logger: Logger = pino(transport);
+});
 
 export default function app(mongo: Connection) {
   const app: Application = express();
-
-  console = {...console, ...logger};
 
   const limiter = rateLimit({
     windowMs: 5 * 60 * 1000,
@@ -127,10 +133,6 @@ export default function app(mongo: Connection) {
   app.use(
     pinoHttp({
       logger,
-
-      genReqId: function(req, _) {
-        return req.ip;
-      },
       customLogLevel: function(_, res, err) {
         if (res.statusCode >= 400 && res.statusCode < 500) {
           return "warn";
@@ -140,22 +142,6 @@ export default function app(mongo: Connection) {
           return "silent";
         }
         return "info";
-      },
-      serializers: {
-        req(req) {
-          req.body = req.raw.body;
-          return req;
-        },
-      },
-      quietReqLogger: true,
-      customErrorMessage: (req, _, err) => {
-        return `${req.method} ${req["originalUrl"]} ${err.message}`;
-      },
-      customReceivedMessage: (req, _) => {
-        return `${req.method} ${req["originalUrl"]}`;
-      },
-      customSuccessMessage: (req, _, responseTime) => {
-        return `${req.method} ${req["originalUrl"]} in ${responseTime}ms`;
       },
     })
   );
