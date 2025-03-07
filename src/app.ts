@@ -62,7 +62,7 @@ export default function app(mongo: Connection) {
   const app: Application = express();
 
   const limiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
+    windowMs: 1 * 60 * 1000,
     limit: 250,
     standardHeaders: "draft-7",
     legacyHeaders: false,
@@ -134,7 +134,7 @@ export default function app(mongo: Connection) {
       cookie: {
         httpOnly: true,
         secure: MODE == Mode.Prod,
-        maxAge: 1000 * 60 * 60,
+        maxAge: 1000 * 60 * 60 * 24, // session lasts 24 hours
         sameSite: "strict",
       },
     })
