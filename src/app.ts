@@ -43,20 +43,41 @@ import dataApis from "./apis/v1/dataApis";
 import reportApis from "./apis/v1/reportApis";
 
 import {
-  ARU_INSTANCE,
   Mode,
   MODE,
   PUBLIC_SERVER,
   SECRET_KEY,
-  SEQ_API_KEY,
-  SEQ_SERVER_URL,
+  LOGGER_URL,
+  ARU_INSTANCE,
 } from "./constants";
 import cors from "cors";
 import routerV2 from "./apis/v2/routerV2";
 import rateLimit from "express-rate-limit";
 import { Connection } from "mongoose";
 
-export let logger: Logger;
+export const logger: Logger = pino({
+  name: "ARU-" + ARU_INSTANCE,
+  redact: ["req.body.password", "req.headers.cookie", "req.body.token"],
+  transport:
+    MODE == Mode.Prod
+      ? {
+          target: "pino-loki",
+          options: {
+            batching: true,
+            interval: 5,
+            host: LOGGER_URL,
+            labels: {
+              name: "ARU-Server",
+            },
+          },
+        }
+      : {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+          },
+        },
+});
 
 export default function app(mongo: Connection) {
   const app: Application = express();
@@ -93,35 +114,6 @@ export default function app(mongo: Connection) {
   app.set("views", path.join(__dirname, "views"));
   app.set("view engine", "ejs");
 
-  if (MODE == Mode.Prod) {
-    const seqConfig = {
-      serverUrl: SEQ_SERVER_URL,
-      apiKey: SEQ_API_KEY,
-    };
-
-    logger = pino({
-      name: ARU_INSTANCE,
-      transport: {
-        target: "@autotelic/pino-seq-transport",
-        options: {
-          loggerOpts: seqConfig,
-        },
-      },
-      redact: ["req.body.password", "req.headers.authorization"],
-    });
-  } else {
-    logger = pino({
-      name: ARU_INSTANCE,
-      transport: {
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-        },
-      },
-      redact: ["res.headers", "req.headers"],
-    });
-  }
-
   app.use(
     session({
       secret: SECRET_KEY,
@@ -143,10 +135,6 @@ export default function app(mongo: Connection) {
   app.use(
     pinoHttp({
       logger,
-
-      genReqId: function (req, _) {
-        return req.ip;
-      },
       customLogLevel: function (_, res, err) {
         if (res.statusCode >= 400 && res.statusCode < 500) {
           return "warn";
@@ -156,22 +144,6 @@ export default function app(mongo: Connection) {
           return "silent";
         }
         return "info";
-      },
-      serializers: {
-        req(req) {
-          req.body = req.raw.body;
-          return req;
-        },
-      },
-      quietReqLogger: true,
-      customErrorMessage: (req, _, err) => {
-        return `${req.method} ${req["originalUrl"]} ${err.message}`;
-      },
-      customReceivedMessage: (req, _) => {
-        return `${req.method} ${req["originalUrl"]}`;
-      },
-      customSuccessMessage: (req, _, responseTime) => {
-        return `${req.method} ${req["originalUrl"]} in ${responseTime}ms`;
       },
     })
   );
