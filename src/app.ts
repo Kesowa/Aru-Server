@@ -58,22 +58,25 @@ import { Connection } from "mongoose";
 export const logger: Logger = pino({
   name: "ARU-" + ARU_INSTANCE,
   redact: ["req.body.password", "req.headers.cookie", "req.body.token"],
-  transport: MODE == Mode.Prod ? {
-    target: "pino-loki",
-    options: {
-      batching: true,
-      interval: 5,
-      host: LOGGER_URL,
-      labels: {
-        name: "ARU-Server"
-      },
-    }
-  } : {
-    target: "pino-pretty",
-    options: {
-      colorize: true,
-    },
-  }
+  transport:
+    MODE == Mode.Prod
+      ? {
+          target: "pino-loki",
+          options: {
+            batching: true,
+            interval: 5,
+            host: LOGGER_URL,
+            labels: {
+              name: "ARU-Server",
+            },
+          },
+        }
+      : {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+          },
+        },
 });
 
 export default function app(mongo: Connection) {
@@ -111,7 +114,6 @@ export default function app(mongo: Connection) {
   app.set("views", path.join(__dirname, "views"));
   app.set("view engine", "ejs");
 
-
   app.use(
     session({
       secret: SECRET_KEY,
@@ -133,7 +135,7 @@ export default function app(mongo: Connection) {
   app.use(
     pinoHttp({
       logger,
-      customLogLevel: function(_, res, err) {
+      customLogLevel: function (_, res, err) {
         if (res.statusCode >= 400 && res.statusCode < 500) {
           return "warn";
         } else if (res.statusCode >= 500 || err) {
@@ -186,7 +188,7 @@ export default function app(mongo: Connection) {
   app.use("/apis/v1/report", reportApis);
 
   // 404 route
-  app.use(function(req, res, next) {
+  app.use(function (req, res, next) {
     // if (req.url.startsWith("/socket.io")) return next();
     if (res.headersSent) return;
     req.log.warn("Trying to handle route, god help us all.");
