@@ -29,7 +29,7 @@ export interface ILayerFile {
   updatedBy: mongoose.Types.ObjectId;
   isReview: boolean; // index
   isThreadExist: boolean;
-  commentCount: Number;
+  commentCount: number;
   fileSize: number;
   createdAt: Date;
   updatedAt: Date;

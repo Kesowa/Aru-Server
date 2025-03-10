@@ -6,11 +6,9 @@ import crypto from "crypto";
 import { generateResetPasswordToken } from "../utils/resetPasswordUtils";
 import { API_SERVER } from "../constants";
 
-// let saltRound = 10;
 export const createTenantLevelrootUser = async (tenant: any) => {
   try {
     const temppass = crypto.randomBytes(10).toString("hex");
-    //  let hashedPassword = await bcrypt.hash(tenant.phoneNo, saltRound );
     const email: any = String(tenant.email);
     const name: any = email.split("@")[0];
     const tenantRoot = new User({
@@ -22,7 +20,6 @@ export const createTenantLevelrootUser = async (tenant: any) => {
       isActive: true,
       tenantId: tenant._id,
     });
-    //console.log(tenantRoot);
     const t = await tenantRoot.save();
 
     const token = await generateResetPasswordToken(tenant.email);
@@ -45,42 +42,6 @@ export const createTenantLevelrootUser = async (tenant: any) => {
     throw error;
   }
 };
-
-// export const addPackageToTenant = async(tenantId:any,packageId:any)=>{
-//     try{
-//         let [thisPackage,thisTenant] = await Promise.all([Package.findById(packageId),Tenant.findById(tenantId)]);
-//         //console.log(thisPackage,thisTenant)
-//         if(thisPackage && thisTenant){
-//             thisTenant.activePackage = {
-//                 name : thisPackage.name,
-//                 bandwidth : thisPackage.bandwidth,
-//                 storage : thisPackage.storage,
-//                 duration : thisPackage.duration,
-//                 userCount : thisPackage.userCount,
-//                 missionCount:thisPackage.missionCount,
-//                 alertCount:thisPackage.alertCount,
-//                 vodCount:thisPackage.vodCount,
-//                 layerCount:thisPackage.layerCount,
-//                 clientCount:thisPackage.clientCount,
-//                 locationCount:thisPackage.locationCount,
-//                 userGroupCount:thisPackage.userGroupCount,
-//                 poster :thisPackage.poster
-//             }
-//             thisTenant.bandwidthUsed = 0;
-//             thisTenant.packageStartDate = moment().toDate();
-//             thisTenant.isActivated=true;
-//             let newTenant = await thisTenant.save();
-//             return newTenant;
-//         }
-//         else{
-//             throw new Error('Invalid inputs.')
-//         }
-//     }
-//     catch(err){
-//         console.error(err);
-//         throw err;
-//     }
-// }
 
 export const addPackageToTenant = async (tenantId: any, packageId: any) => {
   try {

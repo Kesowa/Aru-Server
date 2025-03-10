@@ -157,7 +157,7 @@ router.patch(
 );
 
 // ********* upload file in geojson object*************
-// TODO: Fails centerPoints validation, even when { "lat": 22, "long": 23 } is passed into centerPoints
+// Fails centerPoints validation, even when { "lat": 22, "long": 23 } is passed into centerPoints
 // Also dependant on sys_id property
 router.patch(
   "/upload-file-geojson",
@@ -177,12 +177,12 @@ router.patch(
 );
 
 //************Fetch files for a layer with index */
-// TODO: Dependant on sys_id property
+// Dependant on sys_id property
 router.get(
   "/get-files-by-layerId-fIndex",
   isAuthenticated,
   query("layerId").notEmpty().isMongoId(), // layerId in layerFiles
-  // TODO: This might be related to the missing sys_ids
+  // This might be related to the missing sys_ids
   query("sys_id").optional().notEmpty().isString(), // sys_id is compulsory; and it can be anything (any number or string)
   validator,
   PermissionGuard(PERMS.FEATURE_LIST),
@@ -256,7 +256,7 @@ router.patch(
 );
 
 // ********* download asset of a layer by layerID *************
-// TODO: Works with 200 status, but the link generated is empty string (test written)
+// Works with 200 status, but the link generated is empty string (test written)
 router.get(
   "/downloadassetbylayerId",
   isAuthenticated,
@@ -301,7 +301,7 @@ router.get(
 );
 
 // ********* Filter layers
-// TODO: Works but I don't understand the last 4 filtering options (string or boolean) (test written)
+// Works but I don't understand the last 4 filtering options (string or boolean) (test written)
 router.post(
   "/filter-layer",
   isAuthenticated,
@@ -323,7 +323,7 @@ router.post(
 );
 
 // ********* get features pf geojson ny page,limit and exact search
-// TODO: Works, but I dont understand the pagination logic in the controller (test written)
+// Works, but I dont understand the pagination logic in the controller (test written)
 // [ (page*limit) + limit < ar.length, say page is 1 limit is 1, addition becomes 2, but here we need 1 data only right, not 2 ]
 router.patch(
   "/get-feature-by-layerId",
@@ -341,7 +341,7 @@ router.patch(
 );
 
 //**************** Set cover photo */
-// TODO: Dependant on sys_id property
+// Dependant on sys_id property
 router.post(
   "/set-cover-photo-by-layerFiles-Id",
   isAuthenticated,
@@ -431,14 +431,13 @@ router.get(
   RobustRunner(downloadassetbyIDtoKml)
 );
 
-// router.patch("/gen_2x_layerfiles", isAuthenticated, RobustRunner(gen2x));
 router.patch(
   "/add-isReview-to-layerFiles",
   isAuthenticated,
   PermissionGuard(PERMS.FEATURE_LIST, PERMS.EDIT_FEATURE),
   RobustRunner(addIsReviewToLayerFiles)
 );
-// TODO: How to pass array of files
+// How to pass array of files
 router.post(
   "/pick-to-map-for-layer",
   isAuthenticated,

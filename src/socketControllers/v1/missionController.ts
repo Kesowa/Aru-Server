@@ -2,9 +2,6 @@ import { Namespace, Socket } from "socket.io";
 
 export const missionIoController = (io: Namespace) => {
   io.use(joinRoomByMissionID);
-  io.on("connect", (socket: Socket) => {
-    //console.log(socket.rooms);
-  });
 };
 
 const joinRoomByMissionID = (socket: Socket, next: (err?: any) => void) => {

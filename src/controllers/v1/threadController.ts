@@ -63,7 +63,7 @@ const updateDoc = async (
   };
   switch (docModel) {
     case "document":
-      await Document.update(
+      await Document.updateOne(
         {
           _id: docId,
           tenantId,
@@ -74,7 +74,7 @@ const updateDoc = async (
       );
       break;
     case "vod":
-      await VOD.update(
+      await VOD.updateOne(
         {
           _id: docId,
           tenantId,
@@ -85,7 +85,7 @@ const updateDoc = async (
       );
       break;
     case "alert":
-      await Alert.update(
+      await Alert.updateOne(
         {
           _id: docId,
           tenantId,
@@ -96,7 +96,7 @@ const updateDoc = async (
       );
       break;
     case "layer":
-      await layer.update(
+      await layer.updateOne(
         {
           _id: docId,
           tenantId,
@@ -107,7 +107,7 @@ const updateDoc = async (
       );
       break;
     case "layerfile":
-      await layerFiles.update(
+      await layerFiles.updateOne(
         {
           _id: docId,
           tenantId,
@@ -131,7 +131,7 @@ export const CreateOrUpdateComment = async (
   commentId?: mongoose.Types.ObjectId | undefined
 ) => {
   if (commentId) {
-    return await Thread.update(
+    return await Thread.updateOne(
       {
         doc: docId,
         tenant: tenantId,
@@ -198,7 +198,7 @@ export const DeleteComment = async (
     docId,
     tenantId,
     docModel,
-    commentLength === 0 ? false : true,
+    commentLength !== 0,
     commentLength
   );
   return response;

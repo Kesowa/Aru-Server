@@ -102,19 +102,17 @@ describe("/flight API", () => {
   });
 
   test("GET /all-flights", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          date: new Date().getFullYear() + "-12-12",
-          name: randomUUID(),
-          mission: "61f3b1e65f915a05cb8885ec",
-          time: "05:30:00 PM",
-          duration: "1hr",
-        })
-        .expect(201);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        date: new Date().getFullYear() + "-12-12",
+        name: randomUUID(),
+        mission: "61f3b1e65f915a05cb8885ec",
+        time: "05:30:00 PM",
+        duration: "1hr",
+      })
+      .expect(201);
 
     const res = await request(app)
       .get(full_url("all-flights"))
@@ -129,19 +127,17 @@ describe("/flight API", () => {
   });
 
   test("GET /flightswithoutmission", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          date: new Date().getFullYear() + "-12-12",
-          name: randomUUID(),
-          mission: "61f3b1e65f915a05cb8885ec",
-          time: "05:30:00 PM",
-          duration: "1hr",
-        })
-        .expect(201);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        date: new Date().getFullYear() + "-12-12",
+        name: randomUUID(),
+        mission: "61f3b1e65f915a05cb8885ec",
+        time: "05:30:00 PM",
+        duration: "1hr",
+      })
+      .expect(201);
 
     const res = await request(app)
       .get(full_url("flightswithoutmission"))
@@ -171,7 +167,7 @@ describe("/flight API", () => {
         .expect(201);
       created_flight = res.body.data;
 
-      const res2 = await request(app)
+      await request(app)
         .post(full_url("edit"))
         .set("Authorization", `Bearer ${token}`)
         .send({
@@ -187,7 +183,6 @@ describe("/flight API", () => {
           },
         })
         .expect(200);
-      created_flight = res2.body.data;
     }
 
     const res = await request(app)

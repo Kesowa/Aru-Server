@@ -5,7 +5,7 @@ import type { ILayer } from "../schemas/layer";
 import type { ILocation } from "../schemas/location";
 import type { IMission } from "../schemas/mission";
 import type { IVOD } from "../schemas/VOD";
-import type { AIRequest, droneStat } from "../utils/socketUtils";
+import type { AIRequest, DroneStat } from "../utils/socketUtils";
 import type { ProcessVideoData } from "../utils/videoUtils";
 
 export type NameSpaces = {
@@ -21,7 +21,7 @@ export type DroneLocation = {
     type: "streamer" | "receiver";
   };
   events: {
-    TELEMETRY: droneStat;
+    TELEMETRY: DroneStat;
   };
 };
 

@@ -1,6 +1,5 @@
 import express from "express";
 import { body, check, oneOf, query } from "express-validator";
-// import { uploadFile } from "../../controllers/v1/commonController";
 
 import {
   createAlert,
@@ -159,20 +158,13 @@ router.get(
   PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertsByMissionMapref)
 );
-// router.patch(
-//   "/test-alert-inject",
-//   isAuthenticated,
-//   body("tenantId").notEmpty().isMongoId(),
-//   validator,
-//   RobustRunner(testApiinject)
-// );
 router.get(
   "/get-alerts-by-tenantid",
   isAuthenticated,
   // REGEX
   query("time")
     .optional()
-    .matches(/[0-9]+\s[a-zA-Z]+/), // ex: "2 days"
+    .matches(/^\d{1,4}\s[a-zA-Z]{1,10}$/), // ex: "2 days"
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(fetchAllAlertByTenantId)
@@ -187,7 +179,7 @@ router.get(
   // REGEX
   query("time")
     .optional()
-    .matches(/[0-9]+\s[a-zA-Z]+/), // ex: "2 days"
+    .matches(/^\d{1,4}\s[a-zA-Z]{1,10}$/), // ex: "2 days"
   query("user").optional().isString(),
   query("page").isNumeric().toInt(),
   query("limit").isNumeric().toInt(),
@@ -195,11 +187,6 @@ router.get(
   PermissionGuard(PERMS.ALERT_LIST),
   RobustRunner(advancedAlertResultByTenantId)
 );
-// router.get(
-//   "/convert-all-image-to-thumbnail",
-//   isAuthenticated,
-//   RobustRunner(convertImageToThumbnail)
-// );
 router.delete(
   "/delete-multiple-alerts",
   isAuthenticated,

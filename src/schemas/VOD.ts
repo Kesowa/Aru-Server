@@ -14,7 +14,7 @@ export interface IVOD {
   flightID: mongoose.Types.ObjectId; // index
   missionID: mongoose.Types.ObjectId; // index
   videoPath: string;
-  bookmarks: Map<number, String>;
+  bookmarks: Map<number, string>;
   thumbnail: string;
   originalFile?: string;
   locationID?: mongoose.Types.ObjectId; // index
@@ -24,7 +24,7 @@ export interface IVOD {
   isSRT: boolean;
   isFlagged: boolean;
   isThreadExist: boolean;
-  commentCount: Number;
+  commentCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,7 +33,7 @@ export const VODType = {
   flightID: Types.String(), // index
   missionID: Types.String(), // index
   videoPath: Types.String(),
-  // bookmarks: Map<number, String>; // TODO: No matching Type found in ts-openapi
+  // bookmarks: Map<number, String>; // No matching Type found in ts-openapi
   thumbnail: Types.String(),
   originalFile: Types.String(),
   locationID: Types.String(), // index

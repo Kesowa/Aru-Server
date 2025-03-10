@@ -1,6 +1,5 @@
 db = new Mongo().getDB("test");
 
-// @TODO: Add more data, and complete existing data
 db.createCollection("tenants", { capped: false });
 db.createCollection("users", { capped: false });
 db.createCollection("packages", { capped: false });

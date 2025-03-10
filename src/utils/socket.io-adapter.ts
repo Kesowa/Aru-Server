@@ -48,7 +48,6 @@ export const createAdapter = function ({
       super(nsp, opts, name ?? "default");
     }
   };
-  //    shim.name = AmqpAdapter.name;
   return shim;
 };
 
@@ -100,7 +99,7 @@ export class AmqpAdapter extends Adapter {
     ack: (...args: any[]) => void
   ): Promise<void> {
     await this.broadcast(packet, opts);
-    // todo: shim to handle broadcast with ack until I have time to implement it for real
+    // shim to handle broadcast with ack until I have time to implement it for real
     clientCountCallback(1);
     ack();
   }
@@ -146,8 +145,6 @@ export class AmqpAdapter extends Adapter {
 
   async init(): Promise<void> {
     this.debug("start init w/ exchange name", this.exchangeName);
-
-    // console.log('ohai', this.exchangeName);
 
     const connection = await this.options.amqpConnection();
     await this.handleConnection(connection);
@@ -269,13 +266,13 @@ export class AmqpAdapter extends Adapter {
       if (!this.sids.has(id)) {
         this.sids.set(id, new Set());
       }
-      this.sids.get(id)!.add(room);
+      this.sids.get(id).add(room);
 
       if (!this.rooms.has(room)) {
         this.rooms.set(room, new Set());
         newRooms.add(room);
       }
-      this.rooms.get(room)!.add(id);
+      this.rooms.get(room).add(id);
     }
 
     await Promise.all([
@@ -289,12 +286,12 @@ export class AmqpAdapter extends Adapter {
 
   del(id: string, room: string): void {
     if (this.sids.has(id)) {
-      this.sids.get(id)!.delete(room);
+      this.sids.get(id).delete(room);
     }
 
     if (this.rooms.has(room)) {
-      this.rooms.get(room)!.delete(id);
-      if (this.rooms.get(room)!.size === 0) {
+      this.rooms.get(room).delete(id);
+      if (this.rooms.get(room).size === 0) {
         this.rooms.delete(room);
         this.debug("called del on room:", room);
         // tear down the room listener
@@ -310,8 +307,8 @@ export class AmqpAdapter extends Adapter {
       return;
     }
 
-    for (const room of this.sids.get(id)!) {
-      this.del(id, room); // todo: probably wrap this via promises
+    for (const room of this.sids.get(id)) {
+      this.del(id, room); // probably wrap this via promises
     }
 
     this.sids.delete(id);

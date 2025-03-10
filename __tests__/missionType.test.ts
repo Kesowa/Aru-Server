@@ -26,18 +26,14 @@ describe("/common/missiontype API", () => {
   });
 
   test("GET /getall", async () => {
-    const created_types: any[] = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-        })
-        .expect(201);
-      created_types.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: randomUUID(),
+        description: randomUUID(),
+      })
+      .expect(201);
     const res = await request(app)
       .get(full_url("getall"))
       .set("Authorization", `Bearer ${token}`)

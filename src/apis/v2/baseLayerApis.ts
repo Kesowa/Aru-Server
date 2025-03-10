@@ -195,7 +195,7 @@ baseLayerApi.get(
       alertGeojson: null,
       vodGeojson: null,
     };
-    // !TODO only provide geojson data when requested
+    // only provide geojson data when requested
     if (startDate && endDate) {
       const alertData = await getAlertLocationGeojson(
         res.locals.user.tenantId._id,

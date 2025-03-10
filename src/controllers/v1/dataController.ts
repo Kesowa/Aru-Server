@@ -79,7 +79,7 @@ export const getThermal = async (
     return;
   }
   const thermalImg = await saveThermal(filePath);
-  const converted = thermalImg ? true : false;
+  const converted = !!thermalImg;
   thermalDoc.status = converted ? "completed" : "failed";
   thermalDoc.data.file = converted ? thermalImg.thermalPath : "";
   await thermalDoc.updateOne({

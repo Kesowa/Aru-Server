@@ -9,7 +9,6 @@ const checkEnum = (e: Record<string, string>) => (val: string) =>
 const castEnum = <T>(val: string) => val as unknown as T;
 const checkUrl = (val: string) => {
   if (val.endsWith("/")) {
-    new URL(val);
     return false;
   }
   return true;
@@ -131,7 +130,7 @@ export enum Mode {
 }
 export const MODE = new EnvVar("MODE").isEnum(Mode).toEnum<Mode>();
 
-export { Directory as Directory };
+export { Directory };
 
 export const DirPath = (dir: Directory, filename?: string | undefined) =>
   filename == undefined ? path.join(dir) : path.join(dir, filename);

@@ -4,8 +4,6 @@ import {
   logoutUser,
   loginUser,
   getUserDetails,
-} from "../../controllers/v1/authController";
-import {
   renderResetPasswordPage,
   sendForgotPasswordMail,
   resetPassword,

@@ -48,7 +48,7 @@ describe("/streamtoken API", () => {
         .expect(200);
       created_tokens.push(res.body.token);
     }
-    const res = await request(app)
+    await request(app)
       .post(full_url("validate-token"))
       .set("Authorization", `Bearer ${token}`)
       .send({
@@ -58,18 +58,16 @@ describe("/streamtoken API", () => {
   });
 
   test("GET /get-active-streams", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("gen-stream-token"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          missionID: eMissionID,
-          flightID: eFlightID,
-          assetID: eAssetID,
-          tenantID: eTenantID,
-        })
-        .expect(200);
-    }
+    await request(app)
+      .post(full_url("gen-stream-token"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        missionID: eMissionID,
+        flightID: eFlightID,
+        assetID: eAssetID,
+        tenantID: eTenantID,
+      })
+      .expect(200);
     const res = await request(app)
       .get(full_url("get-active-streams"))
       .set("Authorization", `Bearer ${token}`)

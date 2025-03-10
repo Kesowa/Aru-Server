@@ -80,45 +80,15 @@ describe("/document API", () => {
     });
   });
 
-  // DONE
-  // test("PATCH /gen_2x_documents", async () => {
-  //     let created_doc: any;
-  //     {
-  //         const res = await request(app)
-  //             .post(full_url("create"))
-  //             .set("Authorization", `Bearer ${token}`)
-  //             .field("missionId", "61f3b1e65f915a05cb8885ec")
-  //             .field("folderName", "rawPhotos")
-  //             .field("type", "image/png")
-  //             .attach("file", "/server/assets/image.png")
-  //             .expect(201);
-  //         created_doc = res.body.data;
-  //     }
-  //     const res = await request(app)
-  //         .patch(full_url("gen_2x_documents"))
-  //         .set("Authorization", `Bearer ${token}`)
-  //         .send({
-  //             "folderName": created_doc.folderName,
-  //             "filePath": created_doc.filePath
-  //         })
-  //         .expect(200);
-  //     expect(res.body).toMatchObject({
-  //         "status": true,
-  //         "message": "Successfully generated 2x files"
-  //     });
-  // });
-
   test("PATCH /update-size-for-exist-doc", async () => {
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("folderName", "rawPhotos")
-        .field("type", "image/png")
-        .attach("file", "/server/assets/image.png")
-        .expect(201);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .field("missionId", "61f3b1e65f915a05cb8885ec")
+      .field("folderName", "rawPhotos")
+      .field("type", "image/png")
+      .attach("file", "/server/assets/image.png")
+      .expect(201);
     const res = await request(app)
       .patch(full_url("update-size-for-exist-doc"))
       .set("Authorization", `Bearer ${token}`)
@@ -128,33 +98,6 @@ describe("/document API", () => {
       message: "Successfully updated fileSize",
     });
   });
-
-  // test("DELETE /delete", async () => {
-  //     const created_docs: any[] = [];
-  //     {
-  //         const res = await request(app)
-  //             .post(full_url("create"))
-  //             .set("Authorization", `Bearer ${token}`)
-  //             .field("missionId", "61f3b1e65f915a05cb8885ec")
-  //             .field("folderName", "rawPhotos")
-  //             .field("type", "image/png")
-  //             .attach("file", "/server/assets/image.png")
-  //             .expect(201);
-  //         created_docs.push(res.body.data);
-  //     }
-  //     const res = await request(app)
-  //         .delete(full_url("delete"))
-  //         .set("Authorization", `Bearer ${token}`)
-  //         .query({
-  //             "id": created_docs[0]._id
-  //         })
-  //         .expect(200);
-  //     expect(res.body).toMatchObject({
-  //         "status": true,
-  //         "message": "Document Deleted",
-  //         "data": expect.any(Object)
-  //     });
-  // });
 
   // WORKS
   test("DELETE /delete-multiple", async () => {

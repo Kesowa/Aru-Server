@@ -46,7 +46,6 @@ describe("/client API", () => {
         .set("Authorization", `Bearer ${token}`)
         .send(fake_client())
         .expect(201);
-      // console.error(res.body);
       created_clients.push(res.body.data);
     }
     const res = await request(app)
@@ -103,16 +102,14 @@ describe("/client API", () => {
         .expect(201);
       created_clients.push(res.body.data);
     }
-    {
-      const res = await request(app)
-        .patch(full_url("insert-client-for-mission"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          missionId: "61f3b1e65f915a05cb8885ec",
-          clientId: [created_clients[0]._id],
-        })
-        .expect(200);
-    }
+    await request(app)
+      .patch(full_url("insert-client-for-mission"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        missionId: "61f3b1e65f915a05cb8885ec",
+        clientId: [created_clients[0]._id],
+      })
+      .expect(200);
     const res = await request(app)
       .patch(full_url("remove-client-from-mission"))
       .set("Authorization", `Bearer ${token}`)
@@ -130,15 +127,11 @@ describe("/client API", () => {
   });
 
   test("GET /get-list-client", async () => {
-    const created_clients: any = [];
-    {
-      const res = await request(app)
-        .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
-        .send(fake_client())
-        .expect(201);
-      created_clients.push(res.body.data);
-    }
+    await request(app)
+      .post(full_url("create"))
+      .set("Authorization", `Bearer ${token}`)
+      .send(fake_client())
+      .expect(201);
     const res = await request(app)
       .get(full_url("get-list-client"))
       .set("Authorization", `Bearer ${token}`)
@@ -205,16 +198,14 @@ describe("/client API", () => {
         .expect(201);
       created_clients.push(res.body.data);
     }
-    {
-      const res = await request(app)
-        .patch(full_url("insert-client-for-mission"))
-        .set("Authorization", `Bearer ${token}`)
-        .send({
-          missionId: "61f3b1e65f915a05cb8885ec",
-          clientId: [created_clients[0]._id],
-        })
-        .expect(200);
-    }
+    await request(app)
+      .patch(full_url("insert-client-for-mission"))
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        missionId: "61f3b1e65f915a05cb8885ec",
+        clientId: [created_clients[0]._id],
+      })
+      .expect(200);
     const res = await request(app)
       .get(full_url("get-mission-list-for-Id"))
       .set("Authorization", `Bearer ${token}`)

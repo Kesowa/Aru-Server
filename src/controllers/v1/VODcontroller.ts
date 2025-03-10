@@ -24,41 +24,39 @@ export const saveVOD = async (
   >,
   res: AuthResponse
 ) => {
-  {
-    const filename = req.body.filename;
-    const streamKey = filename.split("-")[0];
-    const temp = Buffer.from(streamKey, "base64").toString();
-    const [missionID, flightID, locationID, tenantId] = temp.split("-");
-    req.log.info(
-      "++++++++++++++++++++++++++++SAVING VOD++++++++++++++++++++++++++++++++++++++++++"
-    );
-    req.log.info(missionID + flightID + locationID + tenantId);
-    if (ARU_INSTANCE == Instance.NKDA) {
-      req.log.info("Sending status info to Wipro...");
-      setTimeout(() => {
-        void WiproInterface.SendStatus({ flightID }, "Disconnect")
-          .then((sent) => console.info("Sent status info to Wipro!", sent))
-          .catch(console.error);
-      }, 10_000);
-    }
-    const vodSize = 1; // !TODO
-    const VODdoc = new VOD({
-      flightID: flightID,
-      missionID: missionID,
-      locationID: locationID,
-      videoPath: `/vod/${req.body.filename}.m3u8`,
-      thumbnail: `/vod/${req.body.filename}.jpg`,
-      tenantId: tenantId,
-      videoName: req.body.filename,
-      fileSize: vodSize,
-    });
-    const dbsave = await VODdoc.create();
-    return res.json({
-      status: true,
-      message: `VOD saved with ${dbsave._id.toString()}`,
-      data: dbsave,
-    });
+  const filename = req.body.filename;
+  const streamKey = filename.split("-")[0];
+  const temp = Buffer.from(streamKey, "base64").toString();
+  const [missionID, flightID, locationID, tenantId] = temp.split("-");
+  req.log.info(
+    "++++++++++++++++++++++++++++SAVING VOD++++++++++++++++++++++++++++++++++++++++++"
+  );
+  req.log.info(missionID + flightID + locationID + tenantId);
+  if (ARU_INSTANCE == Instance.NKDA) {
+    req.log.info("Sending status info to Wipro...");
+    setTimeout(() => {
+      void WiproInterface.SendStatus({ flightID }, "Disconnect")
+        .then((sent) => console.info("Sent status info to Wipro!", sent))
+        .catch(console.error);
+    }, 10_000);
   }
+  const vodSize = 1; // Size gets updated after processing is completed
+  const VODdoc = new VOD({
+    flightID: flightID,
+    missionID: missionID,
+    locationID: locationID,
+    videoPath: `/vod/${req.body.filename}.m3u8`,
+    thumbnail: `/vod/${req.body.filename}.jpg`,
+    tenantId: tenantId,
+    videoName: req.body.filename,
+    fileSize: vodSize,
+  });
+  const dbsave = await VODdoc.create();
+  return res.json({
+    status: true,
+    message: `VOD saved with ${dbsave._id.toString()}`,
+    data: dbsave,
+  });
 };
 const SortToNum = (qry: string) => {
   switch (qry) {
@@ -72,121 +70,113 @@ const SortToNum = (qry: string) => {
 };
 
 export const getVODByID = async (req: Request, res: AuthResponse) => {
-  {
-    const Ids: String[] = req.body.Id.map((id: any) => String(id));
-    const query = {
-      _id: { $in: [...Ids] },
-      tenantId: res.locals.user.tenantId._id,
-    };
-    const docs = await VOD.find(query);
-    if (docs.length) {
-      res.json({
-        status: true,
-        message: "sucessfully fetched the VOD",
-        data: docs,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "No Document found",
-      });
-    }
+  const Ids: string[] = req.body.Id.map((id: any) => String(id));
+  const query = {
+    _id: { $in: [...Ids] },
+    tenantId: res.locals.user.tenantId._id,
+  };
+  const docs = await VOD.find(query);
+  if (docs.length) {
+    res.json({
+      status: true,
+      message: "sucessfully fetched the VOD",
+      data: docs,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "No Document found",
+    });
   }
 };
 
 export const getByMissionID = async (req: Request, res: AuthResponse) => {
-  {
-    const missionID = new Types.ObjectId(String(req.query.missionID));
-    const page = Number(req.query.page) || 1;
-    const sortString = req.query.sort?.toString() || "createdAt:desc";
-    const [sortBy, order] = sortString.split(":");
-    const limit = Number(req.query.limit) || 10;
-    const startIndex = (page - 1) * limit;
+  const missionID = new Types.ObjectId(String(req.query.missionID));
+  const page = Number(req.query.page) || 1;
+  const sortString = req.query.sort?.toString() || "createdAt:desc";
+  const [sortBy, order] = sortString.split(":");
+  const limit = Number(req.query.limit) || 10;
+  const startIndex = (page - 1) * limit;
 
-    const query = {
-      missionID: missionID,
-      tenantId: res.locals.user.tenantId._id,
-    };
-    if (req.query.isFlagged !== undefined) {
-      query["isFlagged"] = req.query.isFlagged;
-    }
-    const total = await VOD.countDocuments(query);
-    const doc = await VOD.find(query)
-      .sort({ [sortBy]: order as SortOrder })
-      .populate<{ flightId: IFlight }>("flightID")
-      .populate<{ missionID: IMission }>("missionID")
-      .skip(startIndex)
-      .limit(limit);
-    if (doc.length) {
-      missionSpecificSocket.to(String(missionID)).emit("VOD_FETCH", {
-        fetchSucessfully: true,
-      });
-      res.json({
-        status: true,
-        message: "sucessfully fetched the VODs",
-        TotalPages: Math.ceil(total / limit),
-        total: total,
-        data: doc,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "No Videos found",
-      });
-    }
+  const query = {
+    missionID: missionID,
+    tenantId: res.locals.user.tenantId._id,
+  };
+  if (req.query.isFlagged !== undefined) {
+    query["isFlagged"] = req.query.isFlagged;
+  }
+  const total = await VOD.countDocuments(query);
+  const doc = await VOD.find(query)
+    .sort({ [sortBy]: order as SortOrder })
+    .populate<{ flightId: IFlight }>("flightID")
+    .populate<{ missionID: IMission }>("missionID")
+    .skip(startIndex)
+    .limit(limit);
+  if (doc.length) {
+    missionSpecificSocket.to(String(missionID)).emit("VOD_FETCH", {
+      fetchSucessfully: true,
+    });
+    res.json({
+      status: true,
+      message: "sucessfully fetched the VODs",
+      TotalPages: Math.ceil(total / limit),
+      total: total,
+      data: doc,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "No Videos found",
+    });
   }
 };
 
 export const getCountByMissionID = async (req: Request, res: AuthResponse) => {
-  {
-    const missionID = new Types.ObjectId(String(req.query.missionID));
-    const len = await VOD.countDocuments({
-      missionID: missionID,
-      tenantId: res.locals.user.tenantId._id,
-    });
+  const missionID = new Types.ObjectId(String(req.query.missionID));
+  const len = await VOD.countDocuments({
+    missionID: missionID,
+    tenantId: res.locals.user.tenantId._id,
+  });
 
-    return res.json({
-      status: true,
-      message: "sucessfully fetched the VODs",
-      data: {
-        count: len,
-      },
-    });
-  }
+  return res.json({
+    status: true,
+    message: "sucessfully fetched the VODs",
+    data: {
+      count: len,
+    },
+  });
 };
 
 export const getByFlightOrLocationID = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const { flightID, locationID, page } = req.query;
+  const { flightID, locationID, page } = req.query;
 
-    const query = {
-      tenantId: res.locals.user.tenantId._id,
-      [flightID && "flightID"]: flightID,
-      [locationID && "locationID"]: locationID,
-    };
+  const query = {
+    tenantId: res.locals.user.tenantId._id,
+    [flightID && "flightID"]: flightID,
+    [locationID && "locationID"]: locationID,
+  };
 
-    const doc = await VOD.find(query)
-      .skip(page ? Number(page) * 10 : 0)
-      .limit(10);
+  const doc = await VOD.find(query)
+    .skip(page ? Number(page) * 10 : 0)
+    .limit(10);
 
-    const len = await VOD.countDocuments(query);
+  const len = await VOD.countDocuments(query);
 
-    if (doc.length) {
-      res.json({
-        status: true,
-        message: "sucessfully fetched the VODs",
-        TotalPages: Math.ceil(len / 10),
-        data: doc,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "No Document found",
-      });
-    }
+  if (doc.length) {
+    res.json({
+      status: true,
+      message: "sucessfully fetched the VODs",
+      TotalPages: Math.ceil(len / 10),
+      data: doc,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "No Document found",
+    });
   }
 };
 
@@ -195,63 +185,59 @@ export const fetchAllVoddataByLocationId = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const page = Number(req.query.page);
-    const limit = Number(req.query.limit);
-    const startIndex = (page - 1) * limit;
+  const page = Number(req.query.page);
+  const limit = Number(req.query.limit);
+  const startIndex = (page - 1) * limit;
 
-    const total = await VOD.countDocuments({
-      locationID: req.query.id,
-      tenantId: res.locals.user.tenantId._id,
+  const total = await VOD.countDocuments({
+    locationID: req.query.id,
+    tenantId: res.locals.user.tenantId._id,
+  });
+
+  const vod = await VOD.find({
+    locationID: req.query.id,
+    tenantId: res.locals.user.tenantId._id,
+  })
+    .populate<{ flightID: IFlight }>({ path: "flightID", select: "name" })
+    .limit(limit)
+    .skip(startIndex);
+
+  if (vod.length) {
+    res.json({
+      status: true,
+      message: "sucessfully fetched the VODs",
+      data: vod,
+      total: total,
     });
-
-    const vod = await VOD.find({
-      locationID: req.query.id,
-      tenantId: res.locals.user.tenantId._id,
-    })
-      .populate<{ flightID: IFlight }>({ path: "flightID", select: "name" })
-      .limit(limit)
-      .skip(startIndex);
-
-    if (vod.length) {
-      res.json({
-        status: true,
-        message: "sucessfully fetched the VODs",
-        data: vod,
-        total: total,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "Wrong input",
-      });
-    }
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "Wrong input",
+    });
   }
 };
 
 export const testApiinject = async (req: Request, res: AuthResponse) => {
-  {
-    const data = await VOD.find({}).limit(req.body.limit);
-    const savedDoc = await Promise.all(
-      data.map(async (d) => {
-        d.locationID = new Types.ObjectId(req.body.locationId);
-        d.missionID = new Types.ObjectId(req.body.missionId);
-        d.flightID = new Types.ObjectId(req.body.flightId);
-        return await d.save();
-      })
-    );
-    if (savedDoc) {
-      res.status(200).json({
-        status: true,
-        message: "Injected successfully",
-        data: savedDoc,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "Error in injecting",
-      });
-    }
+  const data = await VOD.find({}).limit(req.body.limit);
+  const savedDoc = await Promise.all(
+    data.map(async (d) => {
+      d.locationID = new Types.ObjectId(req.body.locationId);
+      d.missionID = new Types.ObjectId(req.body.missionId);
+      d.flightID = new Types.ObjectId(req.body.flightId);
+      return await d.save();
+    })
+  );
+  if (savedDoc) {
+    res.status(200).json({
+      status: true,
+      message: "Injected successfully",
+      data: savedDoc,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "Error in injecting",
+    });
   }
 };
 
@@ -303,7 +289,7 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
     thumbnail: "/processing.png",
     originalFile: fullPath,
     tenantId: res.locals.user.tenantId._id,
-    isSRT: telemetryData ? true : false,
+    isSRT: !!telemetryData,
     fileSize: fileDoc.metadata.filesize,
   }).create();
   await transcodeVideo(fullPath, {
@@ -327,87 +313,82 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
 
 //Delete VOD Entry
 export const removeVOD = async (req: Request, res: AuthResponse) => {
-  {
-    const Id = new Types.ObjectId(String(req.body.Id));
-    const doc = await VOD.findOne({
-      _id: Id,
-      tenantId: res.locals.user.tenantId._id,
+  const Id = new Types.ObjectId(String(req.body.Id));
+  const doc = await VOD.findOne({
+    _id: Id,
+    tenantId: res.locals.user.tenantId._id,
+  });
+  if (doc) {
+    // check if processed vod
+    if (
+      doc.videoPath &&
+      doc.videoPath !== "/processing.m3u8" &&
+      doc.thumbnail &&
+      doc.thumbnail !== "/processing.png"
+    ) {
+      await doc.delete();
+      missionSpecificSocket
+        .to(String(doc.missionID))
+        .emit("VOD_REMOVED", doc);
+      res.status(200).json({
+        status: true,
+        message: "Successfully deleted _id:" + Id.toString(),
+        data: doc,
+      });
+    } else {
+      res.status(400).json({
+        status: false,
+        message: "Cannot delete un-processed VOD",
+      });
+    }
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "VOD of _id:" + Id.toString() + " doesnt exist",
     });
-    if (doc) {
-      // check if processed vod
+  }
+};
+
+//Delete Multiple VOD Entries
+export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
+  const Ids: string[] = req.body.Id.map((id: any) => String(id));
+  const docs = await VOD.find({ _id: { $in: [...Ids] } });
+  const errors: string[] = [];
+  const deleted: string[] = [];
+  if (docs && docs.length > 0) {
+    for (const doc of docs) {
       if (
         doc.videoPath &&
         doc.videoPath !== "/processing.m3u8" &&
         doc.thumbnail &&
         doc.thumbnail !== "/processing.png"
       ) {
-        await doc.delete();
-        missionSpecificSocket
-          .to(String(doc.missionID))
-          .emit("VOD_REMOVED", doc);
-        res.status(200).json({
-          status: true,
-          message: "Successfully deleted _id:" + Id.toString(),
-          data: doc,
-        });
-      } else {
-        res.status(400).json({
-          status: false,
-          message: "Cannot delete un-processed VOD",
-        });
-      }
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "VOD of _id:" + Id.toString() + " doesnt exist",
-      });
-    }
-  }
-};
-
-//Delete Multiple VOD Entries
-export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
-  {
-    const Ids: String[] = req.body.Id.map((id: any) => String(id));
-    const docs = await VOD.find({ _id: { $in: [...Ids] } });
-    const errors: String[] = [];
-    const deleted: String[] = [];
-    if (docs && docs.length > 0) {
-      for (let index = 0; index < docs.length; index++) {
-        const doc = docs[index];
-        if (
-          doc.videoPath &&
-          doc.videoPath !== "/processing.m3u8" &&
-          doc.thumbnail &&
-          doc.thumbnail !== "/processing.png"
-        ) {
-          try {
-            await doc.delete();
-            deleted.push(doc._id.toString());
-            missionSpecificSocket
-              .to(String(doc.missionID))
-              .emit("VOD_REMOVED", doc);
-          } catch (error) {
-            errors.push(doc._id.toString());
-          }
-        } else {
+        try {
+          await doc.delete();
+          deleted.push(doc._id.toString());
+          missionSpecificSocket
+            .to(String(doc.missionID))
+            .emit("VOD_REMOVED", doc);
+        } catch (error) {
           errors.push(doc._id.toString());
         }
+      } else {
+        errors.push(doc._id.toString());
       }
-      return res.json({
-        status: true,
-        message: `${deleted.length} videos deleted`,
-        data: {
-          errors,
-          deleted,
-        },
-      });
-    } else {
-      return res.status(404).json({
-        status: false,
-        message: "no videos found",
-      });
     }
+    return res.json({
+      status: true,
+      message: `${deleted.length} videos deleted`,
+      data: {
+        errors,
+        deleted,
+      },
+    });
+  } else {
+    return res.status(404).json({
+      status: false,
+      message: "no videos found",
+    });
   }
 };
 
@@ -415,107 +396,99 @@ export const testApiinjectTenantID = async (
   req: Request,
   res: AuthResponse
 ) => {
-  {
-    const doc = await VOD.find({});
-    const savedDoc = await Promise.all(
-      doc.map(async (d) => {
-        d.tenantId = req.body.tenantID;
-        return await d.save();
-      })
-    );
+  const doc = await VOD.find({});
+  const savedDoc = await Promise.all(
+    doc.map(async (d) => {
+      d.tenantId = req.body.tenantID;
+      return await d.save();
+    })
+  );
 
-    if (savedDoc) {
-      res.status(200).json({
-        status: true,
-        message: `Injected succefully to ${doc.length} documents`,
-        data: savedDoc,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "Error in injecting",
-      });
-    }
+  if (savedDoc) {
+    res.status(200).json({
+      status: true,
+      message: `Injected succefully to ${doc.length} documents`,
+      data: savedDoc,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "Error in injecting",
+    });
   }
 };
 
 export const renameVOD = async (req: Request, res: AuthResponse) => {
-  {
-    const Id = new Types.ObjectId(String(req.body.id));
-    const updatedDoc = await VOD.findOneAndUpdate(
-      { _id: Id, tenantId: res.locals.user.tenantId._id },
-      req.body.update,
-      {
-        new: true,
-      }
-    );
-
-    if (updatedDoc) {
-      res.json({
-        status: true,
-        message: "VOD renamed sucessfully.",
-        data: updatedDoc,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "VOD couldn't be renamed.",
-      });
+  const Id = new Types.ObjectId(String(req.body.id));
+  const updatedDoc = await VOD.findOneAndUpdate(
+    { _id: Id, tenantId: res.locals.user.tenantId._id },
+    req.body.update,
+    {
+      new: true,
     }
+  );
+
+  if (updatedDoc) {
+    res.json({
+      status: true,
+      message: "VOD renamed sucessfully.",
+      data: updatedDoc,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "VOD couldn't be renamed.",
+    });
   }
 };
 
 export const updateVOD = async (req: Request, res: AuthResponse) => {
-  {
-    const Id = new Types.ObjectId(String(req.body.id));
-    const updatedDoc = await VOD.findOneAndUpdate(
-      { _id: Id, tenantId: res.locals.user.tenantId._id },
-      req.body.update,
-      {
-        new: true,
-      }
-    );
-
-    if (updatedDoc) {
-      res.json({
-        status: true,
-        message: "VOD updated sucessfully.",
-        data: updatedDoc,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "VOD could not be updated.",
-      });
+  const Id = new Types.ObjectId(String(req.body.id));
+  const updatedDoc = await VOD.findOneAndUpdate(
+    { _id: Id, tenantId: res.locals.user.tenantId._id },
+    req.body.update,
+    {
+      new: true,
     }
+  );
+
+  if (updatedDoc) {
+    res.json({
+      status: true,
+      message: "VOD updated sucessfully.",
+      data: updatedDoc,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "VOD could not be updated.",
+    });
   }
 };
 
 export const updateMultiVOD = async (req: Request, res: AuthResponse) => {
-  {
-    const Ids: String[] = req.body.Id.map((id: any) => String(id));
-    const updatedDoc = await VOD.updateMany(
-      { _id: { $in: Ids }, tenantId: res.locals.user.tenantId._id },
-      { $set: req.body.update },
-      { multi: true }
-    );
-    const doc = await VOD.find({
-      _id: { $in: Ids },
-      tenantId: res.locals.user.tenantId._id,
-    })
-      .populate<{ flightId: IFlight }>("flightID")
-      .populate<{ missionID: IMission }>("missionID");
-    if (updatedDoc) {
-      res.json({
-        status: true,
-        message: "VOD updated sucessfully.",
-        data: doc,
-      });
-    } else {
-      res.status(404).json({
-        status: false,
-        message: "VOD could not be updated.",
-      });
-    }
+  const Ids: string[] = req.body.Id.map((id: any) => String(id));
+  const updatedDoc = await VOD.updateMany(
+    { _id: { $in: Ids }, tenantId: res.locals.user.tenantId._id },
+    { $set: req.body.update },
+    { multi: true }
+  );
+  const doc = await VOD.find({
+    _id: { $in: Ids },
+    tenantId: res.locals.user.tenantId._id,
+  })
+    .populate<{ flightId: IFlight }>("flightID")
+    .populate<{ missionID: IMission }>("missionID");
+  if (updatedDoc) {
+    res.json({
+      status: true,
+      message: "VOD updated sucessfully.",
+      data: doc,
+    });
+  } else {
+    res.status(404).json({
+      status: false,
+      message: "VOD could not be updated.",
+    });
   }
 };

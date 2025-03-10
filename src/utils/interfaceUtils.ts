@@ -12,12 +12,12 @@ export type AuthResponse = Response & {
         tenantId: ITenant;
       }
     >;
-    log: logFace;
+    log: LogFace;
     advancedResults: any;
   };
 };
 
-export interface logFace {
+export interface LogFace {
   status: number;
   route: string;
   userID?: string;
