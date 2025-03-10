@@ -451,7 +451,7 @@ describe("/layer API", () => {
     expect(res.body).toMatchObject({
       status: true,
       message: expect.stringMatching(
-        /Data sorted in (ascending|descending) order for (name|createdAt|captureDate)/
+        /Data sorted in (ascending|descending) order for (name|createdAt|captureDate)/,
       ),
       docs: expect.any(Array),
     });

@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import { Types } from "ts-openapi";
 
@@ -26,7 +25,7 @@ vodApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const {
       missionId,
@@ -52,7 +51,7 @@ vodApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -73,7 +72,7 @@ vodApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -126,12 +125,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default vodApi;

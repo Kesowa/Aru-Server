@@ -11,7 +11,7 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const inferVodViolence = async (
   req: Request<{ vodId: string; inferType: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   req.log.info(`Processing VOD with ID: ${req.params.vodId}`);
 
@@ -104,7 +104,7 @@ export const inferVodViolence = async (
 
 export const inferLayerProcessing = async (
   req: Request<{ layerId: string; inferType: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   logger.info(req, "SENT INFERENCE REQUEST");
 
@@ -213,7 +213,7 @@ export const fetchAimlTasks = async (
     {},
     { infer?: string[] }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const query = {
     docModel: req.params.docModel,

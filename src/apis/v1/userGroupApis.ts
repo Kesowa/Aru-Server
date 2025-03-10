@@ -26,7 +26,7 @@ router.post(
   validator,
   PermissionGuard(PERMS.USER_GROUP_CREATE),
   isUserGroupCount,
-  RobustRunner(createUserGroupforTenant)
+  RobustRunner(createUserGroupforTenant),
 );
 
 //list user groups
@@ -36,7 +36,7 @@ router.get(
   query("sort").optional(), // String of format "<field>:<asce or desc>", like "name:desc"
   validator,
   PermissionGuard(PERMS.USER_GROUP_LIST),
-  RobustRunner(listUserGroupforTenant)
+  RobustRunner(listUserGroupforTenant),
 );
 
 //get user group by ID
@@ -46,7 +46,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.USER_GROUP_LIST),
-  RobustRunner(getUserGroupbyID)
+  RobustRunner(getUserGroupbyID),
 );
 
 router.patch(
@@ -61,7 +61,7 @@ router.patch(
     .withMessage("Invalid permissions array"),
   validator,
   PermissionGuard(PERMS.USER_GROUP_UPDATE),
-  RobustRunner(UserGroupforEdit)
+  RobustRunner(UserGroupforEdit),
 );
 
 router.delete(
@@ -70,7 +70,7 @@ router.delete(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.USER_GROUP_DELETE),
-  RobustRunner(UserGroupDelete)
+  RobustRunner(UserGroupDelete),
 );
 
 export default router;

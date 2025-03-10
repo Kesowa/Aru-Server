@@ -23,7 +23,7 @@ export const sendMail = async (
   subject: string,
   text: any,
   html: any,
-  file: any
+  file: any,
 ) => {
   try {
     const defaultmailOption = {

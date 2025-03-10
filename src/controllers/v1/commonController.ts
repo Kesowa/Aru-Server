@@ -21,7 +21,7 @@ import { Directory } from "../../utils/pathUtils";
 //check if email is available for registration
 export const checkIfEmailIdIsAvailable = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const [existingTenantWithEmail, existingUserWithEmail] = await Promise.all([
     User.findOne({ email: req.body.email }),
@@ -34,11 +34,10 @@ export const checkIfEmailIdIsAvailable = async (
       isAvailable: false,
     });
   } else {
-    const [existingTenantWithEmail, existingUserWithEmail] =
-      await Promise.all([
-        User.findOne({ email: req.body.email }, { _id: 1 }),
-        Tenant.findOne({ email: req.body.email }, { _id: 1 }),
-      ]);
+    const [existingTenantWithEmail, existingUserWithEmail] = await Promise.all([
+      User.findOne({ email: req.body.email }, { _id: 1 }),
+      Tenant.findOne({ email: req.body.email }, { _id: 1 }),
+    ]);
     if (existingTenantWithEmail || existingUserWithEmail) {
       res.json({
         status: true,
@@ -66,7 +65,7 @@ export const createUploadUrl = async (
       model: string;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   // check storage
   const sizeInMb = req.body.size / (1024 * 1024);
@@ -89,7 +88,7 @@ export const createUploadUrl = async (
   policy.setBucket(S3_BUCKET_NAME);
   policy.setContentLengthRange(
     Math.floor(req.body.size * 0.99),
-    Math.ceil(req.body.size * 1.01)
+    Math.ceil(req.body.size * 1.01),
   );
   policy.setContentType(req.body.type);
   const expiry = new Date();
@@ -97,7 +96,7 @@ export const createUploadUrl = async (
   policy.setExpires(expiry);
   const safeName = encodeURIComponent(req.body.name);
   policy.setContentDisposition(
-    `attachment; filename="${safeName}"; filename*="${safeName}"`
+    `attachment; filename="${safeName}"; filename*="${safeName}"`,
   );
   const ext = path.extname(req.body.name);
   const key = path.join(Directory.TEMP, randomUUID() + ext);

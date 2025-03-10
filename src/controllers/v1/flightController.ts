@@ -86,7 +86,7 @@ export const editFlight = async (req: Request, res: AuthResponse) => {
     data,
     {
       new: true,
-    }
+    },
   ).populate<{ locationID: ILocation }>("locationID");
 
   res.locals.log = {
@@ -146,7 +146,7 @@ export const deleteFlight = async (req: Request, res: AuthResponse) => {
 //fetch all flights for a specific mission
 export const fetchAllFlightByMissionId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const flights = await Flight.find({
     mission: req.body.missionID,
@@ -185,7 +185,7 @@ export const assignPilotSelf = async (req: Request, res: AuthResponse) => {
   const findDoc = await Flight.findOneAndUpdate(
     { _id: flightID, tenant: res.locals.user.tenantId._id, pilotID: null },
     { pilotID: pilotID },
-    { new: true }
+    { new: true },
   );
   if (findDoc == null) {
     return res.status(404).json({
@@ -226,7 +226,7 @@ export const assignPilot = async (req: Request, res: AuthResponse) => {
     },
     {
       new: true,
-    }
+    },
   ).populate<{ pilotID: IUser }>("pilotID");
   if (findDoc) {
     const mission = findDoc.mission;
@@ -277,7 +277,7 @@ export const fetchAllFlights = async (req: Request, res: AuthResponse) => {
 // flight data get by location id
 export const fetchAllFlightdataByLocationId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const flightdata = await Flight.find({
     locationID: new Types.ObjectId(String(req.query.id)),
@@ -299,7 +299,7 @@ export const fetchAllFlightdataByLocationId = async (
 
 export const fetchFlightsWithoutMission = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const flights = await Flight.aggregate([
     {

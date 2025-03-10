@@ -7,7 +7,7 @@ import flightLogSchema, {
 
 const flightLog = model<IFlightLog, FlightLogModel>(
   "flightLog",
-  flightLogSchema
+  flightLogSchema,
 );
 
 export default flightLog;

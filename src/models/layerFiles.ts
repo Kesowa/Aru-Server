@@ -7,6 +7,6 @@ import layerFilesSchema, {
 
 const layerFiles = mongoose.model<ILayerFile, LayerFileModel>(
   "layerFiles",
-  layerFilesSchema
+  layerFilesSchema,
 );
 export default layerFiles;

@@ -14,7 +14,7 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 export const GetThread = async (
   docModel: docTypes,
   docId: mongoose.Types.ObjectId,
-  tenantId: mongoose.Types.ObjectId
+  tenantId: mongoose.Types.ObjectId,
 ) => {
   const thread = await Thread.findOneAndUpdate(
     {
@@ -32,7 +32,7 @@ export const GetThread = async (
     {
       returnOriginal: false,
       upsert: true,
-    }
+    },
   ).populate("doc");
   return thread;
 };
@@ -40,7 +40,7 @@ export const GetThread = async (
 export const CreateThread = async (
   docModel: docTypes,
   docId: mongoose.Types.ObjectId,
-  tenantId: mongoose.Types.ObjectId
+  tenantId: mongoose.Types.ObjectId,
 ) => {
   const thread = await Thread.create({
     doc: docId,
@@ -56,7 +56,7 @@ const updateDoc = async (
   tenantId,
   docModel,
   isThreadExist,
-  commentCount
+  commentCount,
 ) => {
   const updateValue = {
     isThreadExist,
@@ -71,7 +71,7 @@ const updateDoc = async (
         },
         {
           $set: updateValue,
-        }
+        },
       );
       break;
     case "vod":
@@ -82,7 +82,7 @@ const updateDoc = async (
         },
         {
           $set: updateValue,
-        }
+        },
       );
       break;
     case "alert":
@@ -93,7 +93,7 @@ const updateDoc = async (
         },
         {
           $set: updateValue,
-        }
+        },
       );
       break;
     case "layer":
@@ -104,7 +104,7 @@ const updateDoc = async (
         },
         {
           $set: updateValue,
-        }
+        },
       );
       break;
     case "layerfile":
@@ -115,7 +115,7 @@ const updateDoc = async (
         },
         {
           $set: updateValue,
-        }
+        },
       );
       break;
     default:
@@ -129,7 +129,7 @@ export const CreateOrUpdateComment = async (
   tenantId: mongoose.Types.ObjectId,
   userId: mongoose.Types.ObjectId,
   content: string,
-  commentId?: mongoose.Types.ObjectId | undefined
+  commentId?: mongoose.Types.ObjectId | undefined,
 ) => {
   if (commentId) {
     return await Thread.updateOne(
@@ -139,7 +139,7 @@ export const CreateOrUpdateComment = async (
         docModel: docModel,
         "comments._id": commentId,
       },
-      { $set: { "comments.$.content": content } }
+      { $set: { "comments.$.content": content } },
     );
   } else {
     const user = await User.findOne({
@@ -164,7 +164,7 @@ export const CreateOrUpdateComment = async (
           comments: comment,
         },
       },
-      { new: true }
+      { new: true },
     );
     await updateDoc(docId, tenantId, docModel, true, response.comments.length);
     return response;
@@ -176,7 +176,7 @@ export const DeleteComment = async (
   docId: mongoose.Types.ObjectId,
   tenantId: mongoose.Types.ObjectId,
   userId: mongoose.Types.ObjectId,
-  commentId: mongoose.Types.ObjectId
+  commentId: mongoose.Types.ObjectId,
 ) => {
   const response = await Thread.findOneAndUpdate(
     {
@@ -192,7 +192,7 @@ export const DeleteComment = async (
         },
       },
     },
-    { new: true }
+    { new: true },
   );
   const commentLength = response.comments.length;
   await updateDoc(
@@ -200,19 +200,19 @@ export const DeleteComment = async (
     tenantId,
     docModel,
     commentLength !== 0,
-    commentLength
+    commentLength,
   );
   return response;
 };
 
 export const CreateDocThread = async (
   req: Request<{ docType: docTypes; docId: mongoose.Types.ObjectId }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const thread = await CreateThread(
     req.params.docType,
     req.params.docId,
-    res.locals.user.tenantId._id
+    res.locals.user.tenantId._id,
   );
   if (thread == null) {
     return res.status(400).json({
@@ -229,12 +229,12 @@ export const CreateDocThread = async (
 
 export const GetDocThread = async (
   req: Request<{ docType: docTypes; docId: mongoose.Types.ObjectId }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const thread = await GetThread(
     req.params.docType,
     req.params.docId,
-    res.locals.user.tenantId._id
+    res.locals.user.tenantId._id,
   );
   if (thread == null) {
     return res.status(404).json({
@@ -255,7 +255,7 @@ export const AddorUpdateDocComment = async (
     never,
     { content: string; commentId: mongoose.Types.ObjectId | undefined }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   if (!req.body.commentId) {
     const comment = await CreateOrUpdateComment(
@@ -263,7 +263,7 @@ export const AddorUpdateDocComment = async (
       req.params.docId,
       res.locals.user.tenantId._id,
       res.locals.user._id,
-      req.body.content
+      req.body.content,
     );
     if (comment == null) {
       return res.status(400).json({
@@ -283,7 +283,7 @@ export const AddorUpdateDocComment = async (
       res.locals.user.tenantId._id,
       res.locals.user._id,
       req.body.content,
-      req.body.commentId
+      req.body.commentId,
     );
     if (comment == null) {
       return res.status(400).json({
@@ -308,14 +308,14 @@ export const RemoveDocComment = async (
     },
     never
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const comment = await DeleteComment(
     req.params.docType,
     req.params.docId,
     res.locals.user.tenantId._id,
     res.locals.user._id,
-    req.params.commentId
+    req.params.commentId,
   );
   if (comment == null) {
     return res.status(400).json({

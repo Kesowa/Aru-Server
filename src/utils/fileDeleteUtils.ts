@@ -4,7 +4,7 @@ import { docPath } from "./pathUtils";
 
 export const deleteDirFileUsingName = async (
   dir: Directory,
-  objectkey: string
+  objectkey: string,
 ) => {
   await deleteObj(docPath(dir, objectkey));
 };

@@ -79,12 +79,12 @@ const newTenantSchema = new mongoose.Schema<INewTenant>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 newTenantSchema.index(
   { createdAt: 1 },
-  { expireAfterSeconds: RESET_PASSWORD_TOKEN_EXPIRE }
+  { expireAfterSeconds: RESET_PASSWORD_TOKEN_EXPIRE },
 );
 newTenantSchema.index({ email: 1 }, { unique: true });
 

@@ -30,7 +30,7 @@ export const createDocument = async (req: Request, res: AuthResponse) => {
   const missionId = req.body.missionId;
   const fullPath = await permPath(
     Directory.DOCUMENTS,
-    fileDoc.metadata.objectkey
+    fileDoc.metadata.objectkey,
   );
 
   const doc = new Document({
@@ -89,7 +89,7 @@ export const deleteDocument = async (req: Request, res: AuthResponse) => {
 
 export const deletemultipleDocument = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const documents = await Document.find(
     {
@@ -103,7 +103,7 @@ export const deletemultipleDocument = async (
       fileType: 1,
       tenantId: 1,
       missionId: 1,
-    }
+    },
   );
   for (const d of documents) {
     await d.delete();
@@ -232,7 +232,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         d.map((d) => d.filePath),
         missionId,
         res.locals.user.tenantId._id,
-        res.locals.user._id
+        res.locals.user._id,
       );
       missionSpecificSocket
         .to(missionId)
@@ -260,7 +260,7 @@ export const zipbymissionId = async (req: Request, res: AuthResponse) => {
         d.map((layer) => layer.filePath),
         missionId,
         res.locals.user.tenantId._id,
-        res.locals.user._id
+        res.locals.user._id,
       );
       try {
         missionSpecificSocket
@@ -292,11 +292,11 @@ export const gen2x = async (req: Request, res: AuthResponse) => {
       // update size details
       await Tenant.updateOne(
         { _id: doc.tenantId },
-        { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } }
+        { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } },
       );
       await Mission.updateOne(
         { _id: doc.missionId },
-        { $inc: { size: doc.fileSize } }
+        { $inc: { size: doc.fileSize } },
       );
       res.status(200).json({
         status: true,
@@ -324,7 +324,7 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
     {
       filePath: 1,
       fileSize: 1,
-    }
+    },
   );
   if (docs.length) {
     for (const doc of docs) {
@@ -343,11 +343,11 @@ export const updateSizeExistDoc = async (req: Request, res: AuthResponse) => {
                 actualSize: doc.fileSize - oldSize,
                 allDocumentsSize: doc.fileSize - oldSize,
               },
-            }
+            },
           );
           await Mission.updateOne(
             { _id: doc.missionId },
-            { $inc: { size: doc.fileSize - oldSize } }
+            { $inc: { size: doc.fileSize - oldSize } },
           );
         }
       } else {
@@ -373,7 +373,7 @@ export const updateDoc = async (req: Request, res: AuthResponse) => {
     req.body.update,
     {
       new: true,
-    }
+    },
   );
 
   if (updatedDoc) {
@@ -395,7 +395,7 @@ export const updateMultiDoc = async (req: Request, res: AuthResponse) => {
   const updatedDoc = await Document.updateMany(
     { _id: { $in: Ids }, tenantId: res.locals.user.tenantId._id },
     { $set: req.body.update },
-    { multi: true }
+    { multi: true },
   );
   const doc = await Document.find({
     _id: { $in: Ids },

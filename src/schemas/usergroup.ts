@@ -57,7 +57,7 @@ const usergroupschema = new mongoose.Schema<IUserGroup>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 usergroupschema.index({
   name: 1,

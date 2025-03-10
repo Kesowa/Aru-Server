@@ -33,7 +33,7 @@ export function sanitizeSort(query: string) {
   return Sort.ASC;
 }
 export const RobustRunner = <A, B, C, D, T extends Response>(
-  handler: (req: Request<A, B, C, D>, res: T) => Promise<unknown>
+  handler: (req: Request<A, B, C, D>, res: T) => Promise<unknown>,
 ) => {
   return (req: Request, res: Response) => {
     handler(req as Request<A, B, C, D>, res as T)

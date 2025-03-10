@@ -164,7 +164,7 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 userSchema.index({ email: 1 }, { unique: true });

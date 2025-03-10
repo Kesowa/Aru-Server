@@ -10,14 +10,14 @@ import { sanitizeSort } from "../../utils/requestHelpers";
 //create new  permission
 export const createUserGroupforTenant = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const existing_group = await UserGroup.findOne({
     name: req.body.name,
     tenantId: res.locals.user.tenantId._id,
   });
   const permissions = Object.values(TENANT_STAFF_PERMS).filter((perm) =>
-    req.body.permissions.includes(perm)
+    req.body.permissions.includes(perm),
   );
   if (existing_group) {
     res.json({
@@ -40,7 +40,7 @@ export const createUserGroupforTenant = async (
     if (ug && tenant.actualUserGroupCount >= 0) {
       await Tenant.updateOne(
         { _id: res.locals.user.tenantId },
-        { $inc: { actualUserGroupCount: 1 } }
+        { $inc: { actualUserGroupCount: 1 } },
       );
     }
     res.status(201).json({
@@ -53,7 +53,7 @@ export const createUserGroupforTenant = async (
 //List User Group
 export const listUserGroupforTenant = async (
   req: Request<{}, {}, {}, { sort: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const [sortBy, order] = (req.query.sort || "name:desc").split(":");
   const user_groups = await UserGroup.find({
@@ -86,7 +86,7 @@ export const UserGroupforEdit = async (req: Request, res: AuthResponse) => {
     tenantId: res.locals.user.tenantId,
   });
   const permissions = Object.values(TENANT_STAFF_PERMS).filter((perm) =>
-    req.body.permissions.includes(perm)
+    req.body.permissions.includes(perm),
   );
   if (data) {
     const doc = await UserGroup.findOneAndUpdate(
@@ -99,7 +99,7 @@ export const UserGroupforEdit = async (req: Request, res: AuthResponse) => {
         new: true,
         upsert: true,
         useFindAndModify: false,
-      }
+      },
     );
     return res.status(200).json({
       status: true,
@@ -143,7 +143,7 @@ export const UserGroupDelete = async (req: Request, res: AuthResponse) => {
 
   await Tenant.updateOne(
     { _id: res.locals.user.tenantId },
-    { $inc: { actualUserGroupCount: -1 } }
+    { $inc: { actualUserGroupCount: -1 } },
   );
 
   res.status(200).json({

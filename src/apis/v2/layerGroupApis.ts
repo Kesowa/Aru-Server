@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import { Types } from "ts-openapi";
 
@@ -22,7 +21,7 @@ layerGroupApis.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { layerGroupId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await LayerGroup.find(
@@ -35,7 +34,7 @@ layerGroupApis.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -49,7 +48,7 @@ layerGroupApis.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -99,12 +98,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default layerGroupApis;

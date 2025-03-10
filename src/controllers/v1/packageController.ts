@@ -29,7 +29,7 @@ export const createPackage = async (req: Request, res: AuthResponse) => {
   if (req.body.poster && createDoc) {
     copyFiled(
       req.body.poster,
-      `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`
+      `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`,
     );
   }
   if (createDoc) {
@@ -101,7 +101,7 @@ export const editPackageForId = async (req: Request, res: AuthResponse) => {
       if (a !== b) {
         copyFiled(
           req.body.poster,
-          `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`
+          `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`,
         );
         result.poster = `/images/packagePosters/${
           req.body.poster.split(/[\\\/]/)[3]

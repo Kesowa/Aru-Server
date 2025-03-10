@@ -19,7 +19,7 @@ assetClassApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { assetClassId, populate } = req.query;
     const data = await assetClass
@@ -31,7 +31,7 @@ assetClassApi.get(
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -57,12 +57,12 @@ openApi.addPath(
             properties: {
               data: Types.Array({ arrayType: AssetClassType }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default assetClassApi;

@@ -4,7 +4,7 @@ import documentSchema, { DocumentModel, IDocument } from "../schemas/document";
 
 const Document = mongoose.model<IDocument, DocumentModel>(
   "document",
-  documentSchema
+  documentSchema,
 );
 
 export default Document;

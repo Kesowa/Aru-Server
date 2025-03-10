@@ -120,7 +120,7 @@ const layerFilesSchema = new mongoose.Schema<ILayerFile>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 layerFilesSchema.index({
   layerId: 1,
@@ -139,14 +139,14 @@ layerFilesSchema.methods.create = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: doc.fileSize, allLayerFileSize: doc.fileSize } }
+    { $inc: { actualSize: doc.fileSize, allLayerFileSize: doc.fileSize } },
   );
   const layerDoc = await Layer.findById(doc.layerId);
   layerDoc.fileSize += doc.fileSize;
   await layerDoc.save();
   await Mission.updateOne(
     { _id: layerDoc.missionId },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   // save the document
   return await doc.save();
@@ -162,14 +162,14 @@ layerFilesSchema.methods.delete = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: -doc.fileSize, allLayerFileSize: -doc.fileSize } }
+    { $inc: { actualSize: -doc.fileSize, allLayerFileSize: -doc.fileSize } },
   );
   const layerDoc = await Layer.findById(doc.layerId);
   layerDoc.fileSize -= doc.fileSize;
   await layerDoc.save();
   await Mission.updateOne(
     { _id: layerDoc.missionId },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
   // delete the document
   await doc.deleteOne();

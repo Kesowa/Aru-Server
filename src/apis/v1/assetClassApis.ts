@@ -23,14 +23,14 @@ router.post(
   header("userid").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ASSET_CLASS_CREATE),
-  RobustRunner(createAssetClass)
+  RobustRunner(createAssetClass),
 );
 
 router.get(
   "/get",
   isAuthenticated,
   PermissionGuard(PERMS.ASSET_CLASS_LIST),
-  RobustRunner(getAssetClass)
+  RobustRunner(getAssetClass),
 );
 
 router.patch(
@@ -40,7 +40,7 @@ router.patch(
   body("typeName").notEmpty().isString(),
   validator,
   PermissionGuard(PERMS.ASSET_CLASS_UPDATE),
-  RobustRunner(updateAssetClass)
+  RobustRunner(updateAssetClass),
 );
 
 router.get(
@@ -49,7 +49,7 @@ router.get(
   query("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ASSET_CLASS_LIST),
-  RobustRunner(fetchAssetbyId)
+  RobustRunner(fetchAssetbyId),
 );
 
 router.delete(
@@ -58,7 +58,7 @@ router.delete(
   body("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ASSET_CLASS_DELETE),
-  RobustRunner(removeAssetClass)
+  RobustRunner(removeAssetClass),
 );
 
 export default router;

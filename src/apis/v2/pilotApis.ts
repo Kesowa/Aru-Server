@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import { Types } from "ts-openapi";
 
@@ -22,7 +21,7 @@ pilotApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { limit, offset, orderBy, asc, populate } = req.query;
     const data = await User.find(
@@ -35,7 +34,7 @@ pilotApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .populate<{ userGroupId: { permissions: IPermission[] } }>({
         path: "userGroupId",
@@ -58,7 +57,7 @@ pilotApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -107,12 +106,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default pilotApi;

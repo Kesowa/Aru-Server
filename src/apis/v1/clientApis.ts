@@ -41,7 +41,7 @@ router.post(
   validator,
   PermissionGuard(PERMS.CREATE_CLIENT),
   isClientCount,
-  RobustRunner(createClientformissionGroup)
+  RobustRunner(createClientformissionGroup),
 );
 router.get(
   "/get-mission-list-for-Id",
@@ -56,7 +56,7 @@ router.get(
   query("createdAt").optional().notEmpty().isString(), // asce or desc, sorting order, optional
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(getMissionById)
+  RobustRunner(getMissionById),
 );
 router.patch(
   "/edit-client-details",
@@ -77,7 +77,7 @@ router.patch(
   ]),
   validator,
   PermissionGuard(PERMS.EDIT_CLIENT),
-  RobustRunner(editClientDetails)
+  RobustRunner(editClientDetails),
 );
 router.get(
   "/get-list-client",
@@ -87,7 +87,7 @@ router.get(
   query("sort").optional(), // String of format "<field>:<asce or desc>", like "name:desc"
   validator,
   PermissionGuard(PERMS.CLIENT_LIST),
-  RobustRunner(getListClient)
+  RobustRunner(getListClient),
 );
 router.delete(
   "/delete-client",
@@ -95,13 +95,13 @@ router.delete(
   body("id").notEmpty(),
   validator,
   PermissionGuard(PERMS.DELETE_CLIENT),
-  RobustRunner(deleteCientforTenant)
+  RobustRunner(deleteCientforTenant),
 );
 router.get(
   "/reactivate-client/:token",
   param("token").notEmpty().isString().trim(),
   validator,
-  RobustRunner(reactivateClient)
+  RobustRunner(reactivateClient),
 );
 router.patch(
   "/insert-client-for-mission",
@@ -110,7 +110,7 @@ router.patch(
   body("clientId").isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.MISSION_UPDATE, PERMS.EDIT_CLIENT, PERMS.CREATE_CLIENT),
-  RobustRunner(insertClientforMission)
+  RobustRunner(insertClientforMission),
 );
 router.patch(
   "/remove-client-from-mission",
@@ -119,13 +119,13 @@ router.patch(
   query("clientId").notEmpty(),
   validator,
   PermissionGuard(PERMS.MISSION_UPDATE, PERMS.EDIT_CLIENT, PERMS.CREATE_CLIENT),
-  RobustRunner(removeClientfromMission)
+  RobustRunner(removeClientfromMission),
 );
 router.get(
   "/geneate-client-csv",
   isAuthenticated,
   PermissionGuard(PERMS.CLIENT_LIST),
-  RobustRunner(clientCsv)
+  RobustRunner(clientCsv),
 );
 
 router.get(
@@ -134,7 +134,7 @@ router.get(
   param("id").notEmpty(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchMissionById)
+  RobustRunner(fetchMissionById),
 );
 
 router.get(
@@ -143,7 +143,7 @@ router.get(
   query("email").isEmail().withMessage("invalid Email."),
   validator,
   PermissionGuard(PERMS.CLIENT_LIST),
-  RobustRunner(getClientByEmail)
+  RobustRunner(getClientByEmail),
 );
 
 router.get(
@@ -152,7 +152,7 @@ router.get(
   query("id").isMongoId().withMessage("invalid id"),
   validator,
   PermissionGuard(PERMS.CLIENT_LIST),
-  RobustRunner(getClientById)
+  RobustRunner(getClientById),
 );
 
 router.post(
@@ -162,14 +162,14 @@ router.post(
   body("emailID").isEmail().withMessage("invalid Email."),
   validator,
   PermissionGuard(PERMS.MISSION_UPDATE, PERMS.EDIT_CLIENT, PERMS.CREATE_CLIENT),
-  RobustRunner(inviteClient)
+  RobustRunner(inviteClient),
 );
 
 router.get(
   "/register/:token",
   param("token").notEmpty(),
   validator,
-  RobustRunner(registerClient)
+  RobustRunner(registerClient),
 );
 
 export default router;

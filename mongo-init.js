@@ -289,7 +289,7 @@ db.users.insertMany(
     userGroupId: ObjectId("6116058af270c9142c1588f2"),
     ...commonProps.users,
     ...commonProps.all,
-  }))
+  })),
 );
 
 db.packages.insertMany([
@@ -355,7 +355,7 @@ db.missiontypes.insertMany(
     isActive: true,
     createdBy: SUPER_ADMIN,
     updatedBy: SUPER_ADMIN,
-  }))
+  })),
 );
 
 const missions = [
@@ -374,7 +374,7 @@ db.missions.insertMany(
     ...commonProps.all,
     ...commonProps.missions,
     ...mission,
-  }))
+  })),
 );
 
 const flights = [
@@ -405,7 +405,7 @@ db.flights.insertMany(
     ...commonProps.all,
     ...commonProps.flights,
     ...flight,
-  }))
+  })),
 );
 
 const layers = [
@@ -615,7 +615,7 @@ db.layers.insertMany(
     ...commonProps.all,
     ...commonProps.layers,
     ...layer,
-  }))
+  })),
 );
 
 db.layerfiles.insertMany([
@@ -689,5 +689,5 @@ db.usergroups.insertMany(
     ...usergroup,
     createdBy: TENANT_ROOT,
     updatedBy: TENANT_ROOT,
-  }))
+  })),
 );

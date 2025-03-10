@@ -11,7 +11,7 @@ export async function generateResetPasswordToken(email: string) {
   await PassReset.updateOne(
     { email: email },
     { passwordResetToken: hash, $inc: { retries: 1 } },
-    { upsert: true }
+    { upsert: true },
   );
 
   return email + ";" + token;

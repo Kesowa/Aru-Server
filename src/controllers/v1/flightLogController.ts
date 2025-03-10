@@ -17,7 +17,7 @@ export const createFlightLog = async (req: Request, res: AuthResponse) => {
   if (fileDoc) {
     const filePath = await permPath(
       Directory.FLIGHT_LOGS,
-      fileDoc.metadata.objectkey
+      fileDoc.metadata.objectkey,
     );
 
     const {
@@ -91,7 +91,7 @@ export const getLog = async (req: Request, res: AuthResponse) => {
 
 export const fetchLatestFlightlogDataByMissionId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   if (req.query.missionID != undefined) {
     const missionId = new Types.ObjectId(String(req.query.missionID));
@@ -150,7 +150,7 @@ export const fetchLatestFlightlogDataByMissionId = async (
 
 export const fetchLatestFlightlogByLocationId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const locationId = new Types.ObjectId(String(req.query.id));
   const data = await flightLog

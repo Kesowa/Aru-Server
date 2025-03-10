@@ -23,7 +23,7 @@ modelApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { modelId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Model.find(
@@ -36,7 +36,7 @@ modelApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -50,7 +50,7 @@ modelApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -100,12 +100,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default modelApi;

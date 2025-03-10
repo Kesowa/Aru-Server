@@ -16,7 +16,7 @@ dataRouter.get(
   query("doc").isString().notEmpty().isIn(["alert", "document"]),
   validator,
   isAuthenticated,
-  RobustRunner(getThermal)
+  RobustRunner(getThermal),
 );
 
 dataRouter.post(
@@ -26,7 +26,7 @@ dataRouter.post(
   body("table").isArray().notEmpty(),
   validator,
   isAuthenticated,
-  RobustRunner(createThermalTable)
+  RobustRunner(createThermalTable),
 );
 
 export default dataRouter;

@@ -9,7 +9,7 @@ const joinRoomByTenantID = (socket: Socket, next: (err?: any) => void) => {
   if (tenantID) {
     socket.join(tenantID);
     console.log(
-      `TenantID : ${tenantID} joined notification Socket with sid: ${socket.id}`
+      `TenantID : ${tenantID} joined notification Socket with sid: ${socket.id}`,
     );
     next();
   } else {

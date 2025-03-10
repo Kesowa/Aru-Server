@@ -13,7 +13,6 @@ import tokml from "tokml";
 import { GeoJson, readGeoJson } from "./geojsonUtils";
 import { Directory } from "../constants";
 
-
 import { DOMParser } from "xmldom";
 
 import { deletePublicFileUsingPath } from "./fileDeleteUtils";
@@ -28,14 +27,12 @@ import {
   uploadString,
 } from "./objectStorage";
 
-
 import * as pathUtils from "./pathUtils";
 import Document from "../models/document";
 
-
 const getFlagColor = (geojson: GeoJson) => {
   const colorSet = new Set(
-    geojson.features.map((feature) => feature.properties.color)
+    geojson.features.map((feature) => feature.properties.color),
   );
   if (colorSet.size > 1) {
     return "multiColor";
@@ -56,11 +53,11 @@ export const saveVectorLayer = async (
     icon: "Marker",
     color: "#666",
     inheritColor: false,
-  }
+  },
 ) => {
   const targetPath = pathUtils.docPath(
     pathUtils.Directory.VECTOR,
-    randomUUID() + ".geojson"
+    randomUUID() + ".geojson",
   );
   let geojsonData: GeoJson;
   if (typeof layer == "string") {
@@ -89,9 +86,11 @@ export const saveVectorLayer = async (
         color: options.inheritColor
           ? feature.properties.color || options.color
           : options.color,
-      })
+      }),
   );
-  let flagColor = (!options.inheritColor) ? options.color : getFlagColor(geojsonData);
+  let flagColor = !options.inheritColor
+    ? options.color
+    : getFlagColor(geojsonData);
 
   const featureTypes = new Set<GeoJson["type"]>();
   geojsonData.features.forEach((feature) => {
@@ -116,7 +115,7 @@ export const saveVectorLayer = async (
 
 const populateMultiGeojson = async (
   geojsons: { path: pathUtils.DocPath; map?: Record<string, string> }[],
-  options?: { color?: string; icon?: string }
+  options?: { color?: string; icon?: string },
 ): Promise<GeoJson> => {
   const geojsonObject = {
     type: "FeatureCollection",
@@ -133,7 +132,7 @@ const populateMultiGeojson = async (
   await Promise.allSettled(
     geojsons.map(async (geojsonFile) => {
       const geojson = JSON.parse(
-        await readToString(geojsonFile.path)
+        await readToString(geojsonFile.path),
       ) as GeoJson;
       const map = geojsonFile.map;
       if (map || options) {
@@ -152,7 +151,7 @@ const populateMultiGeojson = async (
         });
       }
       geojsonObject.features.push(...geojson.features);
-    })
+    }),
   );
   return geojsonObject;
 };
@@ -167,7 +166,7 @@ export const saveGeojson = async (
     name?: string;
     type?: string;
     filter?: string[];
-  }
+  },
 ) => {
   let geojsonObject: GeoJson;
   if (typeof geojson == "string") {
@@ -194,7 +193,7 @@ export const saveGeojson = async (
   if (options?.type) geojsonObject.type = options.type;
   const geojsonPath = pathUtils.docPath(
     Directory.VECTOR,
-    randomUUID() + ".geojson"
+    randomUUID() + ".geojson",
   );
   const stringData = JSON.stringify(geojsonObject);
   const size = stringData.length / (1024 * 1024);
@@ -215,7 +214,7 @@ export const saveMultiGeojson = async (
     name?: string;
     color?: string;
     filter?: string[];
-  }
+  },
 ) => {
   const geojsonObject = await populateMultiGeojson(geojsons, { color });
   if (filter)
@@ -233,7 +232,7 @@ export const saveMultiGeojson = async (
   const stringData = JSON.stringify(geojsonObject);
   const geojsonPath = pathUtils.docPath(
     Directory.VECTOR,
-    randomUUID() + ".geojson"
+    randomUUID() + ".geojson",
   );
   await uploadString(geojsonPath, stringData);
   const size = stringData.length / (1024 * 1024);
@@ -245,7 +244,7 @@ export const saveAsKML = async (
   geojson: GeoJson,
   missionId: Types.ObjectId | string,
   tenantId: Types.ObjectId | string,
-  userId: Types.ObjectId | string
+  userId: Types.ObjectId | string,
 ) => {
   const exists = await Document.findOne({ name: filename });
   if (exists) await exists.delete();
@@ -253,7 +252,7 @@ export const saveAsKML = async (
   const { filepath, size } = await saveFile(
     Directory.VECTOR,
     filename,
-    kmlData
+    kmlData,
   );
   const kmlDoc = new Document({
     name: filename,
@@ -276,7 +275,7 @@ export const saveCSV = async (
   data: any,
   missionId: Types.ObjectId | string,
   tenantId: Types.ObjectId | string,
-  userId: Types.ObjectId | string
+  userId: Types.ObjectId | string,
 ) => {
   const exists = await Document.findOne({ name: filename });
   if (exists) await exists.delete();
@@ -304,7 +303,7 @@ export const createArchive = async (
   files: pathUtils.DocPath[],
   missionId: Types.ObjectId | string,
   tenantId: Types.ObjectId | string,
-  userId: Types.ObjectId | string
+  userId: Types.ObjectId | string,
 ) => {
   const exists = await Document.findOne({ name: filename });
   if (exists) await exists.delete();
@@ -329,7 +328,7 @@ export const createArchive = async (
 export const saveFile = async (
   dir: Directory,
   filename: string,
-  data: string | Buffer | Readable
+  data: string | Buffer | Readable,
 ) => {
   const filepath = pathUtils.docPath(dir, filename);
   await uploadAnything(filepath, data);
@@ -355,7 +354,7 @@ export const saveFeatureSearchIndex = async (layerPath: string) => {
   const searchIndexPath = path.dirname(layerPath) + "/" + filename;
   const geojsonData = await readGeoJson<any>(layerPath);
   const keys = Object.keys(geojsonData.features[0].properties).map(
-    (key) => `properties.${key}`
+    (key) => `properties.${key}`,
   );
   const searchIndex = Fuse.createIndex<any>(keys, geojsonData.features);
   await uploadString(searchIndexPath, JSON.stringify(searchIndex.toJSON()));

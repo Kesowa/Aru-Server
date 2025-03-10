@@ -215,7 +215,7 @@ const layerSchema = new mongoose.Schema<ILayer>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 layerSchema.index({
   missionId: 1,
@@ -235,18 +235,18 @@ layerSchema.methods.create = async function () {
         allLayerSize: doc.fileSize,
         actualLayerCount: 1,
       },
-    }
+    },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   // save the document
   return await doc.save();
 };
 layerSchema.methods.updateFile = async function (
   newPath: string,
-  newSize: number
+  newSize: number,
 ) {
   const doc = this as ILayer & mongoose.Document;
   const oldSize = doc.fileSize;
@@ -263,11 +263,11 @@ layerSchema.methods.updateFile = async function (
         actualSize: doc.fileSize - oldSize,
         allLayerSize: doc.fileSize - oldSize,
       },
-    }
+    },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: doc.fileSize - oldSize } }
+    { $inc: { size: doc.fileSize - oldSize } },
   );
   // delete old file
   await deletePublicFileUsingPath(oldPath);
@@ -288,7 +288,7 @@ layerSchema.methods.delete = async function () {
     }
     await LayerFiles.updateMany(
       { layers: doc._id },
-      { $pull: { layers: doc._id } }
+      { $pull: { layers: doc._id } },
     );
     // delete geojson
     await deletePublicFileUsingPath(doc.layerpath);
@@ -314,7 +314,7 @@ layerSchema.methods.delete = async function () {
     await LayerGroup.updateOne(
       { _id: doc._id, tenantId: doc.tenantId },
       { $pull: { layers: doc._id } },
-      { useFindAndModify: false }
+      { useFindAndModify: false },
     );
   }
 
@@ -327,11 +327,11 @@ layerSchema.methods.delete = async function () {
         allLayerSize: -doc.fileSize,
         actualLayerCount: -1,
       },
-    }
+    },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
 
   // delete the document

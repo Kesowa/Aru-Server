@@ -21,7 +21,7 @@ router.get(
   validator,
   isAuthenticated,
   PermissionGuard(PERMS.THREAD_LIST),
-  RobustRunner(GetDocThread)
+  RobustRunner(GetDocThread),
 );
 router.post(
   "/:docType/:docId",
@@ -30,7 +30,7 @@ router.post(
   validator,
   isAuthenticated,
   PermissionGuard(PERMS.THREAD_CREATE),
-  RobustRunner(CreateDocThread)
+  RobustRunner(CreateDocThread),
 );
 router.patch(
   "/:docType/:docId",
@@ -41,7 +41,7 @@ router.patch(
   validator,
   isAuthenticated,
   PermissionGuard(PERMS.THREAD_UPDATE),
-  RobustRunner(AddorUpdateDocComment)
+  RobustRunner(AddorUpdateDocComment),
 );
 router.delete(
   "/:docType/:docId/:commentId",
@@ -51,7 +51,7 @@ router.delete(
   validator,
   isAuthenticated,
   PermissionGuard(PERMS.COMMENT_DELETE),
-  RobustRunner(RemoveDocComment)
+  RobustRunner(RemoveDocComment),
 );
 
 export default router;

@@ -35,7 +35,7 @@ router.post(
   body("deliverables").isArray(),
   validator,
   PermissionGuard(PERMS.FLIGHT_LOG_CREATE),
-  RobustRunner(createFlightLog)
+  RobustRunner(createFlightLog),
 );
 
 router.get(
@@ -44,7 +44,7 @@ router.get(
   query("_id").optional().notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FLIGHT_LOG_CREATE),
-  RobustRunner(getLog)
+  RobustRunner(getLog),
 );
 
 router.get(
@@ -56,7 +56,7 @@ router.get(
   ]),
   validator,
   PermissionGuard(PERMS.FLIGHT_LOG_CREATE),
-  RobustRunner(fetchLatestFlightlogDataByMissionId)
+  RobustRunner(fetchLatestFlightlogDataByMissionId),
 );
 
 router.get(
@@ -65,6 +65,6 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FLIGHT_LOG_CREATE),
-  RobustRunner(fetchLatestFlightlogByLocationId)
+  RobustRunner(fetchLatestFlightlogByLocationId),
 );
 export default router;

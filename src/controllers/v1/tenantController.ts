@@ -13,7 +13,10 @@ import Mission from "../../models/mission";
 import Package from "../../models/package";
 import Tenant from "../../models/tenant";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { createTenantLevelrootUser, addPackageToTenant } from "../../utils/tenantUtils";
+import {
+  createTenantLevelrootUser,
+  addPackageToTenant,
+} from "../../utils/tenantUtils";
 import User from "../../models/user";
 import VOD from "../../models/vod";
 import UserGroup from "../../models/usergroup";
@@ -23,8 +26,6 @@ import { IUser } from "../../schemas/user";
 import { IPackage } from "../../schemas/package";
 import newTenant from "../../models/newTenant";
 import { findCount, findSize } from "../../utils/mongoUtils";
-
-
 
 //create tenant account
 export const createTenant = async (req: Request, res: AuthResponse) => {
@@ -74,7 +75,7 @@ export const createTenant = async (req: Request, res: AuthResponse) => {
 //create tenant account
 export const createTenantPublicApi = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const [existingTenantWithEmail, existingUserWithEmail] = await Promise.all([
     User.findOne({ email: req.body.email }),
@@ -95,7 +96,8 @@ export const createTenantPublicApi = async (
   // }
 
   if (!(existingTenantWithEmail || existingUserWithEmail)) {
-    const verificationNumber = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
+    const verificationNumber =
+      100000 + (randomBytes(3).readUIntBE(0, 3) % 900000); // six digit number
     await newTenant.findOneAndUpdate(
       { email: req.body.email },
       {
@@ -123,7 +125,7 @@ export const createTenantPublicApi = async (
       {
         upsert: true,
         new: true,
-      }
+      },
     );
 
     await sendMail(
@@ -141,7 +143,7 @@ export const createTenantPublicApi = async (
           <p>Best regards,</p>
           <p><b>Team Kesowa</b></p>
           `,
-      ""
+      "",
     );
 
     res.json({
@@ -167,7 +169,8 @@ export const verifyTenant = async (req: Request, res: AuthResponse) => {
   if (tenantData.verificationCode === req.body.verificationCode) {
     const tenantObj = tenantData.toObject();
 
-    tenantObj.verificationCode = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
+    tenantObj.verificationCode =
+      100000 + (randomBytes(3).readUIntBE(0, 3) % 900000); // six digit number
     tenantObj.isVerified = true;
     // tenantObj._id = undefined;
 
@@ -226,7 +229,7 @@ export const verifyTenant = async (req: Request, res: AuthResponse) => {
 
 export const resendVerificationCode = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const email = req.body.email;
 
@@ -247,7 +250,7 @@ export const resendVerificationCode = async (
           <p>Best regards,</p>
           <p><b>Team Kesowa</b></p>
           `,
-      ""
+      "",
     );
 
     res.json({
@@ -277,12 +280,9 @@ export const fetchAllTenants = async (req: Request, res: AuthResponse) => {
 //++++++++++++++++++++add initial package by admin+++++++++++++++++++++++++++++++
 export const addInitialPackageByAdmin = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
-  await addPackageToTenant(
-    req.body.tenantId,
-    req.body.packageId
-  );
+  await addPackageToTenant(req.body.tenantId, req.body.packageId);
   res.json({
     status: true,
     message: "Package added sucessfully.",
@@ -320,13 +320,10 @@ export const addAllCountToTenant = async (req: Request, res: AuthResponse) => {
     userType: "tenant-client",
   });
   const userCount = await findCount(User, res.locals.user.tenantId._id);
-  const locationCount = await findCount(
-    Location,
-    res.locals.user.tenantId._id
-  );
+  const locationCount = await findCount(Location, res.locals.user.tenantId._id);
   const userGroupCount = await findCount(
     UserGroup,
-    res.locals.user.tenantId._id
+    res.locals.user.tenantId._id,
   );
   await Tenant.findOneAndUpdate(
     { _id: res.locals.user.tenantId },
@@ -340,7 +337,7 @@ export const addAllCountToTenant = async (req: Request, res: AuthResponse) => {
       actualLocationCount: locationCount,
       actualUserGroupCount: userGroupCount,
     },
-    { useFindAndModify: false }
+    { useFindAndModify: false },
   );
   return res.status(200).json({
     status: true,
@@ -386,7 +383,7 @@ export const deleteTenantForId = async (req: Request, res: AuthResponse) => {
 
 export const addActualSizeToTenant = async (
   req: Request<{}, {}, { tenantId: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const tenantId = new Types.ObjectId(req.body.tenantId);
   const documentSum = await findSize(Document, tenantId);
@@ -394,8 +391,7 @@ export const addActualSizeToTenant = async (
   const vodSum = await findSize(VOD, tenantId);
   const layerSum = await findSize(Layer, tenantId);
   const layerFileSum = await findSize(layerFiles, tenantId);
-  const ActualSize =
-    documentSum + alertSum + vodSum + layerSum + layerFileSum;
+  const ActualSize = documentSum + alertSum + vodSum + layerSum + layerFileSum;
   await Tenant.findOneAndUpdate(
     { _id: tenantId },
     {
@@ -406,7 +402,7 @@ export const addActualSizeToTenant = async (
       allDocumentsSize: documentSum,
       allLayerFileSize: layerFileSum,
     },
-    { useFindAndModify: false }
+    { useFindAndModify: false },
   );
   return res.status(200).json({
     status: true,
@@ -449,7 +445,7 @@ export const getTenantStats = async (req: Request, res: AuthResponse) => {
 // REVISIT: What is this for?
 export const tenantpublicmaprefupdate = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const docs = await Tenant.find();
   if (docs.length) {
@@ -457,7 +453,7 @@ export const tenantpublicmaprefupdate = async (
       if (tenant.publicMapRef != null || tenant.publicMapRef == undefined) {
         await Tenant.updateOne(
           { _id: tenant._id },
-          { publicMapRef: tenant.publicMapRef }
+          { publicMapRef: tenant.publicMapRef },
         );
       }
     }

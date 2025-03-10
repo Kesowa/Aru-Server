@@ -11,7 +11,6 @@ import { missionSpecificSocket } from "../socket";
 import { deleteObj, readToString, stat, uploadString } from "./objectStorage";
 import { IVOD } from "../schemas/VOD";
 
-
 export const VODEvents = new EventEmitter();
 
 export const REQ_QUEUE = "vod.transcode.req";
@@ -68,7 +67,7 @@ export type TranscodeResponse = {
  * */
 export const transcodeVideo = async (
   filePath: pathUtils.KeyPath | pathUtils.DocPath,
-  metadata: AruMetadata
+  metadata: AruMetadata,
 ) => {
   const req: TranscodeRequest = {
     file: pathUtils.keyPath(filePath),
@@ -81,7 +80,7 @@ export const transcodeVideo = async (
 export const receiveVideo = async (
   video: Video,
   metadata: AruMetadata,
-  success: boolean
+  success: boolean,
 ) => {
   const vod = await VOD.findOne({
     _id: metadata.video_id,
@@ -117,7 +116,7 @@ VODEvents.on(RES_QUEUE, function (res: TranscodeResponse) {
  * Returns undefined if no srt found
  */
 export const extractTelemetry = async (
-  srtPath: pathUtils.KeyPath | pathUtils.DocPath
+  srtPath: pathUtils.KeyPath | pathUtils.DocPath,
 ) => {
   const dir = path.dirname(srtPath);
   const outPath = path.join(dir, "index.geojson");
@@ -161,7 +160,7 @@ export const deleteHlsVodUsingIndex = async (indexFile: string) => {
     .map((file) => indexDir + "/" + file);
   vodFiles.push(indexFile);
   const result = await Promise.allSettled(
-    vodFiles.map((file) => deleteObj(file))
+    vodFiles.map((file) => deleteObj(file)),
   );
   return result.every((res) => res);
 };

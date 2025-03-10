@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import { Types } from "ts-openapi";
 
@@ -25,7 +24,7 @@ locationApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const {
       locationId,
@@ -50,7 +49,7 @@ locationApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -81,7 +80,7 @@ locationApi.get(
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -139,12 +138,12 @@ openApi.addPath(
                 arrayType: LocationType,
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default locationApi;

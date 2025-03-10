@@ -19,7 +19,7 @@ assetApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { assetId, populate } = req.query;
     const data = await Asset.find({
@@ -31,7 +31,7 @@ assetApi.get(
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -56,12 +56,12 @@ openApi.addPath(
             properties: {
               data: Types.Array({ arrayType: AssetType }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default assetApi;

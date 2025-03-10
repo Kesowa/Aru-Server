@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import { HydratedDocument, PipelineStage } from "mongoose";
 import { Types } from "ts-openapi";
@@ -7,7 +6,6 @@ import openApi from "./openApi";
 import Flight from "../../models/flight";
 import { FlightType, IFlight } from "../../schemas/flight";
 import { AuthResponse } from "../../utils/interfaceUtils";
-
 
 const flightApi = Router();
 
@@ -23,7 +21,7 @@ flightApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { locationId, hasNoMission, limit, offset, populate } = req.query;
     let data: HydratedDocument<IFlight>[];
@@ -51,7 +49,7 @@ flightApi.get(
           $match: {
             mission: [],
           },
-        }
+        },
       );
     }
     data = await Flight.aggregate(query);
@@ -70,7 +68,7 @@ flightApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -119,12 +117,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default flightApi;

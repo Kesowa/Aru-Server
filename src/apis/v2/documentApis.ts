@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import { Types } from "ts-openapi";
 
@@ -27,7 +26,7 @@ documentApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const {
       missionId,
@@ -52,7 +51,7 @@ documentApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -76,13 +75,13 @@ documentApi.get(
         data.map((d) => d.filePath),
         missionId,
         res.locals.user.tenantId._id,
-        res.locals.user._id
+        res.locals.user._id,
       );
       missionSpecificSocket
         .to(missionId)
         .emit("DOCUMENT_ZIP_COMPLETED", zipFile);
     }
-  }
+  },
 );
 
 openApi.addPath(
@@ -135,12 +134,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default documentApi;

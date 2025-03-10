@@ -7,7 +7,6 @@ import layerModel from "../models/layer";
 import layerGroupModel from "../models/layerGroup";
 import { vectorProps } from "../schemas/vectorprops";
 
-
 type createMixedLayerGroupInput = {
   name: string;
   missionId?: Types.ObjectId;
@@ -28,7 +27,7 @@ const vectorPropMap = {
 };
 
 export const createMixedLayerGroup = async (
-  input: createMixedLayerGroupInput
+  input: createMixedLayerGroupInput,
 ) => {
   const geojsonData = JSON.parse(await readToString(input.geojson)) as GeoJson;
   const featureLayers = new Map(
@@ -45,7 +44,7 @@ export const createMixedLayerGroup = async (
         },
         features: [],
       },
-    ])
+    ]),
   );
   for (const feature of geojsonData.features) {
     if (feature.properties["stroke"])
@@ -64,7 +63,7 @@ export const createMixedLayerGroup = async (
         layer,
         layerType == "Point"
           ? { inheritColor: true, icon: "MarkerIcon" }
-          : { inheritColor: true }
+          : { inheritColor: true },
       );
       const layerDoc = await layerModel.create({
         name: input.name,
@@ -83,7 +82,7 @@ export const createMixedLayerGroup = async (
       });
       await layerGroup.updateOne({ $addToSet: { layers: layerDoc._id } });
       return layerDoc;
-    }
+    },
   );
   const layers = await Promise.all(layerPromises);
   await deleteObj(input.geojson);

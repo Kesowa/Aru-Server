@@ -111,7 +111,7 @@ const documentSchema = new mongoose.Schema<IDocument>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 documentSchema.index({
   filePath: 1,
@@ -133,11 +133,11 @@ documentSchema.methods.create = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } }
+    { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   // save the document
   return await doc.save();
@@ -160,11 +160,11 @@ documentSchema.methods.delete = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: -doc.fileSize, allDocumentsSize: -doc.fileSize } }
+    { $inc: { actualSize: -doc.fileSize, allDocumentsSize: -doc.fileSize } },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
   // delete the document
   await doc.deleteOne();

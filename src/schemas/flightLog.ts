@@ -80,11 +80,11 @@ flightLogSchema.methods.create = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: doc.fileSize } }
+    { $inc: { actualSize: doc.fileSize } },
   );
   await Mission.updateOne(
     { _id: doc.missionID },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   // save the document
   return await doc.save();
@@ -94,11 +94,11 @@ flightLogSchema.methods.delete = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: -doc.fileSize } }
+    { $inc: { actualSize: -doc.fileSize } },
   );
   await Mission.updateOne(
     { _id: doc.missionID },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
   // delete the document
   await doc.deleteOne();

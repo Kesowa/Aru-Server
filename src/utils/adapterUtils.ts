@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 
 export function* mapIter<T, U>(
   iterable: Iterable<T>,
-  proj: (item: T) => U
+  proj: (item: T) => U,
 ): Iterable<U> {
   for (const x of iterable) {
     yield proj(x);
@@ -11,7 +11,7 @@ export function* mapIter<T, U>(
 
 export function* filterIter<T>(
   iterable: Iterable<T>,
-  pred: (item: T) => boolean
+  pred: (item: T) => boolean,
 ): Iterable<T> {
   for (const x of iterable) {
     if (pred(x)) yield x;

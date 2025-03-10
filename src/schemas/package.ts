@@ -124,7 +124,7 @@ const packageschema = new mongoose.Schema<IPackage>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 packageschema.index({ name: 1 }, { unique: true });
 packageschema.index({

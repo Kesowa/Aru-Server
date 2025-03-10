@@ -5,6 +5,6 @@ export default async function () {
   await Promise.all(
     Object.values(Directory)
       .map((dir) => DirPath(dir))
-      .map((path) => fs.rm(path, { recursive: true }))
+      .map((path) => fs.rm(path, { recursive: true })),
   );
 }

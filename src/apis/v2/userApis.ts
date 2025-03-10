@@ -24,7 +24,7 @@ userApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { genCSV, limit, offset, orderBy, asc, populate } = req.query;
     const data = await User.find(
@@ -37,7 +37,7 @@ userApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -60,13 +60,13 @@ userApi.get(
         data,
         "",
         res.locals.user.tenantId._id,
-        res.locals.user._id
+        res.locals.user._id,
       );
       resp.csvPath = filepath;
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -115,12 +115,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default userApi;

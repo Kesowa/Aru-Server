@@ -54,7 +54,7 @@ const missionTypeSchema = new mongoose.Schema<IMissionType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 missionTypeSchema.index({
   name: 1,

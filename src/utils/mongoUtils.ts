@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 export const findSize = async (
   model: mongoose.Model<any>,
-  tenantId: mongoose.Types.ObjectId
+  tenantId: mongoose.Types.ObjectId,
 ) => {
   const data = await model.aggregate<{ totalSize: number }>([
     {
@@ -26,7 +26,7 @@ export const findSize = async (
 export const findCount = async (
   model: mongoose.Model<any>,
   tenantId: mongoose.Types.ObjectId,
-  extra: Record<string, string> = {}
+  extra: Record<string, string> = {},
 ) => {
   const data = await model.aggregate<{ count: number }>([
     {

@@ -30,7 +30,7 @@ router.post(
     .withMessage("Password must be at least 5 chars long."),
   validator,
   limiter,
-  RobustRunner(loginUser)
+  RobustRunner(loginUser),
 );
 
 //++++++++++++++++++++ user logout Api +++++++++++++++++++++++++++++
@@ -41,14 +41,14 @@ router.get(
   "/userdetails",
   isAuthenticated,
   validator,
-  RobustRunner(getUserDetails)
+  RobustRunner(getUserDetails),
 );
 
 router.get(
   "/reset-password/:token",
   param("token").notEmpty().isString().trim(),
   validator,
-  RobustRunner(renderResetPasswordPage)
+  RobustRunner(renderResetPasswordPage),
 );
 
 router.post(
@@ -58,7 +58,7 @@ router.post(
   param("token").notEmpty().isString().trim(),
   validator,
   limiter,
-  RobustRunner(resetPassword)
+  RobustRunner(resetPassword),
 );
 
 router.post(
@@ -66,7 +66,7 @@ router.post(
   shouldLinkSend,
   body("email").isEmail().trim(),
   validator,
-  RobustRunner(sendForgotPasswordMail)
+  RobustRunner(sendForgotPasswordMail),
 );
 
 export default router;

@@ -57,7 +57,7 @@ export const updateModel = async (req: Request, res: AuthResponse) => {
       _id: req.body.id,
       tenantID: res.locals.user.tenantId._id,
     },
-    { ...req.body.update }
+    { ...req.body.update },
   );
   if (updatedDoc === null) {
     res.status(404).json({

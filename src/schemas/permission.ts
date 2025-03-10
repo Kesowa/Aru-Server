@@ -226,7 +226,7 @@ export const SUPER_ADMIN_PERMS = <const>[
 export const GetPermissions = async (
   userGroupId: mongoose.Types.ObjectId,
   userType: UserTypes,
-  tenantId: mongoose.Types.ObjectId
+  tenantId: mongoose.Types.ObjectId,
 ) => {
   let customPermissions: PERMS[] = [];
   if (userType == "tenant-staff" || userType == "tenant-client") {

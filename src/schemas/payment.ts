@@ -75,7 +75,7 @@ const paymentSchema = new mongoose.Schema<IPayment>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 paymentSchema.index({
   razorpay_order_id: 1,

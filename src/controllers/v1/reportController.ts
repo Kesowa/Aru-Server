@@ -15,7 +15,6 @@ import User from "../../models/user";
 import { saveCSV } from "../../utils/dataUtils";
 import { rasterProps } from "../../schemas/rasterprops";
 
-
 import Mission from "../../models/mission";
 import { IUser } from "../../schemas/user";
 import { vectorProps } from "../../schemas/vectorprops";
@@ -48,7 +47,7 @@ export const generateBlockReport = async (
       missionId: string;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { missionId } = req.body;
   try {
@@ -63,19 +62,19 @@ export const generateBlockReport = async (
     });
 
     const blockLayer = vectorLayers.find(
-      (l) => l.vector === vectorProps.BLOCK_BOUNDARY
+      (l) => l.vector === vectorProps.BLOCK_BOUNDARY,
     );
     const plotLayer = vectorLayers.find((l) => l.vector === vectorProps.PLOT);
 
     const blockFeatures = (
       await readGeoJson<Feature<turf.MultiPolygon, IBlockProperties>>(
-        DirPath(Directory.DEFAULT, blockLayer.layerpath)
+        DirPath(Directory.DEFAULT, blockLayer.layerpath),
       )
     ).features;
 
     const plotFeatures = (
       await readGeoJson<Feature<turf.MultiPolygon, IPlotProperties>>(
-        DirPath(Directory.DEFAULT, plotLayer.layerpath)
+        DirPath(Directory.DEFAULT, plotLayer.layerpath),
       )
     ).features;
 
@@ -90,7 +89,7 @@ export const generateBlockReport = async (
     // mission details filling
     const mission = await Mission.findOne(
       { _id: missionId },
-      { name: 1, user: 1 }
+      { name: 1, user: 1 },
     ).populate<{ user: IUser }>({
       path: "user",
       select: {
@@ -103,7 +102,7 @@ export const generateBlockReport = async (
     // pilot details (names, phone numbers, emails)
     const flight = await Flight.findOne(
       { mission: missionId },
-      { pilotID: 1 }
+      { pilotID: 1 },
     ).populate<{ pilotID: IUser }>({
       path: "pilotID",
       select: {
@@ -124,7 +123,7 @@ export const generateBlockReport = async (
     for (const blockIdx of blockLayer.flaggedFeatures) {
       const blockFeature = blockFeatures[blockIdx];
       const plotsInBlock = plotFeatures.filter(
-        (f) => f.properties.blockName === blockFeature.properties.blockName
+        (f) => f.properties.blockName === blockFeature.properties.blockName,
       );
       req.log.info("Number of plots: " + String(plotsInBlock.length));
       try {
@@ -145,14 +144,14 @@ export const generateBlockReport = async (
           req.log.info("Processing layer: " + layer.name);
           try {
             const layerGeojson = await readGeoJson(
-              DirPath(Directory.DEFAULT, layer.layerpath)
+              DirPath(Directory.DEFAULT, layer.layerpath),
             );
             const combinedFeatures = turf.combine(
-              turf.featureCollection(layerGeojson.features)
+              turf.featureCollection(layerGeojson.features),
             );
             const intersection = turf.intersect(
               combinedFeatures.features[0],
-              blockFeature
+              blockFeature,
             );
             processedLayerData.push({
               vector: layer.vector,
@@ -187,7 +186,7 @@ export const generateBlockReport = async (
           const plotCategory = plot.properties.category;
           areaByCategory.set(
             plotCategory,
-            (areaByCategory.get(plotCategory) || 0) + turf.area(plot)
+            (areaByCategory.get(plotCategory) || 0) + turf.area(plot),
           );
 
           const plotStatus = plot.properties.buildingStatus;
@@ -196,8 +195,7 @@ export const generateBlockReport = async (
               (occupancyByCategory.get(plotCategory)?.occupied || 0) +
               (plotStatus === plotBuildingStatus.CONSTRUCTED ? 1 : 0),
             underConstruction:
-              (occupancyByCategory.get(plotCategory)?.underConstruction ||
-                0) +
+              (occupancyByCategory.get(plotCategory)?.underConstruction || 0) +
               (plotStatus === plotBuildingStatus.UNDER_CONSTRUCTION ? 1 : 0),
             vacant:
               (occupancyByCategory.get(plotCategory)?.vacant || 0) +
@@ -233,23 +231,23 @@ export const generateBlockReport = async (
           phoneNos: [mission.user.phoneNo, flight.pilotID.phoneNo],
           deliverables,
           roadCount: processedLayerData.filter((d) =>
-            entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector)
+            entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector),
           ).length,
           roadLength: processedLayerData
             .filter((d) =>
-              entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector)
+              entityTypes[entityCategories.MOTORABLE_ROADS].includes(d.vector),
             )
             .reduce(
               (acc, curr) => ({ ...curr, length: acc.length + curr.length }),
-              { length: 0, area: 0, vector: "" as vectorProps }
+              { length: 0, area: 0, vector: "" as vectorProps },
             ).length,
           cycleTrackLength: processedLayerData
             .filter((d) =>
-              entityTypes[entityCategories.CYCLE_TRACK].includes(d.vector)
+              entityTypes[entityCategories.CYCLE_TRACK].includes(d.vector),
             )
             .reduce(
               (acc, curr) => ({ ...curr, length: acc.length + curr.length }),
-              { length: 0, area: 0, vector: "" as vectorProps }
+              { length: 0, area: 0, vector: "" as vectorProps },
             ).length,
           area,
           occupancy,
@@ -271,7 +269,7 @@ export const generateBlockReport = async (
       } catch (err) {
         req.log.error(
           { err, block: blockFeature.properties },
-          "REPORT GENERATION FAILED for " + missionId
+          "REPORT GENERATION FAILED for " + missionId,
         );
         missionSpecificSocket
           .to(missionId.toString())
@@ -299,7 +297,7 @@ export const generatePlotReport = async (
       missionId: string;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { missionId } = req.body;
   const errors = {
@@ -390,9 +388,9 @@ export const generatePlotReport = async (
     const actionAreaGeojson = turf.featureCollection(
       (
         await readGeoJson<Feature<turf.MultiPolygon, IBlockProperties>>(
-          DirPath(Directory.DEFAULT, actionAreaLayer.layerpath)
+          DirPath(Directory.DEFAULT, actionAreaLayer.layerpath),
         )
-      ).features
+      ).features,
     );
 
     // multiple plot reports will be generated, one for each flagged plot
@@ -486,7 +484,7 @@ export const generatePlotReport = async (
         rows,
         missionId,
         res.locals.user.tenantId._id,
-        res.locals.user._id
+        res.locals.user._id,
       );
       return res.json({
         status: false,
@@ -518,22 +516,19 @@ export const generatePlotReport = async (
         });
       } else {
         const blockIdx = actionAreaGeojson.features.findIndex(
-          (block) => block.properties.blockName == blockName
+          (block) => block.properties.blockName == blockName,
         );
         if (blockIdx != -1) {
-          PlotsByBlock.set(
-            plotGeojson.features[plotIdx].properties.blockName,
-            {
-              blockIdx,
-              blockFeature: actionAreaGeojson.features[blockIdx],
-              plots: [
-                {
-                  plotIdx,
-                  feature: plotGeojson.features[plotIdx],
-                },
-              ],
-            }
-          );
+          PlotsByBlock.set(plotGeojson.features[plotIdx].properties.blockName, {
+            blockIdx,
+            blockFeature: actionAreaGeojson.features[blockIdx],
+            plots: [
+              {
+                plotIdx,
+                feature: plotGeojson.features[plotIdx],
+              },
+            ],
+          });
         }
       }
     }
@@ -565,11 +560,11 @@ export const generatePlotReport = async (
         String(treeCoverLayer.updatedBy),
         String(greeneryLayer.createdBy),
         String(greeneryLayer.updatedBy),
-      ])
+      ]),
     ); // all unique userIds
 
     const userDocs = await Promise.all(
-      userIds.map((id) => User.findById(id, { name: 1 }))
+      userIds.map((id) => User.findById(id, { name: 1 })),
     );
     const users = userDocs.map((user) => user.name);
     res.status(200).json({
@@ -580,35 +575,35 @@ export const generatePlotReport = async (
     // =================================== DETAILS THAT WON'T VARY ACROSS REPORTS OF DIFFERENT PLOTS ==================================
 
     const waterbodyGeojson = await readGeoJson(
-      DirPath(Directory.DEFAULT, waterbodyLayer.layerpath)
+      DirPath(Directory.DEFAULT, waterbodyLayer.layerpath),
     );
 
     const combinedWaterbody = turf.combine(
-      turf.featureCollection(waterbodyGeojson.features)
+      turf.featureCollection(waterbodyGeojson.features),
     );
 
     const greeneryGeojson = await readGeoJson(
-      DirPath(Directory.DEFAULT, greeneryLayer.layerpath)
+      DirPath(Directory.DEFAULT, greeneryLayer.layerpath),
     );
 
     const combinedGreenery = turf.combine(
-      turf.featureCollection(greeneryGeojson.features)
+      turf.featureCollection(greeneryGeojson.features),
     );
 
     const canopyGeojson = await readGeoJson(
-      DirPath(Directory.DEFAULT, treeCoverLayer.layerpath)
+      DirPath(Directory.DEFAULT, treeCoverLayer.layerpath),
     );
 
     const combinedCanopy = turf.combine(
-      turf.featureCollection(canopyGeojson.features)
+      turf.featureCollection(canopyGeojson.features),
     );
 
     const garbageCollectionGeojson = turf.featureCollection(
       (
         await readGeoJson(
-          DirPath(Directory.DEFAULT, garbageCollectionLayer.layerpath)
+          DirPath(Directory.DEFAULT, garbageCollectionLayer.layerpath),
         )
-      ).features
+      ).features,
     );
 
     // ==================================================================================================================================
@@ -625,32 +620,31 @@ export const generatePlotReport = async (
 
       const intersectWaterbody = turf.intersect(
         combinedWaterbody.features[0],
-        blockGeojson
+        blockGeojson,
       );
       const waterbodyArea =
         intersectWaterbody === null ? 0 : turf.area(intersectWaterbody);
 
       const intersectGreenery = turf.intersect(
         combinedGreenery.features[0],
-        blockGeojson
+        blockGeojson,
       );
       const greeneryArea =
         intersectGreenery === null ? 0 : turf.area(intersectGreenery);
 
       const intersectCanopy = turf.intersect(
         combinedCanopy.features[0],
-        blockGeojson
+        blockGeojson,
       );
       const canopyArea =
         intersectCanopy === null ? 0 : turf.area(intersectCanopy);
 
       const intersectGarbageCollection = turf.pointsWithinPolygon(
         garbageCollectionGeojson,
-        blockGeojson
+        blockGeojson,
       );
 
-      const garbageCollectionCount =
-        intersectGarbageCollection.features.length;
+      const garbageCollectionCount = intersectGarbageCollection.features.length;
 
       const averageBuildingHeight = buildingsGeojson.features
         .filter((building) => building.properties.blockName === blockName)
@@ -682,7 +676,7 @@ export const generatePlotReport = async (
           // for single building:
           const plotBuildingFeature = buildingsGeojson.features.find(
             (feature) =>
-              feature.properties.premiseNo === plotProperties.premiseNo
+              feature.properties.premiseNo === plotProperties.premiseNo,
           );
 
           const plotLayerFile = await layerFiles.findOne({
@@ -754,12 +748,12 @@ export const generatePlotReport = async (
             garbageCollectionInfo: String(garbageCollectionCount),
             averageBuildingHeight: averageBuildingHeight.toFixed(2),
             averageBlockHeight: Number.isNaN(
-              Number(blockProperties.averageBlockHeight)
+              Number(blockProperties.averageBlockHeight),
             )
               ? null
               : blockProperties.averageBlockHeight, // must be numeric
             averageIncentives: Number.isNaN(
-              Number(blockProperties.averageIncentives)
+              Number(blockProperties.averageIncentives),
             )
               ? null
               : blockProperties.averageIncentives, // must be numeric
@@ -777,7 +771,7 @@ export const generatePlotReport = async (
         } catch (err) {
           req.log.error(
             { err, plot: plotFeature.properties },
-            "REPORT GENERATION FAILED for " + missionId
+            "REPORT GENERATION FAILED for " + missionId,
           );
           missionSpecificSocket
             .to(missionId.toString())

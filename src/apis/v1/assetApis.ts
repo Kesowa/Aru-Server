@@ -22,7 +22,7 @@ router.post(
   body("serialNo").isString().notEmpty(),
   body("modelName").isString().notEmpty(),
   validator,
-  RobustRunner(registerDrone)
+  RobustRunner(registerDrone),
 );
 
 router.post(
@@ -39,7 +39,7 @@ router.post(
   body("manufactureID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ASSET_CREATE),
-  RobustRunner(createAsset)
+  RobustRunner(createAsset),
 );
 
 router.get(
@@ -48,14 +48,14 @@ router.get(
   query("assetID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ASSET_LIST),
-  RobustRunner(getAsset)
+  RobustRunner(getAsset),
 );
 
 router.get(
   "/get-all-asset",
   isAuthenticated,
   PermissionGuard(PERMS.ASSET_LIST),
-  RobustRunner(getallAsset)
+  RobustRunner(getallAsset),
 );
 
 router.patch(
@@ -67,7 +67,7 @@ router.patch(
   body("assetInfo").notEmpty().isArray(),
   validator,
   PermissionGuard(PERMS.ASSET_UPDATE),
-  RobustRunner(updateAsset)
+  RobustRunner(updateAsset),
 );
 
 router.delete(
@@ -76,7 +76,7 @@ router.delete(
   body("assetID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ASSET_DELETE),
-  RobustRunner(removeAsset)
+  RobustRunner(removeAsset),
 );
 
 router.patch(
@@ -86,7 +86,7 @@ router.patch(
   body("isActive").notEmpty().isBoolean().toBoolean(),
   PermissionGuard(PERMS.ASSET_UPDATE),
   validator,
-  RobustRunner(toggleAsset)
+  RobustRunner(toggleAsset),
 );
 
 export default router;

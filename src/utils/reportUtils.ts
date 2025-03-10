@@ -28,7 +28,7 @@ export async function Setup(conn: Connection) {
       {
         persistent: true,
         contentType: "application/json",
-      }
+      },
     );
   });
   plotResChannel
@@ -50,7 +50,7 @@ export async function Setup(conn: Connection) {
       {
         persistent: true,
         contentType: "application/json",
-      }
+      },
     );
   });
   blockResChannel
@@ -238,7 +238,7 @@ export const receiveReport = async (res: ReportResponse) => {
   } else {
     logger.error(
       { error: res.error }, // mention plot index in error string from report-service
-      "REPORT GENERATION FAILED for " + res.metadata.mission_id
+      "REPORT GENERATION FAILED for " + res.metadata.mission_id,
     );
     missionSpecificSocket
       .to(res.metadata.mission_id.toString())

@@ -9,7 +9,6 @@ import Location from "../models/location";
 import { IAlert } from "../schemas/alert";
 import { IStreamKey } from "../schemas/streamKey";
 
-
 export class WiproInterface {
   private static readonly ServerURL =
     MODE == Mode.Prod ? "https://iccc.ntkiccc.in" : "http://127.0.0.1";
@@ -17,15 +16,15 @@ export class WiproInterface {
   private static readonly password = "CredKol@123";
   private static readonly AlertURL = new URL(
     "/newtown/insertalert",
-    WiproInterface.ServerURL
+    WiproInterface.ServerURL,
   );
   private static readonly LiveURL = new URL(
     "/newtown/cameradata",
-    WiproInterface.ServerURL
+    WiproInterface.ServerURL,
   );
   private static readonly StatusURL = new URL(
     "/newtown/insertcamerastatus",
-    WiproInterface.ServerURL
+    WiproInterface.ServerURL,
   );
   private static readonly BaseURL = new URL("/", API_SERVER);
   private static readonly Headers = {
@@ -33,7 +32,7 @@ export class WiproInterface {
       "Basic " +
       Buffer.from(
         `${WiproInterface.username}:${WiproInterface.password}`,
-        "binary"
+        "binary",
       ).toString("base64"),
     "Content-Type": "application/json",
   };
@@ -41,7 +40,7 @@ export class WiproInterface {
 
   public static async SendStatus(
     live: { flightID: string },
-    status: "Disconnect"
+    status: "Disconnect",
   ) {
     const data = {
       cameraID: live.flightID,
@@ -114,7 +113,7 @@ export class WiproInterface {
       longitude: location?.geometry.coordinates.lng,
       liveViewUrl: new URL(
         path.join("/live", url),
-        WiproInterface.LiveStreamURL
+        WiproInterface.LiveStreamURL,
       ).toString(),
       todate: live.createdAt.toLocaleString(),
     });

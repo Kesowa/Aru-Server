@@ -97,7 +97,7 @@ const missionSchema = new mongoose.Schema<IMission>(
   {
     timestamps: true,
     strict: true,
-  }
+  },
 );
 missionSchema.index({
   name: "text",

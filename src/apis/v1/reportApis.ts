@@ -17,7 +17,7 @@ router.post(
   body("missionId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.UPLOAD_DOCUMENT),
-  generateBlockReport
+  generateBlockReport,
 );
 
 router.post(
@@ -26,7 +26,7 @@ router.post(
   body("missionId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.UPLOAD_DOCUMENT),
-  generatePlotReport
+  generatePlotReport,
 );
 
 export default router;

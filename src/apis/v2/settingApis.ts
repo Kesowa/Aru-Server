@@ -42,12 +42,12 @@ openApi.addPath(
               COG_URL: Types.String(),
               SERVER_URL: Types.String(),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default settingApi;

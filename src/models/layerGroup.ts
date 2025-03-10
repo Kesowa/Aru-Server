@@ -4,7 +4,7 @@ import layerGroupSchema, { ILayerGroup } from "../schemas/layerGroup";
 
 const layerGroupModel = mongoose.model<ILayerGroup>(
   "layerGroup",
-  layerGroupSchema
+  layerGroupSchema,
 );
 
 export default layerGroupModel;

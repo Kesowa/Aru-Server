@@ -42,7 +42,7 @@ router.post(
   body("poster").optional().notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.PACKAGE_CREATE),
-  RobustRunner(createPackage)
+  RobustRunner(createPackage),
 );
 
 //fetch all packages
@@ -50,7 +50,7 @@ router.get(
   "/fetchall",
   isAuthenticated,
   PermissionGuard(PERMS.PACKAGE_LIST),
-  RobustRunner(fetchAllPackages)
+  RobustRunner(fetchAllPackages),
 );
 
 //fetch package by id
@@ -59,7 +59,7 @@ router.get(
   isAuthenticated,
   query("id").isMongoId().withMessage("Invalid id"),
   PermissionGuard(PERMS.PACKAGE_LIST),
-  RobustRunner(fetchPackageById)
+  RobustRunner(fetchPackageById),
 );
 
 //fetch active packages
@@ -67,7 +67,7 @@ router.get(
   "/fetchactive",
   isAuthenticated,
   PermissionGuard(PERMS.PACKAGE_LIST),
-  RobustRunner(fetchActivePackages)
+  RobustRunner(fetchActivePackages),
 );
 
 router.patch(
@@ -89,7 +89,7 @@ router.patch(
   body("poster").optional().notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.PACKAGE_UPDATE),
-  RobustRunner(editPackageForId)
+  RobustRunner(editPackageForId),
 );
 
 router.delete(
@@ -97,6 +97,6 @@ router.delete(
   isAuthenticated,
   body("_id").notEmpty().isMongoId(),
   PermissionGuard(PERMS.PACKAGE_DELETE),
-  RobustRunner(deletePackageForId)
+  RobustRunner(deletePackageForId),
 );
 export default router;

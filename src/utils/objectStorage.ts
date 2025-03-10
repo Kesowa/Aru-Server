@@ -18,8 +18,6 @@ import {
 } from "../constants";
 import { Directory, docPath, keyPath } from "./pathUtils";
 
-
-
 export const minioClient = new Minio.Client({
   endPoint: S3_ENDPOINT,
   useSSL: ARU_INSTANCE !== Instance.NKDA,
@@ -47,7 +45,7 @@ export const uploadString = async (objKey: string, data: string) => {
 
 export const uploadAnything = async (
   objKey: string,
-  data: Readable | Buffer | string
+  data: Readable | Buffer | string,
 ) => {
   await minioClient.putObject(S3_BUCKET_NAME, keyPath(objKey), data);
 };
@@ -63,9 +61,12 @@ export const stat = async (objKey: string) => {
 export const downloadTemp = async (objKey: string) => {
   const downloadPath = "/tmp/" + randomUUID() + extname(objKey);
   await minioClient.fGetObject(S3_BUCKET_NAME, keyPath(objKey), downloadPath);
-  setTimeout(() => {
-    rm(downloadPath).then().catch();
-  }, 1000 * 3600 * 2); // erase temp after 2 hours
+  setTimeout(
+    () => {
+      rm(downloadPath).then().catch();
+    },
+    1000 * 3600 * 2,
+  ); // erase temp after 2 hours
   return downloadPath;
 };
 
@@ -83,7 +84,7 @@ export const copyObj = async (src: string, dest: string) => {
   await minioClient.copyObject(
     S3_BUCKET_NAME,
     keyPath(dest),
-    "/" + S3_BUCKET_NAME + "/" + keyPath(src)
+    "/" + S3_BUCKET_NAME + "/" + keyPath(src),
   );
 };
 
@@ -95,7 +96,7 @@ export const deleteDir = async (dirKey: string) => {
   const entries = minioClient.listObjects(
     S3_BUCKET_NAME,
     keyPath(dirKey),
-    true
+    true,
   );
   entries.on("data", async function (obj) {
     await deleteObj(obj.name);
@@ -115,12 +116,12 @@ export const archive = async (objKeys: string[]) => {
     objKeys.map(async (objKey) => {
       const stream = await minioClient.getObject(
         S3_BUCKET_NAME,
-        keyPath(objKey)
+        keyPath(objKey),
       );
       archive.append(stream, {
         name: objKey,
       });
-    })
+    }),
   );
   const archivePath = keyPath(docPath(Directory.TEMP, randomUUID() + ".zip"));
   await Promise.all([

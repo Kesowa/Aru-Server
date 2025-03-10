@@ -4,7 +4,7 @@ import thermalPointSchema, { IThermalPoint } from "../schemas/thermalPoint";
 
 const ThermalPoint = mongoose.model<IThermalPoint>(
   "thermalPoint",
-  thermalPointSchema
+  thermalPointSchema,
 );
 
 export default ThermalPoint;

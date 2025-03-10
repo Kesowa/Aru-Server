@@ -16,7 +16,7 @@ router.post(
   isAuthenticated,
   param("vodId").isMongoId(),
   validator,
-  RobustRunner(inferVodViolence)
+  RobustRunner(inferVodViolence),
 );
 
 router.get(
@@ -26,7 +26,7 @@ router.get(
   query("infer").optional().isString().isIn(["violence", "deepforest"]),
   validator,
   isAuthenticated,
-  RobustRunner(fetchAimlTasks)
+  RobustRunner(fetchAimlTasks),
 );
 
 router.post(
@@ -34,7 +34,7 @@ router.post(
   isAuthenticated,
   param("layerId").isMongoId(),
   validator,
-  RobustRunner(inferLayerProcessing)
+  RobustRunner(inferLayerProcessing),
 );
 
 export default router;

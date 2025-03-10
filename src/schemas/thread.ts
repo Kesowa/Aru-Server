@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { Types } from "ts-openapi";
 
 const docModels = <const>["alert", "document", "vod", "layer", "layerfile"];
-export type docTypes = typeof docModels[number];
+export type docTypes = (typeof docModels)[number];
 
 export type IComment = {
   _id: mongoose.Types.ObjectId;
@@ -43,7 +43,7 @@ export const CommentSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export type IThread = {
@@ -81,7 +81,7 @@ export const ThreadSchema = new mongoose.Schema(
       ref: "tenant",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 ThreadSchema.index({ doc: 1, docModel: 1 }, { unique: true });

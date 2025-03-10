@@ -20,7 +20,7 @@ router.post(
   body("layers").notEmpty().isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.UPLOAD_LAYER),
-  RobustRunner(createLayerGroup)
+  RobustRunner(createLayerGroup),
 );
 router.patch(
   "/edit",
@@ -32,7 +32,7 @@ router.patch(
   body("layers").exists({ checkFalsy: true }).isArray(),
   validator,
   PermissionGuard(PERMS.EDIT_LAYER),
-  RobustRunner(editLayerGroup)
+  RobustRunner(editLayerGroup),
 );
 router.get(
   "/fetch",
@@ -40,7 +40,7 @@ router.get(
   body("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.LAYER_LIST),
-  RobustRunner(fetchLayergroup)
+  RobustRunner(fetchLayergroup),
 );
 router.delete(
   "/delete",
@@ -48,7 +48,7 @@ router.delete(
   query("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.DELETE_LAYER),
-  RobustRunner(deleteLayerGroup)
+  RobustRunner(deleteLayerGroup),
 );
 router.post(
   "/delete-layerId",
@@ -57,7 +57,7 @@ router.post(
   body("layers").notEmpty().isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.DELETE_LAYER),
-  RobustRunner(deleteLayerId)
+  RobustRunner(deleteLayerId),
 );
 
 export default router;

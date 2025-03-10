@@ -20,7 +20,7 @@ export const createLayerGroup = async (req: Request, res: AuthResponse) => {
     },
     {
       layerGroupId: saveDoc._id,
-    }
+    },
   );
   const data = await LayerGroup.find({ _id: saveDoc._id }).populate<{
     layer: ILayer;
@@ -52,7 +52,7 @@ export const editLayerGroup = async (req: Request, res: AuthResponse) => {
           $pull: {
             layers: layer._id,
           },
-        }
+        },
       );
     }
     // Update layers
@@ -63,7 +63,7 @@ export const editLayerGroup = async (req: Request, res: AuthResponse) => {
       },
       {
         layerGroupId: doc._id,
-      }
+      },
     );
     // Update the new groups to which layers to be added
     const updatedLayerGroup = await LayerGroup.findOneAndUpdate(
@@ -79,7 +79,7 @@ export const editLayerGroup = async (req: Request, res: AuthResponse) => {
       },
       {
         new: true,
-      }
+      },
     );
     return res.status(200).json({
       status: true,
@@ -161,7 +161,7 @@ export const deleteLayerId = async (req: Request, res: AuthResponse) => {
           $pullAll: {
             layers: req.body.layers,
           },
-        }
+        },
       );
       await Layer.updateMany(
         {
@@ -171,7 +171,7 @@ export const deleteLayerId = async (req: Request, res: AuthResponse) => {
         },
         {
           layerGroupId: null,
-        }
+        },
       );
       return res.status(200).json({
         status: true,

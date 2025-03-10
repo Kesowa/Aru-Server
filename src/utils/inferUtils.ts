@@ -54,11 +54,11 @@ export async function Setup(conn: Connection) {
           response.inference,
           queue,
           response.metadata,
-          response.success
+          response.success,
         )
           .then(() => logger.info(response, "SAVED INFERENCE"))
           .catch((err) =>
-            logger.error({ res, err }, "FAILED TO SAVE INFERENCE")
+            logger.error({ res, err }, "FAILED TO SAVE INFERENCE"),
           );
       }
     });
@@ -98,7 +98,7 @@ export type InferProgress = {
 export const sendInfer = async (
   filePath: pathUtils.KeyPath | pathUtils.DocPath,
   infer: inferTypes,
-  metadata: AruMetadata
+  metadata: AruMetadata,
 ) => {
   const REQ_QUEUE = infer + REQ_QUEUE_SFX;
   const req: InferRequest = {
@@ -114,7 +114,7 @@ export const receiveInfer = async (
   filePath: Inference,
   infer: inferTypes,
   metadata: AruMetadata,
-  success: boolean
+  success: boolean,
 ) => {
   const data = await aimlModel.findOne({
     _id: metadata.infer_id,

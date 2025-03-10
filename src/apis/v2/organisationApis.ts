@@ -18,7 +18,7 @@ organisationApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { populate } = req.query;
     const data = await Tenant.findById(res.locals.user.tenantId._id)
@@ -27,7 +27,7 @@ organisationApi.get(
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -52,12 +52,12 @@ openApi.addPath(
             properties: {
               data: TenantType,
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default organisationApi;

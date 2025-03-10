@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import { Types } from "ts-openapi";
 
@@ -25,7 +24,7 @@ tenantApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { tenantId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Tenant.find(
@@ -37,7 +36,7 @@ tenantApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -62,7 +61,7 @@ tenantApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 tenantApi.get(
   "/",
@@ -72,16 +71,16 @@ tenantApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { populate } = req.query;
     const data = await Tenant.findById(res.locals.user.tenantId._id).populate(
-      populate
+      populate,
     );
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -121,12 +120,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 openApi.addPath(
@@ -150,12 +149,12 @@ openApi.addPath(
             properties: {
               data: TenantType,
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default tenantApi;

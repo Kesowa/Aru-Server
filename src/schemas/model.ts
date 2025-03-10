@@ -86,7 +86,7 @@ const modelSchema = new mongoose.Schema<IModel>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 modelSchema.index({
   tenantID: 1,

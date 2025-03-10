@@ -46,7 +46,7 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
           customPermissions: await GetPermissions(
             user.userGroupId,
             user.userType,
-            user.tenantId
+            user.tenantId,
           ),
           password: undefined,
         });
@@ -115,7 +115,7 @@ export const getUserDetails = async (req: Request, res: AuthResponse) => {
   const customPermissions = await GetPermissions(
     res.locals.user.userGroupId,
     res.locals.user.userType,
-    res.locals.user.tenantId?._id
+    res.locals.user.tenantId?._id,
   );
   if (customPermissions.length == 0) {
     return res.status(404).json({
@@ -140,7 +140,7 @@ export const getUserDetails = async (req: Request, res: AuthResponse) => {
 
 export const renderResetPasswordPage = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/html");
@@ -153,7 +153,7 @@ export const renderResetPasswordPage = async (
 // send mail to reset password
 export const sendForgotPasswordMail = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const email = req.body.email;
   const user = await User.findOne({ email: email }).lean();
@@ -168,7 +168,7 @@ export const sendForgotPasswordMail = async (
   const token = await generateResetPasswordToken(email);
 
   const resetPasswordUrl = `${API_SERVER}/apis/v1/auth/reset-password/${encodeURIComponent(
-    token
+    token,
   )}`;
 
   const html = await ejs.renderFile(
@@ -176,7 +176,7 @@ export const sendForgotPasswordMail = async (
     {
       resetPasswordUrl: resetPasswordUrl,
     },
-    { async: true }
+    { async: true },
   );
 
   await sendMail(
@@ -184,7 +184,7 @@ export const sendForgotPasswordMail = async (
     "Password Reset Request || Kesowa Infinite Ventures Pvt. Ltd",
     "",
     html,
-    ""
+    "",
   );
 
   return res.status(201).json({
@@ -229,7 +229,7 @@ export const resetPassword = async (req: Request, res: AuthResponse) => {
 
   await User.findOneAndUpdate(
     { email: pass.email },
-    { $set: { password: await bcrypt.hash(password, 10) } }
+    { $set: { password: await bcrypt.hash(password, 10) } },
   );
 
   await pass.delete();

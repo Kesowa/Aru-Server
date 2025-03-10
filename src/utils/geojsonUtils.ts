@@ -3,12 +3,10 @@ import { parse } from "path";
 
 import { ObjectId } from "bson";
 
-
 import { Directory } from "../constants";
 import { saveFile } from "./dataUtils";
 import { readToString } from "./objectStorage";
 import Layer from "../models/layer";
-
 
 type Properties = {
   SL_NO: number;
@@ -58,7 +56,7 @@ export async function modGeoJson(
   icon: string,
   color: string,
   geojson: GeoJson,
-  pathh: string
+  pathh: string,
 ) {
   if (color && icon) {
     for (const feature of geojson.features) {
@@ -97,7 +95,7 @@ export async function modGeoJson(
   const { filepath, size } = await saveFile(
     Directory.ROOT,
     newPath,
-    JSON.stringify(geojson)
+    JSON.stringify(geojson),
   );
   return { filepath, size: size / (1024 * 1024) };
 }
@@ -105,7 +103,7 @@ export async function modGeoJson(
 export async function featureAddition(
   pathh: string,
   editObject: any,
-  geojson: GeoJson
+  geojson: GeoJson,
 ) {
   const sys_id = new ObjectId();
   for (const key of Object.keys(editObject.feature.properties)) {
@@ -120,11 +118,11 @@ export async function featureAddition(
   const { filepath, size } = await saveFile(
     Directory.ROOT,
     newPath,
-    JSON.stringify(geojson)
+    JSON.stringify(geojson),
   );
   await Layer.updateOne(
     { _id: editObject.id },
-    { featureCount: geojson.features.length }
+    { featureCount: geojson.features.length },
   );
   return { filepath, size: size / (1024 * 1024) };
 }
@@ -132,19 +130,19 @@ export async function featureAddition(
 export async function editGeoJsonForAll(
   pathh: string,
   editObject: any,
-  geojson: GeoJson
+  geojson: GeoJson,
 ) {
   delete editObject.feature.geometry;
   delete editObject.feature.properties.Id;
   Object.assign(
     geojson.features[editObject.featureIndex].properties,
-    editObject.feature.properties
+    editObject.feature.properties,
   );
   const newPath = parse(pathh).dir + "/" + randomUUID() + ".geojson";
   const { filepath, size } = await saveFile(
     Directory.ROOT,
     newPath,
-    JSON.stringify(geojson)
+    JSON.stringify(geojson),
   );
   return { filepath, size: size / (1024 * 1024) };
 }
@@ -152,18 +150,18 @@ export async function editGeoJsonForAll(
 export async function deleteGeoJsonFeature(
   pathh: string,
   deleteObject: any,
-  geojson: GeoJson
+  geojson: GeoJson,
 ) {
   geojson.features.splice(deleteObject.featureIndex, 1);
   const newPath = parse(pathh).dir + randomUUID() + ".geojson";
   const { filepath, size } = await saveFile(
     Directory.ROOT,
     newPath,
-    JSON.stringify(geojson)
+    JSON.stringify(geojson),
   );
   await Layer.updateOne(
     { _id: deleteObject.id },
-    { featureCount: geojson.features.length }
+    { featureCount: geojson.features.length },
   );
   return { filepath, size: size / (1024 * 1024) };
 }

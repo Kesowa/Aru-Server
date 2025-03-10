@@ -104,7 +104,7 @@ const alertSocketController = (alertSocket: Namespace) => {
                   await WiproInterface.SendAlert(
                     alert,
                     socket.client.conn.remoteAddress,
-                    logger
+                    logger,
                   );
                 }
                 // #endregion
@@ -118,14 +118,14 @@ const alertSocketController = (alertSocket: Namespace) => {
           } else {
             notificationSocket.to(data.tenantId).emit("ALERT_CREATED", {
               message: new Error(
-                "Actual size exceeded the Limit of Set storage!"
+                "Actual size exceeded the Limit of Set storage!",
               ),
             });
           }
         } else {
           notificationSocket.to(data.tenantId).emit("ALERT_CREATED", {
             message: new Error(
-              "Actual alertCount exceeded the Limit of Set alertCount!"
+              "Actual alertCount exceeded the Limit of Set alertCount!",
             ),
           });
         }

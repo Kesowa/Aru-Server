@@ -53,7 +53,7 @@ routerV2.use(
     apiSpec: "/tmp/openapi.json",
     validateRequests: true,
     // validateResponses: true,
-  })
+  }),
 );
 
 routerV2.use(isAuthenticated);

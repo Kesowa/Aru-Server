@@ -7,6 +7,6 @@ declare module "@socket.io/sticky" {
     server: http.Server,
     opts?: {
       loadBalancingMethod: string;
-    }
+    },
   ): void;
 }

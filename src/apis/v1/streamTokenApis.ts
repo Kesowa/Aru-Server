@@ -28,7 +28,7 @@ router.post(
     .isMongoId(),
   validator,
   PermissionGuard(PERMS.STREAM_CREATE),
-  RobustRunner(streamKeyGen)
+  RobustRunner(streamKeyGen),
 );
 
 //+++++++++++++++++++++Stream Token Valiation ++++++++++++++++++++++++++++++
@@ -36,7 +36,7 @@ router.post(
   "/validate-token",
   body("name").isString().notEmpty(),
   validator,
-  RobustRunner(streamTokenValidator)
+  RobustRunner(streamTokenValidator),
 );
 
 //+++++++++++++++++++++ Get Active streams by Tenant-id ++++++++++++++++++++
@@ -44,7 +44,7 @@ router.get(
   "/get-active-streams",
   isAuthenticated,
   PermissionGuard(PERMS.STREAM_LIST),
-  RobustRunner(getActiveStreams)
+  RobustRunner(getActiveStreams),
 );
 
 //+++++++++++++++++++++ Get Active streams by Flight-id ++++++++++++++++++++
@@ -54,7 +54,7 @@ router.get(
   query("flightID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.STREAM_LIST),
-  RobustRunner(getActiveStreamByFlightId)
+  RobustRunner(getActiveStreamByFlightId),
 );
 
 //++++++++++++++++++++ remove streamkey after it has done streaming ++++++++++++++
@@ -65,7 +65,7 @@ router.post(
   body("name").notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.STREAM_DELETE),
-  RobustRunner(removeStreamKey)
+  RobustRunner(removeStreamKey),
 );
 
 export default router;

@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import { Types } from "ts-openapi";
 
@@ -37,7 +36,7 @@ layerApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const {
       layerId,
@@ -76,7 +75,7 @@ layerApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -105,7 +104,7 @@ layerApi.get(
         },
         {
           centerPoints: 1,
-        }
+        },
       );
       resp.centerPoints = flight.centerPoints;
     }
@@ -123,7 +122,7 @@ layerApi.get(
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -201,12 +200,12 @@ openApi.addPath(
                   "Link to download the layer's file(geojson or tiff). Present in response only if layerId is passed (single layer fetched).",
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 layerApi.get(
@@ -225,7 +224,7 @@ layerApi.get(
         populate: string[];
       }
     >,
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { layerId, sysId, isReview, limit, offset, populate } = req.query;
     const data = await LayerFile.find({
@@ -247,7 +246,7 @@ layerApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -297,12 +296,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default layerApi;

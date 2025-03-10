@@ -148,7 +148,7 @@ const flightSchema = new mongoose.Schema<IFlight>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 flightSchema.index({
   locationID: 1,

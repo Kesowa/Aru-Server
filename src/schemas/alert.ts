@@ -146,7 +146,7 @@ const alertSchema = new mongoose.Schema<IAlert>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 alertSchema.index({
   flightId: 1,
@@ -170,11 +170,11 @@ alertSchema.methods.create = async function () {
         allAlertSize: doc.fileSize,
         actualAlertCount: 1,
       },
-    }
+    },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   // save the document
   return await doc.save();
@@ -194,11 +194,11 @@ alertSchema.methods.delete = async function () {
         allAlertSize: -doc.fileSize,
         actualAlertCount: -1,
       },
-    }
+    },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
   // delete the document
   await doc.deleteOne();

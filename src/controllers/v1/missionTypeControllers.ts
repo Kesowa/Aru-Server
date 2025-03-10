@@ -30,7 +30,7 @@ export const editMissionType = async (req: Request, res: AuthResponse) => {
       updatedBy: res.locals.user._id,
       isActive: req.body.isActive ? req.body.isActive : true,
     },
-    { new: true }
+    { new: true },
   );
 
   res.json({

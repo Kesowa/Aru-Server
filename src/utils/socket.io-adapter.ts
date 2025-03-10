@@ -1,4 +1,3 @@
- 
 import { hostname } from "os";
 import { promisify } from "util";
 
@@ -72,7 +71,7 @@ export class AmqpAdapter extends Adapter {
   constructor(
     public readonly nsp: Namespace,
     private options: AmqpAdapterOptions,
-    name: string
+    name: string,
   ) {
     super(nsp);
     this.debug = debugFactory(`socket.io-amqp:${name}`);
@@ -84,7 +83,7 @@ export class AmqpAdapter extends Adapter {
       this.debug("called shutdownCallback");
       this.closed = true;
       await Promise.all(
-        mapIter(this.roomListeners.values(), (unsub) => unsub())
+        mapIter(this.roomListeners.values(), (unsub) => unsub()),
       );
     });
     this.init(); // hack until issue in socket.io is resolved
@@ -98,7 +97,7 @@ export class AmqpAdapter extends Adapter {
     packet: any,
     opts: BroadcastOptions,
     clientCountCallback: (clientCount: number) => void,
-    ack: (...args: any[]) => void
+    ack: (...args: any[]) => void,
   ): Promise<void> {
     await this.broadcast(packet, opts);
     // shim to handle broadcast with ack until I have time to implement it for real
@@ -190,7 +189,7 @@ export class AmqpAdapter extends Adapter {
   }
 
   private async createRoomExchangeAndQueue(
-    room: string | null
+    room: string | null,
   ): Promise<string> {
     const consumeChannelPromise = firstValueFrom(this.readyConsumeChannel$);
     const publishChannel = await firstValueFrom(this.readyPublishChannel$);
@@ -207,7 +206,7 @@ export class AmqpAdapter extends Adapter {
     await consumeChannel.bindQueue(
       queueName,
       this.exchangeName,
-      room ?? defaultRoomName
+      room ?? defaultRoomName,
     );
     this.debug("did bind", this.exchangeName, room ?? defaultRoomName);
     return queueName;
@@ -225,7 +224,7 @@ export class AmqpAdapter extends Adapter {
 
   private async createRoomListener(
     room: string | null,
-    queueName: string
+    queueName: string,
   ): Promise<() => Promise<void>> {
     this.debug("Starting room listener for", room);
     let consumerTag = randomString();
@@ -242,7 +241,7 @@ export class AmqpAdapter extends Adapter {
       {
         noAck: false, // require manual ack
         consumerTag,
-      }
+      },
     );
     consumerTag = consumeReply.consumerTag;
 
@@ -253,7 +252,6 @@ export class AmqpAdapter extends Adapter {
   }
 
   async addAll(id: string, rooms: Set<string>): Promise<void> {
-     
     this.debug("addAll", ...arguments);
 
     const newRooms = new Set<string>();
@@ -329,7 +327,7 @@ export class AmqpAdapter extends Adapter {
       buffer,
       {
         ...(routeKeys.length > 1 ? { CC: routeKeys.slice(1) } : {}),
-      }
+      },
     );
   }
 
@@ -355,7 +353,7 @@ export class AmqpAdapter extends Adapter {
             rooms: new Set([room]),
             flags: { ...opts.flags, local: true },
           });
-        }
+        },
       ),
       this.publishToRooms(nonlocalRooms, envelope),
     ]);
@@ -363,7 +361,7 @@ export class AmqpAdapter extends Adapter {
 
   sockets(
     rooms: Set<Room>,
-    callback?: (sockets: Set<SocketId>) => void
+    callback?: (sockets: Set<SocketId>) => void,
   ): Promise<Set<SocketId>> {
     const sids = new Set<SocketId>();
 
@@ -393,7 +391,7 @@ export class AmqpAdapter extends Adapter {
 
   serverSideEmit(packet: any[]): void {
     throw new Error(
-      "this adapter does not support the serverSideEmit() functionality"
+      "this adapter does not support the serverSideEmit() functionality",
     );
   }
 }

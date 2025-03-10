@@ -11,7 +11,7 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const getThermal = async (
   req: Request<{}, {}, { id: string; doc: "alert" | "document" }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const thermalDoc = await aimlModel.findOneAndUpdate(
     {
@@ -37,7 +37,7 @@ export const getThermal = async (
     {
       upsert: true,
       new: true,
-    }
+    },
   );
   if (thermalDoc) {
     if (thermalDoc.status == "failed") {
@@ -107,7 +107,7 @@ const checkTable = (table) => {
         checkUint(y) &&
         checkFloat(temp) &&
         checkColor(color) &&
-        typeof label == "string"
+        typeof label == "string",
     );
     if (!correct) {
       return false;
@@ -132,7 +132,7 @@ export const createThermalTable = async (
       table: unknown;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { doc, id, table } = req.body;
   const realTable = checkTable(table);

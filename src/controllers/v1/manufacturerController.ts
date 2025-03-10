@@ -45,7 +45,7 @@ export const updateManufacturer = async (req: Request, res: AuthResponse) => {
       tenantID: res.locals.user.tenantId._id,
     },
     req.body.update,
-    { new: true }
+    { new: true },
   );
   if (foundModel === null) {
     res.status(404).json({
@@ -81,7 +81,7 @@ export const removeManufacturer = async (req: Request, res: AuthResponse) => {
 
 export const fetchManufacturerbyId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const gotdoc = await manufacturerModel
     .find({ _id: req.query._id, tenantID: res.locals.user.tenantId._id })

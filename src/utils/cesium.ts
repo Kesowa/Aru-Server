@@ -10,7 +10,6 @@ import layer from "../models/layer";
 import { ILayer } from "../schemas/layer";
 import { missionSpecificSocket } from "../socket";
 
-
 export const LayerEvents = new EventEmitter();
 
 export const REQ_QUEUE = "file.decompress.req";
@@ -59,7 +58,7 @@ export type TranscodeResponse = {
 
 export const decompressZip = async (
   filePath: pathUtils.KeyPath | pathUtils.DocPath,
-  metadata: AruMetadata
+  metadata: AruMetadata,
 ) => {
   const req: TranscodeRequest = {
     file: pathUtils.keyPath(filePath),
@@ -72,7 +71,7 @@ export const decompressZip = async (
 export const receiveZip = async (
   zip: Zip,
   metadata: AruMetadata,
-  success: boolean
+  success: boolean,
 ) => {
   const data = await layer.findOne({
     _id: metadata.layer_id,

@@ -1,4 +1,3 @@
- 
 import { Request, Router } from "express";
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
@@ -16,7 +15,7 @@ const baseLayerApi = Router();
 const getAlertLocationGeojson = async (
   tenantId: mongoose.Types.ObjectId,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) => {
   const alerts = await Alert.find({
     tenantId,
@@ -60,7 +59,7 @@ const getAlertLocationGeojson = async (
 const getVideoLocationGeojson = async (
   tenantId: mongoose.Types.ObjectId,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) => {
   const videos = await VOD.aggregate([
     {
@@ -151,7 +150,7 @@ baseLayerApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const {
       type,
@@ -171,7 +170,7 @@ baseLayerApi.get(
         },
         {
           _id: 1,
-        }
+        },
       );
       tenantId = tenant._id;
     }
@@ -201,19 +200,19 @@ baseLayerApi.get(
       const alertData = await getAlertLocationGeojson(
         res.locals.user.tenantId._id,
         startDate,
-        endDate
+        endDate,
       );
       resp.alertGeojson = alertData;
       const vodData = await getVideoLocationGeojson(
         res.locals.user.tenantId._id,
         startDate,
-        endDate
+        endDate,
       );
       resp.vodGeojson = vodData;
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -281,12 +280,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default baseLayerApi;

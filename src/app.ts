@@ -12,8 +12,6 @@ import { Connection } from "mongoose";
 import pino, { Logger } from "pino";
 import pinoHttp from "pino-http";
 
-
-
 //API imports
 import aimlApis from "./apis/v1/aimlApis";
 import alertApis from "./apis/v1/alertApis";
@@ -56,7 +54,6 @@ import {
   LOGGER_URL,
   ARU_INSTANCE,
 } from "./constants";
-
 
 export const logger: Logger = pino({
   name: "ARU-" + ARU_INSTANCE,
@@ -101,14 +98,14 @@ export default function app(mongo: Connection) {
   app.use(
     helmet({
       frameguard: false,
-    })
+    }),
   );
   app.use(
     cors({
       maxAge: 60 * 60 * 24,
       credentials: true,
       origin: PUBLIC_SERVER,
-    })
+    }),
   );
   app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
 
@@ -132,7 +129,7 @@ export default function app(mongo: Connection) {
         maxAge: 1000 * 60 * 60 * 24, // session lasts 24 hours
         sameSite: "strict",
       },
-    })
+    }),
   );
 
   app.use(
@@ -148,7 +145,7 @@ export default function app(mongo: Connection) {
         }
         return "info";
       },
-    })
+    }),
   );
 
   app.use("/apis/v2", routerV2);
