@@ -1,7 +1,8 @@
 import { Request } from "express";
+
 import User from "../../models/user";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import UserGroup from "../../models/usergroup";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 // Create Alert Controlller
 export const getAllPilots = async (req: Request, res: AuthResponse) => {

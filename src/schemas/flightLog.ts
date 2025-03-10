@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { Types } from "ts-openapi";
 
 interface IFlightLogMethods {
   create(): Promise<IFlightLog>;

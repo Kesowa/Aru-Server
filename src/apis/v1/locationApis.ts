@@ -1,5 +1,6 @@
 import express from "express";
-import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { body, query } from "express-validator";
+
 import {
   createLocation,
   deleteLocation,
@@ -9,10 +10,10 @@ import {
   getLocationByLatLong,
   updateLocation,
 } from "../../controllers/v1/locationController";
-import { isLocationCount } from "../../utils/countPermission";
-import { body, query } from "express-validator";
-import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { isLocationCount } from "../../utils/countPermission";
+import { validator, RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();
 

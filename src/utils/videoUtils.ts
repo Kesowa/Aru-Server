@@ -1,13 +1,16 @@
 import { EventEmitter } from "events";
-import * as pathUtils from "./pathUtils";
 import path from "path";
+
+import { Connection } from "amqplib";
 import DJISRTParser from "dji_srt_parser";
+
+import * as pathUtils from "./pathUtils";
 import { logger } from "../app";
 import VOD from "../models/vod";
 import { missionSpecificSocket } from "../socket";
 import { deleteObj, readToString, stat, uploadString } from "./objectStorage";
 import { IVOD } from "../schemas/VOD";
-import { Connection } from "amqplib";
+
 
 export const VODEvents = new EventEmitter();
 

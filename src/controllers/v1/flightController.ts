@@ -1,10 +1,11 @@
 import { Request } from "express";
-import Flight from "../../models/flight";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { Types } from "mongoose";
-import { notificationSocket } from "../../socket";
-import { IUser } from "../../schemas/user";
+
+import Flight from "../../models/flight";
 import { ILocation } from "../../schemas/location";
+import { IUser } from "../../schemas/user";
+import { notificationSocket } from "../../socket";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 //create flight controller
 export const createFlight = async (req: Request, res: AuthResponse) => {

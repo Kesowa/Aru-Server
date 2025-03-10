@@ -1,5 +1,8 @@
 import express from "express";
 import { body } from "express-validator";
+
+import { Mode } from "../../constants";
+import { fetchActivePackages } from "../../controllers/v1/packageController";
 import {
   createTenant,
   fetchAllTenants,
@@ -15,15 +18,13 @@ import {
   resendVerificationCode,
   tenantpublicmaprefupdate,
 } from "../../controllers/v1/tenantController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
-import { fetchActivePackages } from "../../controllers/v1/packageController";
 import {
   validator,
   RobustRunner,
   environmentGuard,
 } from "../../utils/requestHelpers";
-import { Mode } from "../../constants";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 

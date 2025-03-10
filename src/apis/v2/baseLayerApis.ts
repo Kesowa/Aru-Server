@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
+import mongoose from "mongoose";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
+import Alert from "../../models/alert";
 import Layer from "../../models/layer";
+import Tenant from "../../models/tenant";
+import VOD from "../../models/vod";
 import { LayerType } from "../../schemas/layer";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import mongoose from "mongoose";
-import Alert from "../../models/alert";
-import VOD from "../../models/vod";
-import Tenant from "../../models/tenant";
 
 const baseLayerApi = Router();
 

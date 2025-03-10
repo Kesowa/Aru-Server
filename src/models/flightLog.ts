@@ -1,4 +1,5 @@
 import { model } from "mongoose";
+
 import flightLogSchema, {
   FlightLogModel,
   IFlightLog,

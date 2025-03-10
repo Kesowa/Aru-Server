@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import { Thread } from "../../models/thread";
 import { ThreadType } from "../../schemas/thread";
 import { AuthResponse } from "../../utils/interfaceUtils";

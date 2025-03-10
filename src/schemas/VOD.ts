@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
+
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { deleteHlsVodUsingIndex } from "../utils/videoUtils";
 import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+import { deleteHlsVodUsingIndex } from "../utils/videoUtils";
 interface IVODMethods {
   create(): Promise<IVOD>;
   delete(): Promise<void>;

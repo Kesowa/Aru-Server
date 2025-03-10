@@ -1,12 +1,13 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import { TenantType } from "../../schemas/tenant";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { onlySuperAdminAccess } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const tenantApi = Router();
 

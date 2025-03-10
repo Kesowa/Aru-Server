@@ -1,17 +1,18 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
+import { Directory, DirPath } from "../../constants";
+import Flight from "../../models/flight";
 import Layer from "../../models/layer";
 import LayerFile from "../../models/layerFiles";
 import { LayerType } from "../../schemas/layer";
 import { LayerFileType } from "../../schemas/layerFiles";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import Flight from "../../models/flight";
-import { Directory, DirPath } from "../../constants";
-import { checkFileExists, getFileSize } from "../../utils/fileUtils";
-import { vectorProps } from "../../schemas/vectorprops";
 import { rasterProps } from "../../schemas/rasterprops";
+import { vectorProps } from "../../schemas/vectorprops";
+import { checkFileExists, getFileSize } from "../../utils/fileUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const layerApi = Router();
 

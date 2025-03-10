@@ -1,11 +1,12 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import User from "../../models/user";
 import { UserType } from "../../schemas/user";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUsers } from "../../utils/authUtils";
 import { saveCSV } from "../../utils/dataUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const userApi = Router();
 

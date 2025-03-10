@@ -1,13 +1,14 @@
 import { Request, NextFunction, Response } from "express";
-import User from "../models/user";
-import { AuthResponse } from "./interfaceUtils";
-import Tenant from "../models/tenant";
-
-import { IPackage } from "../schemas/package";
-import PassReset from "../models/passwordReset";
-import { GetPermissions, PERMS } from "../schemas/permission";
 import { Session } from "express-session";
 import zod from "zod";
+
+import { AuthResponse } from "./interfaceUtils";
+import PassReset from "../models/passwordReset";
+import Tenant from "../models/tenant";
+import User from "../models/user";
+import { IPackage } from "../schemas/package";
+import { GetPermissions, PERMS } from "../schemas/permission";
+
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,

@@ -1,29 +1,38 @@
+import path from "path";
+
+import compression from "compression";
+import MongoStore from "connect-mongo";
+import cors from "cors";
+import errorHandler from "errorhandler";
+import express, { Application } from "express";
+import rateLimit from "express-rate-limit";
+import session from "express-session";
+import helmet from "helmet";
+import { Connection } from "mongoose";
 import pino, { Logger } from "pino";
 import pinoHttp from "pino-http";
-import express, { Application } from "express";
-import compression from "compression";
-import helmet from "helmet";
-import path from "path";
-import session from "express-session";
-import MongoStore from "connect-mongo";
-import errorHandler from "errorhandler";
+
+
 
 //API imports
+import aimlApis from "./apis/v1/aimlApis";
+import alertApis from "./apis/v1/alertApis";
+import assetApis from "./apis/v1/assetApis";
+import assetClassApis from "./apis/v1/assetClassApis";
 import authApis from "./apis/v1/authApis";
-import tenantApis from "./apis/v1/tenantApis";
-import packageApis from "./apis/v1/packageApis";
+import clientApis from "./apis/v1/clientApis";
 import commonApis from "./apis/v1/commonApis";
+import packageApis from "./apis/v1/packageApis";
+import tenantApis from "./apis/v1/tenantApis";
 import organisationApis from "./apis/v1/organisationApis";
 import permissionApis from "./apis/v1/permissionApis";
-import userGroupApis from "./apis/v1/userGroupApis";
+import threadApis from "./apis/v1/threadApis";
 import userApis from "./apis/v1/userApis";
+import userGroupApis from "./apis/v1/userGroupApis";
 import missionTypeApis from "./apis/v1/missionTypeApis";
 import missionApis from "./apis/v1/missionApis";
 import flightApis from "./apis/v1/flightApis";
-import alertApis from "./apis/v1/alertApis";
 import streamTokenApis from "./apis/v1/streamTokenApis";
-import assetApis from "./apis/v1/assetApis";
-import assetClassApis from "./apis/v1/assetClassApis";
 import VODApis from "./apis/v1/vodAPIs";
 import pilotApis from "./apis/v1/pilotApis";
 import modelApis from "./apis/v1/modelApis";
@@ -32,16 +41,13 @@ import locationApis from "./apis/v1/locationApis";
 import flightLogApis from "./apis/v1/flightLogApis";
 import layerApis from "./apis/v1/layerApis";
 import documentApis from "./apis/v1/documentApis";
-import clientApis from "./apis/v1/clientApis";
 import LayerGroupApis from "./apis/v1/layerGroupApis";
 import PaymentApis from "./apis/v1/paymentApis";
 import baseLayerApis from "./apis/v1/baseLayerApis";
 import settingApis from "./apis/v1/settingApis";
-import aimlApis from "./apis/v1/aimlApis";
-import threadApis from "./apis/v1/threadApis";
 import dataApis from "./apis/v1/dataApis";
 import reportApis from "./apis/v1/reportApis";
-
+import routerV2 from "./apis/v2/routerV2";
 import {
   Mode,
   MODE,
@@ -50,10 +56,7 @@ import {
   LOGGER_URL,
   ARU_INSTANCE,
 } from "./constants";
-import cors from "cors";
-import routerV2 from "./apis/v2/routerV2";
-import rateLimit from "express-rate-limit";
-import { Connection } from "mongoose";
+
 
 export const logger: Logger = pino({
   name: "ARU-" + ARU_INSTANCE,

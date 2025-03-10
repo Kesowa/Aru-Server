@@ -1,4 +1,6 @@
 import express from "express";
+import { body, oneOf, query } from "express-validator";
+
 import {
   getByFlightOrLocationID,
   getByMissionID,
@@ -14,11 +16,10 @@ import {
   getCountByMissionID,
   getVODByID,
 } from "../../controllers/v1/VODcontroller";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isVodCount } from "../../utils/countPermission";
-import { body, oneOf, query } from "express-validator";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 

@@ -1,5 +1,7 @@
-import { Types } from "mongoose";
 import path from "path";
+
+import { Types } from "mongoose";
+
 import { Directory } from "./utils/pathUtils";
 
 export const DUMMY_TENANT = new Types.ObjectId("629aeb50ea5ed2cee054870b");

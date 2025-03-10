@@ -1,12 +1,14 @@
-import * as pathUtils from "./pathUtils";
 import { EventEmitter } from "stream";
+
+import { Connection } from "amqplib";
+
 import { logger } from "../app";
 import { notificationSocket } from "../socket";
-import { Connection } from "amqplib";
-import aimlModel from "../models/aimlTask";
-import { IAimlTask, inferences, inferTypes } from "../schemas/aimlTask";
 import { permPath, saveVectorLayer } from "./dataUtils";
+import * as pathUtils from "./pathUtils";
+import aimlModel from "../models/aimlTask";
 import Layer from "../models/layer";
+import { IAimlTask, inferences, inferTypes } from "../schemas/aimlTask";
 import { vectorProps } from "../schemas/vectorprops";
 
 export const InferEvents = new EventEmitter();

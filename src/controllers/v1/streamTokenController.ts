@@ -1,10 +1,11 @@
 import { Request } from "express";
-import { streamKeyModel } from "../../models/streamKey";
 import { Types } from "mongoose";
+
+import { ARU_INSTANCE, Instance } from "../../constants";
+import { streamKeyModel } from "../../models/streamKey";
 import { notificationSocket } from "../../socket";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { WiproInterface } from "../../utils/wipro";
-import { ARU_INSTANCE, Instance } from "../../constants";
 
 export const streamKeyGen = async (
   req: Request<

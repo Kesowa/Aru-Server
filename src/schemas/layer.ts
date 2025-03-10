@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
-import Mission from "../models/mission";
-import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
+
 import { rasterProps } from "./rasterprops";
 import { vectorProps } from "./vectorprops";
-import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
 import LayerFiles from "../models/layerFiles";
 import LayerGroup from "../models/layerGroup";
+import Mission from "../models/mission";
+import Tenant from "../models/tenant";
 import { delete3DTiles } from "../utils/cesium";
 import { deleteFeatureSearchIndex } from "../utils/dataUtils";
+import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
 
 interface ILayerMethods {
   create(): Promise<ILayer>;

@@ -1,9 +1,9 @@
 import { Request } from "express";
+
 import deviceModel from "../../models/model";
 import { IAssetClass } from "../../schemas/assetClass";
 import { IManufacturer } from "../../schemas/manufacturer";
 import { IUser } from "../../schemas/user";
-
 import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const createModel = async (req: Request, res: AuthResponse) => {

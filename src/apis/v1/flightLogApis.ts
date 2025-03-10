@@ -1,14 +1,15 @@
 import express from "express";
+import { query, body, oneOf } from "express-validator";
+
 import {
   getLog,
   fetchLatestFlightlogDataByMissionId,
   fetchLatestFlightlogByLocationId,
   createFlightLog,
 } from "../../controllers/v1/flightLogController";
-import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
-import { query, body, oneOf } from "express-validator";
-import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { validator, RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();
 

@@ -1,19 +1,20 @@
-import { Request } from "express";
-import Tenant from "../../models/tenant";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import User from "../../models/user";
-import bcrypt from "bcrypt";
-import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
-import { sendMail } from "../../utils/emailUtil";
 import crypto from "crypto";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
-import { IUser } from "../../schemas/user";
-import { API_SERVER, Directory, DUMMY_TENANT } from "../../constants";
-import UploadTask from "../../models/uploadTask";
-import { permPath, saveCSV } from "../../utils/dataUtils";
-import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
 
+import bcrypt from "bcrypt";
+import { Request } from "express";
+
+import { API_SERVER, Directory, DUMMY_TENANT } from "../../constants";
+import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
+import User from "../../models/user";
 import { PERMS } from "../../schemas/permission";
+import { IUser } from "../../schemas/user";
+import { permPath, saveCSV } from "../../utils/dataUtils";
+import { sendMail } from "../../utils/emailUtil";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
+import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
 // let saltRound = 10;
 //create user account
 export const createUser = async (req: Request, res: AuthResponse) => {

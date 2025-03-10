@@ -1,11 +1,27 @@
 import * as turf from "@turf/turf";
-
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import Layer from "../../models/layer";
-import { vectorProps } from "../../schemas/vectorprops";
+import z from "zod";
+
+import {
+  PlotPropertiesSchema,
+  BlockPropertiesSchema,
+  BuildingPropertiesSchema,
+} from "../../../aru-common/schemas/properties";
 import { DirPath, Directory } from "../../constants";
+import Flight from "../../models/flight";
+import Layer from "../../models/layer";
+import layerFiles from "../../models/layerFiles";
+import User from "../../models/user";
+import { saveCSV } from "../../utils/dataUtils";
+import { rasterProps } from "../../schemas/rasterprops";
+
+
+import Mission from "../../models/mission";
+import { IUser } from "../../schemas/user";
+import { vectorProps } from "../../schemas/vectorprops";
 import { missionSpecificSocket } from "../../socket";
+import { Feature, readGeoJson } from "../../utils/geojsonUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 import {
   entityCategories,
   entityTypes,
@@ -23,20 +39,6 @@ import {
   generatePlotReport as generatePlotReportDocument,
   generateBlockReport as generateBlockReportDocument,
 } from "../../utils/reportUtils";
-import { Feature, readGeoJson } from "../../utils/geojsonUtils";
-import layerFiles from "../../models/layerFiles";
-import User from "../../models/user";
-import { saveCSV } from "../../utils/dataUtils";
-import { rasterProps } from "../../schemas/rasterprops";
-import {
-  PlotPropertiesSchema,
-  BlockPropertiesSchema,
-  BuildingPropertiesSchema,
-} from "../../../aru-common/schemas/properties";
-import z from "zod";
-import Mission from "../../models/mission";
-import { IUser } from "../../schemas/user";
-import Flight from "../../models/flight";
 
 export const generateBlockReport = async (
   req: Request<

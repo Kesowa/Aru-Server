@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Tenant from "../../models/tenant";
 import { TenantType } from "../../schemas/tenant";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { onlyTenantRootAccess } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const organisationApi = Router();
 

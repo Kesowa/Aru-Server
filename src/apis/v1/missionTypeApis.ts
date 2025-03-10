@@ -1,14 +1,15 @@
 import express from "express";
 import { body } from "express-validator";
+
 import {
   createMissionType,
   fetchAllMissionTypes,
   editMissionType,
   deleteMissionType,
 } from "../../controllers/v1/missionTypeControllers";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 

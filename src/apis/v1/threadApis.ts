@@ -1,14 +1,15 @@
 import express from "express";
 import { body, param, query } from "express-validator";
+
 import {
   CreateDocThread,
   AddorUpdateDocComment,
   GetDocThread,
   RemoveDocComment,
 } from "../../controllers/v1/threadController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 

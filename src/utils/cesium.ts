@@ -1,12 +1,15 @@
-import * as pathUtils from "./pathUtils";
 import path from "path";
 import { EventEmitter } from "stream";
+
+import { Connection } from "amqplib";
+
 import { deletePublicFolderUsingPath } from "./fileDeleteUtils";
+import * as pathUtils from "./pathUtils";
 import { logger } from "../app";
+import layer from "../models/layer";
 import { ILayer } from "../schemas/layer";
 import { missionSpecificSocket } from "../socket";
-import layer from "../models/layer";
-import { Connection } from "amqplib";
+
 
 export const LayerEvents = new EventEmitter();
 

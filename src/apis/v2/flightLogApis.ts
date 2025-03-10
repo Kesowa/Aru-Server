@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
+import openApi from "./openApi";
 import flightLog from "../../models/flightLog";
 import { FlightLogType } from "../../schemas/flightLog";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const flightLogApi = Router();
 

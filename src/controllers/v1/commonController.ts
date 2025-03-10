@@ -1,20 +1,22 @@
-import { Request } from "express";
-import Tenant from "../../models/tenant";
-import User from "../../models/user";
+import { randomUUID } from "crypto";
 import path from "path";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
+import { Request } from "express";
+
 import {
   ARU_INSTANCE,
   CDN_URL,
   Instance,
   S3_BUCKET_NAME,
 } from "../../constants";
-import { Directory } from "../../utils/pathUtils";
-import { minioClient } from "../../utils/objectStorage";
-import { IPackage } from "../../schemas/package";
-import { randomUUID } from "crypto";
+import Tenant from "../../models/tenant";
 import uploadModel from "../../models/uploadTask";
+import User from "../../models/user";
+import { IPackage } from "../../schemas/package";
 import { InvalidPackage } from "../../schemas/tenant";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import { minioClient } from "../../utils/objectStorage";
+import { Directory } from "../../utils/pathUtils";
 
 //check if email is available for registration
 export const checkIfEmailIdIsAvailable = async (

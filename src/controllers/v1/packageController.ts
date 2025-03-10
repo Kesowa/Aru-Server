@@ -1,10 +1,11 @@
 import { Request } from "express";
+
 import Package from "../../models/package";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import Tenant from "../../models/tenant";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
-import { copyFiled } from "../../utils/moveFileUtils";
 import { IPackage } from "../../schemas/package";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import { copyFiled } from "../../utils/moveFileUtils";
 //cretae package
 export const createPackage = async (req: Request, res: AuthResponse) => {
   const pac = new Package({

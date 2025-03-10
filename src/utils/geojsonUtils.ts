@@ -1,11 +1,14 @@
-import Layer from "../models/layer";
+import { randomUUID } from "crypto";
+import { parse } from "path";
 
 import { ObjectId } from "bson";
+
+
 import { Directory } from "../constants";
-import { readToString } from "./objectStorage";
 import { saveFile } from "./dataUtils";
-import { parse } from "path";
-import { randomUUID } from "crypto";
+import { readToString } from "./objectStorage";
+import Layer from "../models/layer";
+
 
 type Properties = {
   SL_NO: number;

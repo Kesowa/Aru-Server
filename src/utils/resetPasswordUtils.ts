@@ -1,6 +1,8 @@
 import crypto from "crypto";
-import PassReset from "../models/passwordReset";
+
 import bcrypt from "bcrypt";
+
+import PassReset from "../models/passwordReset";
 
 export async function generateResetPasswordToken(email: string) {
   const token = crypto.randomBytes(50).toString("base64url");

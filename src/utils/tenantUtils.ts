@@ -1,10 +1,12 @@
-import User from "../models/user";
-import Tenant from "../models/tenant";
-import Package from "../models/package";
-import moment from "moment";
 import crypto from "crypto";
-import { generateResetPasswordToken } from "../utils/resetPasswordUtils";
+
+import moment from "moment";
+
 import { API_SERVER } from "../constants";
+import Package from "../models/package";
+import Tenant from "../models/tenant";
+import User from "../models/user";
+import { generateResetPasswordToken } from "../utils/resetPasswordUtils";
 
 export const createTenantLevelrootUser = async (tenant: any) => {
   try {

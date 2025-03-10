@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { body, query } from "express-validator";
+
 import {
   createLayerGroup,
   editLayerGroup,
@@ -7,9 +8,9 @@ import {
   deleteLayerGroup,
   deleteLayerId,
 } from "../../controllers/v1/layerGroupControllers";
-import { body, query } from "express-validator";
-import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { validator, RobustRunner } from "../../utils/requestHelpers";
 const router = Router();
 
 router.post(

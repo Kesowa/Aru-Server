@@ -1,12 +1,13 @@
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import VOD from "../../models/vod";
+import moment from "moment";
+
+import { logger } from "../../app";
 import aimlModel from "../../models/aimlTask";
 import Layer from "../../models/layer";
-import moment from "moment";
+import VOD from "../../models/vod";
 import { notificationSocket } from "../../socket";
 import { sendInfer } from "../../utils/inferUtils";
-import { logger } from "../../app";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const inferVodViolence = async (
   req: Request<{ vodId: string; inferType: string }>,

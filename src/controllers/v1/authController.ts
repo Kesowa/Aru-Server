@@ -1,14 +1,16 @@
-import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import User from "../../models/user";
-import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
-import { sendMail } from "../../utils/emailUtil";
+import path from "path";
+
 import bcrypt from "bcrypt";
+import ejs from "ejs";
+import { Request } from "express";
+
 import { API_SERVER, PUBLIC_SERVER } from "../../constants";
 import PassReset from "../../models/passwordReset";
-import ejs from "ejs";
-import path from "path";
+import User from "../../models/user";
 import { GetPermissions } from "../../schemas/permission";
+import { sendMail } from "../../utils/emailUtil";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 
 //++++++++++++++++++++++++++ user login +++++++++++++++++++++++++++++++++++++++
 

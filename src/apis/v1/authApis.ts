@@ -1,5 +1,7 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { body, param } from "express-validator";
+
 import {
   logoutUser,
   loginUser,
@@ -10,7 +12,6 @@ import {
 } from "../../controllers/v1/authController";
 import { isAuthenticated, shouldLinkSend } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
-import rateLimit from "express-rate-limit";
 const router = express.Router();
 
 const limiter = rateLimit({

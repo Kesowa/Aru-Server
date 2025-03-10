@@ -1,11 +1,13 @@
+import crypto from "crypto";
+
+import { Request } from "express";
 import RazorPay from "razorpay";
+
 import {
   RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET,
   RAZORPAY_HOOK_SECRET,
 } from "../constants";
-import crypto from "crypto";
-import { Request } from "express";
 
 export const RazorPayInstance = new RazorPay({
   key_id: RAZORPAY_KEY_ID,

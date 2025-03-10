@@ -1,10 +1,12 @@
-import layerGroupModel from "../models/layerGroup";
-import layerModel from "../models/layer";
+import { Types } from "mongoose";
+
 import { saveVectorLayer } from "./dataUtils";
 import { GeoJson } from "./geojsonUtils";
 import { deleteObj, readToString } from "./objectStorage";
+import layerModel from "../models/layer";
+import layerGroupModel from "../models/layerGroup";
 import { vectorProps } from "../schemas/vectorprops";
-import { Types } from "mongoose";
+
 
 type createMixedLayerGroupInput = {
   name: string;

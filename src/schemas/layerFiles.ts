@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
-import Layer from "../models/layer";
-import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
+
+import Layer from "../models/layer";
+import Mission from "../models/mission";
+import Tenant from "../models/tenant";
 import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
 import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
-import Mission from "../models/mission";
 
 interface ILayerFileMethods {
   create(): Promise<ILayerFile>;

@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import MissionType from "../../models/missionType";
 import { MissionTypeType } from "../../schemas/missonType";
 import { AuthResponse } from "../../utils/interfaceUtils";

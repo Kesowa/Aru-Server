@@ -1,9 +1,11 @@
-import { Namespace, Socket } from "socket.io";
-import { SocketUserObject, addUser, DroneStat } from "../../utils/socketUtils";
 import fs from "fs";
-import { Directory } from "../../constants";
+
+import { Namespace, Socket } from "socket.io";
 import { ExtendedError } from "socket.io/dist/namespace";
+
+import { Directory } from "../../constants";
 import { saveFile } from "../../utils/dataUtils";
+import { SocketUserObject, addUser, DroneStat } from "../../utils/socketUtils";
 
 const streamers: Array<SocketUserObject> = [];
 const receivers: Array<SocketUserObject> = [];

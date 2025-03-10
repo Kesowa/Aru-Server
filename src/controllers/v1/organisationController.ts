@@ -1,12 +1,14 @@
-import { Request } from "express";
-import Tenant from "../../models/tenant";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import { sendMail } from "../../utils/emailUtil";
-import { permPath } from "../../utils/dataUtils";
-import { saveThumbnails } from "../../utils/imageUtils";
-import { Directory } from "../../constants";
-import UploadTask from "../../models/uploadTask";
 import { randomBytes } from "crypto";
+
+import { Request } from "express";
+
+import { Directory } from "../../constants";
+import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
+import { permPath } from "../../utils/dataUtils";
+import { sendMail } from "../../utils/emailUtil";
+import { saveThumbnails } from "../../utils/imageUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 //check if email is available for registration
 export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {

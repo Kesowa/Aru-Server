@@ -1,12 +1,14 @@
-/* eslint-disable no-console */
-import { BroadcastOptions, Room, SocketId, Adapter } from "socket.io-adapter";
-import { Namespace } from "socket.io";
-import debugFactory, { Debugger } from "debug";
-import { Channel, ConfirmChannel, Connection } from "amqplib";
+ 
 import { hostname } from "os";
-import { randomString, mapIter, filterIter } from "./adapterUtils";
 import { promisify } from "util";
+
+import { Channel, ConfirmChannel, Connection } from "amqplib";
+import debugFactory, { Debugger } from "debug";
 import { ReplaySubject, filter, firstValueFrom } from "rxjs";
+import { Namespace } from "socket.io";
+import { BroadcastOptions, Room, SocketId, Adapter } from "socket.io-adapter";
+
+import { randomString, mapIter, filterIter } from "./adapterUtils";
 
 export const enum SidRoomRouting {
   normal = "normal",
@@ -251,7 +253,7 @@ export class AmqpAdapter extends Adapter {
   }
 
   async addAll(id: string, rooms: Set<string>): Promise<void> {
-    // eslint-disable-next-line prefer-rest-params
+     
     this.debug("addAll", ...arguments);
 
     const newRooms = new Set<string>();

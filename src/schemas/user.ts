@@ -1,6 +1,7 @@
+import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
-import bcrypt from "bcrypt";
+
 import { PERMS } from "./permission";
 
 interface IUserMethods {

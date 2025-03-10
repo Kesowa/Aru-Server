@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Model from "../../models/model";
 import { ModelType } from "../../schemas/model";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListModel } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const modelApi = Router();
 

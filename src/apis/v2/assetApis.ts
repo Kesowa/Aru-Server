@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Asset from "../../models/asset";
 import { AssetType } from "../../schemas/asset";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListAsset } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const assetApi = Router();
 

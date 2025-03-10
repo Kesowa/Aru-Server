@@ -1,15 +1,18 @@
-import { Namespace, Socket } from "socket.io";
-import { addUser, searchUser, SocketUserObject } from "../../utils/socketUtils";
-import Asset from "../../models/asset";
 import dgram from "dgram";
+
+import { Namespace, Socket } from "socket.io";
+
+import { Directory, DirPath } from "../../constants";
+import Asset from "../../models/asset";
+import { getFileSize } from "../../utils/fileUtils";
+import { addUser, searchUser, SocketUserObject } from "../../utils/socketUtils";
 const server = dgram.createSocket("udp4");
 import { VODEvents } from "../../utils/videoUtils";
 import Flight from "../../models/flight";
 import { generateToken } from "../../controllers/v1/streamTokenController";
 
 import format from "date-fns/format";
-import { getFileSize } from "../../utils/fileUtils";
-import { Directory, DirPath } from "../../constants";
+
 
 const streamers: Array<SocketUserObject> = [];
 const Drons: Array<SocketUserObject> = [];

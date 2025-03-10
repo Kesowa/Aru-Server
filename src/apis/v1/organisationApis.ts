@@ -1,5 +1,6 @@
 import express from "express";
 import { body } from "express-validator";
+
 import {
   getOrganisationInfo,
   updateOrganisationInfo,
@@ -7,9 +8,9 @@ import {
   updateOrganisationEmailResendOTP,
   validateOTPForEmail,
 } from "../../controllers/v1/organisationController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 

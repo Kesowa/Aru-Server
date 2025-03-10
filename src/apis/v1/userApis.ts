@@ -1,5 +1,6 @@
 import express from "express";
 import { body, query } from "express-validator";
+
 import {
   createUser,
   fetchAllUserOfTenant,
@@ -10,6 +11,7 @@ import {
   UserDelete,
   UserEdit,
 } from "../../controllers/v1/userController";
+import { PERMS } from "../../schemas/permission";
 import {
   isAuthenticated,
   onlyTenantRootAccess,
@@ -17,7 +19,6 @@ import {
 } from "../../utils/authUtils";
 import { isUserCount } from "../../utils/countPermission";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 

@@ -1,14 +1,15 @@
-import mongoose from "mongoose";
-import { docTypes, IComment } from "../../schemas/thread";
-import { Thread } from "../../models/thread";
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import User from "../../models/user";
-import Document from "../../models/document";
-import VOD from "../../models/vod";
+import mongoose from "mongoose";
+
 import Alert from "../../models/alert";
-import layerFiles from "../../models/layerFiles";
+import Document from "../../models/document";
 import layer from "../../models/layer";
+import layerFiles from "../../models/layerFiles";
+import { Thread } from "../../models/thread";
+import User from "../../models/user";
+import VOD from "../../models/vod";
+import { docTypes, IComment } from "../../schemas/thread";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const GetThread = async (
   docModel: docTypes,

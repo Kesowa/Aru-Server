@@ -1,4 +1,5 @@
 import { bearerAuth, OpenApi } from "ts-openapi";
+
 import { API_SERVER } from "../../constants";
 
 // create an OpenApi instance to store definitions

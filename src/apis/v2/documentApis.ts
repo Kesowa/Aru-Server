@@ -1,12 +1,13 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Document from "../../models/document";
 import { DocumentType } from "../../schemas/document";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { missionSpecificSocket } from "../../socket";
 import { createArchive } from "../../utils/dataUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const documentApi = Router();
 

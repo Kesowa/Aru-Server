@@ -1,8 +1,9 @@
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import LayerGroup from "../../models/layerGroup";
+
 import Layer from "../../models/layer";
+import LayerGroup from "../../models/layerGroup";
 import { ILayer } from "../../schemas/layer";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const createLayerGroup = async (req: Request, res: AuthResponse) => {
   const doc = new LayerGroup({

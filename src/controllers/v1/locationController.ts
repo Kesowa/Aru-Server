@@ -1,10 +1,11 @@
 import { Request } from "express";
 import { Types } from "mongoose";
+
 import Location from "../../models/location";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import { notificationSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import { GeometryObj } from "../../schemas/location";
+import { notificationSocket } from "../../socket";
+import { AuthResponse } from "../../utils/interfaceUtils";
 export const createLocation = async (
   req: Request<{}, {}, GeometryObj & { properties: { name: string } }>,
   res: AuthResponse

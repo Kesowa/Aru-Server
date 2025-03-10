@@ -1,16 +1,16 @@
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { Types } from "mongoose";
-import Document from "../../models/document";
 
-import Mission from "../../models/mission";
-import { missionSpecificSocket } from "../../socket";
 import { Directory, DirPath } from "../../constants";
+import Document from "../../models/document";
+import Mission from "../../models/mission";
+import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
+import { missionSpecificSocket } from "../../socket";
+import { createArchive, permPath } from "../../utils/dataUtils";
 import { checkFileExists, getFileSize } from "../../utils/fileUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
-import { createArchive, permPath } from "../../utils/dataUtils";
-import UploadTask from "../../models/uploadTask";
-import Tenant from "../../models/tenant";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const createDocument = async (req: Request, res: AuthResponse) => {
   const fileDoc = await UploadTask.findOne({

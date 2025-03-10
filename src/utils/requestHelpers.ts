@@ -1,5 +1,6 @@
 import type { NextFunction, RequestHandler, Response, Request } from "express";
 import { validationResult } from "express-validator";
+
 import { MODE, Mode } from "../constants";
 export const serverError = (res: Response) => {
   return res.status(500).json({

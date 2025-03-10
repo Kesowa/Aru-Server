@@ -1,11 +1,12 @@
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
 import {
   PERMS,
   TENANT_CLIENT_PERMS,
   TENANT_ROOT_PERMS,
   TENANT_STAFF_PERMS,
 } from "../../schemas/permission";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 //create new  permission
 export const createPermission = async (_req: Request, res: AuthResponse) => {

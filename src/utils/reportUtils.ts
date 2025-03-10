@@ -1,9 +1,11 @@
 import { EventEmitter } from "stream";
-import { logger } from "../app";
-import { missionSpecificSocket } from "../socket";
+
 import { Connection } from "amqplib";
+
+import { logger } from "../app";
 import Document from "../models/document";
 import { vectorProps } from "../schemas/vectorprops";
+import { missionSpecificSocket } from "../socket";
 
 export const ReportEvents = new EventEmitter();
 

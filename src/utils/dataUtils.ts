@@ -1,14 +1,22 @@
-import * as pathUtils from "./pathUtils";
-import path, { extname } from "path";
-import tokml from "tokml";
-import shp2json from "shpjs";
-import { GeoJson, readGeoJson } from "./geojsonUtils";
 import { randomUUID } from "crypto";
-import { Directory } from "../constants";
+import path, { extname } from "path";
 import { Readable } from "stream";
-import { DOMParser } from "xmldom";
+
 import togeojson from "@mapbox/togeojson";
+import { truncate } from "@turf/turf";
 import { ObjectId } from "bson";
+import Fuse from "fuse.js";
+import { Types } from "mongoose";
+import ObjectsToCsv from "objects-to-csv";
+import shp2json from "shpjs";
+import tokml from "tokml";
+import { GeoJson, readGeoJson } from "./geojsonUtils";
+import { Directory } from "../constants";
+
+
+import { DOMParser } from "xmldom";
+
+import { deletePublicFileUsingPath } from "./fileDeleteUtils";
 import {
   archive,
   copyObj,
@@ -19,12 +27,11 @@ import {
   uploadAnything,
   uploadString,
 } from "./objectStorage";
-import Fuse from "fuse.js";
-import { truncate } from "@turf/turf";
-import { deletePublicFileUsingPath } from "./fileDeleteUtils";
-import ObjectsToCsv from "objects-to-csv";
+
+
+import * as pathUtils from "./pathUtils";
 import Document from "../models/document";
-import { Types } from "mongoose";
+
 
 const getFlagColor = (geojson: GeoJson) => {
   const colorSet = new Set(

@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+
 import {
   SMTP_PASSWORD,
   SMTP_PORT,

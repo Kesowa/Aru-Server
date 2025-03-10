@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 import { UserTypes } from "./user";
 import UserGroup from "../models/usergroup";
 

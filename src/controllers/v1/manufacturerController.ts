@@ -1,7 +1,8 @@
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
 import manufacturerModel from "../../models/manufacturer";
 import { IUser } from "../../schemas/user";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const createManufacturer = async (req: Request, res: AuthResponse) => {
   const newManufacturerModel = new manufacturerModel({

@@ -20,11 +20,10 @@ import {
   updateAlert,
   updateMultiAlert,
 } from "../../controllers/v1/alertController";
-
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isAlertCount } from "../../utils/countPermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 const router = express.Router();
 
 //++++++++++++++++++++ create alert++++++++++++++++++++++++++++++++++

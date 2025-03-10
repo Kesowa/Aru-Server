@@ -1,8 +1,10 @@
 import { exec } from "child_process";
-import { promisify } from "util";
 import fs from "fs/promises";
-import * as pathUtils from "./pathUtils";
 import path from "path";
+import { promisify } from "util";
+
+import * as pathUtils from "./pathUtils";
+
 
 const asyncExec = promisify(exec);
 

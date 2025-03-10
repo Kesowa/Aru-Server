@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
+import { Mode } from "../../constants";
 import Payment from "../../models/payment";
 import { PaymentType } from "../../schemas/payment";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Mode } from "../../constants";
 import { environmentGuard } from "../../utils/requestHelpers";
 
 const paymentApi = Router();

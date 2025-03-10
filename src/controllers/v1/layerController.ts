@@ -1,43 +1,18 @@
+import path, { basename } from "path";
+
+import nearestPoint from "@turf/nearest-point";
+import type { NearestPoint } from "@turf/nearest-point";
+import * as turf from "@turf/turf";
+import { ObjectId } from "bson";
+import { subWeeks, subDays, subMonths, subYears } from "date-fns";
+import exifr from "exifr";
+
 import type { Request } from "express";
-import type { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import layerFiles from "../../models/layerFiles";
 import Tenant from "../../models/tenant";
 import { missionSpecificSocket } from "../../socket";
-import { ObjectId } from "bson";
 import Mission from "../../models/mission";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
-import {
-  modGeoJson,
-  readGeoJson,
-  editGeoJsonForAll,
-  deleteGeoJsonFeature,
-  featureAddition,
-  Feature,
-  Point,
-} from "../../utils/geojsonUtils";
-import * as turf from "@turf/turf";
-import nearestPoint from "@turf/nearest-point";
-import type { NearestPoint } from "@turf/nearest-point";
-import exifr from "exifr";
-import path, { basename } from "path";
-import { subWeeks, subDays, subMonths, subYears } from "date-fns";
-import Flight from "../../models/flight";
-import { featureType, vectorProps } from "../../schemas/vectorprops";
-import { rasterProps } from "../../schemas/rasterprops";
-import type { IPackage } from "../../schemas/package";
-import type { ILayerGroup } from "../../schemas/layerGroup";
-import {
-  Directory,
-  DirPath,
-  TITILER_SERVER,
-  TITILER_STATIC,
-} from "../../constants";
-import { Types } from "mongoose";
-import type { ILayerFile } from "../../schemas/layerFiles";
-import { checkFileExists } from "../../utils/fileUtils";
-import type { ITenant } from "../../schemas/tenant";
-import { saveThumbnails } from "../../utils/imageUtils";
 import {
   createArchive,
   deleteFeatureSearchIndex,
@@ -48,11 +23,41 @@ import {
   saveGeojson,
   saveVectorLayer,
 } from "../../utils/dataUtils";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
+import {
+  modGeoJson,
+  readGeoJson,
+  editGeoJsonForAll,
+  deleteGeoJsonFeature,
+  featureAddition,
+  Feature,
+  Point,
+} from "../../utils/geojsonUtils";
+
+import Flight from "../../models/flight";
+import { rasterProps } from "../../schemas/rasterprops";
+import type { IPackage } from "../../schemas/package";
+import type { ILayerGroup } from "../../schemas/layerGroup";
+import {
+  Directory,
+  DirPath,
+  TITILER_SERVER,
+  TITILER_STATIC,
+} from "../../constants";
+
+import { Types } from "mongoose";
+
+import type { ILayerFile } from "../../schemas/layerFiles";
+import { checkFileExists } from "../../utils/fileUtils";
+import type { ITenant } from "../../schemas/tenant";
+import { saveThumbnails } from "../../utils/imageUtils";
+import type { AuthResponse } from "../../utils/interfaceUtils";
+import { createMixedLayerGroup } from "../../utils/layerUtils";
+import { readToBuffer } from "../../utils/objectStorage";
 import { LazToTiles3D } from "../../utils/pointcloud";
 import { decompressZip } from "../../utils/cesium";
 import UploadTask from "../../models/uploadTask";
-import { readToBuffer } from "../../utils/objectStorage";
-import { createMixedLayerGroup } from "../../utils/layerUtils";
+import { featureType, vectorProps } from "../../schemas/vectorprops";
 
 // ********* create ***********
 
@@ -397,7 +402,7 @@ export const editGeoJson = async (
     {
       id: Types.ObjectId;
       featureIndex: number;
-      feature: Object;
+      feature: object;
     }
   >,
   res: AuthResponse

@@ -1,5 +1,6 @@
 import express from "express";
-import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { body, query } from "express-validator";
+
 import {
   getActiveStreams,
   removeStreamKey,
@@ -7,9 +8,9 @@ import {
   streamTokenValidator,
   getActiveStreamByFlightId,
 } from "../../controllers/v1/streamTokenController";
-import { body, query } from "express-validator";
-import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { validator, RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();
 

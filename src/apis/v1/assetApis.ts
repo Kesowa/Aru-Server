@@ -1,5 +1,6 @@
 import express from "express";
 import { body, header, query } from "express-validator";
+
 import {
   createAsset,
   getallAsset,
@@ -9,9 +10,9 @@ import {
   toggleAsset,
   updateAsset,
 } from "../../controllers/v1/assetController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 

@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   fetchPermissions,
 } from "../../controllers/v1/permissionController";

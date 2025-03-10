@@ -1,6 +1,7 @@
-import Tenant from "../models/tenant";
 import { NextFunction, Request } from "express";
+
 import { AuthResponse } from "./interfaceUtils";
+import Tenant from "../models/tenant";
 import { IPackage } from "../schemas/package";
 export const isAlertCount = async (
   req: Request,

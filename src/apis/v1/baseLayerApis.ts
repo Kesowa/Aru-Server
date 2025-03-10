@@ -1,4 +1,5 @@
 import express from "express";
+import { body, query } from "express-validator";
 
 import {
   createVectorBaseLayer,
@@ -25,13 +26,12 @@ import {
   GetVideoLocationGeojson,
   // sys_id_Inject
 } from "../../controllers/v1/baseLayerController";
+import { PERMS } from "../../schemas/permission";
+import { rasterProps } from "../../schemas/rasterprops";
+import { vectorProps } from "../../schemas/vectorprops";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isLayerCount } from "../../utils/countPermission";
-import { body, query } from "express-validator";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
-import { vectorProps } from "../../schemas/vectorprops";
-import { rasterProps } from "../../schemas/rasterprops";
 
 const router = express.Router();
 

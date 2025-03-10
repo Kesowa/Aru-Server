@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import VOD from "../../models/vod";
 import { VODType } from "../../schemas/VOD";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { missionSpecificSocket } from "../../socket";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const vodApi = Router();
 

@@ -1,5 +1,6 @@
 import express from "express";
 import { body, header, query } from "express-validator";
+
 import {
   createManufacturer,
   fetchManufacturerbyId,
@@ -7,9 +8,9 @@ import {
   removeManufacturer,
   updateManufacturer,
 } from "../../controllers/v1/manufacturerController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 

@@ -1,10 +1,11 @@
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
+import Tenant from "../../models/tenant";
 import User from "../../models/user";
 import UserGroup from "../../models/usergroup";
-import Tenant from "../../models/tenant";
-import { sanitizeSort } from "../../utils/requestHelpers";
 import { TENANT_STAFF_PERMS } from "../../schemas/permission";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import { sanitizeSort } from "../../utils/requestHelpers";
 
 //create new  permission
 export const createUserGroupforTenant = async (

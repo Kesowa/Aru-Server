@@ -9,7 +9,6 @@ import { IManufacturer } from "../../schemas/manufacturer";
 import { IModel } from "../../schemas/model";
 import { ITenant } from "../../schemas/tenant";
 import { IUser } from "../../schemas/user";
-
 import { AuthResponse } from "../../utils/interfaceUtils";
 
 type CreateAssetBody = {

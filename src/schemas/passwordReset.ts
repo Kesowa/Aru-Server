@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
+
 import { RESET_PASSWORD_TOKEN_EXPIRE } from "../constants";
 
 export interface IPassReset {

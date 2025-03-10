@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import UserGroup from "../../models/usergroup";
 import { UserGroupType } from "../../schemas/usergroup";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUserGroup } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const userGroupApi = Router();
 

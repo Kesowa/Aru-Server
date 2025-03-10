@@ -1,11 +1,13 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
+import { HydratedDocument, PipelineStage } from "mongoose";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Flight from "../../models/flight";
 import { FlightType, IFlight } from "../../schemas/flight";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { HydratedDocument, PipelineStage } from "mongoose";
+
 
 const flightApi = Router();
 

@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { Types } from "ts-openapi";
-import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
 import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
 
 interface IAlertMethods {
   create(): Promise<IAlert>;

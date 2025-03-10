@@ -1,10 +1,11 @@
 import { Request } from "express";
 import { Types } from "mongoose";
+
+import { Directory } from "../../constants";
 import flightLog from "../../models/flightLog";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import UploadTask from "../../models/uploadTask";
 import { permPath } from "../../utils/dataUtils";
-import { Directory } from "../../constants";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const createFlightLog = async (req: Request, res: AuthResponse) => {
   const fileDoc = await UploadTask.findOne({

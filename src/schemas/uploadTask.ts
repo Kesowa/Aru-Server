@@ -1,4 +1,5 @@
 import { Schema, Types } from "mongoose";
+
 import { DocToDir } from "../utils/pathUtils";
 
 export type docTypes = keyof typeof DocToDir;

@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+ 
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
+import openApi from "./openApi";
 import { PERMS } from "../../schemas/permission";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const permissionApi = Router();
 

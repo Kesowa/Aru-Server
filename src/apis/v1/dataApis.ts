@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { body, query } from "express-validator";
-import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { isAuthenticated } from "../../utils/authUtils";
+
 import {
   createThermalTable,
   getThermal,
 } from "../../controllers/v1/dataController";
+import { isAuthenticated } from "../../utils/authUtils";
+import { RobustRunner, validator } from "../../utils/requestHelpers";
 
 const dataRouter = Router();
 
