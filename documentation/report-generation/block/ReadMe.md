@@ -65,6 +65,7 @@ The above diagram shows all the main components of the block report generation p
 
 The RabbitMQ messaging queue is used as a means of asynchronous communication between the `aru-server` to the `report-service` <br />
 It has two queues related to the block report generation process:
+
 1. `report.block.req` : The `aru-server` sends [`block report request`](#structure-of-request-message) message on this queue, which gets consumed by `report-service`
 2. `report.block.res` : The `report-service` sends [`block report response`](#structure-of-response-message) message on this queue, which gets consumed by `aru-server`
 
@@ -77,7 +78,7 @@ It has two queues related to the block report generation process:
   rasterLayerpath: string;
   blockName: string;
   tenantImagePath: string;
-  
+
   actionArea: string;
   missionCode: string;
   tenantName: string;
@@ -85,7 +86,7 @@ It has two queues related to the block report generation process:
   users: string[];
   emails: string[];
   phoneNos: string[];
-  
+
   area: {
     total: number;
     privateSpaces: {
@@ -104,11 +105,11 @@ It has two queues related to the block report generation process:
     underConstruction: number;
     vacant: number;
   }[];
-  
+
   roadCount: number;
   roadLength: number;
   cycleTrackLength: number;
-  
+
   deliverables: {
     name: string;
     layerpath: string;
@@ -146,6 +147,7 @@ It has two queues related to the block report generation process:
 The block report generation process can be initiated from the aru web client from the `Report Generation` tab in the mission details page <br />
 
 **Steps to initiate report generation:**
+
 - Go to `Dashboard` (initial page after signing in)
 - Go to `Missions`
 - Choose a mission from the list and click on it to open the mission data page
@@ -155,20 +157,24 @@ The block report generation process can be initiated from the aru web client fro
 ### Server
 
 The server does the following tasks in order:
+
 1. Find the mission using the `missionId`
 2. Find all layers under the mission
 3. Process each layer and find `area`, `length` and `vector` data from the layers using TurfJS
 4. Using the `vector` property from processed data of the layers, categorize them into:
-  - Area categories : `Residential` / `Commercial` / `Government` / `Government Commercial` (based on [this categorization]())
-  - Occupancy status : `Occupied` / `Under Construction` / `Vacant` (based on [this categorization]())
+
+- Area categories : `Residential` / `Commercial` / `Government` / `Government Commercial` (based on [this categorization]())
+- Occupancy status : `Occupied` / `Under Construction` / `Vacant` (based on [this categorization]())
+
 5. Prepare the [`block report request`](#structure-of-request-message) and send it to the `report.block.req` queue
-6. Consume the [`block report response`](#structure-of-response-message) from `report.block.res` queue, and: 
+6. Consume the [`block report response`](#structure-of-response-message) from `report.block.res` queue, and:
    - Save a document corresponding to the report in mongodb on successful report generation response
    - Log errors on failed report generation response
 
 ### Report Service
 
 The server does the following tasks in order:
+
 1. Consume the [`block report request`](#structure-of-request-message) from `report.block.req` queue
 2. Capture the following screenshots:
    - Cover Image using `rasterLayerpath` and `blockLayerpath`
@@ -228,23 +234,23 @@ interface IPage1Properties {
 }
 ```
 
-| Name              | Type      | Required By     | Description                                                       |
-| ----------------- | --------- | --------------- | ----------------------------------------------------------------- |
-| missionHeading    | string    | Component (4)   | Heading of the cover page, set to `ACTION AREA - {actionArea}` where `actionArea` comes from [`the request`](#structure-of-request-message)|
-| missionSubHeading | string    | Component (4)   | Sub Heading of the cover page, set to `BLOCK - {blockName}` where `blockName` comes from [`the request`](#structure-of-request-message)                                                 |
-| missionMapImg     | Buffer    | Component (6)   | Image of map with the block marked on it, as a binary Buffer      |
-| tenantImageBuffer | Buffer    | Component (6)   | Logo of the tenant organization, as a binary Buffer               |
-| tenantName        | string    | Component (6)   | Name of the tenant organization                                   |
-| missionCode       | string    | Component (5)   | Id of the report                                                  |
-| date              | string    | Component (7.3) | Date of generation of report                                     |
-| users             | string[ ] | Component (7.2) | Names of users and pilots who participated in the mission          |
-| emails            | string[ ] | Component (7.5) | Emails of users and pilots who participated in the mission        |
-| phoneNos          | string[ ] | Component (7.4) | Phone Numbers of users and pilots who participated in the mission |
+| Name              | Type      | Required By     | Description                                                                                                                                 |
+| ----------------- | --------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| missionHeading    | string    | Component (4)   | Heading of the cover page, set to `ACTION AREA - {actionArea}` where `actionArea` comes from [`the request`](#structure-of-request-message) |
+| missionSubHeading | string    | Component (4)   | Sub Heading of the cover page, set to `BLOCK - {blockName}` where `blockName` comes from [`the request`](#structure-of-request-message)     |
+| missionMapImg     | Buffer    | Component (6)   | Image of map with the block marked on it, as a binary Buffer                                                                                |
+| tenantImageBuffer | Buffer    | Component (6)   | Logo of the tenant organization, as a binary Buffer                                                                                         |
+| tenantName        | string    | Component (6)   | Name of the tenant organization                                                                                                             |
+| missionCode       | string    | Component (5)   | Id of the report                                                                                                                            |
+| date              | string    | Component (7.3) | Date of generation of report                                                                                                                |
+| users             | string[ ] | Component (7.2) | Names of users and pilots who participated in the mission                                                                                   |
+| emails            | string[ ] | Component (7.5) | Emails of users and pilots who participated in the mission                                                                                  |
+| phoneNos          | string[ ] | Component (7.4) | Phone Numbers of users and pilots who participated in the mission                                                                           |
 
 ### Gathering the Data
 
 - The `missionMapImg` and `tenantImageBuffer` are generated and fetched respectively by the report service.
-- All other fields are collected within the report controller in the server and sent within the request message. 
+- All other fields are collected within the report controller in the server and sent within the request message.
 
 ## Generating Summary Page
 
@@ -296,19 +302,19 @@ interface IPage2Properties {
 }
 ```
 
-| Name              | Type              | Required By   | Description                                                                                    |
-| ----------------- | ----------------- | ------------- | ---------------------------------------------------------------------------------------------- |
-| missionHeading    | string    | Component (4)   | Heading of the cover page, set to `ACTION AREA - {actionArea}` where `actionArea` comes from [`the request`](#structure-of-request-message)|
-| missionSubHeading | string    | Component (4)   | Sub Heading of the cover page, set to `BLOCK - {blockName}` where `blockName` comes from [`the request`](#structure-of-request-message)                                                 |
-| missionMapImg     | Buffer    | Component (6)   | Image of map with the block marked on it, as a binary Buffer      |
-| missionCode       | string            | Component (4) | Id of the report                                                                               |
+| Name              | Type              | Required By   | Description                                                                                                                                               |
+| ----------------- | ----------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| missionHeading    | string            | Component (4) | Heading of the cover page, set to `ACTION AREA - {actionArea}` where `actionArea` comes from [`the request`](#structure-of-request-message)               |
+| missionSubHeading | string            | Component (4) | Sub Heading of the cover page, set to `BLOCK - {blockName}` where `blockName` comes from [`the request`](#structure-of-request-message)                   |
+| missionMapImg     | Buffer            | Component (6) | Image of map with the block marked on it, as a binary Buffer                                                                                              |
+| missionCode       | string            | Component (4) | Id of the report                                                                                                                                          |
 | area              | (mentioned above) | Component (1) | Details of areas of the different [pre-defined categories](/documentation/report-generation/data_categorization.md) into which the block can be split     |
 | occupancy         | (mentioned above) | Component (2) | Details of occupancy of the different [pre-defined categories](/documentation/report-generation/data_categorization.md) into which the block can be split |
 
 ### Gathering the Data
 
 - The `missionMapImg` is generated by the report service.
-- All other fields are collected within the report controller in the server and sent within the request message. 
+- All other fields are collected within the report controller in the server and sent within the request message.
 
 ## Generating Insights Page
 
@@ -476,23 +482,23 @@ interface IPage4Properties {
 }
 ```
 
-| Name             | Type              | Required By                                                                | Description                                                                                    |
-| ---------------- | ----------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| heading          | string            | Component (1)                                                              | Heading of Plot Details page, currently set to `ACTION AREA - ${actionArea} \| BLOCK ${blockName}` where `actionArea` and `blockName` come from [`the request`](#structure-of-request-message)|
-| subheading       | string            | Component (2)                                                              | Constant, `"Plot Details"`                                                                     |
-| categoryPieChart | Buffer            | Component (5) | Image of the area distribution by category pie chart as a binary Buffer    |
-| statusPieChart   | Buffer            | Component (6) | Image of the area distribution by plot status pie chart as a binary Buffer |
-| barChart         | Buffer            | Component (4) | Image of the occupancy bar chart as a binary Buffer                        |
-| area             | (mentioned above) | Component (5, 7)                                                           | Details of areas of the different [pre-defined categories](/documentation/report-generation/data_categorization.md) into which the block can be split     |
-| occupancy        | (mentioned above) | Component (4, 6, 8)                                                        | Details of occupancy of the different [pre-defined categories](/documentation/report-generation/data_categorization.md) into which the block can be split |
-| tenantImageBuffer | Buffer | Component (9) | Logo image of tenant organization, as a binary buffer |
-| missionCode       | string            | Component (3) | Id of the report |
+| Name              | Type              | Required By         | Description                                                                                                                                                                                    |
+| ----------------- | ----------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| heading           | string            | Component (1)       | Heading of Plot Details page, currently set to `ACTION AREA - ${actionArea} \| BLOCK ${blockName}` where `actionArea` and `blockName` come from [`the request`](#structure-of-request-message) |
+| subheading        | string            | Component (2)       | Constant, `"Plot Details"`                                                                                                                                                                     |
+| categoryPieChart  | Buffer            | Component (5)       | Image of the area distribution by category pie chart as a binary Buffer                                                                                                                        |
+| statusPieChart    | Buffer            | Component (6)       | Image of the area distribution by plot status pie chart as a binary Buffer                                                                                                                     |
+| barChart          | Buffer            | Component (4)       | Image of the occupancy bar chart as a binary Buffer                                                                                                                                            |
+| area              | (mentioned above) | Component (5, 7)    | Details of areas of the different [pre-defined categories](/documentation/report-generation/data_categorization.md) into which the block can be split                                          |
+| occupancy         | (mentioned above) | Component (4, 6, 8) | Details of occupancy of the different [pre-defined categories](/documentation/report-generation/data_categorization.md) into which the block can be split                                      |
+| tenantImageBuffer | Buffer            | Component (9)       | Logo image of tenant organization, as a binary buffer                                                                                                                                          |
+| missionCode       | string            | Component (3)       | Id of the report                                                                                                                                                                               |
 
 ### Gathering the Data
 
 - The `categoryPieChart`, `statusPieChart` and `barChart` are generated by the report service.
 - The `tenantImageBuffer` is fetched from `minio` by report service.
-- All other fields are collected within the report controller in the server and sent within the request message. 
+- All other fields are collected within the report controller in the server and sent within the request message.
 
 ## Generating Map Deliverables Page
 
@@ -527,16 +533,16 @@ interface IReportMapPageProperties {
 }
 ```
 
-| Name       | Type   | Required By                                                             | Description                                                             |
-| ---------- | ------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| heading          | string            | Component (1)                                                              | Heading of Deliverable page, currently set to `ACTION AREA - ${actionArea} \| BLOCK ${blockName}` where `actionArea` and `blockName` come from [`the request`](#structure-of-request-message)|
-| subheading       | string            | Component (2)                                                              | Sub-heading of Deliverable page, currently set to the layer name |
-| imgBuffer  | Buffer | Component (4) | Image of the map with the deliverables marked on it, as a binary Buffer |
-| tenantImageBuffer | Buffer | Component (5) | Logo image of tenant organization, as a binary buffer |
-| missionCode       | string            | Component (3) | Id of the report |
+| Name              | Type   | Required By   | Description                                                                                                                                                                                   |
+| ----------------- | ------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| heading           | string | Component (1) | Heading of Deliverable page, currently set to `ACTION AREA - ${actionArea} \| BLOCK ${blockName}` where `actionArea` and `blockName` come from [`the request`](#structure-of-request-message) |
+| subheading        | string | Component (2) | Sub-heading of Deliverable page, currently set to the layer name                                                                                                                              |
+| imgBuffer         | Buffer | Component (4) | Image of the map with the deliverables marked on it, as a binary Buffer                                                                                                                       |
+| tenantImageBuffer | Buffer | Component (5) | Logo image of tenant organization, as a binary buffer                                                                                                                                         |
+| missionCode       | string | Component (3) | Id of the report                                                                                                                                                                              |
 
 ### Gathering the Data
 
 - The `imgBuffer` is generated by the report service.
 - The `tenantImageBuffer` is fetched from `minio` by report service.
-- All other fields are collected within the report controller in the server and sent within the request message. 
+- All other fields are collected within the report controller in the server and sent within the request message.

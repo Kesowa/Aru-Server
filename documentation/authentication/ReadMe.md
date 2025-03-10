@@ -22,11 +22,12 @@ The below diagram describes the flow of events that occur during login:
 <img src="login.svg" alt="Login sequence diagram" style="display: block; margin: 10px auto;">
 
 **Steps involved**
+
 - **On frontend**
   - Any frontend route is accessed with invalid or empty `connect.sid` cookie on browser (un-authorized access)
   - User gets re-directed to `/login` page on fontend
   - User fills `email` and `password` and submits the login form
-  - `POST` request with `email` and `password` in body gets sent to `/apis/v1/auth/login` route 
+  - `POST` request with `email` and `password` in body gets sent to `/apis/v1/auth/login` route
 - **On backend**
   - The controller associated with `/login` route verifies the following
     - Verifies whether a user with the given `email` exists in the database
@@ -49,7 +50,7 @@ The below diagram describes the flow of events that occur during login:
 
 ### On the backend
 
-The `express-session` library is used for maintaining sessions on the backend, and the `isAuthenticated` middleware is used for detecting them. 
+The `express-session` library is used for maintaining sessions on the backend, and the `isAuthenticated` middleware is used for detecting them.
 
 The below diagram describes the logic for session detection on the backend:
 
@@ -70,14 +71,13 @@ The below diagram describes the logic for session detection on the backend:
       - If the id doesn't match with any users in the database, it means that the cookie was corrupted
       - A `401` response is sent back to frontend
     - On successfully finding user in database:
-      - It is verified whether the user's account has not expired 
+      - It is verified whether the user's account has not expired
       - If account has expired:
         - a `401` response is sent back to frontend with appropriate message
       - If account has not expired:
         - All the permissions of the user are populate in the `customPermissions` field of temporarily stored user data object
         - The fetched user data with populated `customPermissions` is assigned to `res.locals.user`
   - After this, all controllers following the `isAuthenticated` middleware are able to access the currently logged in user's data from `res.locals.user`
-
 
 ### On the frontend
 
@@ -101,11 +101,11 @@ The below diagram describes the logic for session detection on the frontend:
 - Otherwise, if the request succeeds with `200` code, and user data is received from backend:
   - The `login` function from `AuthContext` is invoked, to set `Auth.isLoggedIn` to `true` and `Auth.userdetails` to the user data with populated `customPermissions` received from backend
 - After this, all frontend routes except public map redirect to the `/dashboard` frontend route, which is wrapped by `PrivateWrapper` component
-- The `PrivateWrapper` component reads the `Auth` field from `AuthContext` 
-- If `Auth.isLoggedIn` is `false`: 
+- The `PrivateWrapper` component reads the `Auth` field from `AuthContext`
+- If `Auth.isLoggedIn` is `false`:
   - The user is redirected to `/login` route on frontend, and login form is shown
 - If `Auth.isLoggedIn` is `true`:
-  - All other components down the tree are rendered based on the frontend routing 
+  - All other components down the tree are rendered based on the frontend routing
 - After this, all components down the tree can access the currently logged in user's data from `Auth.userdetails` field in the `AuthContext`
 
 ## Logout functionality
@@ -115,6 +115,7 @@ The below diagram describes the flow of events that occur during logout:
 <img src="logout.svg" alt="Logout sequence diagram" style="display: block; margin: 10px auto;">
 
 **Steps involved**
+
 - **On frontend**
   - `POST` request sent to `/apis/v1/auth/logout` on clicking `Logout` button
 - **On backend**
@@ -123,7 +124,7 @@ The below diagram describes the flow of events that occur during logout:
     - Clears the `connect.sid` cookie on the response `res`
     - Sends a `200` response back to frontend
 - **Back on frontend**
-  - `logout` function of `AuthContext` gets called, which sets `Auth.isLoggedIn` to `false` and `Auth.userdetails` to `null` 
+  - `logout` function of `AuthContext` gets called, which sets `Auth.isLoggedIn` to `false` and `Auth.userdetails` to `null`
   - Since `Auth.isLoggedIn` is `false`, `PrivateWrapper` will redirect to `/login` on all further requests
 
 ## Changing password
@@ -133,6 +134,7 @@ The below diagram describes the flow of events that occur during changing passwo
 <img src="reset-password.svg" alt="Changing password flow diagram" style="display: block; margin: 10px auto;">
 
 **Steps involved**
+
 - **On frontend**
   - Any frontend route is accessed with invalid or empty `connect.sid` cookie on browser (un-authorized access)
   - User gets re-directed to `/login` page on fontend
@@ -177,6 +179,7 @@ The `tenant-staff` and `tenant-client` user accounts are created by `tenant-root
 The `tenant-root` users have full authority to view, modify or delete `tenant-staff` and `tenant-client` user accounts under them; including their passwords.
 
 Note:
+
 1. Sign Up option is available only in our SaaS product hosted on `aru.kesowa.com`, it is not available on the `nkda` instance; or other tenant specific instances
 2. Currently, the sign up functionality is not fully functional, because:
    - tenant needs to pay and buy package to get registered, but payment functionality; although implemented; has not been made functional on the platform yet
