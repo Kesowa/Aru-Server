@@ -1,0 +1,114 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="26.0.10">
+  <diagram name="Page-1" id="e2ql1X_fU9W9NxT2DMQ1">
+    <mxGraphModel dx="1442" dy="716" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="ZyS4CuN50HFoA3fYXHm8-1" target="ZyS4CuN50HFoA3fYXHm8-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-1" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;START&lt;/font&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.terminator;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="40" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-2" target="P9lLqgnBV1B7K6n8Hrry-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-2" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Request received on frontend&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="200" y="120" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" parent="1" source="ZyS4CuN50HFoA3fYXHm8-3" target="ZyS4CuN50HFoA3fYXHm8-5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-3" target="P9lLqgnBV1B7K6n8Hrry-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-3" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Does response&amp;nbsp;&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;have 200 status&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;code?&lt;/span&gt;&lt;/div&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="680" y="100" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-5" target="ZyS4CuN50HFoA3fYXHm8-21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1200" y="160" />
+              <mxPoint x="1200" y="560" />
+              <mxPoint x="350" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-5" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Set Auth.isLoggedIn to true&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;and&lt;br&gt;&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;Set Auth.userdetails to user data received from backend&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="960" y="100" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-17" value="YES" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="860" y="120" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZyS4CuN50HFoA3fYXHm8-21" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Redirect to `&lt;b&gt;/dashboard&lt;/b&gt;` on frontend&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="200" y="680" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-1" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Request user data from backend on `&lt;b&gt;/apis/v1/auth/userdetails&lt;/b&gt;` route&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="440" y="100" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;" edge="1" parent="1" source="P9lLqgnBV1B7K6n8Hrry-1" target="ZyS4CuN50HFoA3fYXHm8-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="P9lLqgnBV1B7K6n8Hrry-4" target="ZyS4CuN50HFoA3fYXHm8-21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1070" y="520" />
+              <mxPoint x="250" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-4" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Set Auth.isLoggedIn to false&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;and&lt;br&gt;&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;Set Auth.userdetails to null&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="960" y="320" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-6" value="NO" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="780" y="220" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-7" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;login&lt;/b&gt; function of &lt;b&gt;AuthContext&lt;/b&gt;&lt;/span&gt;" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;strokeWidth=2;dashed=1;width=240;height=40;" vertex="1" parent="1">
+          <mxGeometry x="920" y="40" width="300" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-8" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;logout&lt;/b&gt; function of &lt;b&gt;AuthContext&lt;/b&gt;&lt;/span&gt;" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;strokeWidth=2;dashed=1;width=240;height=40;" vertex="1" parent="1">
+          <mxGeometry x="920" y="260" width="300" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-9" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;App&lt;/b&gt; component&lt;/span&gt;" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;strokeWidth=2;dashed=1;width=160;height=40;" vertex="1" parent="1">
+          <mxGeometry x="420" y="20" width="820" height="460" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="P9lLqgnBV1B7K6n8Hrry-13" target="P9lLqgnBV1B7K6n8Hrry-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" edge="1" parent="1" source="P9lLqgnBV1B7K6n8Hrry-13" target="P9lLqgnBV1B7K6n8Hrry-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-13" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Is `&lt;b&gt;Auth.isLoggedIn&lt;/b&gt;`&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 16px;&quot;&gt;true ?&lt;/span&gt;&lt;/div&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.decision;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="440" y="660" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;" edge="1" parent="1" source="ZyS4CuN50HFoA3fYXHm8-21" target="P9lLqgnBV1B7K6n8Hrry-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-15" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Redirect to `&lt;b&gt;/login&lt;/b&gt;` on frontend&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="680" y="680" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-17" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;Redirect to the actual&amp;nbsp;frontend route accessed&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="680" y="820" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-19" value="YES" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="480" y="820" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-20" value="NO" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="620" y="680" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-22" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;END&lt;/font&gt;" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.terminator;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="760" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-23" value="&lt;span style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;PrivateWrapper&lt;/b&gt;&amp;nbsp;component&lt;/span&gt;" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;strokeWidth=2;dashed=1;width=240;height=40;" vertex="1" parent="1">
+          <mxGeometry x="420" y="600" width="480" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;" edge="1" parent="1" source="P9lLqgnBV1B7K6n8Hrry-15" target="P9lLqgnBV1B7K6n8Hrry-22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="P9lLqgnBV1B7K6n8Hrry-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=2;" edge="1" parent="1" source="P9lLqgnBV1B7K6n8Hrry-17" target="P9lLqgnBV1B7K6n8Hrry-22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

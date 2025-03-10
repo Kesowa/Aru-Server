@@ -16,6 +16,7 @@ services:
       - S3_BUCKET_NAME=aru
       - S3_ENDPOINT=minio
       - RABBITMQ_CONNECTION_STRING=amqp://rabbitmq
+      - LOGGER_URL=http://loki:3100
     env_file:
       - ./server.env
     depends_on:
@@ -97,7 +98,7 @@ services:
       "
 
   vod:
-    image: vod:latest
+    image: ghcr.io/kesowa/vod
     profiles:
       - vod
     depends_on:
@@ -163,6 +164,16 @@ services:
       - AMQP_ADDR=amqp://rabbitmq:5672
       - RUST_LOG=info
       - MODEL_PATH=/opt/models/somerandommodel.pth
+
+  loki:
+    image: grafana/loki
+    ports:
+      - 3100:3100
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3001:3000
 
   rabbitmq:
     image: rabbitmq@sha256:473953b02b8346091f0b3a6819e017618cbe95cb568bca2fecf00966a20ccf2a

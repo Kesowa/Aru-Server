@@ -13,6 +13,7 @@ import mongoose from "mongoose";
 import {
   MONGODB_CONNECTION_STRING,
   PORT,
+  PUBLIC_SERVER,
   RABBITMQ_CONNECTION_STRING,
 } from "./constants";
 
@@ -25,9 +26,9 @@ const worker = async () => {
   //create socket server
   const io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: PUBLIC_SERVER,
       methods: ["GET", "POST"],
-      credentials: false,
+      credentials: true,
     },
   });
 

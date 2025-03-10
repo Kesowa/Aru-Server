@@ -226,20 +226,30 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       message: "Project requested top be deleted not found",
     });
 
-  if (
-    res.locals.user.userType === "tenant-root" ||
-    toBeDeleted.user.toString() === res.locals.user._id.toString()
-  ) {
-    const deletedMission = await Mission.findByIdAndDelete(req.body._id);
-    const deletedLayerData = await Layer.find({ missionId: req.body._id });
-    const deletedAlertData = await Alert.find({ missionId: req.body._id });
-    const deletedVodData = await VOD.find({ missionID: req.body._id });
-    const deletedDocumentsData = await Document.find({
-      missionId: req.body._id,
-    });
-    await Flight.deleteMany({
-      mission: req.body._id,
-    });
+    if (
+      res.locals.user.userType === "tenant-root" ||
+      toBeDeleted.user.toString() === res.locals.user._id.toString()
+    ) {
+      const deletedMission = await Mission.findByIdAndDelete(req.body._id);
+      const deletedLayerData = await Layer.find({ missionId: req.body._id });
+      const deletedAlertData = await Alert.find({ missionId: req.body._id });
+      const deletedVodData = await VOD.find({ missionID: req.body._id });
+      const deletedDocumentsData = await Document.find({
+        missionId: req.body._id,
+      });
+      const deletedFlight = await Flight.deleteMany({
+        mission: req.body._id,
+      });
+      const deletedLayer = await Layer.deleteMany({
+        missionId: req.body._id,
+      });
+      const deletedAlert = await Alert.deleteMany({
+        missionId: req.body._id,
+      });
+      const deletedVod = await VOD.deleteMany({ missionID: req.body._id });
+      const deletedDocumetns = await Document.deleteMany({
+        missionId: req.body._id,
+      });
 
     const tenant: any = await Tenant.findOne({
       _id: res.locals.user.tenantId,
