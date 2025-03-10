@@ -56,6 +56,7 @@ The above diagram shows all the main components of the plot report generation pr
 
 The RabbitMQ messaging queue is used as a means of asynchronous communication between the `aru-server` to the `report-service` <br />
 It has two queues related to the plot report generation process:
+
 1. `report.plot.req` : The `aru-server` sends [`plot report request`](#structure-of-request-message) message on this queue, which gets consumed by `report-service`
 2. `report.plot.res` : The `report-service` sends [`plot report response`](#structure-of-response-message) message on this queue, which gets consumed by `aru-server`
 
@@ -73,38 +74,38 @@ It has two queues related to the plot report generation process:
   tenantImagePath: string;
 
   // plot details
-  plotArea: number; 
-  plotNo?: string; 
-  premiseNo?: string; 
-  pincode?: string; 
-  category?: string; 
-  infraction?: string; 
-  isGreenTopEligible?: string; 
-  isSolarPlantEligible?: string; 
-  hasTradeLicense?: string; 
-  tax?: string; 
+  plotArea: number;
+  plotNo?: string;
+  premiseNo?: string;
+  pincode?: string;
+  category?: string;
+  infraction?: string;
+  isGreenTopEligible?: string;
+  isSolarPlantEligible?: string;
+  hasTradeLicense?: string;
+  tax?: string;
 
   // building details
-  buildingArea: number; 
+  buildingArea: number;
   buildingFootprint: number;
-  buildingAvailable?: string; 
-  floorCount?: string; 
-  buildingNo?: string; 
-  hasCompletionCertificate?: string; 
-  buildingHeight?: string; 
+  buildingAvailable?: string;
+  floorCount?: string;
+  buildingNo?: string;
+  hasCompletionCertificate?: string;
+  buildingHeight?: string;
 
   // block details
-  blockArea: number; 
-  greeneryArea: number; 
-  canopyArea: number; 
-  waterbodyArea: number; 
-  greeneryPercent: number; 
-  canopyPercent: number; 
-  waterbodyPercent: number; 
-  garbageCollectionInfo?: string; 
-  averageBuildingHeight?: string; 
-  averageBlockHeight?: string; 
-  averageIncentives?: string; 
+  blockArea: number;
+  greeneryArea: number;
+  canopyArea: number;
+  waterbodyArea: number;
+  greeneryPercent: number;
+  canopyPercent: number;
+  waterbodyPercent: number;
+  garbageCollectionInfo?: string;
+  averageBuildingHeight?: string;
+  averageBlockHeight?: string;
+  averageIncentives?: string;
 
   // all other data
   blockName?: string;
@@ -141,6 +142,7 @@ It has two queues related to the plot report generation process:
 The plot report generation process can be initiated from the aru web client from the `Report Generation` tab in the mission details page <br />
 
 **Steps to initiate report generation:**
+
 - Go to `Dashboard` (initial page after signing in)
 - Go to `Missions`
 - Choose a mission from the list and click on it to open the mission data page
@@ -150,6 +152,7 @@ The plot report generation process can be initiated from the aru web client from
 ### Server
 
 The server does the following tasks in order:
+
 1. Find the mission using the `missionId`
 2. Search for layers of the following types under the mission, and extract the respective data from them:
    - `"ORTHO"` Layer => for ortho image of area captured by the drone
@@ -162,13 +165,14 @@ The server does the following tasks in order:
    - `"Garbage Collection Point"` Layer => feature intersection with block count for number of garbage collection points
 3. If any of the mentioned layer types not found, or malformed geojson found corresponding to that layer, report these errors in csv format
 4. Prepare the [`plot report request`](#structure-of-request-message) and send it to the `report.plot.req` queue
-5. Consume the [`plot report response`](#structure-of-response-message) from `report.plot.res` queue, and: 
+5. Consume the [`plot report response`](#structure-of-response-message) from `report.plot.res` queue, and:
    - Save a document corresponding to the report in mongodb on successful report generation response
    - Log errors on failed report generation response
 
 ### Report Service
 
 The server does the following tasks in order:
+
 1. Consume the [`plot report request`](#structure-of-request-message) from `report.plot.req` queue
 2. Capture the following screenshots:
    - Cover Image using `rasterLayerpath`, `plotLayerpath` and `blockLayerpath`
@@ -195,15 +199,15 @@ The cover page is the first page of the report
 
 The components are:
 
-| Sl. No. | Component                         | Variable or Constant |
-| ------- | --------------------------------- | -------------------- |
-| 1       | Tenant Logo                       | Variable             |
-| 2       | Block name                        | Variable             |
-| 3       | Federal Synergies Logo            | Constant             |
-| 4       | User and Pilot names              | Variable             |
-| 5       | Date of Report Publication        | Variable             |
-| 6       | Statement of Confidentiality      | Variable             |
-| 7       | Cover Page Image                  | Variable             |
+| Sl. No. | Component                    | Variable or Constant |
+| ------- | ---------------------------- | -------------------- |
+| 1       | Tenant Logo                  | Variable             |
+| 2       | Block name                   | Variable             |
+| 3       | Federal Synergies Logo       | Constant             |
+| 4       | User and Pilot names         | Variable             |
+| 5       | Date of Report Publication   | Variable             |
+| 6       | Statement of Confidentiality | Variable             |
+| 7       | Cover Page Image             | Variable             |
 
 ### Structure of Data Required
 
@@ -218,18 +222,18 @@ interface IPage1Properties {
 }
 ```
 
-| Name              | Type      | Required By       | Description                                                       |
-| ----------------- | --------- | ----------------- | ----------------------------------------------------------------- |
-| tenantImageBuffer | Buffer    | Component (1)     | Image of the logo of the tenant organization, as a binary Buffer  |
-| blockName         | string    | Component (2)     | Name of the block in which the plot is present                    |
-| users             | string[ ] | Component (4)     | Names of users and pilots who participated in the mission         |
-| date              | string    | Component (5)     | Date of generation of the report                                  |
-| tenantName        | string    | Component (6)     | Name of the tenant organization                                   |
-| coverImageBuffer  | Buffer    | Component (7)     | Image of map with block and plot marked on it, as a binary Buffer |
+| Name              | Type      | Required By   | Description                                                       |
+| ----------------- | --------- | ------------- | ----------------------------------------------------------------- |
+| tenantImageBuffer | Buffer    | Component (1) | Image of the logo of the tenant organization, as a binary Buffer  |
+| blockName         | string    | Component (2) | Name of the block in which the plot is present                    |
+| users             | string[ ] | Component (4) | Names of users and pilots who participated in the mission         |
+| date              | string    | Component (5) | Date of generation of the report                                  |
+| tenantName        | string    | Component (6) | Name of the tenant organization                                   |
+| coverImageBuffer  | Buffer    | Component (7) | Image of map with block and plot marked on it, as a binary Buffer |
 
 ### Gathering the Data
 
-- The `blockName`, `date`, `users` and `tenantName` are collected within the report controller in the server and sent within the request message. 
+- The `blockName`, `date`, `users` and `tenantName` are collected within the report controller in the server and sent within the request message.
 - The `coverImageBuffer` and `tenantImageBuffer` are generated by the report service.
 
 ## Generating Block, Plot and Front View Image Pages
@@ -242,10 +246,10 @@ These image pages have a similar structure: a fixed heading and an image
 
 The components are:
 
-| Sl. No. | Component                         | Variable or Constant |
-| ------- | --------------------------------- | -------------------- |
-| 1       | Heading                           | Constant             |
-| 2       | Image                             | Variable             |
+| Sl. No. | Component | Variable or Constant |
+| ------- | --------- | -------------------- |
+| 1       | Heading   | Constant             |
+| 2       | Image     | Variable             |
 
 ### Structure of Data Required
 
@@ -256,10 +260,10 @@ interface IDeliverable {
 }
 ```
 
-| Name              | Type      | Required By      | Description                                                                                            |
-| ----------------- | --------- | ---------------- | ------------------------------------------------------------------------------------------------------ |
-| imageHeading      | string    | Component (1)    | Heading of the page: "`Block Image`", "`Plot Image`" and "`Front View Image`" for the respective pages |
-| imageBuffer       | Buffer    | Component (2)    | Image of map with block/plot marked on it, or the front view image, as a binary Buffer                 |
+| Name         | Type   | Required By   | Description                                                                                            |
+| ------------ | ------ | ------------- | ------------------------------------------------------------------------------------------------------ |
+| imageHeading | string | Component (1) | Heading of the page: "`Block Image`", "`Plot Image`" and "`Front View Image`" for the respective pages |
+| imageBuffer  | Buffer | Component (2) | Image of map with block/plot marked on it, or the front view image, as a binary Buffer                 |
 
 ### Gathering the Data
 
@@ -276,13 +280,13 @@ The annual invoice commitment pages are the last pages of the report
 
 The components are:
 
-| Sl. No. | Component                         | Variable or Constant |
-| ------- | --------------------------------- | -------------------- |
-| 1       | Block heading                     | Variable             |
-| 2       | Plot Data Table                   | Variable             |
-| 3       | Block Data Table                  | Variable             |
-| 4       | Block Insights Table              | Variable             |
-| 5       | Block Announcements Table         | Variable             |
+| Sl. No. | Component                 | Variable or Constant |
+| ------- | ------------------------- | -------------------- |
+| 1       | Block heading             | Variable             |
+| 2       | Plot Data Table           | Variable             |
+| 3       | Block Data Table          | Variable             |
+| 4       | Block Insights Table      | Variable             |
+| 5       | Block Announcements Table | Variable             |
 
 ### Structure of Data Required
 
@@ -291,64 +295,64 @@ interface IPage3Properties {
   blockName: string;
 
   // plot data table
-  plotNo: string; 
-  premiseNo: string; 
-  plotArea: number; 
+  plotNo: string;
+  premiseNo: string;
+  plotArea: number;
   buildingAvailable: string;
-  pincode: string; 
-  category: string; 
-  floorCount: string; 
-  buildingNo: string; 
-  buildingArea: number; 
+  pincode: string;
+  category: string;
+  floorCount: string;
+  buildingNo: string;
+  buildingArea: number;
   buildingFootprint: number;
-  hasCompletionCertificate: string; 
-  averageBuildingHeight: string; 
-  infraction: string; 
-  isGreenTopEligible: string; 
-  isSolarPlantEligible: string; 
-  hasTradeLicense: string; 
-  tax: string; 
+  hasCompletionCertificate: string;
+  averageBuildingHeight: string;
+  infraction: string;
+  isGreenTopEligible: string;
+  isSolarPlantEligible: string;
+  hasTradeLicense: string;
+  tax: string;
 
   // block data table
-  garbageCollectionInfo: string; 
-  buildingHeight: string; 
-  averageBlockHeight: string; 
-  averageIncentives: string; 
+  garbageCollectionInfo: string;
+  buildingHeight: string;
+  averageBlockHeight: string;
+  averageIncentives: string;
 
   // block insights table
-  greeneryPercent: number; 
-  canopyPercent: number; 
-  waterbodyPercent: number; 
+  greeneryPercent: number;
+  canopyPercent: number;
+  waterbodyPercent: number;
 }
 ```
 
-| Name                      | Type      | Required By      | Description                                                               |
-| -----------------         | --------- | ---------------  | ------------------------------------------------------------------------- |
-| blockName                 | string    | Component (1)    | Name of the block in which the plot is present                            |
-| plotNo                    | string    | Component (2)    | Plot Number of the plot                                                   |
-| premiseNo                 | string    | Component (2)    | Premise Number that connects buildings of a plot to the plot              |
-| plotArea                  | number    | Component (2)    | Area of the plot                                                          |
-| buildingAvailable         | string    | Component (2)    | `Yes` or `No` based on whether there is an available building in the plot |
-| pincode                   | string    | Component (2)    | Pincode of the plot                                                       |
-| category                  | string    | Component (2)    | Category of the plot (`Residential`/`Commercial`/`Government`)            |
-| floorCount                | string    | Component (2)    | Number of floors in the building present in the plot                      |
-| buildingNo                | string    | Component (2)    | Building number of the building in the plot                               |
-| buildingArea              | number    | Component (2)    | Area of the building in the plot                                          |
-| buildingFootprint         | number    | Component (2)    | Percentage area of the plot covered by the building                       |
-| hasCompletionCertificate  | string    | Component (2)    | `Yes` or `No` based on whether the building in the plot has a completion certificate |
-| buildingHeight            | string    | Component (2)    | Height of the building in the plot                                        |
-| infraction                | string    | Component (2)    | `Yes` or `No` based on whether the plot is an infraction                  |
-| isGreenTopEligible        | string    | Component (2)    | `Yes` or `No` based on whether the plot is green top eligible             |
-| isSolarPlantEligible      | string    | Component (2)    | `Yes` or `No` based on whether the plot is solar panel eligible           |
-| hasTradeLicense           | string    | Component (2)    | `Yes` or `No` based on whether the plot has a trade license               |
-| tax                       | string    | Component (2)    | Tax of the plot                                                           |
-| garbageCollectionInfo     | string    | Component (3)    | Number of garbage collection points in the block                          | 
-| averageBuildingHeight     | string    | Component (3)    | Average height of buildings in the block                                  | 
-| averageBlockHeight        | string    | Component (3)    | Average height of all structures in the block                             | 
-| averageIncentives         | string    | Component (3)    | Average height of the block                                               | 
-| greeneryPercent           | number    | Component (4)    | Percentage area of block covered in greenery                              | 
-| canopyPercent             | number    | Component (4)    | Percentage area of block covered in canopy (jungle / tree cover)          | 
-| waterbodyPercent          | number    | Component (4)    | Percentage area of block covered in waterbody                             |
+| Name                     | Type   | Required By   | Description                                                                          |
+| ------------------------ | ------ | ------------- | ------------------------------------------------------------------------------------ |
+| blockName                | string | Component (1) | Name of the block in which the plot is present                                       |
+| plotNo                   | string | Component (2) | Plot Number of the plot                                                              |
+| premiseNo                | string | Component (2) | Premise Number that connects buildings of a plot to the plot                         |
+| plotArea                 | number | Component (2) | Area of the plot                                                                     |
+| buildingAvailable        | string | Component (2) | `Yes` or `No` based on whether there is an available building in the plot            |
+| pincode                  | string | Component (2) | Pincode of the plot                                                                  |
+| category                 | string | Component (2) | Category of the plot (`Residential`/`Commercial`/`Government`)                       |
+| floorCount               | string | Component (2) | Number of floors in the building present in the plot                                 |
+| buildingNo               | string | Component (2) | Building number of the building in the plot                                          |
+| buildingArea             | number | Component (2) | Area of the building in the plot                                                     |
+| buildingFootprint        | number | Component (2) | Percentage area of the plot covered by the building                                  |
+| hasCompletionCertificate | string | Component (2) | `Yes` or `No` based on whether the building in the plot has a completion certificate |
+| buildingHeight           | string | Component (2) | Height of the building in the plot                                                   |
+| infraction               | string | Component (2) | `Yes` or `No` based on whether the plot is an infraction                             |
+| isGreenTopEligible       | string | Component (2) | `Yes` or `No` based on whether the plot is green top eligible                        |
+| isSolarPlantEligible     | string | Component (2) | `Yes` or `No` based on whether the plot is solar panel eligible                      |
+| hasTradeLicense          | string | Component (2) | `Yes` or `No` based on whether the plot has a trade license                          |
+| tax                      | string | Component (2) | Tax of the plot                                                                      |
+| garbageCollectionInfo    | string | Component (3) | Number of garbage collection points in the block                                     |
+| averageBuildingHeight    | string | Component (3) | Average height of buildings in the block                                             |
+| averageBlockHeight       | string | Component (3) | Average height of all structures in the block                                        |
+| averageIncentives        | string | Component (3) | Average height of the block                                                          |
+| greeneryPercent          | number | Component (4) | Percentage area of block covered in greenery                                         |
+| canopyPercent            | number | Component (4) | Percentage area of block covered in canopy (jungle / tree cover)                     |
+| waterbodyPercent         | number | Component (4) | Percentage area of block covered in waterbody                                        |
 
 ### Gathering the Data
 
