@@ -247,6 +247,16 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       const deletedFlight = await Flight.deleteMany({
         mission: req.body._id,
       });
+      const deletedLayer = await Layer.deleteMany({
+        missionId: req.body._id,
+      });
+      const deletedAlert = await Alert.deleteMany({
+        missionId: req.body._id,
+      });
+      const deletedVod = await VOD.deleteMany({ missionID: req.body._id });
+      const deletedDocumetns = await Document.deleteMany({
+        missionId: req.body._id,
+      });
 
       const tenant: any = await Tenant.findOne({
         _id: res.locals.user.tenantId,
