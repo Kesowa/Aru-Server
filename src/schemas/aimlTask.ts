@@ -11,6 +11,7 @@ export const inferences = <const>[
   "deepforest",
   "thermal",
   "rooftopseg",
+  "people-count",
 ];
 export type inferTypes = typeof inferences[number];
 
@@ -29,7 +30,7 @@ type TaskTemp<docModel, inference, data> = {
 };
 
 export type IAimlTask =
-  | TaskTemp<"vod", "violence", string>
+  | TaskTemp<"vod", "violence" | "people-count", string>
   | TaskTemp<"layer", "deepforest" | "rooftopseg" | "thermal", string>
   | TaskTemp<
       "alert" | "document",

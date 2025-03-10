@@ -342,22 +342,14 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
         doc.thumbnail !== "/processing.png"
       ) {
         await doc.delete();
-        const resp = await doc.remove();
-        if (resp) {
-          missionSpecificSocket
-            .to(String(resp.missionID))
-            .emit("VOD_REMOVED", resp);
-          res.status(200).json({
-            status: true,
-            message: "Successfully deleted _id:" + Id.toString(),
-            data: resp,
-          });
-        } else {
-          res.status(500).json({
-            status: false,
-            message: "Couldn't delete VOD of _id:" + Id.toString(),
-          });
-        }
+        missionSpecificSocket
+          .to(String(doc.missionID))
+          .emit("VOD_REMOVED", doc);
+        res.status(200).json({
+          status: true,
+          message: "Successfully deleted _id:" + Id.toString(),
+          data: doc,
+        });
       } else {
         res.status(400).json({
           status: false,
@@ -389,14 +381,15 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
           doc.thumbnail &&
           doc.thumbnail !== "/processing.png"
         ) {
-          await doc.delete();
-          const res2 = await doc.remove();
-          if (res2) {
+          try {
+            await doc.delete();
             deleted.push(doc._id.toString());
             missionSpecificSocket
               .to(String(doc.missionID))
               .emit("VOD_REMOVED", doc);
-          } else errors.push(doc._id.toString());
+          } catch (error) {
+            errors.push(doc._id.toString());
+          }
         } else {
           errors.push(doc._id.toString());
         }

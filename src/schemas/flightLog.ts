@@ -2,6 +2,14 @@ import mongoose from "mongoose";
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
 import { Types } from "ts-openapi";
+
+interface IFlightLogMethods {
+  create(): Promise<IFlightLog>;
+  delete(): Promise<void>;
+}
+
+export type FlightLogModel = mongoose.Model<IFlightLog, {}, IFlightLogMethods>;
+
 export interface IFlightLog {
   _id: mongoose.Types.ObjectId;
   date: Date;
@@ -66,31 +74,32 @@ flightLogSchema.index({
   tenantId: 1,
 });
 flightLogSchema.index({ locationID: 1 }, { sparse: true });
-flightLogSchema.pre("save", async function () {
+flightLogSchema.methods.create = async function () {
+  const doc = this as IFlightLog & mongoose.Document;
+  // update size details
   await Tenant.updateOne(
-    { _id: this.tenantId },
-    { $inc: { actualSize: this.fileSize } }
+    { _id: doc.tenantId },
+    { $inc: { actualSize: doc.fileSize } }
   );
   await Mission.updateOne(
-    { _id: this.missionID },
-    { $inc: { size: this.fileSize } }
+    { _id: doc.missionID },
+    { $inc: { size: doc.fileSize } }
   );
-});
-flightLogSchema.post(
-  "remove",
-  async function (this: {
-    tenantId: mongoose.Types.ObjectId;
-    missionID: mongoose.Types.ObjectId;
-    fileSize: number;
-  }) {
-    await Tenant.updateOne(
-      { _id: this.tenantId },
-      { $inc: { actualSize: -this.fileSize } }
-    );
-    await Mission.updateOne(
-      { _id: this.missionID },
-      { $inc: { size: -this.fileSize } }
-    );
-  }
-);
+  // save the document
+  return await doc.save();
+};
+flightLogSchema.methods.delete = async function () {
+  const doc = this as IFlightLog & mongoose.Document;
+  // update size details
+  await Tenant.updateOne(
+    { _id: doc.tenantId },
+    { $inc: { actualSize: -doc.fileSize } }
+  );
+  await Mission.updateOne(
+    { _id: doc.missionID },
+    { $inc: { size: -doc.fileSize } }
+  );
+  // delete the document
+  await doc.deleteOne();
+};
 export default flightLogSchema;

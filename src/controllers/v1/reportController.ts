@@ -5,7 +5,6 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import Layer from "../../models/layer";
 import { vectorProps } from "../../schemas/vectorprops";
 import { DirPath, Directory } from "../../constants";
-import Document from "../../models/document";
 import { missionSpecificSocket } from "../../socket";
 import {
   entityCategories,
@@ -29,9 +28,7 @@ import {
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import layerFiles from "../../models/layerFiles";
 import User from "../../models/user";
-import { saveFile } from "../../utils/dataUtils";
-import { randomUUID } from "crypto";
-import ObjectsToCsv from "objects-to-csv";
+import { saveCSV } from "../../utils/dataUtils";
 import { rasterProps } from "../../schemas/rasterprops";
 import {
   PlotPropertiesSchema,
@@ -135,16 +132,9 @@ export const generateBlockReport = async (
           const filename = `block_report | ${
             blockFeature.properties.blockName || "blockName"
           }.docx`;
-          const reportExists = await Document.exists({
-            tenantId: res.locals.user.tenantId._id,
-            missionId,
-            name: filename,
-          });
-          if (reportExists) {
-            req.log.warn(
-              "block report exists, skipping. filename: " + filename
-            );
-          }
+
+          // If report exists, it will get deleted and new updated report will be generated
+          // Logic implemented in generateBlockReport function in reportUtils
 
           const processedLayerData: {
             area: number;
@@ -493,12 +483,13 @@ export const generatePlotReport = async (
             });
           }
         });
-        const csv = new ObjectsToCsv(rows);
-        const csvData = await csv.toString();
-        const { filepath } = await saveFile(
-          Directory.TEMP,
-          randomUUID() + ".csv",
-          csvData
+        const filename = "report-errors-" + missionId + ".csv";
+        const { filepath } = await saveCSV(
+          filename,
+          rows,
+          missionId,
+          res.locals.user.tenantId._id,
+          res.locals.user._id
         );
         return res.json({
           status: false,
@@ -680,16 +671,10 @@ export const generatePlotReport = async (
             } | ${plotFeature.properties.premiseNo || "premiseNo"} | ${
               plotFeature.properties.sys_id
             }.docx`;
-            const reportExists = await Document.exists({
-              tenantId: res.locals.user.tenantId._id,
-              missionId,
-              name: filename,
-            });
-            if (reportExists) {
-              req.log.warn(
-                "plot report exists, skipping. filename: " + filename
-              );
-            }
+
+            // If report exists, it will get deleted and new updated report will be generated
+            // Logic implemented in generatePlotReport function in reportUtils
+
             const plotProperties = plotFeature.properties;
 
             // ******************** PLOT DETAILS ***********************
