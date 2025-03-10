@@ -1,6 +1,5 @@
 import type { Request } from "express";
 import type { AuthResponse } from "../../utils/interfaceUtils";
-import fetch from "node-fetch";
 import Layer from "../../models/layer";
 import layerFiles from "../../models/layerFiles";
 import Tenant from "../../models/tenant";

@@ -3,7 +3,6 @@
 import Location from "../models/location";
 import { IAlert } from "../schemas/alert";
 import { IStreamKey } from "../schemas/streamKey";
-import fetch from "node-fetch";
 import path from "path";
 import { API_SERVER, LIVE_URL, MODE, Mode } from "../constants";
 import { Logger } from "pino";

@@ -1,7 +1,6 @@
 import { Request } from "express";
 import * as pathUtils from "../../utils/pathUtils";
 import Layer from "../../models/layer";
-import fetch from "node-fetch";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { Feature, readGeoJson } from "../../utils/geojsonUtils";
 import Tenant from "../../models/tenant";
