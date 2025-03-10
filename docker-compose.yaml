@@ -114,7 +114,7 @@ services:
       - RUST_LOG=debug
 
   zip:
-    image: zip:latest
+    image: ghcr.io/kesowa/zip-decompress:latest
     profiles:
       - zip
     depends_on:
