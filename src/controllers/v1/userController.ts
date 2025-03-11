@@ -1,19 +1,20 @@
-import { Request } from "express";
-import Tenant from "../../models/tenant";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import User from "../../models/user";
-import bcrypt from "bcrypt";
-import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
-import { sendMail } from "../../utils/emailUtil";
 import crypto from "crypto";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
-import { IUser } from "../../schemas/user";
-import { API_SERVER, Directory, DUMMY_TENANT } from "../../constants";
-import UploadTask from "../../models/uploadTask";
-import { permPath, saveCSV } from "../../utils/dataUtils";
-import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
 
+import bcrypt from "bcrypt";
+import { Request } from "express";
+
+import { API_SERVER, Directory, DUMMY_TENANT } from "../../constants";
+import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
+import User from "../../models/user";
 import { PERMS } from "../../schemas/permission";
+import { IUser } from "../../schemas/user";
+import { permPath, saveCSV } from "../../utils/dataUtils";
+import { sendMail } from "../../utils/emailUtil";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
+import { deleteThumbnails, saveThumbnails } from "../../utils/imageUtils";
 // let saltRound = 10;
 //create user account
 export const createUser = async (req: Request, res: AuthResponse) => {
@@ -51,7 +52,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
     if (fileDoc) {
       const fullPath = await permPath(
         Directory.USER_AVATARS,
-        fileDoc.metadata.objectkey
+        fileDoc.metadata.objectkey,
       );
       await saveThumbnails(fullPath);
       userr.avatar = fullPath;
@@ -64,7 +65,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
     if (dd && tenant.actualUserCount >= 0) {
       await Tenant.updateOne(
         { _id: res.locals.user.tenantId },
-        { $inc: { actualUserCount: 1 } }
+        { $inc: { actualUserCount: 1 } },
       );
     }
 
@@ -87,7 +88,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
               <p>Best regards,</p>
               <p><b>Team Kesowa</b></p>
               `,
-      ""
+      "",
     );
 
     res.status(201).json({
@@ -95,10 +96,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
       message: "User created! Check email to change password",
       data: userr,
     });
-  } else if (
-    existingUsertWithEmail &&
-    (!existingUsertWithEmail.isActive)
-  ) {
+  } else if (existingUsertWithEmail && !existingUsertWithEmail.isActive) {
     const temppass = crypto.randomBytes(10).toString("hex");
     const user = {
       name: req.body.name,
@@ -120,7 +118,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
     if (fileDoc) {
       const fullPath = await permPath(
         Directory.USER_AVATARS,
-        fileDoc.metadata.objectkey
+        fileDoc.metadata.objectkey,
       );
       await saveThumbnails(fullPath);
       user.avatar = fullPath;
@@ -132,7 +130,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
       {
         upsert: true,
         useFindAndModify: false,
-      }
+      },
     );
     const email = req.body.email;
 
@@ -153,7 +151,7 @@ export const createUser = async (req: Request, res: AuthResponse) => {
                   <p>Best regards,</p>
                   <p><b>Team Kesowa</b></p>
                   `,
-      ""
+      "",
     );
 
     res.json({
@@ -209,7 +207,7 @@ export const fetchAllUserOfTenant = async (req: Request, res: AuthResponse) => {
 
 export const fetchUserOfTenantById = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const doc = await User.findOne({
     _id: req.query.id,
@@ -252,7 +250,7 @@ export const fetchUserOfTenantById = async (
 export const userCsv = async (req: Request, res: AuthResponse) => {
   const data = await User.find(
     { tenantId: res.locals.user.tenantId._id },
-    { _id: 0, name: 1, email: 1, phoneNo: 1, userType: 1 }
+    { _id: 0, name: 1, email: 1, phoneNo: 1, userType: 1 },
   ).lean();
   if (data.length) {
     const filename = "users-" + String(res.locals.user.tenantId._id) + ".csv";
@@ -261,7 +259,7 @@ export const userCsv = async (req: Request, res: AuthResponse) => {
       data,
       "",
       res.locals.user.tenantId._id,
-      res.locals.user._id
+      res.locals.user._id,
     );
     res.json({
       status: true,
@@ -292,7 +290,7 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
         new: true,
         upsert: true,
         useFindAndModify: false,
-      }
+      },
     );
     const dd = await User.findOne({
       _id: req.body.id,
@@ -308,7 +306,7 @@ export const UserEdit = async (req: Request, res: AuthResponse) => {
       if (fileDoc) {
         const fullPath = await permPath(
           Directory.USER_AVATARS,
-          fileDoc.metadata.objectkey
+          fileDoc.metadata.objectkey,
         );
         await saveThumbnails(fullPath);
         doc.avatar = fullPath;
@@ -358,7 +356,7 @@ export const UserDelete = async (req: Request, res: AuthResponse) => {
     if (d && tenant.actualUserCount) {
       await Tenant.updateOne(
         { _id: res.locals.user.tenantId },
-        { $inc: { actualUserCount: -1 } }
+        { $inc: { actualUserCount: -1 } },
       );
     }
     return res.status(200).json({
@@ -379,7 +377,7 @@ export const termsAccepted = async (req: Request, res: AuthResponse) => {
     const doc = await User.findOneAndUpdate(
       { _id: res.locals.user._id, tenantId: res.locals.user.tenantId },
       { isTermsAccepted: true },
-      { upsert: true, timestamps: false }
+      { upsert: true, timestamps: false },
     ).lean();
     if (doc) {
       res.status(200).json({

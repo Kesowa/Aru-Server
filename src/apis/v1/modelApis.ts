@@ -1,5 +1,6 @@
 import express from "express";
 import { body, header, query } from "express-validator";
+
 import {
   createModel,
   fetchModelbyId,
@@ -7,9 +8,9 @@ import {
   removeModel,
   updateModel,
 } from "../../controllers/v1/modelController";
+import { PERMS } from "../../schemas/permission";
 import { PermissionGuard, isAuthenticated } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -26,14 +27,14 @@ router.post(
   body("props").exists({ checkFalsy: true }).isObject(),
   validator,
   PermissionGuard(PERMS.MODEL_CREATE),
-  RobustRunner(createModel)
+  RobustRunner(createModel),
 );
 
 router.get(
   "/get",
   isAuthenticated,
   PermissionGuard(PERMS.MODEL_LIST),
-  RobustRunner(getModel)
+  RobustRunner(getModel),
 );
 
 router.get(
@@ -42,7 +43,7 @@ router.get(
   query("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MODEL_LIST),
-  RobustRunner(fetchModelbyId)
+  RobustRunner(fetchModelbyId),
 );
 
 router.patch(
@@ -52,7 +53,7 @@ router.patch(
   body("update").exists({ checkFalsy: true }).isObject(),
   validator,
   PermissionGuard(PERMS.MODEL_UPDATE),
-  RobustRunner(updateModel)
+  RobustRunner(updateModel),
 );
 
 router.delete(
@@ -61,7 +62,7 @@ router.delete(
   body("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MODEL_DELETE),
-  RobustRunner(removeModel)
+  RobustRunner(removeModel),
 );
 
 export default router;

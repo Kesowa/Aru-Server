@@ -9,7 +9,6 @@ import { IManufacturer } from "../../schemas/manufacturer";
 import { IModel } from "../../schemas/model";
 import { ITenant } from "../../schemas/tenant";
 import { IUser } from "../../schemas/user";
-
 import { AuthResponse } from "../../utils/interfaceUtils";
 
 type CreateAssetBody = {
@@ -30,7 +29,7 @@ type AssetInfo = {
 
 export const createAsset = async (
   req: Request<null, null, CreateAssetBody>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const asset = new Asset({
     assetName: req.body.assetName,
@@ -108,7 +107,7 @@ export const updateAsset = async (req: Request, res: AuthResponse) => {
       tenantID: res.locals.user.tenantId._id,
     },
     toUpdate,
-    { new: true, useFindAndModify: false }
+    { new: true, useFindAndModify: false },
   )
     .populate<{ userID: IUser }>("userID", "tenantID")
     .populate<{ createdBy: IUser }>("createdBy")
@@ -157,7 +156,7 @@ export const toggleAsset = async (req: Request, res: AuthResponse) => {
   const toggledAsset = await Asset.findOneAndUpdate(
     { _id: assetID, tenantID: res.locals.user.tenantId._id },
     toUpdate,
-    { new: true, useFindAndModify: false }
+    { new: true, useFindAndModify: false },
   );
 
   if (!toggledAsset) {
@@ -214,7 +213,7 @@ export const getallAsset = async (req: Request, res: AuthResponse) => {
 
 export const registerDrone = async (
   req: Request<{}, {}, { serialNo: string; modelName: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const drone = await Asset.findOne({ serialNo: req.body.serialNo });
   if (drone) {
@@ -239,7 +238,7 @@ export const registerDrone = async (
     {
       returnOriginal: false,
       upsert: true,
-    }
+    },
   );
   const manufacturer = await manufacturerModel.findOneAndUpdate(
     {
@@ -255,7 +254,7 @@ export const registerDrone = async (
     {
       returnOriginal: false,
       upsert: true,
-    }
+    },
   );
   const model = await Model.findOneAndUpdate(
     { modelName: req.body.modelName },
@@ -271,7 +270,7 @@ export const registerDrone = async (
     {
       returnOriginal: false,
       upsert: true,
-    }
+    },
   );
   const newDrone = await Asset.create({
     serialNo: req.body.serialNo,

@@ -11,7 +11,7 @@ export interface IAsset {
       UIN: string;
       FCID: string;
       serialNO: string;
-    }
+    },
   ];
   manufactureID: mongoose.Types.ObjectId;
 
@@ -118,7 +118,7 @@ const assetSchema = new mongoose.Schema<IAsset>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 assetSchema.index({ tenantID: 1 });
 export default assetSchema;

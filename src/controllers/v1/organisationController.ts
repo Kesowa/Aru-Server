@@ -1,12 +1,14 @@
-import { Request } from "express";
-import Tenant from "../../models/tenant";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import { sendMail } from "../../utils/emailUtil";
-import { permPath } from "../../utils/dataUtils";
-import { saveThumbnails } from "../../utils/imageUtils";
-import { Directory } from "../../constants";
-import UploadTask from "../../models/uploadTask";
 import { randomBytes } from "crypto";
+
+import { Request } from "express";
+
+import { Directory } from "../../constants";
+import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
+import { permPath } from "../../utils/dataUtils";
+import { sendMail } from "../../utils/emailUtil";
+import { saveThumbnails } from "../../utils/imageUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 //check if email is available for registration
 export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {
@@ -28,7 +30,7 @@ export const getOrganisationInfo = async (req: Request, res: AuthResponse) => {
 //update tenant account
 export const updateOrganisationInfo = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   if (res.locals.user.tenantId) {
     let fileDoc;
@@ -57,7 +59,7 @@ export const updateOrganisationInfo = async (
     if (fileDoc) {
       const fullPath = await permPath(
         Directory.USER_AVATARS,
-        fileDoc.metadata.objectkey
+        fileDoc.metadata.objectkey,
       );
       await saveThumbnails(fullPath); // Generate and save thumbnails (optional)
       updateData.avatar = fullPath; // Set the full path as the avatar field
@@ -68,7 +70,7 @@ export const updateOrganisationInfo = async (
       updateData,
       {
         new: true,
-      }
+      },
     );
     res.json({
       status: true,
@@ -86,7 +88,7 @@ export const updateOrganisationInfo = async (
 //update organisation email
 export const updateOrganisationEmailGetOTP = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   try {
     if (res.locals.user.tenantId) {
@@ -107,7 +109,7 @@ export const updateOrganisationEmailGetOTP = async (
               message: "This email id is already taken by some other client.",
             });
           } else {
-            const OTP = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
+            const OTP = 100000 + (randomBytes(3).readUIntBE(0, 3) % 900000); // six digit number
             thisTenant.modefiedEmailRequested = req.body.email;
             thisTenant.modefiedEmailRequestedOTPs = [OTP];
             await thisTenant.save();
@@ -116,7 +118,7 @@ export const updateOrganisationEmailGetOTP = async (
               "OTP for email change",
               `Please use the OTP ${OTP} to change your email id`,
               null,
-              null
+              null,
             );
             res.json({
               status: true,
@@ -148,12 +150,12 @@ export const updateOrganisationEmailGetOTP = async (
 //resend emai OTP
 export const updateOrganisationEmailResendOTP = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   if (res.locals.user.tenantId) {
     const thisTenant = await Tenant.findById(res.locals.user.tenantId);
     if (thisTenant) {
-      const OTP = 100000 + (randomBytes(3).readUIntBE(0,3) % 900000); // six digit number
+      const OTP = 100000 + (randomBytes(3).readUIntBE(0, 3) % 900000); // six digit number
       if (
         thisTenant.modefiedEmailRequested &&
         thisTenant.modefiedEmailRequestedOTPs
@@ -165,7 +167,7 @@ export const updateOrganisationEmailResendOTP = async (
           "OTP for email change",
           `Please use the OTP ${OTP} to change your email id`,
           null,
-          null
+          null,
         );
         res.json({
           status: true,
@@ -210,7 +212,7 @@ export const validateOTPForEmail = async (req: Request, res: AuthResponse) => {
             "Email id changed",
             `Email id changed sucessfully. New email id ${thisTenant.email}`,
             null,
-            null
+            null,
           );
           res.json({
             status: true,

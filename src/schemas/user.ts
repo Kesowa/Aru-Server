@@ -1,6 +1,7 @@
+import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
-import bcrypt from "bcrypt";
+
 import { PERMS } from "./permission";
 
 interface IUserMethods {
@@ -163,7 +164,7 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 userSchema.index({ email: 1 }, { unique: true });

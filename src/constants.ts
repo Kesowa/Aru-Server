@@ -1,5 +1,7 @@
-import { Types } from "mongoose";
 import path from "path";
+
+import { Types } from "mongoose";
+
 import { Directory } from "./utils/pathUtils";
 
 export const DUMMY_TENANT = new Types.ObjectId("629aeb50ea5ed2cee054870b");
@@ -102,7 +104,7 @@ export const FTP_HOST_PROD = new EnvVar("FTP_HOST_PROD").toString();
 export const FTP_USERNAME = new EnvVar("FTP_USERNAME").toString();
 export const FTP_PASSWORD = new EnvVar("FTP_PASSWORD").toString();
 export const RESET_PASSWORD_TOKEN_EXPIRE = new EnvVar(
-  "RESET_PASSWORD_TOKEN_EXPIRE"
+  "RESET_PASSWORD_TOKEN_EXPIRE",
 ).toNumeric();
 export const SECRET_KEY = new EnvVar("SECRET_KEY").toString();
 
@@ -120,7 +122,7 @@ export const TITILER_STATIC = new EnvVar("TITILER_STATIC").isUrl().toString();
 export const RAZORPAY_KEY_ID = new EnvVar("RAZORPAY_KEY_ID").toString();
 export const RAZORPAY_KEY_SECRET = new EnvVar("RAZORPAY_KEY_SECRET").toString();
 export const RAZORPAY_HOOK_SECRET = new EnvVar(
-  "RAZORPAY_HOOK_SECRET"
+  "RAZORPAY_HOOK_SECRET",
 ).toString();
 
 export enum Mode {
@@ -138,7 +140,7 @@ export const DirPath = (dir: Directory, filename?: string | undefined) =>
 export const TITILER_PUBLIC = new EnvVar("TITILER_PUBLIC").isUrl().toString();
 export const RTMP_PUBLIC = new EnvVar("RTMP_PUBLIC").isUrl().toString();
 export const RABBITMQ_CONNECTION_STRING = new EnvVar(
-  "RABBITMQ_CONNECTION_STRING"
+  "RABBITMQ_CONNECTION_STRING",
 )
   .isUrl()
   .toString();

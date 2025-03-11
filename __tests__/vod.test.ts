@@ -21,7 +21,7 @@ describe("/vod API", () => {
     const filename = videoMetadata + "-video.mp4";
     await fs.copyFile(
       "/server/assets/video.mp4",
-      "/server/src/public/vod/" + filename
+      "/server/src/public/vod/" + filename,
     );
     const res = await request(app)
       .post(full_url("save-VOD"))

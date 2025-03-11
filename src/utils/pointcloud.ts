@@ -1,8 +1,9 @@
 import { exec } from "child_process";
-import { promisify } from "util";
 import fs from "fs/promises";
-import * as pathUtils from "./pathUtils";
 import path from "path";
+import { promisify } from "util";
+
+import * as pathUtils from "./pathUtils";
 
 const asyncExec = promisify(exec);
 
@@ -23,9 +24,8 @@ async function LazToLas(absLaz: string, absLas: string) {
 }
 
 async function LasToTiles3D(absLas: string, absTileDir: string) {
-  if (!(await fs.stat(absTileDir)).isDirectory())
-    await fs.mkdir(absTileDir);
+  if (!(await fs.stat(absTileDir)).isDirectory()) await fs.mkdir(absTileDir);
   await asyncExec(
-    `gocesiumtiler -a grid -grid-max-size 5 -grid-min-size 1 -i "${absLas}" -o "${absTileDir}" -srid 32633`
+    `gocesiumtiler -a grid -grid-max-size 5 -grid-min-size 1 -i "${absLas}" -o "${absTileDir}" -srid 32633`,
   );
 }

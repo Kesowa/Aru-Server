@@ -1,13 +1,14 @@
 import { Request } from "express";
 import { Types } from "mongoose";
+
 import Location from "../../models/location";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import { notificationSocket } from "../../socket";
 import Tenant from "../../models/tenant";
 import { GeometryObj } from "../../schemas/location";
+import { notificationSocket } from "../../socket";
+import { AuthResponse } from "../../utils/interfaceUtils";
 export const createLocation = async (
   req: Request<{}, {}, GeometryObj & { properties: { name: string } }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const newLocation = await Location.create({
     geometry: {
@@ -21,7 +22,7 @@ export const createLocation = async (
   if (newLocation && tenant.actualLocationCount >= 0) {
     await Tenant.updateOne(
       { _id: res.locals.user.tenantId },
-      { $inc: { actualLocationCount: 1 } }
+      { $inc: { actualLocationCount: 1 } },
     );
   }
   if (newLocation) {
@@ -113,7 +114,7 @@ export const getLocationByID = async (req: Request, res: AuthResponse) => {
 
 export const getwithinLocationByID = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   try {
     const selectedDoc = await Location.findOne({
@@ -179,7 +180,7 @@ export const updateLocation = async (req: Request, res: AuthResponse) => {
     },
     {
       new: true,
-    }
+    },
   );
   if (findDoc) {
     const message = `Location Id : ${findDoc._id} updated`;
@@ -214,7 +215,7 @@ export const deleteLocation = async (req: Request, res: AuthResponse) => {
     if (deletedDoc && tenant.actualLocationCount) {
       await Tenant.updateOne(
         { _id: res.locals.user.tenantId },
-        { $inc: { actualLocationCount: -1 } }
+        { $inc: { actualLocationCount: -1 } },
       );
     }
     if (deletedDoc) {

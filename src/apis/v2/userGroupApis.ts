@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import UserGroup from "../../models/usergroup";
 import { UserGroupType } from "../../schemas/usergroup";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUserGroup } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const userGroupApi = Router();
 
@@ -22,7 +23,7 @@ userGroupApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { userGroupId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await UserGroup.find(
@@ -35,7 +36,7 @@ userGroupApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -49,7 +50,7 @@ userGroupApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -99,12 +100,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default userGroupApi;

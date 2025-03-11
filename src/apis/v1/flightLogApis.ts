@@ -1,14 +1,15 @@
 import express from "express";
+import { query, body, oneOf } from "express-validator";
+
 import {
   getLog,
   fetchLatestFlightlogDataByMissionId,
   fetchLatestFlightlogByLocationId,
   createFlightLog,
 } from "../../controllers/v1/flightLogController";
-import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
-import { query, body, oneOf } from "express-validator";
-import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { validator, RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.post(
   body("deliverables").isArray(),
   validator,
   PermissionGuard(PERMS.FLIGHT_LOG_CREATE),
-  RobustRunner(createFlightLog)
+  RobustRunner(createFlightLog),
 );
 
 router.get(
@@ -43,7 +44,7 @@ router.get(
   query("_id").optional().notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FLIGHT_LOG_CREATE),
-  RobustRunner(getLog)
+  RobustRunner(getLog),
 );
 
 router.get(
@@ -55,7 +56,7 @@ router.get(
   ]),
   validator,
   PermissionGuard(PERMS.FLIGHT_LOG_CREATE),
-  RobustRunner(fetchLatestFlightlogDataByMissionId)
+  RobustRunner(fetchLatestFlightlogDataByMissionId),
 );
 
 router.get(
@@ -64,6 +65,6 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FLIGHT_LOG_CREATE),
-  RobustRunner(fetchLatestFlightlogByLocationId)
+  RobustRunner(fetchLatestFlightlogByLocationId),
 );
 export default router;

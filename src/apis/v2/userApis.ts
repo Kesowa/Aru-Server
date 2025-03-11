@@ -1,11 +1,12 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import User from "../../models/user";
 import { UserType } from "../../schemas/user";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListUsers } from "../../utils/authUtils";
 import { saveCSV } from "../../utils/dataUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const userApi = Router();
 
@@ -23,7 +24,7 @@ userApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { genCSV, limit, offset, orderBy, asc, populate } = req.query;
     const data = await User.find(
@@ -36,7 +37,7 @@ userApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -59,13 +60,13 @@ userApi.get(
         data,
         "",
         res.locals.user.tenantId._id,
-        res.locals.user._id
+        res.locals.user._id,
       );
       resp.csvPath = filepath;
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -114,12 +115,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default userApi;

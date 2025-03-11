@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import MissionType from "../../models/missionType";
 import { MissionTypeType } from "../../schemas/missonType";
 import { AuthResponse } from "../../utils/interfaceUtils";
@@ -21,7 +21,7 @@ missionTypeApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { isActive, limit, offset, orderBy, asc, populate } = req.query;
     const data = await MissionType.find(
@@ -33,7 +33,7 @@ missionTypeApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -47,7 +47,7 @@ missionTypeApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -97,12 +97,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default missionTypeApi;

@@ -1,12 +1,14 @@
-import * as pathUtils from "./pathUtils";
 import { EventEmitter } from "stream";
+
+import { Connection } from "amqplib";
+
 import { logger } from "../app";
 import { notificationSocket } from "../socket";
-import { Connection } from "amqplib";
-import aimlModel from "../models/aimlTask";
-import { IAimlTask, inferences, inferTypes } from "../schemas/aimlTask";
 import { permPath, saveVectorLayer } from "./dataUtils";
+import * as pathUtils from "./pathUtils";
+import aimlModel from "../models/aimlTask";
 import Layer from "../models/layer";
+import { IAimlTask, inferences, inferTypes } from "../schemas/aimlTask";
 import { vectorProps } from "../schemas/vectorprops";
 
 export const InferEvents = new EventEmitter();
@@ -52,11 +54,11 @@ export async function Setup(conn: Connection) {
           response.inference,
           queue,
           response.metadata,
-          response.success
+          response.success,
         )
           .then(() => logger.info(response, "SAVED INFERENCE"))
           .catch((err) =>
-            logger.error({ res, err }, "FAILED TO SAVE INFERENCE")
+            logger.error({ res, err }, "FAILED TO SAVE INFERENCE"),
           );
       }
     });
@@ -96,7 +98,7 @@ export type InferProgress = {
 export const sendInfer = async (
   filePath: pathUtils.KeyPath | pathUtils.DocPath,
   infer: inferTypes,
-  metadata: AruMetadata
+  metadata: AruMetadata,
 ) => {
   const REQ_QUEUE = infer + REQ_QUEUE_SFX;
   const req: InferRequest = {
@@ -112,7 +114,7 @@ export const receiveInfer = async (
   filePath: Inference,
   infer: inferTypes,
   metadata: AruMetadata,
-  success: boolean
+  success: boolean,
 ) => {
   const data = await aimlModel.findOne({
     _id: metadata.infer_id,

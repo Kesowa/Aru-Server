@@ -1,27 +1,28 @@
 import { Request } from "express";
-import Mission from "../../models/mission";
+import moment from "moment";
+import { Types } from "mongoose";
+
+import Alert from "../../models/alert";
+import Document from "../../models/document";
 import Flight from "../../models/flight";
 import Layer from "../../models/layer";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import { Types } from "mongoose";
-import { notificationSocket } from "../../socket";
+import Location from "../../models/location";
+import Mission from "../../models/mission";
+import Tenant from "../../models/tenant";
+import VOD from "../../models/vod";
 import {
   getNumberOfTypesOfMissions,
   missionByLocationPipe,
 } from "../../pipelines/missionPipeline";
-import Alert from "../../models/alert";
-import Document from "../../models/document";
-import VOD from "../../models/vod";
-import Tenant from "../../models/tenant";
+import { notificationSocket } from "../../socket";
+import { saveCSV } from "../../utils/dataUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
 import { IMissionType } from "../../schemas/missonType";
 import { IInvite } from "../../schemas/invite";
 import { ILocation } from "../../schemas/location";
 import MissionType from "../../models/missionType";
-import Location from "../../models/location";
-import moment from "moment";
-import { saveCSV } from "../../utils/dataUtils";
 
 //create flight controller
 type CreateMission = {
@@ -62,7 +63,7 @@ type CreateMission = {
 };
 export const createMission = async (
   req: Request<{}, {}, CreateMission>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { name, description, deliverables, assetID, flights } = req.body;
 
@@ -93,7 +94,7 @@ export const createMission = async (
   if (mission && tenant.actualMissionCount >= 0) {
     await Tenant.updateOne(
       { _id: res.locals.user.tenantId },
-      { $inc: { actualMissionCount: 1 } }
+      { $inc: { actualMissionCount: 1 } },
     );
   }
   // Mission id to store with flight
@@ -196,7 +197,7 @@ export const editMission = async (req: Request, res: AuthResponse) => {
       missionType: missionType?._id,
       isPublic,
     },
-    { new: true }
+    { new: true },
   )
     .populate<{ user: IUser }>("user", "name")
     .populate<{ missionType: IMissionType }>("missionType");
@@ -226,30 +227,30 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
       message: "Project requested top be deleted not found",
     });
 
-    if (
-      res.locals.user.userType === "tenant-root" ||
-      toBeDeleted.user.toString() === res.locals.user._id.toString()
-    ) {
-      const deletedMission = await Mission.findByIdAndDelete(req.body._id);
-      const deletedLayerData = await Layer.find({ missionId: req.body._id });
-      const deletedAlertData = await Alert.find({ missionId: req.body._id });
-      const deletedVodData = await VOD.find({ missionID: req.body._id });
-      const deletedDocumentsData = await Document.find({
-        missionId: req.body._id,
-      });
-      const deletedFlight = await Flight.deleteMany({
-        mission: req.body._id,
-      });
-      const deletedLayer = await Layer.deleteMany({
-        missionId: req.body._id,
-      });
-      const deletedAlert = await Alert.deleteMany({
-        missionId: req.body._id,
-      });
-      const deletedVod = await VOD.deleteMany({ missionID: req.body._id });
-      const deletedDocumetns = await Document.deleteMany({
-        missionId: req.body._id,
-      });
+  if (
+    res.locals.user.userType === "tenant-root" ||
+    toBeDeleted.user.toString() === res.locals.user._id.toString()
+  ) {
+    const deletedMission = await Mission.findByIdAndDelete(req.body._id);
+    const deletedLayerData = await Layer.find({ missionId: req.body._id });
+    const deletedAlertData = await Alert.find({ missionId: req.body._id });
+    const deletedVodData = await VOD.find({ missionID: req.body._id });
+    const deletedDocumentsData = await Document.find({
+      missionId: req.body._id,
+    });
+    const deletedFlight = await Flight.deleteMany({
+      mission: req.body._id,
+    });
+    const deletedLayer = await Layer.deleteMany({
+      missionId: req.body._id,
+    });
+    const deletedAlert = await Alert.deleteMany({
+      missionId: req.body._id,
+    });
+    const deletedVod = await VOD.deleteMany({ missionID: req.body._id });
+    const deletedDocumetns = await Document.deleteMany({
+      missionId: req.body._id,
+    });
 
     const tenant: any = await Tenant.findOne({
       _id: res.locals.user.tenantId,
@@ -257,7 +258,7 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
     if (deletedMission && tenant.actualMissionCount) {
       await Tenant.updateOne(
         { _id: res.locals.user.tenantId },
-        { $inc: { actualMissionCount: -1 } }
+        { $inc: { actualMissionCount: -1 } },
       );
     }
     for (const layer of deletedLayerData) {
@@ -304,7 +305,7 @@ export const deleteMission = async (req: Request, res: AuthResponse) => {
 //fetch all flights for a specific mission
 export const fetchAllMissionByUserId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const missions = await Mission.find({ user: res.locals.user._id });
   res.json({
@@ -317,7 +318,7 @@ export const fetchAllMissionByUserId = async (
 // fetch all missions of a particular organisation
 export const fetchAllMissionsForTenant = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { client, filter, missionType, searchFilters, sort } = req.query;
   const isClient = res.locals.user.userType === "tenant-client";
@@ -383,7 +384,7 @@ export const fetchAllMissionsForTenant = async (
 
         mission["flight"] = flight;
         return mission;
-      })
+      }),
     );
 
     // Finding total number of results matching the rest of the query
@@ -408,7 +409,7 @@ export const fetchAllMissionsForTenant = async (
 
         mission["flight"] = flight;
         return mission;
-      })
+      }),
     );
 
     // Filtering
@@ -430,8 +431,7 @@ export const fetchAllMissionsForTenant = async (
             shouldReturn &&
             re.test(moment(mission.flight.date).format("YYYY-MM-DD"));
         } else if (filterBy === "clientId" && mission.clientId) {
-          shouldReturn =
-            shouldReturn && re.test(String(mission.clientId.name));
+          shouldReturn = shouldReturn && re.test(String(mission.clientId.name));
         } else {
           shouldReturn = shouldReturn && re.test(String(mission[filterBy]));
         }
@@ -446,7 +446,7 @@ export const fetchAllMissionsForTenant = async (
     if (startIndex < missionsList.length) {
       missionsList = missionsList.slice(
         startIndex,
-        Math.min(startIndex + limit, missionsList.length)
+        Math.min(startIndex + limit, missionsList.length),
       );
     }
   }
@@ -470,7 +470,7 @@ export const fetchAllMissionsForTenant = async (
   }
 
   const allMissionsCount = await Mission.aggregate(
-    getNumberOfTypesOfMissions(res.locals.user.tenantId._id)
+    getNumberOfTypesOfMissions(res.locals.user.tenantId._id),
   );
 
   const resp = {
@@ -546,7 +546,7 @@ export const fetchAllMissionByPilotOrNull = async (
       pilotID: Types.ObjectId;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const status = req.query.status;
   const qdate = req.query.date;
@@ -570,7 +570,7 @@ export const fetchAllMissionByPilotOrNull = async (
           date: qdate,
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       )
         .skip(page * 10)
         .limit(10)
@@ -594,7 +594,7 @@ export const fetchAllMissionByPilotOrNull = async (
           },
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       )
         .skip(page * 10)
         .limit(10)
@@ -613,7 +613,7 @@ export const fetchAllMissionByPilotOrNull = async (
           tenant: res.locals.user.tenantId._id,
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       )
         .skip(page * 10)
         .limit(10)
@@ -635,7 +635,7 @@ export const fetchAllMissionByPilotOrNull = async (
           date: qdate,
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       )
         .skip(page * 10)
         .limit(10)
@@ -662,7 +662,7 @@ export const fetchAllMissionByPilotOrNull = async (
           },
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       )
         .skip(page * 10)
         .limit(10)
@@ -681,7 +681,7 @@ export const fetchAllMissionByPilotOrNull = async (
           tenant: res.locals.user.tenantId._id,
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       )
         .skip(page * 10)
         .limit(10)
@@ -707,7 +707,7 @@ export const fetchAllMissionByPilotOrNull = async (
           date: qdate,
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       ).populate<{ mission: IMission }>("mission");
       const filteredFlights = selectedFlights?.filter((flight) => {
         if (flight?.mission.status == status) {
@@ -731,7 +731,7 @@ export const fetchAllMissionByPilotOrNull = async (
           },
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       )
 
         .populate<{ mission: IMission }>("mission")
@@ -749,7 +749,7 @@ export const fetchAllMissionByPilotOrNull = async (
           tenant: res.locals.user.tenantId._id,
         },
         null,
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       ).populate<{ mission: IMission }>("mission");
       const filteredFlights = selectedFlights?.filter((flight) => {
         if (flight?.mission.status == status) {
@@ -833,7 +833,7 @@ export const autoComplete = async (req: Request, res: AuthResponse) => {
 
 export const fetchTotalNumberofMissionByLocationID = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const data = await Flight.count({
     locationID: new Types.ObjectId(String(req.query.id)),
@@ -856,14 +856,14 @@ export const fetchTotalNumberofMissionByLocationID = async (
 // get mission for a location
 export const fetchMissionsByLocationMapref = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const data = await Flight.find(
     {
       locationID: new Types.ObjectId(String(req.query.id)),
       tenant: res.locals.user.tenantId._id,
     },
-    { mission: 1, centerPoints: 1, createdAt: 1 }
+    { mission: 1, centerPoints: 1, createdAt: 1 },
   ).populate<{ mission: IMission }>("mission", "name");
 
   const result: any[] = [];
@@ -892,7 +892,7 @@ export const fetchMissionsByLocationMapref = async (
 
 export const fetchMissionByLocationID = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const locationID = String(req.query.locationID);
   const missionID = String(req.query.missionID);
@@ -901,8 +901,8 @@ export const fetchMissionByLocationID = async (
     missionByLocationPipe(
       locationID.toString(),
       missionID.toString(),
-      tenantID.toString()
-    )
+      tenantID.toString(),
+    ),
   );
   if (data.length) {
     res.json({
@@ -920,7 +920,7 @@ export const fetchMissionByLocationID = async (
 
 export const getDocumentCountForMission = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const totalAlert = await Alert.countDocuments({
     missionId: new Types.ObjectId(String(req.query.missionId)),
@@ -954,7 +954,7 @@ export const getDocumentCountForMission = async (
 
 export const insertMissionTypeById = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const result = await Mission.findById(req.body.id);
   if (result) {
@@ -973,13 +973,13 @@ export const insertMissionTypeById = async (
 
 export const insertMissionTypeBytenantId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const result = await Mission.updateMany(
     {
       tenantId: res.locals.user.tenantId._id,
     },
-    { missionType: req.body.missionType }
+    { missionType: req.body.missionType },
   );
   if (result) {
     return res.status(200).json({
@@ -995,7 +995,7 @@ export const insertMissionTypeBytenantId = async (
 
 export const getMissionCsvForTenantOrUser = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const result = await Mission.find(
     {
@@ -1003,7 +1003,7 @@ export const getMissionCsvForTenantOrUser = async (
       tenantId: res.locals.user.tenantId._id,
       status: req.body.status,
     },
-    { name: 1, status: 1, deliverables: 1, missionType: 1 }
+    { name: 1, status: 1, deliverables: 1, missionType: 1 },
   )
     .populate<{ missionType: IMissionType }>({
       path: "missionType",
@@ -1020,7 +1020,7 @@ export const getMissionCsvForTenantOrUser = async (
       result,
       "",
       res.locals.user.tenantId._id,
-      res.locals.user._id
+      res.locals.user._id,
     );
     return res.status(200).json({
       status: true,
@@ -1038,7 +1038,7 @@ export const getMissionCsvForTenantOrUser = async (
 // convert clientId from ObjectId to array of Object Id
 export const convertClientIdToArray = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const result = await Mission.updateMany(
     {
@@ -1061,7 +1061,7 @@ export const convertClientIdToArray = async (
           clientId: ["$clientId"],
         },
       },
-    ]
+    ],
   );
   await Mission.updateMany(
     {
@@ -1071,7 +1071,7 @@ export const convertClientIdToArray = async (
       $pull: {
         clientId: null,
       },
-    }
+    },
   );
   return res.json({
     status: true,
@@ -1084,7 +1084,7 @@ export const convertClientIdToArray = async (
 
 export const getMissionLayerFiles = async (
   req: Request<{ id: Types.ObjectId }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const data = await Layer.aggregate([
     {
@@ -1124,7 +1124,7 @@ const getAlertLocationGeojson = async (
   tenantId: Types.ObjectId,
   startDate: Date,
   endDate: Date,
-  missionID: Types.ObjectId
+  missionID: Types.ObjectId,
 ) => {
   const alerts = await Alert.find({
     tenantId,
@@ -1173,7 +1173,7 @@ export const GetAlertLocationGeojson = async (
     unknown,
     { startDate: Date; endDate: Date }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const startDate = req.query.startDate;
   const endDate = req.query.endDate;
@@ -1181,7 +1181,7 @@ export const GetAlertLocationGeojson = async (
     res.locals.user.tenantId._id,
     startDate,
     endDate,
-    new Types.ObjectId(req.params.missionID)
+    new Types.ObjectId(req.params.missionID),
   );
   res.json(geojson);
 };
@@ -1190,7 +1190,7 @@ const getVideoLocationGeojson = async (
   tenantId: Types.ObjectId,
   startDate: Date,
   endDate: Date,
-  missionID: Types.ObjectId
+  missionID: Types.ObjectId,
 ) => {
   const videos = await VOD.aggregate([
     {
@@ -1274,7 +1274,7 @@ export const GetVideoLocationGeojson = async (
     unknown,
     { startDate: Date; endDate: Date }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const startDate = req.query.startDate;
   const endDate = req.query.endDate;
@@ -1282,7 +1282,7 @@ export const GetVideoLocationGeojson = async (
     res.locals.user.tenantId._id,
     startDate,
     endDate,
-    new Types.ObjectId(req.params.missionID)
+    new Types.ObjectId(req.params.missionID),
   );
   res.json(geojson);
 };

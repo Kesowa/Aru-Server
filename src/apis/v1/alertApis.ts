@@ -20,11 +20,10 @@ import {
   updateAlert,
   updateMultiAlert,
 } from "../../controllers/v1/alertController";
-
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isAlertCount } from "../../utils/countPermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 const router = express.Router();
 
 //++++++++++++++++++++ create alert++++++++++++++++++++++++++++++++++
@@ -46,7 +45,7 @@ router.post(
   validator,
   PermissionGuard(PERMS.ALERT_CREATE),
   isAlertCount,
-  RobustRunner(createAlert)
+  RobustRunner(createAlert),
 );
 router.post(
   "/manual-upload-alert",
@@ -63,7 +62,7 @@ router.post(
   body("type").notEmpty().isString(),
   validator,
   PermissionGuard(PERMS.ALERT_CREATE),
-  RobustRunner(manualUploadAlert)
+  RobustRunner(manualUploadAlert),
 );
 //+++++++++++++++++++ fetch all alert for a mission +++++++++++++++++++++++++
 
@@ -76,7 +75,7 @@ router.get(
   ]),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchAllAlertByFlightorLocationId)
+  RobustRunner(fetchAllAlertByFlightorLocationId),
 );
 router.get(
   "/get-alert-by-ID",
@@ -84,7 +83,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchAllAlertByAlertId)
+  RobustRunner(fetchAllAlertByAlertId),
 );
 router.get(
   "/get-alerts-by-location-ID",
@@ -92,7 +91,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchAllAlertByLocationId)
+  RobustRunner(fetchAllAlertByLocationId),
 );
 
 router.get(
@@ -102,7 +101,7 @@ router.get(
   query("time").notEmpty().isString(),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchAllAlertByLocationIdAndTime)
+  RobustRunner(fetchAllAlertByLocationIdAndTime),
 );
 
 router.get(
@@ -111,7 +110,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchNumberofAlertsByLocationId)
+  RobustRunner(fetchNumberofAlertsByLocationId),
 );
 
 router.get(
@@ -123,14 +122,14 @@ router.get(
   query("sortBy")
     .optional()
     .matches(
-      /(createdAt|updatedAt|location|locationName|pcount|fileSize|type):(desc|asce)/
+      /(createdAt|updatedAt|location|locationName|pcount|fileSize|type):(desc|asce)/,
     ),
   query("alertType").optional().isString(),
   query("id").notEmpty().isMongoId(),
   query("isFlagged").optional().isBoolean().toBoolean(),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchAlertsUsePaginationByMissionID)
+  RobustRunner(fetchAlertsUsePaginationByMissionID),
 );
 
 router.get(
@@ -143,11 +142,11 @@ router.get(
   query("sortBy")
     .optional()
     .matches(
-      /(createdAt|updatedAt|location|locationName|pcount|fileSize|type):(desc|asc)/
+      /(createdAt|updatedAt|location|locationName|pcount|fileSize|type):(desc|asc)/,
     ),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchAlertsUsePaginationByLocationId)
+  RobustRunner(fetchAlertsUsePaginationByLocationId),
 );
 
 router.get(
@@ -156,7 +155,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchAllAlertsByMissionMapref)
+  RobustRunner(fetchAllAlertsByMissionMapref),
 );
 router.get(
   "/get-alerts-by-tenantid",
@@ -167,7 +166,7 @@ router.get(
     .matches(/^\d{1,4}\s[a-zA-Z]{1,10}$/), // ex: "2 days"
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(fetchAllAlertByTenantId)
+  RobustRunner(fetchAllAlertByTenantId),
 );
 router.get(
   "/get-alerts-by-tenantid-advanced-result",
@@ -185,7 +184,7 @@ router.get(
   query("limit").isNumeric().toInt(),
   validator,
   PermissionGuard(PERMS.ALERT_LIST),
-  RobustRunner(advancedAlertResultByTenantId)
+  RobustRunner(advancedAlertResultByTenantId),
 );
 router.delete(
   "/delete-multiple-alerts",
@@ -193,7 +192,7 @@ router.delete(
   body("id").notEmpty().isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.ALERT_LIST, PERMS.ALERT_DELETE),
-  RobustRunner(deleteMultipleAlerts)
+  RobustRunner(deleteMultipleAlerts),
 );
 
 router.patch(
@@ -203,7 +202,7 @@ router.patch(
   body("update").notEmpty().isObject(),
   PermissionGuard(PERMS.ALERT_UPDATE),
   validator,
-  RobustRunner(updateAlert)
+  RobustRunner(updateAlert),
 );
 router.patch(
   "/update-multi-alert-by-ID",
@@ -212,7 +211,7 @@ router.patch(
   body("update").notEmpty().isObject(),
   PermissionGuard(PERMS.ALERT_LIST, PERMS.ALERT_UPDATE),
   validator,
-  RobustRunner(updateMultiAlert)
+  RobustRunner(updateMultiAlert),
 );
 // only for development purpose delete during moving to production
 // router.post('/update-ids', updateAlertIds);

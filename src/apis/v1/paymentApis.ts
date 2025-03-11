@@ -1,5 +1,6 @@
 import express from "express";
 import { body, param } from "express-validator";
+
 import { Mode } from "../../constants";
 import {
   completeOrder,
@@ -24,7 +25,7 @@ router.post(
   body("package").isMongoId(),
   // onlyTenantRootAccess,
   validator,
-  RobustRunner(generateOrder)
+  RobustRunner(generateOrder),
 );
 
 router.post(
@@ -36,7 +37,7 @@ router.post(
   body("razorpay_signature").isString().notEmpty(),
   // onlyTenantRootAccess,
   validator,
-  RobustRunner(completeOrder)
+  RobustRunner(completeOrder),
 );
 
 router.post(
@@ -47,7 +48,7 @@ router.post(
   body("payment_id").isString().notEmpty(),
   body("order_id").isString().notEmpty(),
   validator,
-  RobustRunner(paymentFail)
+  RobustRunner(paymentFail),
 );
 
 router.post("/handle-webhook", RobustRunner(handleWebhook));
@@ -58,7 +59,7 @@ router.get(
   // isAuthenticated,
   param("tenantId").isMongoId(),
   validator,
-  RobustRunner(getAllTenantPayments)
+  RobustRunner(getAllTenantPayments),
 );
 
 export default router;

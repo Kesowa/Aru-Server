@@ -1,4 +1,5 @@
 import { model } from "mongoose";
+
 import flightLogSchema, {
   FlightLogModel,
   IFlightLog,
@@ -6,7 +7,7 @@ import flightLogSchema, {
 
 const flightLog = model<IFlightLog, FlightLogModel>(
   "flightLog",
-  flightLogSchema
+  flightLogSchema,
 );
 
 export default flightLog;

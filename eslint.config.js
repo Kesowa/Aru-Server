@@ -34,11 +34,24 @@ export default [
           alphabetize: { order: "asc", caseInsensitive: true },
         },
       ],
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-inferrable-types": "off",
     },
-    ignores: ["node_modules", "build", "assets", "dist", "jest.config.jest", "mongo-init.js", "openAPI", "tmp", ".github"]
+    ignores: [
+      "node_modules",
+      "build",
+      "assets",
+      "dist",
+      "jest.config.jest",
+      "mongo-init.js",
+      "openAPI",
+      "tmp",
+      ".github",
+    ],
   },
 ];

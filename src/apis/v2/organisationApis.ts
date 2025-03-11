@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Tenant from "../../models/tenant";
 import { TenantType } from "../../schemas/tenant";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { onlyTenantRootAccess } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const organisationApi = Router();
 
@@ -17,7 +18,7 @@ organisationApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { populate } = req.query;
     const data = await Tenant.findById(res.locals.user.tenantId._id)
@@ -26,7 +27,7 @@ organisationApi.get(
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -51,12 +52,12 @@ openApi.addPath(
             properties: {
               data: TenantType,
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default organisationApi;

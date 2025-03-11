@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { body, query } from "express-validator";
+
 import {
   createLayerGroup,
   editLayerGroup,
@@ -7,9 +8,9 @@ import {
   deleteLayerGroup,
   deleteLayerId,
 } from "../../controllers/v1/layerGroupControllers";
-import { body, query } from "express-validator";
-import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { validator, RobustRunner } from "../../utils/requestHelpers";
 const router = Router();
 
 router.post(
@@ -19,7 +20,7 @@ router.post(
   body("layers").notEmpty().isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.UPLOAD_LAYER),
-  RobustRunner(createLayerGroup)
+  RobustRunner(createLayerGroup),
 );
 router.patch(
   "/edit",
@@ -31,7 +32,7 @@ router.patch(
   body("layers").exists({ checkFalsy: true }).isArray(),
   validator,
   PermissionGuard(PERMS.EDIT_LAYER),
-  RobustRunner(editLayerGroup)
+  RobustRunner(editLayerGroup),
 );
 router.get(
   "/fetch",
@@ -39,7 +40,7 @@ router.get(
   body("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.LAYER_LIST),
-  RobustRunner(fetchLayergroup)
+  RobustRunner(fetchLayergroup),
 );
 router.delete(
   "/delete",
@@ -47,7 +48,7 @@ router.delete(
   query("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.DELETE_LAYER),
-  RobustRunner(deleteLayerGroup)
+  RobustRunner(deleteLayerGroup),
 );
 router.post(
   "/delete-layerId",
@@ -56,7 +57,7 @@ router.post(
   body("layers").notEmpty().isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.DELETE_LAYER),
-  RobustRunner(deleteLayerId)
+  RobustRunner(deleteLayerId),
 );
 
 export default router;

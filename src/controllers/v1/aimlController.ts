@@ -1,16 +1,17 @@
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import VOD from "../../models/vod";
+import moment from "moment";
+
+import { logger } from "../../app";
 import aimlModel from "../../models/aimlTask";
 import Layer from "../../models/layer";
-import moment from "moment";
+import VOD from "../../models/vod";
 import { notificationSocket } from "../../socket";
 import { sendInfer } from "../../utils/inferUtils";
-import { logger } from "../../app";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const inferVodViolence = async (
   req: Request<{ vodId: string; inferType: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   req.log.info(`Processing VOD with ID: ${req.params.vodId}`);
 
@@ -103,7 +104,7 @@ export const inferVodViolence = async (
 
 export const inferLayerProcessing = async (
   req: Request<{ layerId: string; inferType: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   logger.info(req, "SENT INFERENCE REQUEST");
 
@@ -212,7 +213,7 @@ export const fetchAimlTasks = async (
     {},
     { infer?: string[] }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const query = {
     docModel: req.params.docModel,

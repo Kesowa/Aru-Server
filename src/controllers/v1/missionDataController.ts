@@ -1,14 +1,13 @@
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { Request } from "express";
 import { isValidObjectId, Types, Model } from "mongoose";
-import Mission from "../../models/mission";
-import Document from "../../models/document";
+
 import Alert from "../../models/alert";
+import Document from "../../models/document";
+import Mission from "../../models/mission";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 // add models with missionId and fileSize here
-const ModelMap = new Array<
-  [string, Model<any>]
->();
+const ModelMap = new Array<[string, Model<any>]>();
 ModelMap.push(["document", Document]);
 ModelMap.push(["alert", Alert]);
 

@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import User from "../../models/user";
+import { IPermission } from "../../schemas/permission";
 import { UserType } from "../../schemas/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { IPermission } from "../../schemas/permission";
 
 const pilotApi = Router();
 
@@ -21,7 +21,7 @@ pilotApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { limit, offset, orderBy, asc, populate } = req.query;
     const data = await User.find(
@@ -34,7 +34,7 @@ pilotApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .populate<{ userGroupId: { permissions: IPermission[] } }>({
         path: "userGroupId",
@@ -57,7 +57,7 @@ pilotApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -106,12 +106,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default pilotApi;

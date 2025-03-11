@@ -4,7 +4,7 @@ import { readToString, stat } from "./objectStorage";
 export const getFileSize = async (filepath: string) => {
   const fileStats = await stat(filepath);
   const fileSize: number = Number(
-    (Number(fileStats.size) / (1024 * 1024)).toFixed(5)
+    (Number(fileStats.size) / (1024 * 1024)).toFixed(5),
   );
   return fileSize;
 };
@@ -25,7 +25,7 @@ export const findHlsSize = async (indexFile: string) => {
     .filter((line) => !line.startsWith("#") && line.endsWith(".ts"));
   const partSize = (
     await stat(
-      DirPath(Directory.VOD, vodFiles[Math.floor(vodFiles.length / 2)])
+      DirPath(Directory.VOD, vodFiles[Math.floor(vodFiles.length / 2)]),
     )
   ).size;
   const hlsSize = index.length + vodFiles.length * partSize;

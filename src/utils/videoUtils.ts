@@ -1,13 +1,15 @@
 import { EventEmitter } from "events";
-import * as pathUtils from "./pathUtils";
 import path from "path";
+
+import { Connection } from "amqplib";
 import DJISRTParser from "dji_srt_parser";
+
+import * as pathUtils from "./pathUtils";
 import { logger } from "../app";
 import VOD from "../models/vod";
 import { missionSpecificSocket } from "../socket";
 import { deleteObj, readToString, stat, uploadString } from "./objectStorage";
 import { IVOD } from "../schemas/VOD";
-import { Connection } from "amqplib";
 
 export const VODEvents = new EventEmitter();
 
@@ -65,7 +67,7 @@ export type TranscodeResponse = {
  * */
 export const transcodeVideo = async (
   filePath: pathUtils.KeyPath | pathUtils.DocPath,
-  metadata: AruMetadata
+  metadata: AruMetadata,
 ) => {
   const req: TranscodeRequest = {
     file: pathUtils.keyPath(filePath),
@@ -78,7 +80,7 @@ export const transcodeVideo = async (
 export const receiveVideo = async (
   video: Video,
   metadata: AruMetadata,
-  success: boolean
+  success: boolean,
 ) => {
   const vod = await VOD.findOne({
     _id: metadata.video_id,
@@ -114,7 +116,7 @@ VODEvents.on(RES_QUEUE, function (res: TranscodeResponse) {
  * Returns undefined if no srt found
  */
 export const extractTelemetry = async (
-  srtPath: pathUtils.KeyPath | pathUtils.DocPath
+  srtPath: pathUtils.KeyPath | pathUtils.DocPath,
 ) => {
   const dir = path.dirname(srtPath);
   const outPath = path.join(dir, "index.geojson");
@@ -158,7 +160,7 @@ export const deleteHlsVodUsingIndex = async (indexFile: string) => {
     .map((file) => indexDir + "/" + file);
   vodFiles.push(indexFile);
   const result = await Promise.allSettled(
-    vodFiles.map((file) => deleteObj(file))
+    vodFiles.map((file) => deleteObj(file)),
   );
   return result.every((res) => res);
 };

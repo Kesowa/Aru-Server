@@ -1,9 +1,9 @@
 import { Request } from "express";
+
 import deviceModel from "../../models/model";
 import { IAssetClass } from "../../schemas/assetClass";
 import { IManufacturer } from "../../schemas/manufacturer";
 import { IUser } from "../../schemas/user";
-
 import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const createModel = async (req: Request, res: AuthResponse) => {
@@ -57,7 +57,7 @@ export const updateModel = async (req: Request, res: AuthResponse) => {
       _id: req.body.id,
       tenantID: res.locals.user.tenantId._id,
     },
-    { ...req.body.update }
+    { ...req.body.update },
   );
   if (updatedDoc === null) {
     res.status(404).json({

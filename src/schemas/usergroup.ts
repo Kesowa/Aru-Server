@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
+
 import { PERMS } from "./permission";
 
 export interface IUserGroup {
@@ -56,7 +57,7 @@ const usergroupschema = new mongoose.Schema<IUserGroup>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 usergroupschema.index({
   name: 1,

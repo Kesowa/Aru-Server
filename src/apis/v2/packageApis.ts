@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Package from "../../models/package";
 import { PackageType } from "../../schemas/package";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { onlySuperAdminAccess } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const packageApi = Router();
 
@@ -22,7 +23,7 @@ packageApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { isActive, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Package.find(
@@ -34,7 +35,7 @@ packageApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -48,7 +49,7 @@ packageApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -98,12 +99,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default packageApi;

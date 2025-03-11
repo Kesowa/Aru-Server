@@ -1,11 +1,12 @@
-import Tenant from "../models/tenant";
 import { NextFunction, Request } from "express";
+
 import { AuthResponse } from "./interfaceUtils";
+import Tenant from "../models/tenant";
 import { IPackage } from "../schemas/package";
 export const isAlertCount = async (
   req: Request,
   res: AuthResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const docCount = await Tenant.findOne({
@@ -35,7 +36,7 @@ export const isAlertCount = async (
 export const isUserCount = async (
   req: Request,
   res: AuthResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const docCount = await Tenant.findOne({
@@ -65,7 +66,7 @@ export const isUserCount = async (
 export const isClientCount = async (
   req: Request,
   res: AuthResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const docCount: any = await Tenant.findOne({
@@ -95,7 +96,7 @@ export const isClientCount = async (
 export const isMissionCount = async (
   req: Request,
   res: AuthResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const docCount: any = await Tenant.findOne({
@@ -125,7 +126,7 @@ export const isMissionCount = async (
 export const isLayerCount = async (
   req: Request,
   res: AuthResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const doc = await Tenant.findOne({ _id: res.locals.user.tenantId })
@@ -151,7 +152,7 @@ export const isLayerCount = async (
 export const isLocationCount = async (
   req: Request,
   res: AuthResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const docCount: any = await Tenant.findOne({
@@ -182,7 +183,7 @@ export const isLocationCount = async (
 export const isVodCount = async (
   req: Request,
   res: AuthResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const docCount: any = await Tenant.findOne({
@@ -211,7 +212,7 @@ export const isVodCount = async (
 export const isUserGroupCount = async (
   req: Request,
   res: AuthResponse,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const docCount: any = await Tenant.findOne({

@@ -1,5 +1,6 @@
 import express from "express";
-import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { body, query } from "express-validator";
+
 import {
   createLocation,
   deleteLocation,
@@ -9,10 +10,10 @@ import {
   getLocationByLatLong,
   updateLocation,
 } from "../../controllers/v1/locationController";
-import { isLocationCount } from "../../utils/countPermission";
-import { body, query } from "express-validator";
-import { validator, RobustRunner } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
+import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
+import { isLocationCount } from "../../utils/countPermission";
+import { validator, RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();
 
@@ -24,14 +25,14 @@ router.post(
   body("properties").notEmpty().isObject(),
   PermissionGuard(PERMS.LOCATION_CREATE),
   isLocationCount,
-  RobustRunner(createLocation)
+  RobustRunner(createLocation),
 );
 
 router.get(
   "/get",
   isAuthenticated,
   PermissionGuard(PERMS.LOCATION_LIST),
-  RobustRunner(getLocation)
+  RobustRunner(getLocation),
 );
 
 // Route not used in client, and inconsistent
@@ -41,7 +42,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.LOCATION_LIST),
-  RobustRunner(getwithinLocationByID)
+  RobustRunner(getwithinLocationByID),
 );
 
 router.get(
@@ -50,7 +51,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.LOCATION_LIST),
-  RobustRunner(getLocationByID)
+  RobustRunner(getLocationByID),
 );
 
 router.patch(
@@ -63,7 +64,7 @@ router.patch(
   body("geometry.type").notEmpty().isString(),
   validator,
   PermissionGuard(PERMS.LOCATION_UPDATE),
-  RobustRunner(updateLocation)
+  RobustRunner(updateLocation),
 );
 
 router.get(
@@ -73,7 +74,7 @@ router.get(
   query("long").exists().isNumeric().toInt(),
   validator,
   PermissionGuard(PERMS.LOCATION_LIST),
-  RobustRunner(getLocationByLatLong)
+  RobustRunner(getLocationByLatLong),
 );
 
 router.delete(
@@ -82,7 +83,7 @@ router.delete(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.LOCATION_DELETE),
-  RobustRunner(deleteLocation)
+  RobustRunner(deleteLocation),
 );
 
 export default router;

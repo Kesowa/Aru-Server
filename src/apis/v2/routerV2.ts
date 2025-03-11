@@ -1,25 +1,27 @@
 import { Router } from "express";
+
 import "express-async-errors";
-import openApi from "./openApi";
 import { writeFileSync } from "fs";
+
 import * as OpenApiValidator from "express-openapi-validator";
 import swaggerUi from "swagger-ui-express";
+
 import alertApi from "./alertApis";
-import { isAuthenticated } from "../../utils/authUtils";
-import missionApi from "./missionApis";
 import assetApi from "./assetApis";
 import assetClassApi from "./assetClassApis";
-import layerApi from "./layerApis";
 import baseLayerApi from "./baseLayerApis";
+import clientApi from "./clientApis";
 import documentApi from "./documentApis";
 import flightApi from "./flightApis";
-import clientApi from "./clientApis";
 import flightLogApi from "./flightLogApis";
+import layerApi from "./layerApis";
 import layerGroupApis from "./layerGroupApis";
 import locationApi from "./locationApis";
 import manufacturerApi from "./manufacturerApis";
+import missionApi from "./missionApis";
 import missionTypeApi from "./missionTypeApis";
 import modelApi from "./modelApis";
+import openApi from "./openApi";
 import organisationApi from "./organisationApis";
 import packageApi from "./packageApis";
 import paymentApi from "./paymentApis";
@@ -32,6 +34,7 @@ import threadApi from "./threadApis";
 import userApi from "./userApis";
 import userGroupApi from "./userGroupApis";
 import vodApi from "./vodApis";
+import { isAuthenticated } from "../../utils/authUtils";
 
 const routerV2 = Router();
 
@@ -50,7 +53,7 @@ routerV2.use(
     apiSpec: "/tmp/openapi.json",
     validateRequests: true,
     // validateResponses: true,
-  })
+  }),
 );
 
 routerV2.use(isAuthenticated);

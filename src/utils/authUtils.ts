@@ -1,13 +1,13 @@
 import { Request, NextFunction, Response } from "express";
-import User from "../models/user";
-import { AuthResponse } from "./interfaceUtils";
-import Tenant from "../models/tenant";
-
-import { IPackage } from "../schemas/package";
-import PassReset from "../models/passwordReset";
-import { GetPermissions, PERMS } from "../schemas/permission";
 import { Session } from "express-session";
 import zod from "zod";
+
+import { AuthResponse } from "./interfaceUtils";
+import PassReset from "../models/passwordReset";
+import Tenant from "../models/tenant";
+import User from "../models/user";
+import { IPackage } from "../schemas/package";
+import { GetPermissions, PERMS } from "../schemas/permission";
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,
@@ -34,7 +34,7 @@ const Authenticator = async (session: Session) => {
     user["customPermissions"] = await GetPermissions(
       user.userGroupId,
       user.userType,
-      user.tenantId
+      user.tenantId,
     );
     if (user.userType == "super-admin") return user;
     const doc = await Tenant.findOne({ _id: user.tenantId }).populate<{
@@ -55,7 +55,7 @@ const Authenticator = async (session: Session) => {
 export const isAuthenticated = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   Authenticator(req.session)
     .then((data) => {
@@ -93,7 +93,7 @@ export function PermissionGuard(...perms: PERMS[]) {
   return (req: Request, res: AuthResponse, next: NextFunction) => {
     console.log("PERMISSIONS", perms);
     const sufficientPerms = perms.every((perm) =>
-      res.locals.user.customPermissions.includes(perm)
+      res.locals.user.customPermissions.includes(perm),
     );
     if (sufficientPerms) {
       req.log.info("user has sufficient perms");
@@ -101,7 +101,7 @@ export function PermissionGuard(...perms: PERMS[]) {
       return;
     }
     const missingPerms = perms.filter(
-      (perm) => !res.locals.user.customPermissions.includes(perm)
+      (perm) => !res.locals.user.customPermissions.includes(perm),
     );
     res.status(403).json({
       status: false,
@@ -154,7 +154,7 @@ function genPermissionGuard(perm: permGuardType) {
 export const shouldLinkSend = async (
   req: Request<{}, {}, { email: string }>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const email = req.body.email;

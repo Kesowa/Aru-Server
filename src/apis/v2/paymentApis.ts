@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
+import { Mode } from "../../constants";
 import Payment from "../../models/payment";
 import { PaymentType } from "../../schemas/payment";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Mode } from "../../constants";
 import { environmentGuard } from "../../utils/requestHelpers";
 
 const paymentApi = Router();
@@ -22,7 +23,7 @@ paymentApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { limit, offset, orderBy, asc, populate } = req.query;
     const data = await Payment.find(
@@ -34,7 +35,7 @@ paymentApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -48,7 +49,7 @@ paymentApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -98,12 +99,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default paymentApi;

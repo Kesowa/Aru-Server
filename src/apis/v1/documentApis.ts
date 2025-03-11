@@ -1,4 +1,5 @@
 import express from "express";
+
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 const router = express.Router();
 import {
@@ -13,7 +14,9 @@ import {
   updateDoc,
   getImagesbymissionID,
 } from "../../controllers/v1/documentController";
+
 import { body, query } from "express-validator";
+
 import { validator } from "../../utils/requestHelpers";
 import { PERMS } from "../../schemas/permission";
 
@@ -28,7 +31,7 @@ router.post(
   body("type").optional().trim(),
   validator,
   PermissionGuard(PERMS.UPLOAD_DOCUMENT),
-  createDocument
+  createDocument,
 );
 
 // ********* delete  Document*************
@@ -38,7 +41,7 @@ router.delete(
   query("id").notEmpty(),
   validator,
   PermissionGuard(PERMS.DELETE_DOCUMENT),
-  deleteDocument
+  deleteDocument,
 );
 
 // ********* delete  multiple Document*************
@@ -49,7 +52,7 @@ router.delete(
   body("id").isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.DELETE_DOCUMENT, PERMS.LIST_DOCUMENT),
-  deletemultipleDocument
+  deletemultipleDocument,
 );
 
 // ********* fetch Document by missionID  *************
@@ -62,7 +65,7 @@ router.get(
   query("limit").optional().isInt().toInt(),
   validator,
   PermissionGuard(PERMS.LIST_DOCUMENT),
-  getbymissionID
+  getbymissionID,
 );
 
 router.get(
@@ -74,7 +77,7 @@ router.get(
   query("limit").optional().isInt().toInt(),
   validator,
   PermissionGuard(PERMS.LIST_DOCUMENT),
-  getImagesbymissionID
+  getImagesbymissionID,
 );
 
 router.get(
@@ -84,7 +87,7 @@ router.get(
   query("folderName").trim(),
   validator,
   PermissionGuard(PERMS.LIST_DOCUMENT),
-  zipbymissionId
+  zipbymissionId,
 );
 
 router.patch(
@@ -94,7 +97,7 @@ router.patch(
   body("update").notEmpty().isObject(),
   validator,
   PermissionGuard(PERMS.UPDATE_DOCUMENT),
-  updateDoc
+  updateDoc,
 );
 
 router.patch(
@@ -104,7 +107,7 @@ router.patch(
   body("update").notEmpty().isObject(),
   validator,
   PermissionGuard(PERMS.UPDATE_DOCUMENT, PERMS.LIST_DOCUMENT),
-  updateMultiDoc
+  updateMultiDoc,
 );
 
 export default router;

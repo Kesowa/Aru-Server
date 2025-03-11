@@ -1,10 +1,10 @@
 import { Schema, Types } from "mongoose";
 
 const docModels = <const>["vod", "layer", "alert", "document"];
-export type docTypes = typeof docModels[number];
+export type docTypes = (typeof docModels)[number];
 
 const status = <const>["started", "completed", "failed"];
-export type statusType = typeof status[number];
+export type statusType = (typeof status)[number];
 
 export const inferences = <const>[
   "violence",
@@ -13,7 +13,7 @@ export const inferences = <const>[
   "rooftopseg",
   "people-count",
 ];
-export type inferTypes = typeof inferences[number];
+export type inferTypes = (typeof inferences)[number];
 
 type TaskTemp<docModel, inference, data> = {
   _id: Types.ObjectId;
@@ -86,7 +86,7 @@ export const AimlTaskSchema = new Schema<IAimlTask>(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 AimlTaskSchema.index({ doc: 1, infer: 1 }, { unique: true });

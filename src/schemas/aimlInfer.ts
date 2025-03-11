@@ -5,7 +5,7 @@ const inferenceModels = <const>[
   { name: "deepforest", target: "tiff" },
   { name: "thermal", target: "image" },
 ];
-export type inferenceTypes = typeof inferenceModels[number];
+export type inferenceTypes = (typeof inferenceModels)[number];
 
 export type IAimlInfer = {
   _id: Types.ObjectId;

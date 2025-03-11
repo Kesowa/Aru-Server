@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Model from "../../models/model";
 import { ModelType } from "../../schemas/model";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListModel } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const modelApi = Router();
 
@@ -22,7 +23,7 @@ modelApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { modelId, limit, offset, orderBy, asc, populate } = req.query;
     const data = await Model.find(
@@ -35,7 +36,7 @@ modelApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -49,7 +50,7 @@ modelApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -99,12 +100,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default modelApi;

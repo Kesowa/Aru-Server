@@ -289,22 +289,22 @@ declare module "wrtc" {
     addEventListener<K extends keyof RTCDTMFSenderEventMap>(
       type: K,
       listener: (this: RTCDTMFSender, ev: RTCDTMFSenderEventMap[K]) => any,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     addEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     removeEventListener<K extends keyof RTCDTMFSenderEventMap>(
       type: K,
       listener: (this: RTCDTMFSender, ev: RTCDTMFSenderEventMap[K]) => any,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
     removeEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
   }
 
@@ -322,7 +322,7 @@ declare module "wrtc" {
     prototype: RTCDTMFToneChangeEvent;
     new (
       type: string,
-      eventInitDict?: RTCDTMFToneChangeEventInit
+      eventInitDict?: RTCDTMFToneChangeEventInit,
     ): RTCDTMFToneChangeEvent;
   };
 
@@ -361,22 +361,22 @@ declare module "wrtc" {
     addEventListener<K extends keyof RTCDataChannelEventMap>(
       type: K,
       listener: (this: RTCDataChannel, ev: RTCDataChannelEventMap[K]) => any,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     addEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     removeEventListener<K extends keyof RTCDataChannelEventMap>(
       type: K,
       listener: (this: RTCDataChannel, ev: RTCDataChannelEventMap[K]) => any,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
     removeEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
   }
 
@@ -393,7 +393,7 @@ declare module "wrtc" {
     prototype: RTCDataChannelEvent;
     new (
       type: string,
-      eventInitDict: RTCDataChannelEventInit
+      eventInitDict: RTCDataChannelEventInit,
     ): RTCDataChannelEvent;
   };
 
@@ -412,27 +412,27 @@ declare module "wrtc" {
       type: K,
       listener: (
         this: RTCDtlsTransport,
-        ev: RTCDtlsTransportEventMap[K]
+        ev: RTCDtlsTransportEventMap[K],
       ) => any,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     addEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     removeEventListener<K extends keyof RTCDtlsTransportEventMap>(
       type: K,
       listener: (
         this: RTCDtlsTransport,
-        ev: RTCDtlsTransportEventMap[K]
+        ev: RTCDtlsTransportEventMap[K],
       ) => any,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
     removeEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
   }
 
@@ -524,22 +524,22 @@ declare module "wrtc" {
     addEventListener<K extends keyof RTCIceTransportEventMap>(
       type: K,
       listener: (this: RTCIceTransport, ev: RTCIceTransportEventMap[K]) => any,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     addEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     removeEventListener<K extends keyof RTCIceTransportEventMap>(
       type: K,
       listener: (this: RTCIceTransport, ev: RTCIceTransportEventMap[K]) => any,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
     removeEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
   }
 
@@ -600,32 +600,32 @@ declare module "wrtc" {
     addIceCandidate(
       candidate: RTCIceCandidateInit,
       successCallback: VoidFunction,
-      failureCallback: RTCPeerConnectionErrorCallback
+      failureCallback: RTCPeerConnectionErrorCallback,
     ): Promise<void>;
     addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender;
     addTransceiver(
       trackOrKind: MediaStreamTrack | string,
-      init?: RTCRtpTransceiverInit
+      init?: RTCRtpTransceiverInit,
     ): RTCRtpTransceiver;
     close(): void;
     createAnswer(
-      options?: RTCAnswerOptions
+      options?: RTCAnswerOptions,
     ): Promise<RTCSessionDescriptionInit>;
     /** @deprecated */
     createAnswer(
       successCallback: RTCSessionDescriptionCallback,
-      failureCallback: RTCPeerConnectionErrorCallback
+      failureCallback: RTCPeerConnectionErrorCallback,
     ): Promise<void>;
     createDataChannel(
       label: string,
-      dataChannelDict?: RTCDataChannelInit
+      dataChannelDict?: RTCDataChannelInit,
     ): RTCDataChannel;
     createOffer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit>;
     /** @deprecated */
     createOffer(
       successCallback: RTCSessionDescriptionCallback,
       failureCallback: RTCPeerConnectionErrorCallback,
-      options?: RTCOfferOptions
+      options?: RTCOfferOptions,
     ): Promise<void>;
     getConfiguration(): RTCConfiguration;
     getReceivers(): RTCRtpReceiver[];
@@ -636,46 +636,46 @@ declare module "wrtc" {
     restartIce(): void;
     setConfiguration(configuration?: RTCConfiguration): void;
     setLocalDescription(
-      description?: RTCLocalSessionDescriptionInit
+      description?: RTCLocalSessionDescriptionInit,
     ): Promise<void>;
     /** @deprecated */
     setLocalDescription(
       description: RTCLocalSessionDescriptionInit,
       successCallback: VoidFunction,
-      failureCallback: RTCPeerConnectionErrorCallback
+      failureCallback: RTCPeerConnectionErrorCallback,
     ): Promise<void>;
     setRemoteDescription(description: RTCSessionDescriptionInit): Promise<void>;
     /** @deprecated */
     setRemoteDescription(
       description: RTCSessionDescriptionInit,
       successCallback: VoidFunction,
-      failureCallback: RTCPeerConnectionErrorCallback
+      failureCallback: RTCPeerConnectionErrorCallback,
     ): Promise<void>;
     addEventListener<K extends keyof RTCPeerConnectionEventMap>(
       type: K,
       listener: (
         this: RTCPeerConnection,
-        ev: RTCPeerConnectionEventMap[K]
+        ev: RTCPeerConnectionEventMap[K],
       ) => any,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     addEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     removeEventListener<K extends keyof RTCPeerConnectionEventMap>(
       type: K,
       listener: (
         this: RTCPeerConnection,
-        ev: RTCPeerConnectionEventMap[K]
+        ev: RTCPeerConnectionEventMap[K],
       ) => any,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
     removeEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
   }
 
@@ -683,7 +683,7 @@ declare module "wrtc" {
     prototype: RTCPeerConnection;
     new (configuration?: RTCConfiguration): RTCPeerConnection;
     generateCertificate(
-      keygenAlgorithm: AlgorithmIdentifier
+      keygenAlgorithm: AlgorithmIdentifier,
     ): Promise<RTCCertificate>;
   };
 
@@ -699,7 +699,7 @@ declare module "wrtc" {
     prototype: RTCPeerConnectionIceErrorEvent;
     new (
       type: string,
-      eventInitDict: RTCPeerConnectionIceErrorEventInit
+      eventInitDict: RTCPeerConnectionIceErrorEventInit,
     ): RTCPeerConnectionIceErrorEvent;
   };
 
@@ -712,7 +712,7 @@ declare module "wrtc" {
     prototype: RTCPeerConnectionIceEvent;
     new (
       type: string,
-      eventInitDict?: RTCPeerConnectionIceEventInit
+      eventInitDict?: RTCPeerConnectionIceEventInit,
     ): RTCPeerConnectionIceEvent;
   };
 
@@ -779,27 +779,27 @@ declare module "wrtc" {
       type: K,
       listener: (
         this: RTCSctpTransport,
-        ev: RTCSctpTransportEventMap[K]
+        ev: RTCSctpTransportEventMap[K],
       ) => any,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     addEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | AddEventListenerOptions
+      options?: boolean | AddEventListenerOptions,
     ): void;
     removeEventListener<K extends keyof RTCSctpTransportEventMap>(
       type: K,
       listener: (
         this: RTCSctpTransport,
-        ev: RTCSctpTransportEventMap[K]
+        ev: RTCSctpTransportEventMap[K],
       ) => any,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
     removeEventListener(
       type: string,
       listener: EventListenerOrEventListenerObject,
-      options?: boolean | EventListenerOptions
+      options?: boolean | EventListenerOptions,
     ): void;
   }
 
@@ -823,7 +823,7 @@ declare module "wrtc" {
   export interface RTCStatsReport {
     forEach(
       callbackfn: (value: any, key: string, parent: RTCStatsReport) => void,
-      thisArg?: any
+      thisArg?: any,
     ): void;
   }
 
@@ -846,7 +846,9 @@ declare module "wrtc" {
 
   export type RTCPeerConnectionErrorCallback = (error: DOMException) => void;
 
-  export type RTCSessionDescriptionCallback = (description: RTCSessionDescriptionInit) => void;
+  export type RTCSessionDescriptionCallback = (
+    description: RTCSessionDescriptionInit,
+  ) => void;
 
   type RTCBundlePolicy = "balanced" | "max-bundle" | "max-compat";
   type RTCDataChannelState = "closed" | "closing" | "connecting" | "open";

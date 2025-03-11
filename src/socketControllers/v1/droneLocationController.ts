@@ -1,9 +1,11 @@
-import { Namespace, Socket } from "socket.io";
-import { SocketUserObject, addUser, DroneStat } from "../../utils/socketUtils";
 import fs from "fs";
-import { Directory } from "../../constants";
+
+import { Namespace, Socket } from "socket.io";
 import { ExtendedError } from "socket.io/dist/namespace";
+
+import { Directory } from "../../constants";
 import { saveFile } from "../../utils/dataUtils";
+import { SocketUserObject, addUser, DroneStat } from "../../utils/socketUtils";
 
 const streamers: Array<SocketUserObject> = [];
 const receivers: Array<SocketUserObject> = [];
@@ -41,7 +43,7 @@ class TelemetryLogger {
   private write(logFile: fs.WriteStream, data: DroneStat) {
     logFile.write(
       `index, location.lat, location.long, battery, timestamp, compass, altitude, velocity\n
-      ${data.index}, ${data.location.long}, ${data.location.lat}, ${data.battery}, ${data.timestamp}, ${data.compass}, ${data.altitude}, ${data.velocity}\n`
+      ${data.index}, ${data.location.long}, ${data.location.lat}, ${data.battery}, ${data.timestamp}, ${data.compass}, ${data.altitude}, ${data.velocity}\n`,
     );
   }
   public log(streamKey: string, data: DroneStat) {
@@ -55,7 +57,7 @@ class TelemetryLogger {
     this.write(logFile, data);
   }
   private async convert(
-    streamKey: string
+    streamKey: string,
   ): Promise<{ flightLog: FlightLog; flightPath: FlightPath }> {
     const log_file = await fs.promises.readFile(`/tmp/${streamKey}.csv`, {
       encoding: "utf-8",
@@ -102,12 +104,12 @@ class TelemetryLogger {
     await saveFile(
       Directory.FLIGHT_LOGS,
       `${streamKey}.geojson`,
-      JSON.stringify(flightLog)
+      JSON.stringify(flightLog),
     );
     await saveFile(
       Directory.FLIGHT_LOGS,
       `Path_${streamKey}.geojson`,
-      JSON.stringify(flightPath)
+      JSON.stringify(flightPath),
     );
     await fs.promises.rm(`/tmp/${streamKey}.csv`);
     this.logFiles.delete(streamKey);
@@ -167,7 +169,7 @@ const joinRoomByStreamKey = (socket: Socket, next: Function) => {
   if (streamKey) {
     socket.join(streamKey);
     console.log(
-      `streamKey : ${streamKey} joined stream key specific Socket with sid: ${socket.id}`
+      `streamKey : ${streamKey} joined stream key specific Socket with sid: ${socket.id}`,
     );
     next();
   } else {

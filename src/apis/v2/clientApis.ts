@@ -1,13 +1,13 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import User from "../../models/user";
-import { UserType } from "../../schemas/user";
+
+import openApi from "./openApi";
 import Mission from "../../models/mission";
-import { MissionType } from "../../schemas/mission";
 import Tenant from "../../models/tenant";
+import User from "../../models/user";
+import { MissionType } from "../../schemas/mission";
+import { UserType } from "../../schemas/user";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const clientApi = Router();
 
@@ -27,7 +27,7 @@ clientApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const {
       clientId,
@@ -52,7 +52,7 @@ clientApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -87,7 +87,7 @@ clientApi.get(
     }
 
     res.json(resp);
-  }
+  },
 );
 
 openApi.addPath(
@@ -153,12 +153,12 @@ openApi.addPath(
                   "Path to csv file, returned only when generateCSV option was true in request",
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default clientApi;

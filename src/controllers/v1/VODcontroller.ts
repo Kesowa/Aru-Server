@@ -1,18 +1,19 @@
 import { Request } from "express";
 import { SortOrder, Types } from "mongoose";
-import VOD from "../../models/vod";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import { transcodeVideo } from "../../utils/videoUtils";
-import { missionSpecificSocket } from "../../socket";
-import { IFlight } from "../../schemas/flight";
-import { IMission } from "../../schemas/mission";
+
 import { ARU_INSTANCE, Instance } from "../../constants";
-import { WiproInterface } from "../../utils/wipro";
 import Flight from "../../models/flight";
-import * as pathUtils from "../../utils/pathUtils";
 import Location from "../../models/location";
 import UploadTask from "../../models/uploadTask";
+import VOD from "../../models/vod";
+import { IFlight } from "../../schemas/flight";
+import { IMission } from "../../schemas/mission";
+import { missionSpecificSocket } from "../../socket";
 import { permPath } from "../../utils/dataUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import * as pathUtils from "../../utils/pathUtils";
+import { transcodeVideo } from "../../utils/videoUtils";
+import { WiproInterface } from "../../utils/wipro";
 
 export const saveVOD = async (
   req: Request<
@@ -22,14 +23,14 @@ export const saveVOD = async (
       filename: string;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const filename = req.body.filename;
   const streamKey = filename.split("-")[0];
   const temp = Buffer.from(streamKey, "base64").toString();
   const [missionID, flightID, locationID, tenantId] = temp.split("-");
   req.log.info(
-    "++++++++++++++++++++++++++++SAVING VOD++++++++++++++++++++++++++++++++++++++++++"
+    "++++++++++++++++++++++++++++SAVING VOD++++++++++++++++++++++++++++++++++++++++++",
   );
   req.log.info(missionID + flightID + locationID + tenantId);
   if (ARU_INSTANCE == Instance.NKDA) {
@@ -149,7 +150,7 @@ export const getCountByMissionID = async (req: Request, res: AuthResponse) => {
 
 export const getByFlightOrLocationID = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { flightID, locationID, page } = req.query;
 
@@ -183,7 +184,7 @@ export const getByFlightOrLocationID = async (
 // get All  Vod data By Location ID
 export const fetchAllVoddataByLocationId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const page = Number(req.query.page);
   const limit = Number(req.query.limit);
@@ -225,7 +226,7 @@ export const testApiinject = async (req: Request, res: AuthResponse) => {
       d.missionID = new Types.ObjectId(req.body.missionId);
       d.flightID = new Types.ObjectId(req.body.flightId);
       return await d.save();
-    })
+    }),
   );
   if (savedDoc) {
     res.status(200).json({
@@ -254,13 +255,13 @@ export const saveVODManual = async (req: Request, res: AuthResponse) => {
   if (locationID == null || locationID == undefined) {
     const flight = await Flight.findOne(
       { _id: flightID, tenant: tenantId },
-      { locationID: 1 }
+      { locationID: 1 },
     );
     locationID = flight.locationID;
   }
   const fullPath = await permPath(
     pathUtils.Directory.VOD,
-    fileDoc.metadata.objectkey
+    fileDoc.metadata.objectkey,
   );
   // const telemetryData = await extractTelemetry(filepath);
   const telemetryData = null;
@@ -327,9 +328,7 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
       doc.thumbnail !== "/processing.png"
     ) {
       await doc.delete();
-      missionSpecificSocket
-        .to(String(doc.missionID))
-        .emit("VOD_REMOVED", doc);
+      missionSpecificSocket.to(String(doc.missionID)).emit("VOD_REMOVED", doc);
       res.status(200).json({
         status: true,
         message: "Successfully deleted _id:" + Id.toString(),
@@ -394,14 +393,14 @@ export const removeMultiVOD = async (req: Request, res: AuthResponse) => {
 
 export const testApiinjectTenantID = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const doc = await VOD.find({});
   const savedDoc = await Promise.all(
     doc.map(async (d) => {
       d.tenantId = req.body.tenantID;
       return await d.save();
-    })
+    }),
   );
 
   if (savedDoc) {
@@ -425,7 +424,7 @@ export const renameVOD = async (req: Request, res: AuthResponse) => {
     req.body.update,
     {
       new: true,
-    }
+    },
   );
 
   if (updatedDoc) {
@@ -449,7 +448,7 @@ export const updateVOD = async (req: Request, res: AuthResponse) => {
     req.body.update,
     {
       new: true,
-    }
+    },
   );
 
   if (updatedDoc) {
@@ -471,7 +470,7 @@ export const updateMultiVOD = async (req: Request, res: AuthResponse) => {
   const updatedDoc = await VOD.updateMany(
     { _id: { $in: Ids }, tenantId: res.locals.user.tenantId._id },
     { $set: req.body.update },
-    { multi: true }
+    { multi: true },
   );
   const doc = await VOD.find({
     _id: { $in: Ids },

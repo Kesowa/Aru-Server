@@ -1,15 +1,17 @@
-import { Namespace, Socket } from "socket.io";
-import { addUser, searchUser, SocketUserObject } from "../../utils/socketUtils";
-import Asset from "../../models/asset";
 import dgram from "dgram";
+
+import { Namespace, Socket } from "socket.io";
+
+import { Directory, DirPath } from "../../constants";
+import Asset from "../../models/asset";
+import { getFileSize } from "../../utils/fileUtils";
+import { addUser, searchUser, SocketUserObject } from "../../utils/socketUtils";
 const server = dgram.createSocket("udp4");
 import { VODEvents } from "../../utils/videoUtils";
 import Flight from "../../models/flight";
 import { generateToken } from "../../controllers/v1/streamTokenController";
 
 import format from "date-fns/format";
-import { getFileSize } from "../../utils/fileUtils";
-import { Directory, DirPath } from "../../constants";
 
 const streamers: Array<SocketUserObject> = [];
 const Drons: Array<SocketUserObject> = [];
@@ -30,7 +32,7 @@ export const mavstatIoController = async (io: Namespace) => {
           const assetData = await Asset.findOne({ _id: payload.assetId });
           if (assetData) {
             const droneSocket = drones.get(
-              assetData.assetInfo[0].UIN.toString()
+              assetData.assetInfo[0].UIN.toString(),
             );
             if (droneSocket) {
               // }
@@ -80,7 +82,7 @@ const sendAnswer = async (
     setLocalDescription: (arg0: any) => any;
     localDescription: any;
   },
-  socket: { emit: (arg0: string, arg1: { sdp: any }) => void }
+  socket: { emit: (arg0: string, arg1: { sdp: any }) => void },
 ) => {
   const answer = await peer.createAnswer();
   await peer.setLocalDescription(answer);
@@ -118,7 +120,7 @@ const Auth = async (socket: Socket, next: Function) => {
 
 const joinRoomByStreamKey = async (
   socket: Socket,
-  next: (err?: any) => void
+  next: (err?: any) => void,
 ) => {
   if (socket.handshake.query.type == "MavDrone") {
     const asset = await Asset.findOne({
@@ -135,7 +137,7 @@ const joinRoomByStreamKey = async (
           : socket.handshake.query.UIN[0];
       drones.set(UIN, socket);
       console.log(
-        `Drone connected with UIN:${socket.handshake.query.UIN} and sockedId ${socket.id}`
+        `Drone connected with UIN:${socket.handshake.query.UIN} and sockedId ${socket.id}`,
       );
       next();
     } else {
@@ -218,7 +220,7 @@ const processVideo = async (data: {
   try {
     console.log(data);
     const flight = await Flight.findOne({ mission: data.missionId }).select(
-      "_id tenant locationID"
+      "_id tenant locationID",
     );
     const flightID = flight._id;
     const tenantID = flight.tenant;
@@ -230,7 +232,7 @@ const processVideo = async (data: {
       data.missionID,
       flightID.toString(),
       locationID.toString(),
-      tenantID.toString()
+      tenantID.toString(),
     );
     const timestamp = format(new Date(), "dd-MMM-yy-hh-mm-ss");
     const filename = `${token}-${timestamp}`;

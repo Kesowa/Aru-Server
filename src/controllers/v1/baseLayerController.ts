@@ -1,21 +1,17 @@
-import { Request } from "express";
-import * as pathUtils from "../../utils/pathUtils";
-import Layer from "../../models/layer";
-import fetch from "node-fetch";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import { Feature, readGeoJson } from "../../utils/geojsonUtils";
-import Tenant from "../../models/tenant";
+import { randomUUID } from "crypto";
 
-import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
-import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
 import { ObjectId } from "bson";
-import layerFiles from "../../models/layerFiles";
+import { subDays, subMonths, subWeeks, subYears, format } from "date-fns";
+import { Request } from "express";
+
 import { featureType, vectorProps } from "../../schemas/vectorprops";
 import { IMission } from "../../schemas/mission";
 import { rasterProps } from "../../schemas/rasterprops";
 import { IPackage } from "../../schemas/package";
 import { ITenant } from "../../schemas/tenant";
+
 import mongoose from "mongoose";
+
 import {
   Directory,
   DirPath,
@@ -23,6 +19,10 @@ import {
   TITILER_STATIC,
 } from "../../constants";
 import Alert from "../../models/alert";
+import Layer from "../../models/layer";
+import layerFiles from "../../models/layerFiles";
+import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
 import VOD from "../../models/vod";
 import {
   permPath,
@@ -33,9 +33,11 @@ import {
   saveVectorLayer,
   deleteFeatureSearchIndex,
 } from "../../utils/dataUtils";
+import { deleteDirFileUsingName } from "../../utils/fileDeleteUtils";
+import { Feature, readGeoJson } from "../../utils/geojsonUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import * as pathUtils from "../../utils/pathUtils";
 import { LazToTiles3D } from "../../utils/pointcloud";
-import UploadTask from "../../models/uploadTask";
-import { randomUUID } from "crypto";
 
 interface MissionMapVal {
   missionId: mongoose.Types.ObjectId;
@@ -45,7 +47,7 @@ interface MissionMapVal {
       _id: mongoose.Types.ObjectId;
       name: string;
       fields: string[];
-    }
+    },
   ];
 }
 interface AttrMapVal {
@@ -56,12 +58,12 @@ interface AttrMapVal {
       layerId: mongoose.Types.ObjectId;
       layerName: string;
       missionName: string;
-    }
+    },
   ];
 }
 export const getMetadataForBaseLayer = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const data = await Layer.find(
     {
@@ -74,7 +76,7 @@ export const getMetadataForBaseLayer = async (
       mission: 1,
       missionId: 1,
       vector: 1,
-    }
+    },
   ).populate<{ missionId: IMission }>("missionId");
 
   if (data.length !== req.body.layers.length) {
@@ -102,12 +104,12 @@ export const getMetadataForBaseLayer = async (
       data.map(async (layer) => {
         const properties = Object.keys(
           (await readGeoJson(DirPath(Directory.ROOT, layer.layerpath)))
-            .features[0]?.properties
+            .features[0]?.properties,
         );
         properties.forEach((key) => {
           allAttributes.set(
             key,
-            allAttributes.get(key) ? allAttributes.get(key) + 1 : 1
+            allAttributes.get(key) ? allAttributes.get(key) + 1 : 1,
           );
         });
         return {
@@ -117,7 +119,7 @@ export const getMetadataForBaseLayer = async (
           missionId: layer.missionId._id.toString(),
           properties,
         };
-      })
+      }),
     );
 
     const response: {
@@ -134,9 +136,7 @@ export const getMetadataForBaseLayer = async (
     }[] = [];
 
     layerGeojson.forEach((layer) => {
-      const mission = response.find(
-        (res) => res.missionId == layer.missionId
-      );
+      const mission = response.find((res) => res.missionId == layer.missionId);
       const minLayer = {
         _id: layer._id,
         name: layer.name,
@@ -168,7 +168,7 @@ export const getMetadataForBaseLayer = async (
 // Create Base Layer
 export const createVectorBaseLayer = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   let geojsonPath: string;
   let size: number;
@@ -283,7 +283,7 @@ export const createBaseLayerByAttr = async (
       vectorType: vectorProps;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   if (req.body.layers) {
     const ids = req.body.layers.map((l) => l.layerId);
@@ -311,7 +311,7 @@ export const createBaseLayerByAttr = async (
         ],
         name: req.body.name,
         color,
-      }
+      },
     );
 
     const vectorLayer = new Layer({
@@ -334,7 +334,7 @@ export const createBaseLayerByAttr = async (
       const savedDoc = await vectorLayer.create();
       await layerFiles.updateMany(
         { layerId: { $in: ids } },
-        { $push: { layers: savedDoc._id } }
+        { $push: { layers: savedDoc._id } },
       );
       return res.status(201).json({
         status: true,
@@ -486,7 +486,7 @@ export const filterBaseLayer = async (req: Request, res: AuthResponse) => {
 
 export const getMetadataForUpdatingBaseLayer = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const data = await Layer.find(
     {
@@ -499,7 +499,7 @@ export const getMetadataForUpdatingBaseLayer = async (
       mission: 1,
       missionId: 1,
       vector: 1,
-    }
+    },
   ).populate<{ missionId: IMission }>("missionId");
 
   const baseLayerData = await Layer.findOne(
@@ -511,7 +511,7 @@ export const getMetadataForUpdatingBaseLayer = async (
     {
       vector: 1,
       layerpath: 1,
-    }
+    },
   );
 
   if (!baseLayerData) throw new Error("baseLayer data is null");
@@ -536,8 +536,7 @@ export const getMetadataForUpdatingBaseLayer = async (
     } else if (!layerTypes.has(featureType[baseLayerData.vector])) {
       return res.json({
         success: false,
-        message:
-          "Vector type of base layer is different than selected layers",
+        message: "Vector type of base layer is different than selected layers",
       });
     }
 
@@ -555,7 +554,7 @@ export const getMetadataForUpdatingBaseLayer = async (
     const attrMap: Map<string, AttrMapVal> = new Map();
 
     const bgjson = await readGeoJson(
-      DirPath(Directory.ROOT, baseLayerData.layerpath)
+      DirPath(Directory.ROOT, baseLayerData.layerpath),
     );
     const bfeaure = bgjson.features[0];
     const pattr: any = [];
@@ -566,9 +565,7 @@ export const getMetadataForUpdatingBaseLayer = async (
     }
 
     for (const layer of layerData) {
-      const gjson = await readGeoJson(
-        DirPath(Directory.ROOT, layer.layerpath)
-      );
+      const gjson = await readGeoJson(DirPath(Directory.ROOT, layer.layerpath));
       const feature = gjson.features[0];
 
       if (missionMap.get(layer.missionId.toString())) {
@@ -631,15 +628,16 @@ export const getMetadataForUpdatingBaseLayer = async (
               const lm = attrMap
                 .get(f)
                 .layerMatches.filter(
-                  (l) => l.layerId.toString() !== layer._id.toString()
+                  (l) => l.layerId.toString() !== layer._id.toString(),
                 );
               let layerMatches;
               if (lm.length === 0) layerMatches = "No Other Mathces";
-              else if (lm.length === layerData.length - 1) layerMatches = "Matches With All";
+              else if (lm.length === layerData.length - 1)
+                layerMatches = "Matches With All";
               else layerMatches = lm;
               return {
                 ...attrMap.get(f),
-                layerMatches
+                layerMatches,
               };
             }),
           };
@@ -660,7 +658,7 @@ export const getMetadataForUpdatingBaseLayer = async (
 
 export const updateBaseLayerByAttr = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const baseLayer = await Layer.findOne(
     {
@@ -672,7 +670,7 @@ export const updateBaseLayerByAttr = async (
       layerpath: 1,
       vector: 1,
       fileSize: 1,
-    }
+    },
   );
 
   if (!baseLayer) throw new Error("baseLayer is null or undefined");
@@ -686,7 +684,7 @@ export const updateBaseLayerByAttr = async (
       {
         layerpath: 1,
         vector: 1,
-      }
+      },
     ).populate<{ missionId: IMission }>("missionId");
 
     for (const d of layerData) {
@@ -701,7 +699,7 @@ export const updateBaseLayerByAttr = async (
     const layers = layerData.map((layer) => ({
       path: layer.layerpath,
       map: req.body.layers.find(
-        (l) => l.layerId.toString() === layer._id.toString()
+        (l) => l.layerId.toString() === layer._id.toString(),
       ).attrMapping,
     }));
     const clonedGeojson = await saveMultiGeojson(layers, {
@@ -748,7 +746,7 @@ export const getBaseLayers = async (req: Request, res: AuthResponse) => {
 // Create Base Layer
 export const uploadLayerToUpdateBaseLayer = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const fileDoc = await UploadTask.findOne({
     _id: req.body.file,
@@ -771,7 +769,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     },
     {
       layerpath: 1,
-    }
+    },
   );
 
   if (!baseLayer) {
@@ -791,9 +789,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     });
   }
 
-  if (
-    geojson.features[0].geometry.type !== bgjson.features[0].geometry.type
-  ) {
+  if (geojson.features[0].geometry.type !== bgjson.features[0].geometry.type) {
     return res.status(400).json({
       success: false,
       message: "The file must be of same type as base layer",
@@ -811,7 +807,7 @@ export const uploadLayerToUpdateBaseLayer = async (
   const layerAttr: any = [];
 
   for (const [attr, val] of Object.entries<any>(
-    geojson.features[0].properties
+    geojson.features[0].properties,
   )) {
     layerAttr.push({
       attr: attr,
@@ -820,10 +816,7 @@ export const uploadLayerToUpdateBaseLayer = async (
   }
 
   // updating the geojson of baselayer to the one uploaded
-  const fullPath = await permPath(
-    Directory.VECTOR,
-    fileDoc.metadata.objectkey
-  );
+  const fullPath = await permPath(Directory.VECTOR, fileDoc.metadata.objectkey);
   const size = fileDoc.metadata.filesize;
   await baseLayer.updateFile(fullPath, size);
   await fileDoc.delete();
@@ -842,7 +835,7 @@ export const uploadLayerToUpdateBaseLayer = async (
 // Create Base Layer
 export const updateBaseLayerByUploadedFile = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const objectKey = req.body.filePath;
 
@@ -862,7 +855,7 @@ export const updateBaseLayerByUploadedFile = async (
     {
       layerpath: 1,
       fileSize: 1,
-    }
+    },
   );
 
   if (!baseLayer) {
@@ -935,7 +928,7 @@ export const updateBaseLayerByUploadedFile = async (
     {
       activePackage: 1,
       actualSize: 1,
-    }
+    },
   )
     .populate<{ activePackage: IPackage }>("activePackage")
     .lean();
@@ -1001,7 +994,7 @@ const flattenObj = (ob: {
 
 export const createBaseRasterfromMission = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const layer = await Layer.findOne({
     _id: req.body.layers[0],
@@ -1055,7 +1048,7 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
         await layer.delete();
       }
       return layer;
-    })
+    }),
   );
 
   res.json({
@@ -1070,7 +1063,7 @@ export const delete_baseLayer = async (req: Request, res: AuthResponse) => {
 
 export const createBaseRasterfromUpload = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const fileDoc = await UploadTask.findOne({
     _id: req.body.file,
@@ -1117,10 +1110,7 @@ export const createBaseRasterfromUpload = async (
   } else if (rasterType == rasterProps.POINT_CLOUD) {
     metadata = await LazToTiles3D(fileDoc.metadata.objectkey);
   }
-  const newPath = await permPath(
-    Directory.RASTER,
-    fileDoc.metadata.objectkey
-  );
+  const newPath = await permPath(Directory.RASTER, fileDoc.metadata.objectkey);
   const layer = new Layer({
     name: `base - ${name}`,
     type: "Raster",
@@ -1155,7 +1145,7 @@ export const createBaseRasterfromUpload = async (
 
 export const updateBaseLayerRasterUpload = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const fileDoc = await UploadTask.findOne({
     _id: req.body.file,
@@ -1212,7 +1202,7 @@ export const updateBaseLayerRasterUpload = async (
 
 export const updateBaseLayerRasterImport = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const doc = await Layer.findOne({
     _id: req.body.layerId,
@@ -1266,38 +1256,21 @@ export const isBaseupdateDev = async (req: Request, res: AuthResponse) => {
       isBase: 1,
       missionId: 1,
       type: 1,
-    }
+    },
   );
   if (docs.length) {
     for (const doc of docs) {
-      if ((!doc.isBase) && doc.missionId != null) {
+      if (!doc.isBase && doc.missionId != null) {
         doc.isBase = false;
-        await Layer.updateOne(
-          { _id: doc._id },
-          { isBase: doc.isBase }
-        );
+        await Layer.updateOne({ _id: doc._id }, { isBase: doc.isBase });
       }
-      if (
-        (!doc.isBase) &&
-        doc.missionId == null &&
-        doc.type == "Vector"
-      ) {
+      if (!doc.isBase && doc.missionId == null && doc.type == "Vector") {
         doc.isBase = false;
-        await Layer.updateOne(
-          { _id: doc._id },
-          { isBase: doc.isBase }
-        );
+        await Layer.updateOne({ _id: doc._id }, { isBase: doc.isBase });
       }
-      if (
-        (!doc.isBase) &&
-        doc.missionId == null &&
-        doc.type == "Raster"
-      ) {
+      if (!doc.isBase && doc.missionId == null && doc.type == "Raster") {
         doc.isBase = false;
-        await Layer.updateOne(
-          { _id: doc._id },
-          { isBase: doc.isBase }
-        );
+        await Layer.updateOne({ _id: doc._id }, { isBase: doc.isBase });
       }
     }
     res.status(200).json({
@@ -1314,7 +1287,7 @@ export const isBaseupdateDev = async (req: Request, res: AuthResponse) => {
 
 export const createBaseVectorLayer = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const vectorLayer = await saveVectorLayer(req.body.geoJSON, {
     inheritColor: true,
@@ -1359,7 +1332,7 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
       tenantId: 1,
       layerpath: 1,
       metadata: 1,
-    }
+    },
   );
   const tenantDoc = await Tenant.findOne(
     {
@@ -1367,7 +1340,7 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
     },
     {
       publicMapRef: 1,
-    }
+    },
   );
   if (doc) {
     const searchIndexPath = await saveFeatureSearchIndex(doc.layerpath);
@@ -1377,12 +1350,12 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
       const unid = `${doc.tenantId}${randomString}`;
       await Tenant.updateOne(
         { _id: res.locals.user.tenantId },
-        { publicMapRef: unid }
+        { publicMapRef: unid },
       );
     }
     await Layer.updateOne(
       { _id: req.body.layerId },
-      { isPublic: true, metadata }
+      { isPublic: true, metadata },
     );
     const getDoc = await Layer.findOne({ _id: req.body.layerId }).populate<{
       tenantId: ITenant;
@@ -1410,7 +1383,7 @@ export const publishBaseLayer = async (req: Request, res: AuthResponse) => {
 
 export const getallpublicbaselayer = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   req.log.info(req.query.mapRef);
   const tenant = await Tenant.findOne(
@@ -1419,7 +1392,7 @@ export const getallpublicbaselayer = async (
     },
     {
       _id: 1,
-    }
+    },
   );
   const docs = await Layer.find({
     tenantId: tenant._id,
@@ -1457,40 +1430,32 @@ export const isPublicupdateDev = async (req: Request, res: AuthResponse) => {
       missionId: 1,
       publicMapRef: 1,
       type: 1,
-    }
+    },
   );
   if (docs.length) {
     for (const doc of docs) {
-      if ((!doc.isPublic) && doc.missionId != null) {
+      if (!doc.isPublic && doc.missionId != null) {
         doc.isPublic = false;
         doc.publicMapRef = null;
         await Layer.updateOne(
           { _id: doc._id },
-          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef }
+          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef },
         );
       }
-      if (
-        (!doc.isPublic) &&
-        doc.missionId == null &&
-        doc.type == "Vector"
-      ) {
+      if (!doc.isPublic && doc.missionId == null && doc.type == "Vector") {
         doc.isPublic = false;
         doc.publicMapRef = null;
         await Layer.updateOne(
           { _id: doc._id },
-          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef }
+          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef },
         );
       }
-      if (
-        (!doc.isPublic) &&
-        doc.missionId == null &&
-        doc.type == "Raster"
-      ) {
+      if (!doc.isPublic && doc.missionId == null && doc.type == "Raster") {
         doc.isPublic = false;
         doc.publicMapRef = null;
         await Layer.updateOne(
           { _id: doc._id },
-          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef }
+          { isPublic: doc.isPublic, publicMapRef: doc.publicMapRef },
         );
       }
     }
@@ -1509,7 +1474,7 @@ export const isPublicupdateDev = async (req: Request, res: AuthResponse) => {
 const getAlertLocationGeojson = async (
   tenantId: mongoose.Types.ObjectId,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) => {
   const alerts = await Alert.find({
     tenantId,
@@ -1552,14 +1517,14 @@ const getAlertLocationGeojson = async (
 
 export const GetAlertLocationGeojson = async (
   req: Request<{}, {}, {}, { startDate: Date; endDate: Date }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const startDate = req.query.startDate;
   const endDate = req.query.endDate;
   const geojson = await getAlertLocationGeojson(
     res.locals.user.tenantId._id,
     startDate,
-    endDate
+    endDate,
   );
   res.json(geojson);
 };
@@ -1567,7 +1532,7 @@ export const GetAlertLocationGeojson = async (
 const getVideoLocationGeojson = async (
   tenantId: mongoose.Types.ObjectId,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ) => {
   const videos = await VOD.aggregate([
     {
@@ -1645,14 +1610,14 @@ const getVideoLocationGeojson = async (
 
 export const GetVideoLocationGeojson = async (
   req: Request<{}, {}, {}, { startDate: Date; endDate: Date }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const startDate = req.query.startDate;
   const endDate = req.query.endDate;
   const geojson = await getVideoLocationGeojson(
     res.locals.user.tenantId._id,
     startDate,
-    endDate
+    endDate,
   );
   res.json(geojson);
 };

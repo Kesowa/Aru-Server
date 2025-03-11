@@ -3,7 +3,7 @@ declare module "dji_srt_parser" {
     toGeoJSON(
       raw: boolean,
       waypoints: boolean,
-      elevationOffset: boolean
+      elevationOffset: boolean,
     ): string;
     metadata(): {
       stats: {
@@ -21,6 +21,6 @@ declare module "dji_srt_parser" {
   export default function (
     file: string | string[],
     fileName: string | string[],
-    isPreparedData?: boolean
+    isPreparedData?: boolean,
   ): AllFunctions;
 }

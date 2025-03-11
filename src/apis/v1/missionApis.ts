@@ -1,5 +1,6 @@
 import express from "express";
 import { body, param, query } from "express-validator";
+
 import {
   createMission,
   fetchAllMissionByUserId,
@@ -22,11 +23,11 @@ import {
   GetAlertLocationGeojson,
   GetVideoLocationGeojson,
 } from "../../controllers/v1/missionController";
+import { getMemoryUsage } from "../../controllers/v1/missionDataController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isMissionCount } from "../../utils/countPermission";
-import { getMemoryUsage } from "../../controllers/v1/missionDataController";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -48,7 +49,7 @@ router.post(
   validator,
   PermissionGuard(PERMS.MISSION_CREATE),
   isMissionCount,
-  RobustRunner(createMission)
+  RobustRunner(createMission),
 );
 
 //++++++++++++++++++++ edit mission type Api++++++++++++++++++++++++
@@ -62,7 +63,7 @@ router.post(
   body("isPublic").optional().isBoolean(),
   validator,
   PermissionGuard(PERMS.MISSION_UPDATE),
-  RobustRunner(editMission)
+  RobustRunner(editMission),
 );
 
 //++++++++++++++++++++ delete mission api++++++++++++++++++++++++
@@ -72,7 +73,7 @@ router.post(
   body("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_DELETE),
-  RobustRunner(deleteMission)
+  RobustRunner(deleteMission),
 );
 
 //++++++++++++++++++++ fetch all mission for the specific user++++++++++++++++++++++++
@@ -80,7 +81,7 @@ router.post(
   "/mission-by-userid",
   isAuthenticated,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchAllMissionByUserId)
+  RobustRunner(fetchAllMissionByUserId),
 );
 
 //++++++++++++++++++++ fetch all mission (Development purpose only) ++++++++++++++++++++++++
@@ -103,7 +104,7 @@ router.get(
   query("searchFilters").optional().isString(), // didn't quite understand the format
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchAllMissionsForTenant)
+  RobustRunner(fetchAllMissionsForTenant),
 );
 
 // Duplicate Route. Same logic for "/mission-by-userid", and "id" param not even used in controller
@@ -113,7 +114,7 @@ router.get(
   param("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchAllMissionByUserId)
+  RobustRunner(fetchAllMissionByUserId),
 );
 
 router.get(
@@ -122,7 +123,7 @@ router.get(
   param("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchMissionById)
+  RobustRunner(fetchMissionById),
 );
 
 //+++++++++++++++++++++ filter missions by status ++++++++++++++++++++++++
@@ -139,7 +140,7 @@ router.get(
   query("page").default(0).isNumeric().toInt(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchAllMissionByPilotOrNull)
+  RobustRunner(fetchAllMissionByPilotOrNull),
 );
 
 router.patch(
@@ -149,14 +150,14 @@ router.patch(
   body("status").notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.MISSION_UPDATE),
-  RobustRunner(missionStatusUpdate)
+  RobustRunner(missionStatusUpdate),
 );
 
 router.get(
   "/autocomplete",
   query("query").notEmpty().trim(),
   validator,
-  RobustRunner(autoComplete)
+  RobustRunner(autoComplete),
 );
 
 router.get(
@@ -164,7 +165,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchTotalNumberofMissionByLocationID)
+  RobustRunner(fetchTotalNumberofMissionByLocationID),
 );
 
 router.get(
@@ -173,7 +174,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchMissionsByLocationMapref)
+  RobustRunner(fetchMissionsByLocationMapref),
 );
 
 router.get(
@@ -183,7 +184,7 @@ router.get(
   query("locationID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(fetchMissionByLocationID)
+  RobustRunner(fetchMissionByLocationID),
 );
 router.get(
   "/get-mission-csv-for-tenant-Or-user",
@@ -192,7 +193,7 @@ router.get(
   body("status").optional().trim(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(getMissionCsvForTenantOrUser)
+  RobustRunner(getMissionCsvForTenantOrUser),
 );
 router.get(
   "/get-mission-doc-count",
@@ -200,7 +201,7 @@ router.get(
   query("missionId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(getDocumentCountForMission)
+  RobustRunner(getDocumentCountForMission),
 );
 router.post(
   "/insert-missiontype-by-Id",
@@ -209,7 +210,7 @@ router.post(
   body("missionType").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_TYPE_UPDATE, PERMS.MISSION_UPDATE),
-  RobustRunner(insertMissionTypeById)
+  RobustRunner(insertMissionTypeById),
 );
 
 router.get(
@@ -218,7 +219,7 @@ router.get(
   param("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(getMemoryUsage)
+  RobustRunner(getMemoryUsage),
 );
 
 router.get(
@@ -227,7 +228,7 @@ router.get(
   param("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST, PERMS.FEATURE_LIST),
-  RobustRunner(getMissionLayerFiles)
+  RobustRunner(getMissionLayerFiles),
 );
 
 router.get(
@@ -238,7 +239,7 @@ router.get(
   query("endDate").notEmpty().isISO8601().toDate(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST, PERMS.ALERT_LIST),
-  RobustRunner(GetAlertLocationGeojson)
+  RobustRunner(GetAlertLocationGeojson),
 );
 router.get(
   "/:missionID/vods",
@@ -248,6 +249,6 @@ router.get(
   query("endDate").notEmpty().isISO8601().toDate(),
   validator,
   PermissionGuard(PERMS.MISSION_LIST, PERMS.VOD_LIST),
-  RobustRunner(GetVideoLocationGeojson)
+  RobustRunner(GetVideoLocationGeojson),
 );
 export default router;

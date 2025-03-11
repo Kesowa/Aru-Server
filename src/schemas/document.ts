@@ -1,13 +1,15 @@
+import path from "path";
+
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { Types } from "ts-openapi";
-import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
-import path from "path";
 import {
   deletePublicFileUsingPath,
   deletePublicFolderUsingPath,
 } from "../utils/fileDeleteUtils";
+import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
 
 interface IDocumentMethods {
   create(): Promise<IDocument>;
@@ -109,7 +111,7 @@ const documentSchema = new mongoose.Schema<IDocument>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 documentSchema.index({
   filePath: 1,
@@ -131,11 +133,11 @@ documentSchema.methods.create = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } }
+    { $inc: { actualSize: doc.fileSize, allDocumentsSize: doc.fileSize } },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   // save the document
   return await doc.save();
@@ -158,11 +160,11 @@ documentSchema.methods.delete = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: -doc.fileSize, allDocumentsSize: -doc.fileSize } }
+    { $inc: { actualSize: -doc.fileSize, allDocumentsSize: -doc.fileSize } },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
   // delete the document
   await doc.deleteOne();

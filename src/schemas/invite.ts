@@ -37,6 +37,6 @@ export const inviteSchema = new mongoose.Schema<IInvite>(
       type: Date,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 inviteSchema.index({ missionID: 1 }, { expireAfterSeconds: inviteDuration });

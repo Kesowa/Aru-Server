@@ -72,7 +72,7 @@ const manufacturerSchema = new mongoose.Schema<IManufacturer>(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 manufacturerSchema.index({ tenantID: 1 });
 export default manufacturerSchema;

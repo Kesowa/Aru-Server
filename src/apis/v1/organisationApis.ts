@@ -1,5 +1,6 @@
 import express from "express";
 import { body } from "express-validator";
+
 import {
   getOrganisationInfo,
   updateOrganisationInfo,
@@ -7,9 +8,9 @@ import {
   updateOrganisationEmailResendOTP,
   validateOTPForEmail,
 } from "../../controllers/v1/organisationController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ router.get(
   "/fetch-organisation-details",
   isAuthenticated,
   PermissionGuard(PERMS.TENANT_LIST_SELF),
-  RobustRunner(getOrganisationInfo)
+  RobustRunner(getOrganisationInfo),
 );
 
 //++++++++++++++++++++ Update Organisation Api +++++++++++++++++++++++++++++
@@ -39,7 +40,7 @@ router.post(
   body("avatar").optional().notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.TENANT_UPDATE_SELF),
-  RobustRunner(updateOrganisationInfo)
+  RobustRunner(updateOrganisationInfo),
 );
 
 //++++++++++++++++++++ request OTP for email updation +++++++++++++++++++++++++++++++
@@ -49,7 +50,7 @@ router.post(
   body("email").isEmail().withMessage("invalid Email."),
   validator,
   PermissionGuard(PERMS.TENANT_UPDATE_SELF),
-  RobustRunner(updateOrganisationEmailGetOTP)
+  RobustRunner(updateOrganisationEmailGetOTP),
 );
 
 //++++++++++++++++++++ resend OTP email ++++++++++++++++++++++++++++++++++++
@@ -57,7 +58,7 @@ router.post(
   "/resend-otp-for-email-change",
   isAuthenticated,
   PermissionGuard(PERMS.TENANT_UPDATE_SELF),
-  RobustRunner(updateOrganisationEmailResendOTP)
+  RobustRunner(updateOrganisationEmailResendOTP),
 );
 
 //+++++++++++++++++++ validate OTP and update email id++++++++++++++++++++++++
@@ -66,7 +67,7 @@ router.post(
   isAuthenticated,
   body("otp").notEmpty().isNumeric(),
   PermissionGuard(PERMS.TENANT_UPDATE_SELF),
-  RobustRunner(validateOTPForEmail)
+  RobustRunner(validateOTPForEmail),
 );
 
 export default router;

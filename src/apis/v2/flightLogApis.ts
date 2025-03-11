@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
+import openApi from "./openApi";
 import flightLog from "../../models/flightLog";
 import { FlightLogType } from "../../schemas/flightLog";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const flightLogApi = Router();
 
@@ -23,7 +23,7 @@ flightLogApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const {
       flightLogId,
@@ -48,7 +48,7 @@ flightLogApi.get(
           sort: {
             [orderBy]: asc ? "asc" : "desc",
           },
-        }
+        },
       )
       .skip(offset)
       .limit(limit)
@@ -62,7 +62,7 @@ flightLogApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -114,12 +114,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default flightLogApi;

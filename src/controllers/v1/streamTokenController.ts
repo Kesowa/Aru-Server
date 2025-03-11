@@ -1,10 +1,11 @@
 import { Request } from "express";
-import { streamKeyModel } from "../../models/streamKey";
 import { Types } from "mongoose";
+
+import { ARU_INSTANCE, Instance } from "../../constants";
+import { streamKeyModel } from "../../models/streamKey";
 import { notificationSocket } from "../../socket";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { WiproInterface } from "../../utils/wipro";
-import { ARU_INSTANCE, Instance } from "../../constants";
 
 export const streamKeyGen = async (
   req: Request<
@@ -17,7 +18,7 @@ export const streamKeyGen = async (
       locationID: string;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const tenantId = String(res.locals.user.tenantId._id);
   //extract user, MissionID, FlightId and asset from body of the post request
@@ -51,7 +52,7 @@ export const streamKeyGen = async (
     status: 200,
   };
   req.log.info(
-    `${res.locals.user.name} generated stream key with token ${token}`
+    `${res.locals.user.name} generated stream key with token ${token}`,
   );
   return res.json(resp);
 };
@@ -64,7 +65,7 @@ export const streamTokenValidator = async (req: Request, res: AuthResponse) => {
     },
     {
       isActive: true,
-    }
+    },
   );
   if (streamKey) {
     // const message = `token[${req.body.name}] is authorised`;
@@ -91,7 +92,7 @@ export const getActiveStreams = async (req: Request, res: AuthResponse) => {
   const tenantId = res.locals.user.tenantId._id;
   const activeStreams = await streamKeyModel.find(
     { tenantID: tenantId, isActive: true },
-    "streamKey createdAt createdBy missionID flightID"
+    "streamKey createdAt createdBy missionID flightID",
   );
   if (activeStreams) {
     res.status(200).send(activeStreams);
@@ -102,12 +103,12 @@ export const getActiveStreams = async (req: Request, res: AuthResponse) => {
 
 export const getActiveStreamByFlightId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const flightID = new Types.ObjectId(String(req.query.flightID));
   const activeStream = await streamKeyModel.find(
     { flightID: flightID, tenantID: res.locals.user.tenantId._id },
-    "streamKey createdAt createdBy missionID flightID"
+    "streamKey createdAt createdBy missionID flightID",
   );
   if (activeStream.length) {
     res.json({
@@ -131,7 +132,7 @@ export const removeStreamKey = async (
       name: string;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const streamKey = String(req.body.name);
   const resp = await streamKeyModel.findOneAndDelete({
@@ -163,11 +164,11 @@ export const generateToken = (
   missionID: string,
   flightID: string,
   locationID: string,
-  tenantId: string
+  tenantId: string,
 ) => {
   return Buffer.from(
     `${missionID}-${flightID}-${locationID}-${tenantId}`,
-    "utf-8"
+    "utf-8",
   )
     .toString("base64")
     .replace(/=/g, "");

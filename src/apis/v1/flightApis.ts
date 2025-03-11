@@ -1,5 +1,6 @@
 import express from "express";
 import { body, query } from "express-validator";
+
 import {
   createFlight,
   fetchAllFlightByMissionId,
@@ -9,6 +10,7 @@ import {
   assignPilotSelf,
   fetchAllFlightdataByLocationId,
 } from "../../controllers/v1/flightController";
+import { PERMS } from "../../schemas/permission";
 import {
   isAuthenticated,
   canCreateMission,
@@ -17,7 +19,6 @@ import {
   PermissionGuard,
 } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 const router = express.Router();
 
 //++++++++++++++++++++ create new flight ++++++++++++++++++++++++
@@ -38,7 +39,7 @@ router.post(
   body("geoFence").optional().isObject(),
   validator,
   PermissionGuard(PERMS.FLIGHT_CREATE),
-  RobustRunner(createFlight)
+  RobustRunner(createFlight),
 );
 
 //++++++++++++++++++++ edit mission type Api++++++++++++++++++++++++
@@ -63,7 +64,7 @@ router.post(
   body("geoLocation").optional().notEmpty().isString().trim(),
   validator,
   PermissionGuard(PERMS.FLIGHT_UPDATE),
-  RobustRunner(editFlight)
+  RobustRunner(editFlight),
 );
 
 //++++++++++++++++++++ delete mission type Api++++++++++++++++++++++++
@@ -74,7 +75,7 @@ router.post(
   body("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FLIGHT_DELETE),
-  RobustRunner(deleteFlight)
+  RobustRunner(deleteFlight),
 );
 
 //++++++++++++++++++++ fetch all mission for the specific user++++++++++++++++++++++++
@@ -84,7 +85,7 @@ router.post(
   body("missionID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FLIGHT_LIST),
-  RobustRunner(fetchAllFlightByMissionId)
+  RobustRunner(fetchAllFlightByMissionId),
 );
 
 router.get(
@@ -93,7 +94,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FLIGHT_LIST),
-  RobustRunner(fetchAllFlightdataByLocationId)
+  RobustRunner(fetchAllFlightdataByLocationId),
 );
 
 //+++++++++++++++++++ assign pilot to flight ++++++++++++++++++++++++
@@ -104,7 +105,7 @@ router.patch(
   body("flightID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.FLIGHT_UPDATE),
-  RobustRunner(assignPilotSelf)
+  RobustRunner(assignPilotSelf),
 );
 
 router.patch(
@@ -114,7 +115,7 @@ router.patch(
   body("pilotID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_UPDATE, PERMS.FLIGHT_UPDATE),
-  RobustRunner(assignPilot)
+  RobustRunner(assignPilot),
 );
 
 export default router;

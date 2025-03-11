@@ -41,7 +41,7 @@ const layerGroupSchema = new mongoose.Schema<ILayerGroup>(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 layerGroupSchema.index({
   layers: 1,

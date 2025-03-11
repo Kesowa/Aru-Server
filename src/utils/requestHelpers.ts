@@ -1,5 +1,6 @@
 import type { NextFunction, RequestHandler, Response, Request } from "express";
 import { validationResult } from "express-validator";
+
 import { MODE, Mode } from "../constants";
 export const serverError = (res: Response) => {
   return res.status(500).json({
@@ -32,7 +33,7 @@ export function sanitizeSort(query: string) {
   return Sort.ASC;
 }
 export const RobustRunner = <A, B, C, D, T extends Response>(
-  handler: (req: Request<A, B, C, D>, res: T) => Promise<unknown>
+  handler: (req: Request<A, B, C, D>, res: T) => Promise<unknown>,
 ) => {
   return (req: Request, res: Response) => {
     handler(req as Request<A, B, C, D>, res as T)

@@ -1,5 +1,6 @@
 import express from "express";
 import { body, header, query } from "express-validator";
+
 import {
   createManufacturer,
   fetchManufacturerbyId,
@@ -7,9 +8,9 @@ import {
   removeManufacturer,
   updateManufacturer,
 } from "../../controllers/v1/manufacturerController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -24,14 +25,14 @@ router.post(
   header("userid").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MANUFACTURER_CREATE),
-  RobustRunner(createManufacturer)
+  RobustRunner(createManufacturer),
 );
 
 router.get(
   "/get",
   isAuthenticated,
   PermissionGuard(PERMS.MANUFACTURER_LIST),
-  RobustRunner(getManufacturer)
+  RobustRunner(getManufacturer),
 );
 
 router.get(
@@ -40,7 +41,7 @@ router.get(
   query("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MANUFACTURER_LIST),
-  RobustRunner(fetchManufacturerbyId)
+  RobustRunner(fetchManufacturerbyId),
 );
 
 router.patch(
@@ -50,7 +51,7 @@ router.patch(
   body("update").exists().isObject(),
   validator,
   PermissionGuard(PERMS.MANUFACTURER_UPDATE),
-  RobustRunner(updateManufacturer)
+  RobustRunner(updateManufacturer),
 );
 
 router.delete(
@@ -59,7 +60,7 @@ router.delete(
   body("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MANUFACTURER_DELETE),
-  RobustRunner(removeManufacturer)
+  RobustRunner(removeManufacturer),
 );
 
 export default router;

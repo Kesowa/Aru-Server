@@ -1,4 +1,6 @@
 import express from "express";
+import { body, oneOf, query } from "express-validator";
+
 import {
   getByFlightOrLocationID,
   getByMissionID,
@@ -14,11 +16,10 @@ import {
   getCountByMissionID,
   getVODByID,
 } from "../../controllers/v1/VODcontroller";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isVodCount } from "../../utils/countPermission";
-import { body, oneOf, query } from "express-validator";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ router.post(
   "/save-VOD",
   body("filename").exists().isString().notEmpty(),
   validator,
-  RobustRunner(saveVOD)
+  RobustRunner(saveVOD),
 );
 
 router.post(
@@ -39,7 +40,7 @@ router.post(
   validator,
   PermissionGuard(PERMS.VOD_CREATE),
   isVodCount,
-  RobustRunner(saveVODManual)
+  RobustRunner(saveVODManual),
 );
 
 //  update data
@@ -60,7 +61,7 @@ router.post(
   body("Id").notEmpty().isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.VOD_LIST),
-  RobustRunner(getVODByID)
+  RobustRunner(getVODByID),
 );
 
 // all get method here
@@ -80,7 +81,7 @@ router.get(
   query("isFlagged").optional().isBoolean().toBoolean(),
   validator,
   PermissionGuard(PERMS.VOD_LIST),
-  RobustRunner(getByMissionID)
+  RobustRunner(getByMissionID),
 );
 
 router.get(
@@ -89,7 +90,7 @@ router.get(
   query("missionID").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.VOD_LIST),
-  RobustRunner(getCountByMissionID)
+  RobustRunner(getCountByMissionID),
 );
 
 router.get(
@@ -104,7 +105,7 @@ router.get(
   ]),
   validator,
   PermissionGuard(PERMS.VOD_LIST),
-  RobustRunner(getByFlightOrLocationID)
+  RobustRunner(getByFlightOrLocationID),
 );
 
 router.get(
@@ -115,7 +116,7 @@ router.get(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.VOD_LIST),
-  RobustRunner(fetchAllVoddataByLocationId)
+  RobustRunner(fetchAllVoddataByLocationId),
 );
 
 router.delete(
@@ -124,7 +125,7 @@ router.delete(
   body("Id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.VOD_DELETE),
-  RobustRunner(removeVOD)
+  RobustRunner(removeVOD),
 );
 
 router.delete(
@@ -133,7 +134,7 @@ router.delete(
   body("Id").notEmpty().isArray({ min: 1 }),
   validator,
   PermissionGuard(PERMS.VOD_DELETE, PERMS.VOD_LIST),
-  RobustRunner(removeMultiVOD)
+  RobustRunner(removeMultiVOD),
 );
 
 router.patch(
@@ -143,7 +144,7 @@ router.patch(
   body("update").notEmpty().isObject(),
   validator,
   PermissionGuard(PERMS.VOD_UPDATE),
-  RobustRunner(renameVOD)
+  RobustRunner(renameVOD),
 );
 
 router.patch(
@@ -153,7 +154,7 @@ router.patch(
   body("update").notEmpty().isObject(),
   validator,
   PermissionGuard(PERMS.VOD_UPDATE),
-  RobustRunner(updateVOD)
+  RobustRunner(updateVOD),
 );
 router.patch(
   "/update-multi-vod-by-ID",
@@ -162,7 +163,7 @@ router.patch(
   body("update").notEmpty().isObject(),
   validator,
   PermissionGuard(PERMS.VOD_LIST, PERMS.VOD_UPDATE),
-  RobustRunner(updateMultiVOD)
+  RobustRunner(updateMultiVOD),
 );
 
 export default router;

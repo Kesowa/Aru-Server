@@ -1,12 +1,13 @@
+import { Request } from "express";
+import mongoose from "mongoose";
+
+import { API_SERVER } from "../../constants";
 import { inviteModel } from "../../models/invite";
 import Mission from "../../models/mission";
 import User from "../../models/user";
 import { sendMail } from "../../utils/emailUtil";
 import { AuthResponse } from "../../utils/interfaceUtils";
-import { Request } from "express";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
-import mongoose from "mongoose";
-import { API_SERVER } from "../../constants";
 
 export const inviteClient = async (req: Request, res: AuthResponse) => {
   const missionID = req.body.missionID;
@@ -30,7 +31,7 @@ export const inviteClient = async (req: Request, res: AuthResponse) => {
     },
     {
       tenantId: 1,
-    }
+    },
   );
   if (!missionExists) {
     return res.status(404).json({
@@ -68,7 +69,7 @@ export const inviteClient = async (req: Request, res: AuthResponse) => {
         <p>Best regards,</p>
         <p><b>Team Kesowa</b></p>
         `,
-    ""
+    "",
   );
   return res.json({
     status: true,
@@ -113,7 +114,7 @@ export const registerClient = async (req: Request, res: AuthResponse) => {
       $addToSet: {
         clientId: user._id,
       },
-    }
+    },
   );
 
   if (!updateMission.acknowledged) {
@@ -136,7 +137,7 @@ export const registerClient = async (req: Request, res: AuthResponse) => {
         <p>Best regards,</p>
         <p><b>Team Kesowa</b></p>
         `,
-    ""
+    "",
   );
   await invite.update({ valid: false });
   return res.redirect(passwordRedirect);

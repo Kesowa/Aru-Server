@@ -1,9 +1,10 @@
 import { Namespace, Server } from "socket.io";
+
 import alertSocketController from "./socketControllers/v1/alertControllers";
 import { droneLocationIoController } from "./socketControllers/v1/droneLocationController";
-import { notificationIoController } from "./socketControllers/v1/notificationController";
-import { missionIoController } from "./socketControllers/v1/missionController";
 import { mavstatIoController } from "./socketControllers/v1/mavstatsController";
+import { missionIoController } from "./socketControllers/v1/missionController";
+import { notificationIoController } from "./socketControllers/v1/notificationController";
 
 export let notificationSocket: Namespace;
 export let missionSpecificSocket: Namespace;

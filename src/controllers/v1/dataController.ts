@@ -1,16 +1,17 @@
 import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
+import { HydratedDocument } from "mongoose";
+
+import aimlModel from "../../models/aimlTask";
 import Alert from "../../models/alert";
 import Document from "../../models/document";
-import { saveThermal } from "../../utils/imageUtils";
-import aimlModel from "../../models/aimlTask";
-import { HydratedDocument } from "mongoose";
 import { IAlert } from "../../schemas/alert";
 import { IDocument } from "../../schemas/document";
+import { saveThermal } from "../../utils/imageUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 export const getThermal = async (
   req: Request<{}, {}, { id: string; doc: "alert" | "document" }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const thermalDoc = await aimlModel.findOneAndUpdate(
     {
@@ -36,7 +37,7 @@ export const getThermal = async (
     {
       upsert: true,
       new: true,
-    }
+    },
   );
   if (thermalDoc) {
     if (thermalDoc.status == "failed") {
@@ -106,7 +107,7 @@ const checkTable = (table) => {
         checkUint(y) &&
         checkFloat(temp) &&
         checkColor(color) &&
-        typeof label == "string"
+        typeof label == "string",
     );
     if (!correct) {
       return false;
@@ -131,7 +132,7 @@ export const createThermalTable = async (
       table: unknown;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { doc, id, table } = req.body;
   const realTable = checkTable(table);

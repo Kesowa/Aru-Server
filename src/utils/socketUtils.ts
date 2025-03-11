@@ -66,7 +66,7 @@ export interface MavStat {
 
 export const addUser = (
   userArray: Array<SocketUserObject>,
-  user: SocketUserObject
+  user: SocketUserObject,
 ) => {
   const u = searchUser(userArray, user.id);
   if (!u) {
@@ -76,7 +76,7 @@ export const addUser = (
 
 export const removeUser = (
   userArray: Array<SocketUserObject>,
-  user: SocketUserObject
+  user: SocketUserObject,
 ) => {
   const index = userArray.findIndex((u) => u.id === user.id);
   if (index !== -1) {

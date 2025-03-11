@@ -1,14 +1,15 @@
 import express from "express";
 import { body } from "express-validator";
+
 import {
   createMissionType,
   fetchAllMissionTypes,
   editMissionType,
   deleteMissionType,
 } from "../../controllers/v1/missionTypeControllers";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ router.post(
   body("description").notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.MISSION_TYPE_CREATE),
-  RobustRunner(createMissionType)
+  RobustRunner(createMissionType),
 );
 
 //++++++++++++++++++++ edit mission type Api++++++++++++++++++++++++
@@ -37,7 +38,7 @@ router.post(
     .toBoolean(),
   validator,
   PermissionGuard(PERMS.MISSION_TYPE_UPDATE),
-  RobustRunner(editMissionType)
+  RobustRunner(editMissionType),
 );
 
 //++++++++++++++++++++ delete mission type Api++++++++++++++++++++++++
@@ -47,7 +48,7 @@ router.post(
   body("_id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MISSION_TYPE_DELETE),
-  RobustRunner(deleteMissionType)
+  RobustRunner(deleteMissionType),
 );
 
 //++++++++++++++++++++ fetch all mission type Api++++++++++++++++++++++++
@@ -55,7 +56,7 @@ router.get(
   "/getall",
   isAuthenticated,
   PermissionGuard(PERMS.MISSION_TYPE_LIST),
-  RobustRunner(fetchAllMissionTypes)
+  RobustRunner(fetchAllMissionTypes),
 );
 
 export default router;

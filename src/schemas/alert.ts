@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { Types } from "ts-openapi";
-import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
 import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+import { deleteThumbnails, saveThumbnails } from "../utils/imageUtils";
 
 interface IAlertMethods {
   create(): Promise<IAlert>;
@@ -145,7 +146,7 @@ const alertSchema = new mongoose.Schema<IAlert>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 alertSchema.index({
   flightId: 1,
@@ -169,11 +170,11 @@ alertSchema.methods.create = async function () {
         allAlertSize: doc.fileSize,
         actualAlertCount: 1,
       },
-    }
+    },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   // save the document
   return await doc.save();
@@ -193,11 +194,11 @@ alertSchema.methods.delete = async function () {
         allAlertSize: -doc.fileSize,
         actualAlertCount: -1,
       },
-    }
+    },
   );
   await Mission.updateOne(
     { _id: doc.missionId },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
   // delete the document
   await doc.deleteOne();

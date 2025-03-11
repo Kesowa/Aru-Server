@@ -1,21 +1,22 @@
-import app, { logger } from "./app";
 import http from "http";
-import { Server } from "socket.io";
-import { createAdapter } from "./utils/socket.io-adapter";
-import { connect } from "amqplib";
-import { ioHandler } from "./socket";
-import { Setup as VodSetup } from "./utils/videoUtils";
-import { Setup as ZipSetup } from "./utils/cesium";
-import { Setup as InferSetup } from "./utils/inferUtils";
-import { Setup as ReportSetup } from "./utils/reportUtils";
 
+import { connect } from "amqplib";
 import mongoose from "mongoose";
+import { Server } from "socket.io";
+
+import app, { logger } from "./app";
 import {
   MONGODB_CONNECTION_STRING,
   PORT,
   PUBLIC_SERVER,
   RABBITMQ_CONNECTION_STRING,
 } from "./constants";
+import { ioHandler } from "./socket";
+import { Setup as ZipSetup } from "./utils/cesium";
+import { Setup as InferSetup } from "./utils/inferUtils";
+import { Setup as ReportSetup } from "./utils/reportUtils";
+import { createAdapter } from "./utils/socket.io-adapter";
+import { Setup as VodSetup } from "./utils/videoUtils";
 
 const worker = async () => {
   const mongodb = await mongoose.connect(MONGODB_CONNECTION_STRING);

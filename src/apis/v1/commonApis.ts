@@ -1,5 +1,6 @@
 import express from "express";
 import { body } from "express-validator";
+
 import {
   checkIfEmailIdIsAvailable,
   createUploadUrl,
@@ -15,7 +16,7 @@ router.post(
   isAuthenticated,
   body("email").isEmail().withMessage("invalid Email."),
   validator,
-  RobustRunner(checkIfEmailIdIsAvailable)
+  RobustRunner(checkIfEmailIdIsAvailable),
 );
 
 router.post(
@@ -26,7 +27,7 @@ router.post(
   body("type").default("application/octet-stream").isMimeType(),
   body("model").isString(),
   validator,
-  RobustRunner(createUploadUrl)
+  RobustRunner(createUploadUrl),
 );
 
 export default router;

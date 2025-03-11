@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { body, query } from "express-validator";
-import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { isAuthenticated } from "../../utils/authUtils";
+
 import {
   createThermalTable,
   getThermal,
 } from "../../controllers/v1/dataController";
+import { isAuthenticated } from "../../utils/authUtils";
+import { RobustRunner, validator } from "../../utils/requestHelpers";
 
 const dataRouter = Router();
 
@@ -15,7 +16,7 @@ dataRouter.get(
   query("doc").isString().notEmpty().isIn(["alert", "document"]),
   validator,
   isAuthenticated,
-  RobustRunner(getThermal)
+  RobustRunner(getThermal),
 );
 
 dataRouter.post(
@@ -25,7 +26,7 @@ dataRouter.post(
   body("table").isArray().notEmpty(),
   validator,
   isAuthenticated,
-  RobustRunner(createThermalTable)
+  RobustRunner(createThermalTable),
 );
 
 export default dataRouter;

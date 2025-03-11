@@ -1,17 +1,20 @@
-import { Namespace, Socket } from "socket.io";
-import { stat } from "../v1/droneLocationController";
-import axios from "axios";
-import Tenant from "../../models/tenant";
-import Alert from "../../models/alert";
-import { AIRequest } from "../../utils/socketUtils";
-import { Types } from "mongoose";
-import { notificationSocket } from "../../socket";
-import { IPackage } from "../../schemas/package";
-import { WiproInterface } from "../../utils/wipro";
-import { ARU_INSTANCE, Directory, Instance, MAP_KEY } from "../../constants";
-import { logger } from "../../app";
-import { saveFile } from "../../utils/dataUtils";
 import { randomUUID } from "crypto";
+
+import axios from "axios";
+import { Types } from "mongoose";
+import { Namespace, Socket } from "socket.io";
+
+import { logger } from "../../app";
+import { ARU_INSTANCE, Directory, Instance, MAP_KEY } from "../../constants";
+import Alert from "../../models/alert";
+import Tenant from "../../models/tenant";
+import { IPackage } from "../../schemas/package";
+import { notificationSocket } from "../../socket";
+import { saveFile } from "../../utils/dataUtils";
+import { AIRequest } from "../../utils/socketUtils";
+import { WiproInterface } from "../../utils/wipro";
+import { stat } from "../v1/droneLocationController";
+
 const geoMapApi = "https://maps.googleapis.com/maps/api/geocode/json";
 
 /*
@@ -101,7 +104,7 @@ const alertSocketController = (alertSocket: Namespace) => {
                   await WiproInterface.SendAlert(
                     alert,
                     socket.client.conn.remoteAddress,
-                    logger
+                    logger,
                   );
                 }
                 // #endregion
@@ -115,14 +118,14 @@ const alertSocketController = (alertSocket: Namespace) => {
           } else {
             notificationSocket.to(data.tenantId).emit("ALERT_CREATED", {
               message: new Error(
-                "Actual size exceeded the Limit of Set storage!"
+                "Actual size exceeded the Limit of Set storage!",
               ),
             });
           }
         } else {
           notificationSocket.to(data.tenantId).emit("ALERT_CREATED", {
             message: new Error(
-              "Actual alertCount exceeded the Limit of Set alertCount!"
+              "Actual alertCount exceeded the Limit of Set alertCount!",
             ),
           });
         }

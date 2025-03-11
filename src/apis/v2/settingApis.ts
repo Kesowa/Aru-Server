@@ -1,13 +1,14 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
+import openApi from "./openApi";
 import {
   API_SERVER,
   LIVE_URL,
   RTMP_PUBLIC,
   TITILER_PUBLIC,
 } from "../../constants";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const settingApi = Router();
 
@@ -41,12 +42,12 @@ openApi.addPath(
               COG_URL: Types.String(),
               SERVER_URL: Types.String(),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default settingApi;

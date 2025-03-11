@@ -1,5 +1,8 @@
 import express from "express";
 import { body } from "express-validator";
+
+import { Mode } from "../../constants";
+import { fetchActivePackages } from "../../controllers/v1/packageController";
 import {
   createTenant,
   fetchAllTenants,
@@ -15,15 +18,13 @@ import {
   resendVerificationCode,
   tenantpublicmaprefupdate,
 } from "../../controllers/v1/tenantController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
-import { fetchActivePackages } from "../../controllers/v1/packageController";
 import {
   validator,
   RobustRunner,
   environmentGuard,
 } from "../../utils/requestHelpers";
-import { Mode } from "../../constants";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -48,7 +49,7 @@ router.post(
   body("avatar").optional().notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.TENANT_CREATE),
-  RobustRunner(createTenant)
+  RobustRunner(createTenant),
 );
 
 router.post(
@@ -71,7 +72,7 @@ router.post(
   body("password").notEmpty().trim(),
   body("package").optional({ checkFalsy: true }).notEmpty().isMongoId(), // If done from super-admin side, it will be present; if done by new tenant user then it wont
   validator,
-  RobustRunner(createTenantPublicApi)
+  RobustRunner(createTenantPublicApi),
 );
 
 router.post(
@@ -84,20 +85,20 @@ router.post(
     .isNumeric()
     .toInt(),
   validator,
-  RobustRunner(verifyTenant)
+  RobustRunner(verifyTenant),
 );
 
 router.post(
   "/resend-verification-code",
   environmentGuard(Mode.Dev),
   body("email").notEmpty().isEmail().withMessage("invalid Email."),
-  RobustRunner(resendVerificationCode)
+  RobustRunner(resendVerificationCode),
 );
 
 router.get(
   "/fetch-active-package-public",
   PermissionGuard(PERMS.PACKAGE_LIST),
-  RobustRunner(fetchActivePackages)
+  RobustRunner(fetchActivePackages),
 );
 
 //+++++++++++++++++++++++++ fetch all tenants+++++++++++++++++++++++
@@ -105,7 +106,7 @@ router.get(
   "/fetchall",
   isAuthenticated,
   PermissionGuard(PERMS.TENANT_LIST),
-  RobustRunner(fetchAllTenants)
+  RobustRunner(fetchAllTenants),
 );
 
 //+++++++++++++++++++++++++ Add initial package by admin +++++++++++++++++++++
@@ -116,7 +117,7 @@ router.post(
   body("packageId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.TENANT_UPDATE),
-  RobustRunner(addInitialPackageByAdmin)
+  RobustRunner(addInitialPackageByAdmin),
 );
 
 router.patch(
@@ -140,7 +141,7 @@ router.patch(
   body("avatar").optional().notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.TENANT_UPDATE),
-  RobustRunner(editTenantForId)
+  RobustRunner(editTenantForId),
 );
 
 //++++++++++++++++++++++++ Fetch tenant details+++++++++++++++++++++++++++++++
@@ -150,21 +151,21 @@ router.post(
   body("tenantId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.TENANT_LIST),
-  RobustRunner(fetchTenantDetails)
+  RobustRunner(fetchTenantDetails),
 );
 
 router.patch(
   "/add-all-count-to-tenant",
   isAuthenticated,
   PermissionGuard(PERMS.TENANT_UPDATE),
-  RobustRunner(addAllCountToTenant)
+  RobustRunner(addAllCountToTenant),
 );
 router.post(
   "/add-actualSize-to-tenant",
   isAuthenticated,
   body("tenantId").notEmpty().isMongoId(),
   PermissionGuard(PERMS.TENANT_UPDATE),
-  RobustRunner(addActualSizeToTenant)
+  RobustRunner(addActualSizeToTenant),
 );
 router.delete(
   "/delete-tenant",
@@ -172,19 +173,19 @@ router.delete(
   body("tenantId").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.TENANT_DELETE, PERMS.TENANT_UPDATE),
-  RobustRunner(deleteTenantForId)
+  RobustRunner(deleteTenantForId),
 );
 router.get(
   "/get-tenant-stats",
   isAuthenticated,
   PermissionGuard(PERMS.MISSION_LIST),
-  RobustRunner(getTenantStats)
+  RobustRunner(getTenantStats),
 );
 router.patch(
   "/updatepublicMapRef",
   isAuthenticated,
   PermissionGuard(PERMS.TENANT_UPDATE),
-  RobustRunner(tenantpublicmaprefupdate)
+  RobustRunner(tenantpublicmaprefupdate),
 );
 
 export default router;

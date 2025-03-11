@@ -1,10 +1,11 @@
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Asset from "../../models/asset";
 import { AssetType } from "../../schemas/asset";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { canListAsset } from "../../utils/authUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const assetApi = Router();
 
@@ -18,7 +19,7 @@ assetApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { assetId, populate } = req.query;
     const data = await Asset.find({
@@ -30,7 +31,7 @@ assetApi.get(
     res.json({
       data,
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -55,12 +56,12 @@ openApi.addPath(
             properties: {
               data: Types.Array({ arrayType: AssetType }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default assetApi;

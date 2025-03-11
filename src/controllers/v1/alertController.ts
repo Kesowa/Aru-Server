@@ -1,20 +1,20 @@
-import { Request } from "express";
-import Alert from "../../models/alert";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import { notificationSocket } from "../../socket";
-import Tenant from "../../models/tenant";
-import { Types } from "mongoose";
 import { subWeeks, subDays, subMonths, subYears } from "date-fns";
+import { Request } from "express";
+import { Types } from "mongoose";
 
+import { ARU_INSTANCE, Directory, Instance } from "../../constants";
+import Alert from "../../models/alert";
+import Mission from "../../models/mission";
+import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
+import { IFlight } from "../../schemas/flight";
 import { IMission } from "../../schemas/mission";
 import { IUser } from "../../schemas/user";
-import { IFlight } from "../../schemas/flight";
-import { ARU_INSTANCE, Directory, Instance } from "../../constants";
+import { notificationSocket } from "../../socket";
+import { AuthResponse } from "../../utils/interfaceUtils";
 import { WiproInterface } from "../../utils/wipro";
 import { readCoords, saveThumbnails } from "../../utils/imageUtils";
-import UploadTask from "../../models/uploadTask";
 import { permPath } from "../../utils/dataUtils";
-import Mission from "../../models/mission";
 
 // Create Alert Controlller
 type CreateAlert = {
@@ -31,7 +31,7 @@ type CreateAlert = {
 };
 export const createAlert = async (
   req: Request<{}, {}, CreateAlert>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const fileDoc = await UploadTask.findOne({
     _id: req.body.image,
@@ -43,7 +43,7 @@ export const createAlert = async (
     req.body;
   const fullPath = await permPath(
     Directory.ALERT_IMAGES,
-    fileDoc.metadata.objectkey
+    fileDoc.metadata.objectkey,
   );
   const newAlert = new Alert({
     locationName,
@@ -85,7 +85,7 @@ export const createAlert = async (
 // get All alert Data by flightId
 export const fetchAllAlertByFlightorLocationId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { flightID, locationID } = req.query;
   const alert = await Alert.find({
@@ -114,7 +114,7 @@ export const fetchAllAlertByFlightorLocationId = async (
 // get All Alert Data By Alert Id
 export const fetchAllAlertByAlertId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const alert = await Alert.find({
     _id: req.query.id,
@@ -140,7 +140,7 @@ export const fetchAllAlertByAlertId = async (
 // get All Alert Data By Location Id
 export const fetchAllAlertByLocationId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const alert = await Alert.find({
     locationId: req.query.id,
@@ -174,7 +174,7 @@ export const fetchAllAlertByLocationId = async (
 // get Number of Alertsgit By LocationId
 export const fetchNumberofAlertsByLocationId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const alert = await Alert.find(
     {
@@ -187,7 +187,7 @@ export const fetchNumberofAlertsByLocationId = async (
     {
       _id: 0,
       locationName: 1,
-    }
+    },
   );
   if (alert) {
     res.json({
@@ -207,7 +207,7 @@ export const fetchNumberofAlertsByLocationId = async (
 // fetch alerts use pagination by missionID
 export const fetchAlertsUsePaginationByMissionID = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { page, limit, sortBy, id, isFlagged, alertType } = req.query;
 
@@ -239,7 +239,7 @@ export const fetchAlertsUsePaginationByMissionID = async (
     null,
     {
       sort: { [orderBy]: order },
-    }
+    },
   )
     .populate<{ missionId: IMission }>({
       path: "missionId",
@@ -276,7 +276,7 @@ export const fetchAlertsUsePaginationByMissionID = async (
 
 export const fetchAlertsUsePaginationByLocationId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { id, sortBy, page, limit } = req.query;
   const startIndex = (Number(page) - 1) * Number(limit);
@@ -295,7 +295,7 @@ export const fetchAlertsUsePaginationByLocationId = async (
       ],
     },
     null,
-    { sort: { [orderBy]: order } }
+    { sort: { [orderBy]: order } },
   )
     .populate<{ missionId: IMission }>({
       path: "missionId",
@@ -331,7 +331,7 @@ export const fetchAlertsUsePaginationByLocationId = async (
 // get all alerts of a mission
 export const fetchAllAlertsByMissionMapref = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const data = await Alert.find(
     {
@@ -345,7 +345,7 @@ export const fetchAllAlertsByMissionMapref = async (
       image: 1,
       location: 1,
       missionId: 1,
-    }
+    },
   ).populate<{ missionId: IMission }>({
     path: "missionId",
     match: { tenantId: res.locals.user.tenantId._id },
@@ -382,7 +382,7 @@ export const testApiinject = async (req: Request, res: AuthResponse) => {
     data.map(async (d) => {
       d.tenantId = req.body.tenantId;
       return await d.save();
-    })
+    }),
   );
   if (savedDoc) {
     res.status(200).json({
@@ -400,7 +400,7 @@ export const testApiinject = async (req: Request, res: AuthResponse) => {
 
 export const fetchAllAlertByLocationIdAndTime = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const timeStr = String(req.query.time);
   const time = Number(timeStr.split(" ")[0]);
@@ -447,7 +447,7 @@ export const fetchAllAlertByLocationIdAndTime = async (
     {
       image: 1,
       location: 1,
-    }
+    },
   );
 
   const result: any[] = [];
@@ -491,7 +491,7 @@ export const updateAlertIds = async (req: Request, res: AuthResponse) => {
       flightId: flightID,
       createdBy: createdBy,
       tenantId: tenantID,
-    }
+    },
   );
 
   res.json({
@@ -503,7 +503,7 @@ export const updateAlertIds = async (req: Request, res: AuthResponse) => {
 // alerts by tenant id
 export const fetchAllAlertByTenantId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   let data = [];
   if (req.query.time) {
@@ -549,7 +549,7 @@ export const fetchAllAlertByTenantId = async (
       {
         image: 1,
         location: 1,
-      }
+      },
     );
   } else {
     data = await Alert.find(
@@ -559,7 +559,7 @@ export const fetchAllAlertByTenantId = async (
       {
         image: 1,
         location: 1,
-      }
+      },
     );
   }
 
@@ -595,7 +595,7 @@ export const fetchAllAlertByTenantId = async (
 // advanced alert results by tenant id
 export const advancedAlertResultByTenantId = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const { timeRange, time, page, limit, user } = req.query;
 
@@ -677,7 +677,7 @@ export const advancedAlertResultByTenantId = async (
 
 export const convertImageToThumbnail = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const result = await Alert.find({
     $or: [
@@ -699,11 +699,11 @@ export const convertImageToThumbnail = async (
             actualSize: doc.fileSize - oldSize,
             allAlertSize: doc.fileSize - oldSize,
           },
-        }
+        },
       );
       await Mission.updateOne(
         { _id: doc.missionId },
-        { $inc: { size: doc.fileSize - oldSize } }
+        { $inc: { size: doc.fileSize - oldSize } },
       );
     }
     res.status(200).json({
@@ -729,7 +729,7 @@ export const deleteMultipleAlerts = async (req: Request, res: AuthResponse) => {
       fileSize: 1,
       tenantId: 1,
       missionId: 1,
-    }
+    },
   );
   if (data.length) {
     for (const d of data) {
@@ -756,7 +756,7 @@ export const manualUploadAlert = async (req: Request, res: AuthResponse) => {
   });
   const fullPath = await permPath(
     Directory.ALERT_IMAGES,
-    imgDoc.metadata.objectkey
+    imgDoc.metadata.objectkey,
   );
 
   const ff = await readCoords(fullPath);
@@ -799,7 +799,7 @@ export const updateAlert = async (req: Request, res: AuthResponse) => {
     req.body.update,
     {
       new: true,
-    }
+    },
   );
 
   if (updatedDoc) {
@@ -822,7 +822,7 @@ export const updateMultiAlert = async (req: Request, res: AuthResponse) => {
   const updatedDoc = await Alert.updateMany(
     { _id: { $in: Ids }, tenantId: res.locals.user.tenantId._id },
     { $set: req.body.update },
-    { multi: true }
+    { multi: true },
   );
   console.info(Ids, updatedDoc);
   const doc = await Alert.find({

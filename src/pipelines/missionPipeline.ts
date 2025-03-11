@@ -3,7 +3,7 @@ import { Types, PipelineStage } from "mongoose";
 export const missionByLocationPipe = (
   locationID: string,
   missionId: string,
-  tenantID: string
+  tenantID: string,
 ) => {
   return [
     {

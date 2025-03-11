@@ -1,6 +1,7 @@
 import { Request } from "express";
 import { Types } from "mongoose";
 import { Logger } from "pino";
+
 import { RAZORPAY_KEY_ID } from "../../constants";
 import Package from "../../models/package";
 import Payment from "../../models/payment";
@@ -20,7 +21,7 @@ export const generateOrder = async (
     unknown,
     { tenantId: Types.ObjectId; package: Types.ObjectId }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const tenantId = req.body.tenantId;
   const paymentId = RAZORPAY_KEY_ID;
@@ -73,7 +74,7 @@ export const generateOrder = async (
 const buyPackage = async (
   tenantID: Types.ObjectId,
   packageID: Types.ObjectId,
-  log: Logger
+  log: Logger,
 ) => {
   // const session = await mongoose.startSession();
   let success = false;
@@ -99,7 +100,7 @@ const buyPackage = async (
         actualClientCount: 0,
         actualLocationCount: 0,
         actualUserGroupCount: 0,
-      }
+      },
     );
     // ).session(session);
     log.info("Updated tenant");
@@ -110,7 +111,7 @@ const buyPackage = async (
       },
       {
         isActive: true,
-      }
+      },
     );
     // ).session(session);
     log.info("Updated user");
@@ -139,7 +140,7 @@ export const completeOrder = async (
       razorpay_signature: string;
     }
   >,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const payload = req.body;
 
@@ -175,7 +176,7 @@ export const completeOrder = async (
   const success = await buyPackage(
     paymentObj.tenant,
     paymentObj.package,
-    req.log
+    req.log,
   );
 
   if (!success) {
@@ -196,7 +197,7 @@ export const completeOrder = async (
 
 export const paymentFail = async (
   req: Request<{}, {}, { payment_id: string; order_id: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const payload = req.body;
   if (!payload.payment_id || !payload.order_id) {
@@ -210,7 +211,7 @@ export const paymentFail = async (
 
   await Payment.updateOne(
     { razorpay_order_id: payload.order_id },
-    paymentUpdate
+    paymentUpdate,
   );
 
   res.status(200).json({
@@ -221,7 +222,7 @@ export const paymentFail = async (
 
 export const handleWebhook = async (
   req: Request<{}, {}, WebhookEvent>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const isValid = VerifyWebhookSignature(req);
   if (!isValid) {
@@ -253,7 +254,7 @@ export const handleWebhook = async (
     const success = await buyPackage(
       paymentRecord.tenant,
       paymentRecord.package,
-      req.log
+      req.log,
     );
     if (success) {
       res.status(200).json({

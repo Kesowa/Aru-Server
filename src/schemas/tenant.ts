@@ -300,7 +300,7 @@ const tenantschema = new mongoose.Schema<ITenant>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 tenantschema.index({ email: 1 }, { unique: true });
 tenantschema.index({ publicMapRef: 1 }, { sparse: true });

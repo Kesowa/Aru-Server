@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
+
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { deleteHlsVodUsingIndex } from "../utils/videoUtils";
 import { deletePublicFileUsingPath } from "../utils/fileDeleteUtils";
+import { deleteHlsVodUsingIndex } from "../utils/videoUtils";
 interface IVODMethods {
   create(): Promise<IVOD>;
   delete(): Promise<void>;
@@ -122,7 +123,7 @@ const VODSchema = new mongoose.Schema<IVOD>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 VODSchema.index({
   flightID: 1,
@@ -133,14 +134,14 @@ VODSchema.index(
   {
     locationID: 1,
   },
-  { sparse: true }
+  { sparse: true },
 );
 VODSchema.methods.create = async function () {
   const doc = this as IVOD & mongoose.Document;
   // update size details
   await Mission.updateOne(
     { _id: doc.missionID },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   await Tenant.updateOne(
     { _id: doc.tenantId },
@@ -150,7 +151,7 @@ VODSchema.methods.create = async function () {
         allVodSize: doc.fileSize,
         actualVodCount: 1,
       },
-    }
+    },
   );
   // save document
   return await doc.save();
@@ -166,7 +167,7 @@ VODSchema.methods.delete = async function () {
   // update size details
   await Mission.updateOne(
     { _id: doc.missionID },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
   await Tenant.updateOne(
     { _id: doc.tenantId },
@@ -176,7 +177,7 @@ VODSchema.methods.delete = async function () {
         allVodSize: -doc.fileSize,
         actualVodCount: -1,
       },
-    }
+    },
   );
   // delete document
   await doc.deleteOne();

@@ -1,6 +1,7 @@
 import express from "express";
-import { isAuthenticated } from "../../utils/authUtils";
+
 import { getAllPilots } from "../../controllers/v1/pilotController";
+import { isAuthenticated } from "../../utils/authUtils";
 import { RobustRunner } from "../../utils/requestHelpers";
 
 const router = express.Router();

@@ -1,11 +1,12 @@
 import { Schema, Types } from "mongoose";
+
 import { DocToDir } from "../utils/pathUtils";
 
 export type docTypes = keyof typeof DocToDir;
 const docModels = Object.keys(DocToDir);
 
 const status = <const>["started", "completed", "failed"];
-export type statusType = typeof status[number];
+export type statusType = (typeof status)[number];
 
 export type UploadTask = {
   _id: Types.ObjectId;
@@ -68,7 +69,7 @@ export const UploadTaskSchema = new Schema<UploadTask>(
       formData: Schema.Types.Map,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 UploadTaskSchema.index({ tenant: 1, docModel: 1, doc: 1 });

@@ -1,8 +1,9 @@
 import { Response } from "express";
-import { IUser } from "../schemas/user";
 import { LeanDocument } from "mongoose";
-import { ITenant } from "../schemas/tenant";
+
 import { PERMS } from "../schemas/permission";
+import { ITenant } from "../schemas/tenant";
+import { IUser } from "../schemas/user";
 
 export type AuthResponse = Response & {
   locals: {

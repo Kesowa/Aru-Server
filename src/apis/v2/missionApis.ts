@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
+
+import openApi from "./openApi";
 import Mission from "../../models/mission";
 import { MissionType } from "../../schemas/mission";
 import { AuthResponse } from "../../utils/interfaceUtils";
@@ -26,7 +26,7 @@ missionApi.get(
         status?: string;
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const {
       missionId,
@@ -61,7 +61,7 @@ missionApi.get(
         sort: {
           [orderBy]: asc ? "asc" : "desc",
         },
-      }
+      },
     )
       .skip(offset)
       .limit(limit)
@@ -75,7 +75,7 @@ missionApi.get(
         count: data.length,
       },
     });
-  }
+  },
 );
 
 openApi.addPath(
@@ -134,12 +134,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default missionApi;

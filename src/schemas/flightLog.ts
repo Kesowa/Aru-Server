@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
+import { Types } from "ts-openapi";
+
 import Mission from "../models/mission";
 import Tenant from "../models/tenant";
-import { Types } from "ts-openapi";
 
 interface IFlightLogMethods {
   create(): Promise<IFlightLog>;
@@ -79,11 +80,11 @@ flightLogSchema.methods.create = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: doc.fileSize } }
+    { $inc: { actualSize: doc.fileSize } },
   );
   await Mission.updateOne(
     { _id: doc.missionID },
-    { $inc: { size: doc.fileSize } }
+    { $inc: { size: doc.fileSize } },
   );
   // save the document
   return await doc.save();
@@ -93,11 +94,11 @@ flightLogSchema.methods.delete = async function () {
   // update size details
   await Tenant.updateOne(
     { _id: doc.tenantId },
-    { $inc: { actualSize: -doc.fileSize } }
+    { $inc: { actualSize: -doc.fileSize } },
   );
   await Mission.updateOne(
     { _id: doc.missionID },
-    { $inc: { size: -doc.fileSize } }
+    { $inc: { size: -doc.fileSize } },
   );
   // delete the document
   await doc.deleteOne();

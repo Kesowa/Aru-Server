@@ -1,10 +1,11 @@
 import { Request } from "express";
+
 import Package from "../../models/package";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import Tenant from "../../models/tenant";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
-import { copyFiled } from "../../utils/moveFileUtils";
 import { IPackage } from "../../schemas/package";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import { copyFiled } from "../../utils/moveFileUtils";
 //cretae package
 export const createPackage = async (req: Request, res: AuthResponse) => {
   const pac = new Package({
@@ -28,7 +29,7 @@ export const createPackage = async (req: Request, res: AuthResponse) => {
   if (req.body.poster && createDoc) {
     copyFiled(
       req.body.poster,
-      `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`
+      `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`,
     );
   }
   if (createDoc) {
@@ -100,7 +101,7 @@ export const editPackageForId = async (req: Request, res: AuthResponse) => {
       if (a !== b) {
         copyFiled(
           req.body.poster,
-          `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`
+          `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`,
         );
         result.poster = `/images/packagePosters/${
           req.body.poster.split(/[\\\/]/)[3]

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
-import { RESET_PASSWORD_TOKEN_EXPIRE } from "../constants";
 import { Types } from "ts-openapi";
+
+import { RESET_PASSWORD_TOKEN_EXPIRE } from "../constants";
 
 export interface INewTenant {
   _id: mongoose.Types.ObjectId;
@@ -78,12 +79,12 @@ const newTenantSchema = new mongoose.Schema<INewTenant>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 newTenantSchema.index(
   { createdAt: 1 },
-  { expireAfterSeconds: RESET_PASSWORD_TOKEN_EXPIRE }
+  { expireAfterSeconds: RESET_PASSWORD_TOKEN_EXPIRE },
 );
 newTenantSchema.index({ email: 1 }, { unique: true });
 

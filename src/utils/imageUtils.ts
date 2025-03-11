@@ -1,9 +1,12 @@
-import sharp from "sharp";
-import { KeyPath, Directory, DocPath, docPath } from "./pathUtils";
-import path from "path";
-import exifr from "exifr";
 import { exec } from "child_process";
+import { randomUUID } from "crypto";
+import path from "path";
 import { promisify } from "util";
+
+import exifr from "exifr";
+import sharp from "sharp";
+
+import { deletePublicFileUsingPath } from "./fileDeleteUtils";
 import {
   downloadTemp,
   readToBuffer,
@@ -11,8 +14,7 @@ import {
   uploadAnything,
   uploadFile,
 } from "./objectStorage";
-import { randomUUID } from "crypto";
-import { deletePublicFileUsingPath } from "./fileDeleteUtils";
+import { KeyPath, Directory, DocPath, docPath } from "./pathUtils";
 const asyncExec = promisify(exec);
 
 /**

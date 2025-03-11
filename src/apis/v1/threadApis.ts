@@ -1,14 +1,15 @@
 import express from "express";
 import { body, param, query } from "express-validator";
+
 import {
   CreateDocThread,
   AddorUpdateDocComment,
   GetDocThread,
   RemoveDocComment,
 } from "../../controllers/v1/threadController";
+import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ router.get(
   validator,
   isAuthenticated,
   PermissionGuard(PERMS.THREAD_LIST),
-  RobustRunner(GetDocThread)
+  RobustRunner(GetDocThread),
 );
 router.post(
   "/:docType/:docId",
@@ -29,7 +30,7 @@ router.post(
   validator,
   isAuthenticated,
   PermissionGuard(PERMS.THREAD_CREATE),
-  RobustRunner(CreateDocThread)
+  RobustRunner(CreateDocThread),
 );
 router.patch(
   "/:docType/:docId",
@@ -40,7 +41,7 @@ router.patch(
   validator,
   isAuthenticated,
   PermissionGuard(PERMS.THREAD_UPDATE),
-  RobustRunner(AddorUpdateDocComment)
+  RobustRunner(AddorUpdateDocComment),
 );
 router.delete(
   "/:docType/:docId/:commentId",
@@ -50,7 +51,7 @@ router.delete(
   validator,
   isAuthenticated,
   PermissionGuard(PERMS.COMMENT_DELETE),
-  RobustRunner(RemoveDocComment)
+  RobustRunner(RemoveDocComment),
 );
 
 export default router;

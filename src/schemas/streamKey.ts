@@ -79,7 +79,7 @@ const streamKeySchema = new mongoose.Schema<IStreamKey>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 const streamDuration = 60 * 60 * 4;
 streamKeySchema.index({ createdAt: 1 }, { expireAfterSeconds: streamDuration });

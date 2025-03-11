@@ -9,7 +9,7 @@ const joinRoomByMissionID = (socket: Socket, next: (err?: any) => void) => {
   if (missionID) {
     socket.join(missionID);
     console.log(
-      `missionID : ${missionID} joined mission specific Socket with sid: ${socket.id}`
+      `missionID : ${missionID} joined mission specific Socket with sid: ${socket.id}`,
     );
     next();
   } else {

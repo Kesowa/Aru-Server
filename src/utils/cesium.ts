@@ -1,12 +1,14 @@
-import * as pathUtils from "./pathUtils";
 import path from "path";
 import { EventEmitter } from "stream";
+
+import { Connection } from "amqplib";
+
 import { deletePublicFolderUsingPath } from "./fileDeleteUtils";
+import * as pathUtils from "./pathUtils";
 import { logger } from "../app";
+import layer from "../models/layer";
 import { ILayer } from "../schemas/layer";
 import { missionSpecificSocket } from "../socket";
-import layer from "../models/layer";
-import { Connection } from "amqplib";
 
 export const LayerEvents = new EventEmitter();
 
@@ -56,7 +58,7 @@ export type TranscodeResponse = {
 
 export const decompressZip = async (
   filePath: pathUtils.KeyPath | pathUtils.DocPath,
-  metadata: AruMetadata
+  metadata: AruMetadata,
 ) => {
   const req: TranscodeRequest = {
     file: pathUtils.keyPath(filePath),
@@ -69,7 +71,7 @@ export const decompressZip = async (
 export const receiveZip = async (
   zip: Zip,
   metadata: AruMetadata,
-  success: boolean
+  success: boolean,
 ) => {
   const data = await layer.findOne({
     _id: metadata.layer_id,

@@ -1,5 +1,6 @@
 import express from "express";
 import { body, query } from "express-validator";
+
 import {
   createUser,
   fetchAllUserOfTenant,
@@ -10,6 +11,7 @@ import {
   UserDelete,
   UserEdit,
 } from "../../controllers/v1/userController";
+import { PERMS } from "../../schemas/permission";
 import {
   isAuthenticated,
   onlyTenantRootAccess,
@@ -17,7 +19,6 @@ import {
 } from "../../utils/authUtils";
 import { isUserCount } from "../../utils/countPermission";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
-import { PERMS } from "../../schemas/permission";
 
 const router = express.Router();
 
@@ -49,7 +50,7 @@ router.post(
   isAuthenticated,
   onlyTenantRootAccess,
   isUserCount,
-  RobustRunner(createUser)
+  RobustRunner(createUser),
 );
 
 //+++++++++++++++++++++++++ fetch all user of tenant+++++++++++++++++++++++
@@ -57,7 +58,7 @@ router.get(
   "/fetch-all-user",
   isAuthenticated,
   PermissionGuard(PERMS.USER_LIST),
-  RobustRunner(fetchAllUserOfTenant)
+  RobustRunner(fetchAllUserOfTenant),
 );
 
 router.get(
@@ -65,7 +66,7 @@ router.get(
   isAuthenticated,
   query("id").isMongoId().withMessage("Invalid id"),
   PermissionGuard(PERMS.USER_LIST),
-  RobustRunner(fetchUserOfTenantById)
+  RobustRunner(fetchUserOfTenantById),
 );
 
 router.patch(
@@ -85,7 +86,7 @@ router.patch(
   body("avatar").optional().isMongoId(),
   validator,
   PermissionGuard(PERMS.USER_UPDATE),
-  RobustRunner(UserEdit)
+  RobustRunner(UserEdit),
 );
 
 router.delete(
@@ -94,7 +95,7 @@ router.delete(
   query("id").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.USER_DELETE),
-  RobustRunner(UserDelete)
+  RobustRunner(UserDelete),
 );
 
 router.get("/generate-userList-csv", isAuthenticated, RobustRunner(userCsv));
@@ -104,7 +105,7 @@ router.patch(
   isAuthenticated,
   query("terms").notEmpty().isBoolean(),
   validator,
-  RobustRunner(termsAccepted)
+  RobustRunner(termsAccepted),
 );
 
 router.post(
@@ -112,7 +113,7 @@ router.post(
   isAuthenticated,
   query("flag").notEmpty().trim(),
   validator,
-  RobustRunner(testTerms)
+  RobustRunner(testTerms),
 );
 
 export default router;

@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Request, Router } from "express";
-import openApi from "./openApi";
 import { Types } from "ts-openapi";
-import { AuthResponse } from "../../utils/interfaceUtils";
+
+import openApi from "./openApi";
 import { PERMS } from "../../schemas/permission";
+import { AuthResponse } from "../../utils/interfaceUtils";
 
 const permissionApi = Router();
 
@@ -19,7 +19,7 @@ permissionApi.get(
         populate: string[];
       };
     },
-    res: AuthResponse
+    res: AuthResponse,
   ) => {
     const { limit, offset } = req.query;
     if (["super-admin", "tenant-root"].includes(res.locals.user.userType)) {
@@ -35,7 +35,7 @@ permissionApi.get(
     } else {
       throw new Error("Access Denied");
     }
-  }
+  },
 );
 
 openApi.addPath(
@@ -86,12 +86,12 @@ openApi.addPath(
                 },
               }),
             },
-          })
+          }),
         ),
       },
     },
   },
-  true
+  true,
 );
 
 export default permissionApi;

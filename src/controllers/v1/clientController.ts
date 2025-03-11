@@ -1,16 +1,8 @@
-import { Request } from "express";
-import { AuthResponse } from "../../utils/interfaceUtils";
-import Usergroup from "../../models/usergroup";
-import Mission from "../../models/mission";
-import User from "../../models/user";
-import bcrypt from "bcrypt";
-import Flight from "../../models/flight";
-import Tenant from "../../models/tenant";
-import path from "path";
 import crypto from "crypto";
-import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
-import { sendMail } from "../../utils/emailUtil";
-import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
+import path from "path";
+
+import bcrypt from "bcrypt";
+
 import { IUser } from "../../schemas/user";
 import { IMission } from "../../schemas/mission";
 import { ILocation } from "../../schemas/location";
@@ -24,15 +16,25 @@ import {
 import { SortOrder } from "mongoose";
 import { getFileSize } from "../../utils/fileUtils";
 import ejs from "ejs";
+import { Request } from "express";
+import Flight from "../../models/flight";
+import Mission from "../../models/mission";
+import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
+import User from "../../models/user";
+import Usergroup from "../../models/usergroup";
+import { PERMS, TENANT_CLIENT_PERMS } from "../../schemas/permission";
 import { iv } from "../../utils/authUtils";
 import { permPath, saveCSV } from "../../utils/dataUtils";
+import { sendMail } from "../../utils/emailUtil";
+import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
-import UploadTask from "../../models/uploadTask";
-import { PERMS, TENANT_CLIENT_PERMS } from "../../schemas/permission";
+import { AuthResponse } from "../../utils/interfaceUtils";
+import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
 
 export const createClientformissionGroup = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const fileDoc = await UploadTask.findOne({
     _id: req.body.avatar,
@@ -45,7 +47,7 @@ export const createClientformissionGroup = async (
     tenantId: res.locals.user.tenantId._id,
   });
   const onlyClientPerms = result.permissions.every((perm) =>
-    TENANT_CLIENT_PERMS.includes(perm)
+    TENANT_CLIENT_PERMS.includes(perm),
   );
   if (result) {
     if (onlyClientPerms) {
@@ -80,7 +82,7 @@ export const createClientformissionGroup = async (
         if (fileDoc) {
           const fullPath = await permPath(
             Directory.USER_AVATARS,
-            fileDoc.metadata.objectkey
+            fileDoc.metadata.objectkey,
           );
           await saveThumbnails(fullPath);
           modClient.avatar = fullPath;
@@ -109,7 +111,7 @@ export const createClientformissionGroup = async (
                   <p>Best regards,</p>
                   <p><b>Team Kesowa</b></p>
                   `,
-          ""
+          "",
         );
 
         return res.status(201).json({
@@ -142,7 +144,7 @@ export const createClientformissionGroup = async (
         if (fileDoc) {
           const fullPath = await permPath(
             Directory.USER_AVATARS,
-            fileDoc.metadata.objectkey
+            fileDoc.metadata.objectkey,
           );
           await saveThumbnails(fullPath);
           newClient.avatar = fullPath;
@@ -155,12 +157,12 @@ export const createClientformissionGroup = async (
           },
           {
             actualClientCount: 1,
-          }
+          },
         );
         if (createDoc && tenant.actualClientCount >= 0) {
           await Tenant.updateOne(
             { _id: res.locals.user.tenantId },
-            { $inc: { actualClientCount: 1 } }
+            { $inc: { actualClientCount: 1 } },
           );
         }
         const token = await generateResetPasswordToken(email);
@@ -180,7 +182,7 @@ export const createClientformissionGroup = async (
                   <p>Best regards,</p>
                   <p><b>Team Kesowa</b></p>
                   `,
-          ""
+          "",
         );
 
         return res.status(201).json({
@@ -235,7 +237,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
           ...mission,
           ["flight"]: data,
         };
-      })
+      }),
     );
   } else if (req.query.status == "All") {
     resultt = await Mission.find({
@@ -256,7 +258,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
           ...mission,
           ["flight"]: data,
         };
-      })
+      }),
     );
   }
   const q: number = req.query.limit ? Number(req.query.limit) : 10;
@@ -278,9 +280,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
       } else
         return res.json({
           status: true,
-          message: `Your data must be less than equal to ${
-            result.length - 1
-          }`,
+          message: `Your data must be less than equal to ${result.length - 1}`,
           data: result,
         });
     } else
@@ -309,7 +309,7 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
     },
     {
       avatar: 1,
-    }
+    },
   );
   if (req.body.password)
     req.body.password = await bcrypt.hash(req.body.password, 10);
@@ -322,7 +322,7 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
         new: true,
         upsert: true,
         useFindAndModify: false,
-      }
+      },
     );
     const modDoc = await User.findOne({
       _id: req.body.id,
@@ -332,7 +332,7 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
       if (fileDoc) {
         const fullPath = await permPath(
           Directory.USER_AVATARS,
-          fileDoc.metadata.objectkey
+          fileDoc.metadata.objectkey,
         );
         await saveThumbnails(fullPath);
         modDoc.avatar = fullPath;
@@ -355,12 +355,12 @@ export const editClientDetails = async (req: Request, res: AuthResponse) => {
 
 export const clientReactivationMail = async (
   user: { email: string; name: string },
-  client: { email: string; name: string }
+  client: { email: string; name: string },
 ) => {
   const cipher = crypto.createCipheriv(
     "aes-256-gcm",
     Buffer.from(SECRET_KEY, "base64"),
-    iv
+    iv,
   );
   let token = cipher.update(client.email, "utf8", "base64");
   token += cipher.final("base64");
@@ -373,26 +373,26 @@ export const clientReactivationMail = async (
       "..",
       "views",
       "mails",
-      "clientDeletionNotification.ejs"
+      "clientDeletionNotification.ejs",
     ),
     {
       name: user.name,
       reactivateClientUrl,
     },
-    { async: true }
+    { async: true },
   );
   await sendMail(
     user.email,
     "Client Deletion Notification || Kesowa Infinite Ventures Pvt. Ltd",
     "",
     html,
-    ""
+    "",
   );
 };
 
 export const deleteCientforTenant = async (
   req: Request<{}, {}, { id: string }>,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const doc = await User.findOne({
     _id: req.body.id,
@@ -408,7 +408,7 @@ export const deleteCientforTenant = async (
         $pull: {
           clientId: req.body.id,
         },
-      }
+      },
     );
     try {
       const docPath = DirPath(Directory.ROOT, doc.avatar);
@@ -428,12 +428,12 @@ export const deleteCientforTenant = async (
       },
       {
         actualClientCount: 1,
-      }
+      },
     );
     if (d && tenant.actualClientCount) {
       await Tenant.updateOne(
         { _id: res.locals.user.tenantId },
-        { $inc: { actualClientCount: -1 } }
+        { $inc: { actualClientCount: -1 } },
       );
     }
 
@@ -461,7 +461,7 @@ export const reactivateClient = async (req: Request, res: AuthResponse) => {
   const decipher = crypto.createDecipheriv(
     "aes-256-gcm",
     Buffer.from(SECRET_KEY, "base64"),
-    iv
+    iv,
   );
   let email = decipher.update(req.params.token, "base64", "utf8");
   email += decipher.final("utf8");
@@ -479,7 +479,7 @@ export const reactivateClient = async (req: Request, res: AuthResponse) => {
     client.isActive = true;
     client.tenantId = creator.tenantId;
     client.expiryDatee = new Date(
-      new Date().getTime() + 1000 * 60 * 60 * 24 * 365.25
+      new Date().getTime() + 1000 * 60 * 60 * 24 * 365.25,
     );
 
     const d = await client.save();
@@ -490,12 +490,12 @@ export const reactivateClient = async (req: Request, res: AuthResponse) => {
       },
       {
         actualClientCount: 1,
-      }
+      },
     );
     if (d && tenant.actualClientCount) {
       await Tenant.updateOne(
         { _id: creator.tenantId },
-        { $inc: { actualClientCount: 1 } }
+        { $inc: { actualClientCount: 1 } },
       );
     }
 
@@ -513,7 +513,7 @@ export const reactivateClient = async (req: Request, res: AuthResponse) => {
 
 export const insertClientforMission = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const doc: Array<any> = await Mission.find(
     {
@@ -522,7 +522,7 @@ export const insertClientforMission = async (
     },
     {
       clientId: 1,
-    }
+    },
   );
   const trigger = false;
   let arr: any = [];
@@ -541,7 +541,7 @@ export const insertClientforMission = async (
             _id: clientId,
             tenantId: res.locals.user.tenantId,
           },
-          { _id: 1 }
+          { _id: 1 },
         );
         if (result.length) {
           if (arr.includes(clientId)) {
@@ -558,7 +558,7 @@ export const insertClientforMission = async (
       }
       const save: any = await Mission.updateOne(
         { _id: req.body.missionId },
-        { clientId: arr }
+        { clientId: arr },
       );
       if (save) {
         const data: any = [];
@@ -588,7 +588,7 @@ export const insertClientforMission = async (
 
 export const removeClientfromMission = async (
   req: Request,
-  res: AuthResponse
+  res: AuthResponse,
 ) => {
   const doc = await Mission.findOneAndUpdate(
     {
@@ -603,7 +603,7 @@ export const removeClientfromMission = async (
     {
       safe: true,
       multi: true,
-    }
+    },
   );
   if (doc) {
     res.json({
@@ -629,7 +629,7 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       name: 1,
       email: 1,
       phoneNo: 1,
-    }
+    },
   )
     .sort({ createdAt: -1 })
     .populate<{ createdBy: IUser }>({ path: "createdBy", select: "name" })
@@ -645,14 +645,13 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
       savedResult.push(d);
     }
 
-    const filename =
-      "clients-" + String(res.locals.user.tenantId._id) + ".csv";
+    const filename = "clients-" + String(res.locals.user.tenantId._id) + ".csv";
     const { filepath } = await saveCSV(
       filename,
       savedResult,
       "",
       res.locals.user.tenantId._id,
-      res.locals.user._id
+      res.locals.user._id,
     );
     return res.status(200).json({
       status: true,
@@ -670,7 +669,7 @@ export const getListClient = async (req: Request, res: AuthResponse) => {
   const page = Number(req.query.page) - 1;
   const limit = Number(req.query.limit);
   const [sortBy, order] = (req.query.sort?.toString() || "name:desc").split(
-    ":"
+    ":",
   );
 
   const results = await User.find({
@@ -706,14 +705,14 @@ export const devApiClientArr = async (req: Request, res: AuthResponse) => {
     },
     {
       clientId: 1,
-    }
+    },
   );
   if (docs.length) {
     for (const mission of docs) {
       if (!(mission.clientId instanceof Array) && mission.clientId != null) {
         await Mission.updateOne(
           { _id: mission._id },
-          { $set: { clientId: [mission.clientId] } }
+          { $set: { clientId: [mission.clientId] } },
         );
         req.log.info("updated");
       } else {
@@ -736,7 +735,7 @@ export const getClientByEmail = async (req: Request, res: AuthResponse) => {
   }
   const client = await User.findOne(
     { email: email, tenantId: res.locals.user.tenantId._id },
-    { email: 1, name: 1 }
+    { email: 1, name: 1 },
   );
   if (!client) {
     return res.status(404).json({

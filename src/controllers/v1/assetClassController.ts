@@ -1,7 +1,8 @@
 import { Request } from "express";
+
 import assetClassModel from "../../models/assetClass";
-import { AuthResponse } from "../../utils/interfaceUtils";
 import { notificationSocket } from "../../socket";
+import { AuthResponse } from "../../utils/interfaceUtils";
 import { serverError } from "../../utils/requestHelpers";
 
 export const createAssetClass = async (req: Request, res: AuthResponse) => {

@@ -1,7 +1,6 @@
 import express from "express";
-import {
-  fetchPermissions,
-} from "../../controllers/v1/permissionController";
+
+import { fetchPermissions } from "../../controllers/v1/permissionController";
 import { isAuthenticated } from "../../utils/authUtils";
 import { RobustRunner } from "../../utils/requestHelpers";
 
@@ -11,14 +10,14 @@ const router = express.Router();
 router.get(
   "/admin-permission-list",
   isAuthenticated,
-  RobustRunner(fetchPermissions)
+  RobustRunner(fetchPermissions),
 );
 
 //++++++++++++++++++++ fetch tennat Api++++++++++++++++++++++++
 router.get(
   "/tenant-permission-list",
   isAuthenticated,
-  RobustRunner(fetchPermissions)
+  RobustRunner(fetchPermissions),
 );
 
 export default router;

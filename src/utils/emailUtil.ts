@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+
 import {
   SMTP_PASSWORD,
   SMTP_PORT,
@@ -22,7 +23,7 @@ export const sendMail = async (
   subject: string,
   text: any,
   html: any,
-  file: any
+  file: any,
 ) => {
   try {
     const defaultmailOption = {
