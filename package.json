@@ -9,7 +9,7 @@
     "dev": "ts-node-dev --transpile-only ./src/server.ts",
     "dev:debug": "ts-node-dev --transpile-only --respawn --inspect=4321 --project tsconfig.json src/server.ts",
     "build": "tsc || true",
-    "test": "jest --watchAll -w 4 --detectOpenHandles --max_old_space_size=4096",
+    "test": "jest",
     "lint": "eslint",
     "format": "prettier",
     "lint:check": "npm run prettier:check && npm run eslint:check",

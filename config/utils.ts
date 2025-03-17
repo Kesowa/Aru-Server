@@ -1,26 +1,30 @@
-import { sessionModel } from "../src/models/session";
-import User from "../src/models/user";
+export const APP_URL = "http://localhost:5011";
+import request, { SuperAgentTest } from "supertest";
+
+const USER = {
+  email: "admin@NKDA.com",
+  password: "fsipl1@3$",
+}
 
 export const Login = async () => {
-  const user = await User.findOne({ email: "admin@NKDA.com" });
-  if (!user) throw Error("Login Failed: User Not Found");
-  const session = await sessionModel.create({ owner: user._id });
-  return session._id.toHexString();
+  const agent = request.agent(APP_URL);
+  await agent
+    .post(CurriedUrl("auth")("login"))
+    .send(USER)
+    .expect(200);
+
+  return agent;
 };
 
-export const LoginSuper = async () => {
-  const user = await User.findOne({ email: "admin@kesowa.com" });
-  if (!user) throw Error("Login Failed: User Not Found");
-  const session = await sessionModel.create({ owner: user._id });
-  return session._id.toHexString();
-};
+export const LoginSuper = Login;
 
-export const Logout = async () => {
-  await sessionModel.deleteMany({});
+export const Logout = async (agent: SuperAgentTest) => {
+  await agent
+    .post(CurriedUrl("auth")("logout"))
+    .expect(200);
 };
 
 export const clearAllClients = async () => {
-  await User.deleteMany({ userType: "tenant-client" });
 };
 
 export const CurriedUrl = (base: string) => (relative: string) =>
