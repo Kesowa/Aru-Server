@@ -167,11 +167,15 @@ services:
 
   loki:
     image: grafana/loki
+    profiles:
+      - log
     ports:
       - 3100:3100
 
   grafana:
     image: grafana/grafana
+    profiles:
+      - log
     ports:
       - 3001:3000
 

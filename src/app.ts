@@ -57,7 +57,12 @@ import {
 
 export const logger: Logger = pino({
   name: "ARU-" + ARU_INSTANCE,
-  redact: ["req.body.password", "req.headers.cookie", "req.body.token"],
+  redact: [
+    "req.body.password",
+    MODE == Mode.Prod ? "req.headers.cookie" : "req.headers",
+    "req.body.token",
+    MODE == Mode.Prod ? "res.headers.Set-Cookie" : "res.headers",
+  ],
   transport:
     MODE == Mode.Prod
       ? {
@@ -126,9 +131,10 @@ export default function app(mongo: Connection) {
       cookie: {
         httpOnly: true,
         secure: MODE == Mode.Prod,
-        maxAge: 1000 * 60 * 60 * 24, // session lasts 24 hours
+        maxAge: 1000 * 60 * 60 * 2, // session lasts 2 hours
         sameSite: "strict",
       },
+      rolling: true, // Session resets on every request, keeping it active
     }),
   );
 
