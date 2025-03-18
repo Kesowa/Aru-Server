@@ -1,5 +1,6 @@
+import { uploadFile } from "./utils/upload";
 import { CurriedUrl, Login, Logout } from "./utils/utils";
-import {SuperAgentTest} from "supertest";
+import { SuperAgentTest } from "supertest";
 
 let agent: SuperAgentTest;
 
@@ -21,5 +22,11 @@ describe("/common API", () => {
       message: "This email id is available.",
       isAvailable: true,
     });
+  });
+
+  test("POST /upload-url", async () => {
+    const uploadId = await uploadFile(agent, "./assets/poles.geojson");
+
+    expect(uploadId).toBeDefined();
   });
 });
