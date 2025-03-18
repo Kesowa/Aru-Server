@@ -1,11 +1,12 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
+let agent: SuperAgentTest;
+
 beforeAll(async () => {
-  token = await Login();
+  agent = await Login();
+  afterAll(async () => Logout(agent));
 });
 const full_url = CurriedUrl("layer");
 
@@ -53,9 +54,8 @@ const sampleGeojsonData = {
 
 describe("/layer API", () => {
   test("POST /create/Vector", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create/Vector"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/poles.geojson")
       .field("name", randomUUID())
       .field("type", "Vector")
@@ -75,9 +75,8 @@ describe("/layer API", () => {
   });
 
   test("POST /create-vector-layer", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create-vector-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         missionId: "61f3b1e65f915a05cb8885ec",
@@ -94,9 +93,8 @@ describe("/layer API", () => {
   });
 
   test("POST /create/Raster", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create/Raster"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/Ortho_25cm.tif")
       .field("name", randomUUID())
       .field("type", "Raster")
@@ -116,9 +114,8 @@ describe("/layer API", () => {
   test("POST /upload-file-to-layer", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -131,9 +128,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("upload-file-to-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/image.png")
       .field("layerId", created_layers[0]._id)
       .expect(201);
@@ -149,9 +145,8 @@ describe("/layer API", () => {
     const created_layers: any[] = [];
     const created_layerFiles: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -164,18 +159,16 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
 
-      const res2 = await request(app)
+      const res2 = await agent
         .post(full_url("upload-file-to-layer"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
       created_layerFiles.push(res2.body.data);
     }
 
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-file-geojson"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_layerFiles[0]._id,
       })
@@ -191,9 +184,8 @@ describe("/layer API", () => {
   test("PATCH /edit-layer", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -206,9 +198,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("edit-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .query({ id: created_layers[0]._id })
       .send({
         name: "NewNameTestingUpdate" + randomUUID(),
@@ -226,9 +217,8 @@ describe("/layer API", () => {
   test("PATCH /changecolorbyId", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -241,9 +231,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("changecolorbyId"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_layers[0]._id,
         color: "#FF0000",
@@ -260,9 +249,8 @@ describe("/layer API", () => {
   test("GET /getbymissionId", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -275,9 +263,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("getbymissionId"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionId: created_layers[0].missionId,
       })
@@ -293,9 +280,8 @@ describe("/layer API", () => {
   test("GET /all-layers-for-mission", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -308,9 +294,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("all-layers-for-mission"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionId: created_layers[0].missionId,
       })
@@ -325,9 +310,8 @@ describe("/layer API", () => {
   test("GET /getrasterdetailsbyID", async () => {
     const created_layers_ids: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Raster"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/Ortho_25cm.tif")
         .field("name", randomUUID())
         .field("type", "Raster")
@@ -338,9 +322,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers_ids.push(res.body.data._id);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("getrasterdetailsbyID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_layers_ids[0],
       })
@@ -356,9 +339,8 @@ describe("/layer API", () => {
   test("GET /downloadassetbylayerId", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -371,9 +353,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("downloadassetbylayerId"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_layers[0]._id,
       })
@@ -389,9 +370,8 @@ describe("/layer API", () => {
   test("GET /download-asset-by-Id-to-kml", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -404,9 +384,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("download-asset-by-Id-to-kml"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_layers[0]._id,
       })
@@ -422,9 +401,8 @@ describe("/layer API", () => {
   test("GET /sort-all-layer", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -437,9 +415,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("sort-all-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionId: created_layers[0].missionId,
         name: "desc",
@@ -460,9 +437,8 @@ describe("/layer API", () => {
   test("GET /fetch-to-be-reviwed-files", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -475,16 +451,14 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
 
-      await request(app)
+      await agent
         .post(full_url("upload-file-to-layer"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("fetch-to-be-reviwed-files"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         layerId: created_layers[0]._id,
       })
@@ -498,9 +472,8 @@ describe("/layer API", () => {
   });
 
   test("POST /filter-layer", async () => {
-    await request(app)
+    await agent
       .post(full_url("create/Vector"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/poles.geojson")
       .field("name", randomUUID())
       .field("type", "Vector")
@@ -511,9 +484,8 @@ describe("/layer API", () => {
       .field("icon", "MarkerIcon")
       .field("inHeritOriginalColorFromFile", "false")
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .post(full_url("filter-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         time: "2 days",
         missionId: "61f3b1e65f915a05cb8885ec",
@@ -537,9 +509,8 @@ describe("/layer API", () => {
   test("PATCH /get-feature-by-layerId", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-vector-layer"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           missionId: "61f3b1e65f915a05cb8885ec",
@@ -549,9 +520,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("get-feature-by-layerId"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_layers[0]._id,
         limit: "1",
@@ -573,9 +543,8 @@ describe("/layer API", () => {
   test("PATCH /get-feature-csv-by-layerIndex", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -588,9 +557,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("get-feature-csv-by-layerIndex"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_layers[0]._id,
         featureIndex: [0, 1, 2],
@@ -607,9 +575,8 @@ describe("/layer API", () => {
   test("PATCH /assignLayerLabel", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -622,9 +589,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("assignLayerLabel"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layerId: created_layers[0]._id,
         label: "Test Label",
@@ -641,9 +607,8 @@ describe("/layer API", () => {
   test("PATCH /auto-assign-uploaded-image", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -656,9 +621,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("auto-assign-uploaded-image"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/image.png")
       .attach("file", "/server/assets/image.png")
       .attach("file", "/server/assets/image.png")
@@ -676,9 +640,8 @@ describe("/layer API", () => {
     const created_layers: any[] = [];
     const created_layerFiles: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -691,18 +654,16 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
 
-      const res2 = await request(app)
+      const res2 = await agent
         .post(full_url("upload-file-to-layer"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
       created_layerFiles.push(res2.body.data);
     }
 
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("images-review"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layerId: created_layers[0]._id,
         check: [created_layerFiles[0]],
@@ -716,9 +677,8 @@ describe("/layer API", () => {
   });
 
   test("POST /pick-to-map-for-layer", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("pick-to-map-for-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/image.png")
       .field("name", randomUUID())
       .field("type", "Vector")
@@ -737,9 +697,8 @@ describe("/layer API", () => {
   // test("PATCH /upload-file-geojson", async () => {
   //     const created_layers: any[] = [];
   //     {
-  //         const res = await request(app)
+  //         const res = await agent
   //         .post(full_url("create/Vector"))
-  //         .set("Authorization", `Bearer ${token}`)
   //         .attach("file", "/server/assets/poles.geojson")
   //         .field("name", randomUUID())
   //         .field("type", "Vector")
@@ -752,9 +711,8 @@ describe("/layer API", () => {
   //         .expect(201);
   //         created_layers.push(res.body.data);
   //     }
-  //     const res = await request(app)
+  //     const res = await agent
   //         .patch(full_url("upload-file-geojson"))
-  //         .set("Authorization", `Bearer ${token}`)
   //         .attach("file", "/server/assets/image.png")
   //         .field("layerId", created_layers[0]._id)
   //         .field("sys_id", "abcdefg")
@@ -776,9 +734,8 @@ describe("/layer API", () => {
   test("PATCH /edit-geojson", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -791,9 +748,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("edit-geojson"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_layers[0]._id,
         featureIndex: "0",
@@ -811,9 +767,8 @@ describe("/layer API", () => {
   test("PATCH /addFeature", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -826,9 +781,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("addFeature"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_layers[0]._id,
         feature: sampleGeojsonData.features[0],
@@ -843,9 +797,8 @@ describe("/layer API", () => {
   });
 
   test("PATCH /add-isReview-to-layerFiles", async () => {
-    await request(app)
+    await agent
       .post(full_url("create/Vector"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/poles.geojson")
       .field("name", randomUUID())
       .field("type", "Vector")
@@ -856,9 +809,8 @@ describe("/layer API", () => {
       .field("icon", "MarkerIcon")
       .field("inHeritOriginalColorFromFile", "false")
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("add-isReview-to-layerFiles"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -868,9 +820,8 @@ describe("/layer API", () => {
   });
 
   test("PATCH /gen_2x_layerfiles", async () => {
-    await request(app)
+    await agent
       .post(full_url("create/Vector"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/poles.geojson")
       .field("name", randomUUID())
       .field("type", "Vector")
@@ -881,9 +832,8 @@ describe("/layer API", () => {
       .field("icon", "MarkerIcon")
       .field("inHeritOriginalColorFromFile", "false")
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("gen_2x_layerfiles"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -895,9 +845,8 @@ describe("/layer API", () => {
   test("DELETE /delete-geojson", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -910,9 +859,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-geojson"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_layers[0]._id,
         featureIndex: "0",
@@ -928,9 +876,8 @@ describe("/layer API", () => {
   test("DELETE /delete", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -943,9 +890,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_layers[0]._id,
       })
@@ -962,9 +908,8 @@ describe("/layer API", () => {
     const created_layers: any[] = [];
     const created_layerFiles: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -977,18 +922,16 @@ describe("/layer API", () => {
         .expect(201);
       created_layers.push(res.body.data);
 
-      const res2 = await request(app)
+      const res2 = await agent
         .post(full_url("upload-file-to-layer"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
       created_layerFiles.push(res2.body.data);
     }
 
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-multipleLayerFiles"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layerFileIds: [created_layerFiles[0]._id],
       })
@@ -1004,9 +947,8 @@ describe("/layer API", () => {
   test("POST /delete-layers", async () => {
     const created_layers_ids: any[] = [];
     for (let i = 1; i <= 2; i++) {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -1019,9 +961,8 @@ describe("/layer API", () => {
         .expect(201);
       created_layers_ids.push(res.body.data._id);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("delete-layers"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layers: created_layers_ids,
       })

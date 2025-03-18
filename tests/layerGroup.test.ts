@@ -1,19 +1,19 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("layergroup");
 
 describe("/layergroup API", () => {
   test("POST /create", async () => {
     const created_layers: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -27,9 +27,8 @@ describe("/layergroup API", () => {
       created_layers.push(res.body.data);
     }
 
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         type: "Vector",
@@ -48,9 +47,8 @@ describe("/layergroup API", () => {
     const created_layers_ids: any[] = [];
     const created_layergroups: any[] = [];
     for (let i = 0; i < 2; i++) {
-      const res = await request(app)
+      const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -64,9 +62,8 @@ describe("/layergroup API", () => {
       created_layers_ids.push(res.body.data._id);
     }
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           type: "Vector",
@@ -76,9 +73,8 @@ describe("/layergroup API", () => {
       created_layergroups.push(res.body.data[0]);
     }
 
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("edit"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_layergroups[0]._id,
         layers: created_layers_ids,
@@ -96,9 +92,8 @@ describe("/layergroup API", () => {
     const created_layers_ids: any[] = [];
     const created_layergroups: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -112,9 +107,8 @@ describe("/layergroup API", () => {
       created_layers_ids.push(res.body.data._id);
     }
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           type: "Vector",
@@ -124,9 +118,8 @@ describe("/layergroup API", () => {
       created_layergroups.push(res.body.data[0]);
     }
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("fetch"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_layergroups[0]._id,
       })
@@ -143,9 +136,8 @@ describe("/layergroup API", () => {
     const created_layers_ids: any[] = [];
     const created_layergroups: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -159,9 +151,8 @@ describe("/layergroup API", () => {
       created_layers_ids.push(res.body.data._id);
     }
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           type: "Vector",
@@ -171,9 +162,8 @@ describe("/layergroup API", () => {
       created_layergroups.push(res.body.data[0]);
     }
 
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         _id: created_layergroups[0]._id,
       })
@@ -190,9 +180,8 @@ describe("/layergroup API", () => {
     const created_layers_ids: any[] = [];
     const created_layergroups: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
@@ -206,9 +195,8 @@ describe("/layergroup API", () => {
       created_layers_ids.push(res.body.data._id);
     }
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           type: "Vector",
@@ -218,9 +206,8 @@ describe("/layergroup API", () => {
       created_layergroups.push(res.body.data[0]);
     }
 
-    const res = await request(app)
+    const res = await agent
       .post(full_url("delete-layerId"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_layergroups[0]._id,
         layers: [created_layers_ids[0]],

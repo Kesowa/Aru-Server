@@ -1,16 +1,16 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("document");
 
 describe("/document API", () => {
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .field("missionId", "61f3b1e65f915a05cb8885ec")
       .field("folderName", "rawPhotos")
       .field("type", "image/png")
@@ -27,9 +27,8 @@ describe("/document API", () => {
   test("GET /getbymissionId", async () => {
     const created_docs: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .field("missionId", "61f3b1e65f915a05cb8885ec")
         .field("folderName", "rawPhotos")
         .field("type", "image/png")
@@ -37,9 +36,8 @@ describe("/document API", () => {
         .expect(201);
       created_docs.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("getbymissionId"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionId: created_docs[0].missionId,
       })
@@ -55,9 +53,8 @@ describe("/document API", () => {
   test("GET /zipbyId", async () => {
     const created_docs: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .field("missionId", "61f3b1e65f915a05cb8885ec")
         .field("folderName", "rawPhotos")
         .field("type", "image/png")
@@ -65,9 +62,8 @@ describe("/document API", () => {
         .expect(201);
       created_docs.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("zipbyId"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionId: created_docs[0].missionId,
         folderName: created_docs[0].folderName,
@@ -81,17 +77,15 @@ describe("/document API", () => {
   });
 
   test("PATCH /update-size-for-exist-doc", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .field("missionId", "61f3b1e65f915a05cb8885ec")
       .field("folderName", "rawPhotos")
       .field("type", "image/png")
       .attach("file", "/server/assets/image.png")
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("update-size-for-exist-doc"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(res.body).toMatchObject({
       status: true,
@@ -103,9 +97,8 @@ describe("/document API", () => {
   test("DELETE /delete-multiple", async () => {
     let created_doc: any;
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .field("missionId", "61f3b1e65f915a05cb8885ec")
         .field("folderName", "rawPhotos")
         .field("type", "image/png")
@@ -113,9 +106,8 @@ describe("/document API", () => {
         .expect(201);
       created_doc = res.body.data;
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-multiple"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: [created_doc._id],
       })

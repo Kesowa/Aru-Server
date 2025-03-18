@@ -1,17 +1,17 @@
-import { CurriedUrl, LoginSuper } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, LoginSuper, Logout} from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
-beforeAll(async () => (token = await LoginSuper()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await LoginSuper()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("common/missiontype");
 
 describe("/common/missiontype API", () => {
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         description: randomUUID(),
@@ -26,17 +26,15 @@ describe("/common/missiontype API", () => {
   });
 
   test("GET /getall", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         description: randomUUID(),
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("getall"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -49,9 +47,8 @@ describe("/common/missiontype API", () => {
   test("POST /edit", async () => {
     const created_types: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -59,9 +56,8 @@ describe("/common/missiontype API", () => {
         .expect(201);
       created_types.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("edit"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_types[0]._id,
         name: randomUUID(),
@@ -80,9 +76,8 @@ describe("/common/missiontype API", () => {
   test("POST /delete", async () => {
     const created_types: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -90,9 +85,8 @@ describe("/common/missiontype API", () => {
         .expect(201);
       created_types.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_types[0]._id,
       })

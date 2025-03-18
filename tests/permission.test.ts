@@ -1,18 +1,18 @@
-import { CurriedUrl, Login, LoginSuper } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, LoginSuper, Logout} from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
+let agent: SuperAgentTest;
+
 
 describe("/admin/permission API", () => {
-  beforeAll(async () => (token = await LoginSuper()));
+  beforeAll(async () => (agent = await LoginSuper()));
+  afterAll(async () => Logout(agent));
   const full_url = CurriedUrl("admin/permission");
 
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         isFrontendRoute: true,
@@ -33,9 +33,8 @@ describe("/admin/permission API", () => {
   });
 
   test("GET /admin-permission-list", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         isFrontendRoute: true,
@@ -48,9 +47,8 @@ describe("/admin/permission API", () => {
         sideNavOptionLabel: randomUUID(),
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("admin-permission-list"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -62,13 +60,12 @@ describe("/admin/permission API", () => {
 });
 
 describe("/tenantroot/permission API", () => {
-  beforeAll(async () => (token = await Login()));
+  beforeAll(async () => (agent = await Login()));
   const full_url = CurriedUrl("tenantroot/permission");
 
   test("GET /tenant-permission-list", async () => {
-    const res = await request(app)
+    const res = await agent
       .get(full_url("tenant-permission-list"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({

@@ -1,17 +1,17 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("tenant/usergroup");
 
 describe("/usergroup API", () => {
   test("POST /tenant-usergroup-create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("tenant-usergroup-create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
@@ -25,17 +25,15 @@ describe("/usergroup API", () => {
   });
 
   test("GET /tenant-usergroup-list", async () => {
-    await request(app)
+    await agent
       .post(full_url("tenant-usergroup-create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("tenant-usergroup-list"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -48,24 +46,21 @@ describe("/usergroup API", () => {
   test("PATCH /tenant-usergroup-edit", async () => {
     const created_groups: any[] = [];
     {
-      await request(app)
+      await agent
         .post(full_url("tenant-usergroup-create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
         })
         .expect(201);
 
-      const res2 = await request(app)
+      const res2 = await agent
         .get(full_url("tenant-usergroup-list"))
-        .set("Authorization", `Bearer ${token}`)
         .expect(200);
       created_groups.push(res2.body.data[res2.body.data.length - 1]);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("tenant-usergroup-edit"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_groups[0]._id,
         name: randomUUID(),
@@ -83,24 +78,21 @@ describe("/usergroup API", () => {
   test("DELETE /tenant-usergroup-delete", async () => {
     const created_groups: any[] = [];
     {
-      await request(app)
+      await agent
         .post(full_url("tenant-usergroup-create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
         })
         .expect(201);
 
-      const res2 = await request(app)
+      const res2 = await agent
         .get(full_url("tenant-usergroup-list"))
-        .set("Authorization", `Bearer ${token}`)
         .expect(200);
       created_groups.push(res2.body.data[res2.body.data.length - 1]);
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("tenant-usergroup-delete"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_groups[0]._id,
       })

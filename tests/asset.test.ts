@@ -1,18 +1,18 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("asset");
 
 describe("/asset API", () => {
   const created_assets: any = [];
 
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .set("userid", "608e7b3ae11f711a34fb0476")
       .send({
         assetName: "New Drone",
@@ -35,9 +35,8 @@ describe("/asset API", () => {
   });
   test("GET /get", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "608e7b3ae11f711a34fb0476")
         .send({
           assetName: "New Drone",
@@ -51,9 +50,8 @@ describe("/asset API", () => {
         .expect(201);
       created_assets.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         assetID: created_assets[0]._id,
       })
@@ -67,9 +65,8 @@ describe("/asset API", () => {
   });
   test("GET /get-all-asset", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "608e7b3ae11f711a34fb0476")
         .send({
           assetName: "New Drone",
@@ -83,9 +80,8 @@ describe("/asset API", () => {
         .expect(201);
       created_assets.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-all-asset"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -96,9 +92,8 @@ describe("/asset API", () => {
   });
   test("PATCH /update", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "608e7b3ae11f711a34fb0476")
         .send({
           assetName: "New Drone",
@@ -112,9 +107,8 @@ describe("/asset API", () => {
         .expect(201);
       created_assets.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("update"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         userID: created_assets[0].userID,
         tenantID: created_assets[0].tenantID,
@@ -131,9 +125,8 @@ describe("/asset API", () => {
   });
   test("PATCH /toggle-asset-status", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "608e7b3ae11f711a34fb0476")
         .send({
           assetName: "New Drone",
@@ -147,9 +140,8 @@ describe("/asset API", () => {
         .expect(201);
       created_assets.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("toggle-asset-status"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         assetID: created_assets[0]._id,
         isActive: "true",
@@ -164,9 +156,8 @@ describe("/asset API", () => {
   });
   test("DELETE /delete", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "608e7b3ae11f711a34fb0476")
         .send({
           assetName: "New Drone",
@@ -181,9 +172,8 @@ describe("/asset API", () => {
       created_assets.push(res.body.data);
     }
     const created_ids: string[] = created_assets.map((a) => a._id);
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         assetID: created_ids[0],
       })

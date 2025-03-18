@@ -1,10 +1,11 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("location");
 
 const sampleGeometry = {
@@ -22,9 +23,8 @@ const sampleGeometry = {
 
 describe("/location API", () => {
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         type: sampleGeometry.type,
         coordinates: sampleGeometry.coordinates,
@@ -44,9 +44,8 @@ describe("/location API", () => {
   test("PATCH /update", async () => {
     const created_locations: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           type: sampleGeometry.type,
           coordinates: sampleGeometry.coordinates,
@@ -58,9 +57,8 @@ describe("/location API", () => {
       created_locations.push(res.body.data);
     }
 
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("update"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_locations[0]._id,
         type: sampleGeometry.type,
@@ -78,9 +76,8 @@ describe("/location API", () => {
   });
 
   test("GET /get", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         type: sampleGeometry.type,
         coordinates: sampleGeometry.coordinates,
@@ -90,9 +87,8 @@ describe("/location API", () => {
       })
       .expect(201);
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -105,9 +101,8 @@ describe("/location API", () => {
   test("GET /get-by-id", async () => {
     const created_locations: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           type: sampleGeometry.type,
           coordinates: sampleGeometry.coordinates,
@@ -119,9 +114,8 @@ describe("/location API", () => {
       created_locations.push(res.body.data);
     }
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-by-id"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_locations[0]._id,
       })
@@ -135,9 +129,8 @@ describe("/location API", () => {
   });
 
   test("GET /get-locationID-By-lat-long", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         type: "Point",
         coordinates: [88, 22],
@@ -147,9 +140,8 @@ describe("/location API", () => {
       })
       .expect(201);
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-locationID-By-lat-long"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         long: 88,
         lat: 22,
@@ -169,9 +161,8 @@ describe("/location API", () => {
   test.skip("GET /get-within-by-id", async () => {
     let createdPolygon: string;
     {
-      const resPoly = await request(app)
+      const resPoly = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           type: sampleGeometry.type,
           coordinates: sampleGeometry.coordinates,
@@ -183,9 +174,8 @@ describe("/location API", () => {
       createdPolygon = resPoly.body.data._id;
     }
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-within-by-id"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: createdPolygon,
       })
@@ -201,9 +191,8 @@ describe("/location API", () => {
   test("DELETE /delete", async () => {
     const created_locations: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           type: sampleGeometry.type,
           coordinates: sampleGeometry.coordinates,
@@ -215,9 +204,8 @@ describe("/location API", () => {
       created_locations.push(res.body.data);
     }
 
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_locations[0]._id,
       })

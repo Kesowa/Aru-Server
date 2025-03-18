@@ -1,17 +1,17 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import webrtc from "wrtc";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("webrtc");
 
 describe("/webrtc API", () => {
   test("GET /get-active-streams", async () => {
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-active-streams"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -37,9 +37,8 @@ describe("/webrtc API", () => {
     const offer = await fakePeer.createOffer();
     await fakePeer.setLocalDescription(offer);
 
-    const res = await request(app)
+    const res = await agent
       .post(full_url("broadcaster"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionId: "61f3b1e65f915a05cb8885ec", // exists in db
         sdp: offer,
@@ -66,9 +65,8 @@ describe("/webrtc API", () => {
     const offer = await fakePeer.createOffer();
     await fakePeer.setLocalDescription(offer);
 
-    const res = await request(app)
+    const res = await agent
       .post(full_url("consumer"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionId: "61f3b1e65f915a05cb8885ec", // exists in db
         sdp: offer,

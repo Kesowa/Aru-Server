@@ -1,10 +1,11 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("flightlog");
 
 const sampleGeoFence = {
@@ -23,9 +24,8 @@ const sampleGeoFence = {
 
 describe("/flightlog API", () => {
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("file", "/server/assets/image.png")
       .field("date", Date())
       .field("time", "21:30:30")
@@ -50,9 +50,8 @@ describe("/flightlog API", () => {
   test("GET /get", async () => {
     const created_logs: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/image.png")
         .field("date", Date())
         .field("time", "21:30:30")
@@ -69,9 +68,8 @@ describe("/flightlog API", () => {
         .expect(201);
       created_logs.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         _id: created_logs[0]._id,
       })
@@ -86,9 +84,8 @@ describe("/flightlog API", () => {
   test("GET /last-flightlog-by-ID", async () => {
     const created_logs: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/image.png")
         .field("date", Date())
         .field("time", "21:30:30")
@@ -105,9 +102,8 @@ describe("/flightlog API", () => {
         .expect(201);
       created_logs.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("last-flightlog-by-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionID: created_logs[0].missionID,
         locationID: created_logs[0].locationID,
@@ -123,9 +119,8 @@ describe("/flightlog API", () => {
   test("GET /last-flightlog-by-location-ID", async () => {
     const created_logs: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("file", "/server/assets/image.png")
         .field("date", Date())
         .field("time", "21:30:30")
@@ -142,9 +137,8 @@ describe("/flightlog API", () => {
         .expect(201);
       created_logs.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("last-flightlog-by-location-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_logs[0].locationID,
       })

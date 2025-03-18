@@ -1,10 +1,11 @@
-import { CurriedUrl, LoginSuper } from "../config/utils";
+import { CurriedUrl, LoginSuper, Logout } from "../config/utils";
 import { SuperAgentTest } from "supertest";
 import { randomUUID } from "crypto";
 import { faker } from "@faker-js/faker";
 
 let agent: SuperAgentTest;
 beforeAll(async () => (agent = await LoginSuper()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("admin/tenant");
 
 const fakeTenant = {

@@ -1,15 +1,15 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
-let token: string;
-beforeAll(async () => (token = await Login()));
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("rasterProp");
 
 describe("/rasterProp API", () => {
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: "ORTHO",
         bidx: Math.floor(Math.random() * 10),
@@ -31,9 +31,8 @@ describe("/rasterProp API", () => {
   test("GET /get-by-ID", async () => {
     const created_props: string[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: "ORTHO",
           bidx: Math.floor(Math.random() * 10),
@@ -45,9 +44,8 @@ describe("/rasterProp API", () => {
       created_props.push(res.body.data._id);
     }
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-by-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_props[0],
       })
@@ -61,9 +59,8 @@ describe("/rasterProp API", () => {
   });
 
   test("GET /get-all-rasterProps", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: "ORTHO",
         bidx: Math.floor(Math.random() * 10),
@@ -73,9 +70,8 @@ describe("/rasterProp API", () => {
       })
       .expect(201);
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-all-rasterProps"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({

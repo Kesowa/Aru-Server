@@ -1,17 +1,17 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("model");
 
 describe("/model API", () => {
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .set("userid", "5f12572c3c19462d3673dbe9") // id of super-admin user KESOWA (exists in database) (any other id would also work)
       .send({
         modelName: randomUUID(),
@@ -38,9 +38,8 @@ describe("/model API", () => {
   });
 
   test("GET /get", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .set("userid", "5f12572c3c19462d3673dbe9")
       .send({
         modelName: randomUUID(),
@@ -58,9 +57,8 @@ describe("/model API", () => {
         },
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -73,9 +71,8 @@ describe("/model API", () => {
   test("GET /get-by-id", async () => {
     const created_models: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "5f12572c3c19462d3673dbe9")
         .send({
           modelName: randomUUID(),
@@ -95,9 +92,8 @@ describe("/model API", () => {
         .expect(201);
       created_models.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-by-id"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         _id: created_models[0]._id,
       })
@@ -113,9 +109,8 @@ describe("/model API", () => {
   test("PATCH /update", async () => {
     const created_models: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "5f12572c3c19462d3673dbe9")
         .send({
           modelName: randomUUID(),
@@ -135,9 +130,8 @@ describe("/model API", () => {
         .expect(201);
       created_models.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("update"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_models[0]._id,
         update: {
@@ -162,9 +156,8 @@ describe("/model API", () => {
   test("DELETE /delete", async () => {
     const created_models: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "5f12572c3c19462d3673dbe9")
         .send({
           modelName: randomUUID(),
@@ -184,9 +177,8 @@ describe("/model API", () => {
         .expect(201);
       created_models.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_models[0]._id,
       })

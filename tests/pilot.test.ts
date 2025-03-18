@@ -1,24 +1,23 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("pilot");
 
 describe("/pilot API", () => {
   // Endpoint returns no response
   // test("POST /login", async () => {
-  //     const res = await request(app)
+  //     const res = await agent
   //         .post(full_url("login"))
-  //         .set("Authorization", `Bearer ${token}`)
   //         .expect(200);
   // });
 
   test("GET /get-all-pilots", async () => {
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-all-pilots"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({

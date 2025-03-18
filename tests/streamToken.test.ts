@@ -1,9 +1,10 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("streamtoken");
 
 describe("/streamtoken API", () => {
@@ -13,9 +14,8 @@ describe("/streamtoken API", () => {
   const eTenantID: string = "5f204f03b9445726102781a8"; // exists in db
 
   test("POST /gen-stream-token", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("gen-stream-token"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionID: eMissionID,
         flightID: eFlightID,
@@ -36,9 +36,8 @@ describe("/streamtoken API", () => {
   test("POST /validate-token", async () => {
     const created_tokens: string[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("gen-stream-token"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           missionID: eMissionID,
           flightID: eFlightID,
@@ -48,9 +47,8 @@ describe("/streamtoken API", () => {
         .expect(200);
       created_tokens.push(res.body.token);
     }
-    await request(app)
+    await agent
       .post(full_url("validate-token"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: created_tokens[0],
       })
@@ -58,9 +56,8 @@ describe("/streamtoken API", () => {
   });
 
   test("GET /get-active-streams", async () => {
-    await request(app)
+    await agent
       .post(full_url("gen-stream-token"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionID: eMissionID,
         flightID: eFlightID,
@@ -68,9 +65,8 @@ describe("/streamtoken API", () => {
         tenantID: eTenantID,
       })
       .expect(200);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-active-streams"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toBeInstanceOf(Array);
@@ -79,9 +75,8 @@ describe("/streamtoken API", () => {
   test("GET /get-active-stream/flight", async () => {
     const created_streams: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("gen-stream-token"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           missionID: eMissionID,
           flightID: eFlightID,
@@ -91,9 +86,8 @@ describe("/streamtoken API", () => {
         .expect(200);
       created_streams.push(res.body);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-active-stream/flight"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         flightID: created_streams[0].flightID,
       })
@@ -107,9 +101,8 @@ describe("/streamtoken API", () => {
   test("POST /remove-token", async () => {
     const created_tokens: string[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("gen-stream-token"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           missionID: eMissionID,
           flightID: eFlightID,
@@ -119,9 +112,8 @@ describe("/streamtoken API", () => {
         .expect(200);
       created_tokens.push(res.body.token);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("remove-token"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: created_tokens[0],
       })

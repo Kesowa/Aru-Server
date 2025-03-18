@@ -1,18 +1,18 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
+let agent: SuperAgentTest;
+
 const full_url = CurriedUrl("mission");
 
 describe("/mission API", () => {
-  beforeAll(async () => (token = await Login()));
+  beforeAll(async () => (agent = await Login()));
+  afterAll(async () => Logout(agent));
 
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         description: randomUUID(),
@@ -50,9 +50,8 @@ describe("/mission API", () => {
   });
 
   test("POST /mission-by-userid", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         description: randomUUID(),
@@ -81,9 +80,8 @@ describe("/mission API", () => {
         ],
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .post(full_url("mission-by-userid"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -96,9 +94,8 @@ describe("/mission API", () => {
   test("GET /get/tenant", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -129,9 +126,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get/tenant"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         filter: "all",
         missionType: created_missions[0].missionType,
@@ -151,9 +147,8 @@ describe("/mission API", () => {
   });
 
   test("GET /get/user/:id", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         description: randomUUID(),
@@ -182,9 +177,8 @@ describe("/mission API", () => {
         ],
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get/user/608e7b3ae11f711a34fb0476"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -197,9 +191,8 @@ describe("/mission API", () => {
   test("GET /get/:id", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -230,9 +223,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get/" + created_missions[0]._id))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -244,9 +236,8 @@ describe("/mission API", () => {
 
   // FIXED: Check commit for more info
   test("GET /filtered-mission", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         description: randomUUID(),
@@ -275,9 +266,8 @@ describe("/mission API", () => {
         ],
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("filtered-mission"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         status: "All",
         date: "2022-09-15",
@@ -296,9 +286,8 @@ describe("/mission API", () => {
   });
 
   test("GET /autocomplete", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: "New Text Mission",
         description:
@@ -328,9 +317,8 @@ describe("/mission API", () => {
         ],
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("autocomplete"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         query: "mission",
       })
@@ -346,9 +334,8 @@ describe("/mission API", () => {
   test("GET /get-total-number-of-mission-by-locationID", async () => {
     const created_flights: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -379,9 +366,8 @@ describe("/mission API", () => {
         .expect(201);
       created_flights.push(res.body.data.flight);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-total-number-of-mission-by-locationID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_flights[0].locationID,
       })
@@ -397,9 +383,8 @@ describe("/mission API", () => {
   test("GET /get-missions-by-location-mapref", async () => {
     const created_flights: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -430,9 +415,8 @@ describe("/mission API", () => {
         .expect(201);
       created_flights.push(res.body.data.flight);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-missions-by-location-mapref"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_flights[0].locationID,
       })
@@ -449,9 +433,8 @@ describe("/mission API", () => {
     const created_missions: any[] = [];
     const created_flights: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -483,9 +466,8 @@ describe("/mission API", () => {
       created_missions.push(res.body.data.mission);
       created_flights.push(res.body.data.flight);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-missions-by-locationID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionID: created_missions[0]._id,
         locationID: created_flights[0].locationID,
@@ -502,9 +484,8 @@ describe("/mission API", () => {
   test("GET /get-mission-csv-for-tenant-Or-user", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -535,9 +516,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-mission-csv-for-tenant-Or-user"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         userid: created_missions[0].user,
         status: created_missions[0].status,
@@ -554,9 +534,8 @@ describe("/mission API", () => {
   test("GET /get-alert-vod-count", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -587,9 +566,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-alert-vod-count"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionId: created_missions[0]._id,
       })
@@ -608,9 +586,8 @@ describe("/mission API", () => {
   test("GET /memory-usage/:id", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -641,9 +618,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("memory-usage/" + created_missions[0]._id))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         missionId: created_missions[0]._id,
       })
@@ -659,9 +635,8 @@ describe("/mission API", () => {
   test("POST /edit", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -692,9 +667,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("edit"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_missions[0]._id,
         name: randomUUID(),
@@ -714,9 +688,8 @@ describe("/mission API", () => {
   test("PATCH /update-status", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -747,9 +720,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("update-status"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionID: created_missions[0]._id,
         status: "Completed",
@@ -765,9 +737,8 @@ describe("/mission API", () => {
   test("POST /insert-missiontype-by-Id", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -798,9 +769,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("insert-missiontype-by-Id"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_missions[0]._id,
         missionType: "5f4771e3976282570dbfffc8",
@@ -814,9 +784,8 @@ describe("/mission API", () => {
   });
 
   test("POST /insert-missionType-for-tenantId", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         description: randomUUID(),
@@ -845,9 +814,8 @@ describe("/mission API", () => {
         ],
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .post(full_url("insert-missionType-for-tenantId"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionType: "5f4771e3976282570dbfffc8",
       })
@@ -862,9 +830,8 @@ describe("/mission API", () => {
   test("POST /delete", async () => {
     const created_missions: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           description: randomUUID(),
@@ -895,9 +862,8 @@ describe("/mission API", () => {
         .expect(201);
       created_missions.push(res.body.data.mission);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_missions[0]._id,
       })

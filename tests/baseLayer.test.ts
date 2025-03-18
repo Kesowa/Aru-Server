@@ -1,11 +1,12 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
+let agent: SuperAgentTest;
+
 beforeAll(async () => {
-  token = await Login();
+  agent = await Login();
+  afterAll(async () => Logout(agent));
 });
 const full_url = CurriedUrl("baselayer");
 
@@ -54,9 +55,8 @@ const sampleGeojsonData = {
 describe("/baselayer API", () => {
   const created_layers: any[] = [];
   test("POST /create/Vector", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create/Vector"))
-      .set("Authorization", `Bearer ${token}`)
       .field("name", Date())
       .field("type", "Vector")
       .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -77,9 +77,8 @@ describe("/baselayer API", () => {
 
   test("POST /create-by-layers", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -91,9 +90,8 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create-by-layers"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: "base-test-2",
         pattr: [],
@@ -125,9 +123,8 @@ describe("/baselayer API", () => {
   });
 
   test("POST /create-base-vector-layer", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create-base-vector-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: "base-test-3",
         vectorId: "60c3a13fca0cbe039fce0d4f",
@@ -145,9 +142,8 @@ describe("/baselayer API", () => {
 
   test("GET /fetch/All", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -159,9 +155,8 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("fetch/All"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -170,9 +165,8 @@ describe("/baselayer API", () => {
       data: expect.any(Array),
     });
 
-    const res2 = await request(app)
+    const res2 = await agent
       .get(full_url("/fetch/Vector"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res2.body).toMatchObject({
@@ -184,9 +178,8 @@ describe("/baselayer API", () => {
 
   test("POST /filter-base-layer", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -198,9 +191,8 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("filter-base-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         captureDate: "desc",
         time: "2 days",
@@ -216,9 +208,8 @@ describe("/baselayer API", () => {
 
   test("PATCH /publishBaseLayer", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -230,9 +221,8 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("publishBaseLayer"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layerId: [created_layers[0]._id],
       })
@@ -247,9 +237,8 @@ describe("/baselayer API", () => {
 
   test("GET /getallpublicbaselayers", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -261,9 +250,8 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("getallpublicbaselayers"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         mapRef: "5f204f03b9445726102781a862148702831c465d972286b3",
       })
@@ -278,9 +266,8 @@ describe("/baselayer API", () => {
 
   test("GET /searchPublicLayer", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -292,9 +279,8 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("searchPublicLayer"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         mapRef: "5f204f03b9445726102781a862148702831c465d972286b3",
         key: "color",
@@ -311,9 +297,8 @@ describe("/baselayer API", () => {
 
   test("PUT /set-prime-attr", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -325,9 +310,8 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
-    const res = await request(app)
+    const res = await agent
       .put(full_url("set-prime-attr"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         path: created_layers[0].layerpath,
         pattr: ["Zip_Code"],
@@ -342,9 +326,8 @@ describe("/baselayer API", () => {
   });
 
   test("PATCH /updateisBase", async () => {
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("updateisBase"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(res.body).toMatchObject({
       status: true,
@@ -353,9 +336,8 @@ describe("/baselayer API", () => {
   });
 
   test("PATCH /updateisPublic", async () => {
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("updateisPublic"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(res.body).toMatchObject({
       status: true,
@@ -366,9 +348,8 @@ describe("/baselayer API", () => {
   test("PATCH /update-by-layers", async () => {
     let base_layer: string = "";
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-base-vector-layer"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: "base-test-3",
           vectorId: "60c3a3c5ca0cbe039fce0d64",
@@ -379,9 +360,8 @@ describe("/baselayer API", () => {
       base_layer = res.body.data._id;
     }
 
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("update-by-layers"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layers: [
           {
@@ -402,9 +382,8 @@ describe("/baselayer API", () => {
   test("POST /upload-to-update-base-layer/Vector", async () => {
     let base_layer: string = "";
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-base-vector-layer"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           vectorId: "60c3a3c5ca0cbe039fce0d64",
@@ -415,9 +394,8 @@ describe("/baselayer API", () => {
       base_layer = res.body.data._id;
     }
 
-    const res = await request(app)
+    const res = await agent
       .post(full_url("upload-to-update-base-layer/Vector"))
-      .set("Authorization", `Bearer ${token}`)
       .field("baseLayer", base_layer)
       .attach("file", "/server/assets/sampleData.geojson")
       .expect(200);
@@ -433,9 +411,8 @@ describe("/baselayer API", () => {
   });
 
   test("PATCH /get-meta-data", async () => {
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("get-meta-data"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layers: ["61e7b5ab7f65140b304f4842"],
       })
@@ -451,9 +428,8 @@ describe("/baselayer API", () => {
   test("PATCH /get-meta-data-for-update", async () => {
     let base_layer: string = "";
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-base-vector-layer"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: "base-test-3",
           vectorId: "60c3a3c5ca0cbe039fce0d64",
@@ -463,9 +439,8 @@ describe("/baselayer API", () => {
       expect(res.body.data._id).toBeDefined();
       base_layer = res.body.data._id;
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("get-meta-data-for-update"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layers: ["61e7b5ab7f65140b304f4842"],
         baseLayer: base_layer,
@@ -481,9 +456,8 @@ describe("/baselayer API", () => {
   test("PATCH /update-base-layer-by-uploaded-layer", async () => {
     const layer = { layerpath: "", id: "" };
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -497,9 +471,8 @@ describe("/baselayer API", () => {
       layer.layerpath = res.body.data.layer.layerpath;
       layer.id = res.body.data.layer._id;
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("update-base-layer-by-uploaded-layer"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         filePath: "public" + layer.layerpath,
         baseLayer: layer.id,
@@ -516,9 +489,8 @@ describe("/baselayer API", () => {
   });
 
   test("POST /create-base-raster-upload/Raster", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create-base-raster-upload/Raster"))
-      .set("Authorization", `Bearer ${token}`)
       .field("name", Date())
       .field("type", "Raster")
       .field("raster", "60c3138f4764fb024a3c1a59")
@@ -535,9 +507,8 @@ describe("/baselayer API", () => {
   const created_layer_ids: string[] = [];
   test("POST /create-base-raster-import-mission", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-base-raster-upload/Raster"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Raster")
         .field("raster", "60c3138f4764fb024a3c1a59")
@@ -546,9 +517,8 @@ describe("/baselayer API", () => {
         .expect(201);
       created_layer_ids.push(res.body.data._id);
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create-base-raster-import-mission"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         layers: ["61eb92375f7a012bcdbbfb2a"],
@@ -567,9 +537,8 @@ describe("/baselayer API", () => {
   test("PATCH /updateRasterLayerUpload/Raster", async () => {
     let base_layer = "";
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-base-raster-upload/Raster"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Raster")
         .field("raster", "60c3138f4764fb024a3c1a59")
@@ -579,9 +548,8 @@ describe("/baselayer API", () => {
       base_layer = res.body.data._id;
       created_layer_ids.push(res.body.data._id);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("updateRasterLayerUpload/Raster"))
-      .set("Authorization", `Bearer ${token}`)
       .field("layerId", base_layer)
       .attach("file", "/server/assets/Ortho_25cm.tif")
       .expect(200);
@@ -595,9 +563,8 @@ describe("/baselayer API", () => {
   test("PATCH /updateRasterLayerImport", async () => {
     let base_layer = "";
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-base-raster-upload/Raster"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Raster")
         .field("raster", "60c3138f4764fb024a3c1a59")
@@ -606,9 +573,8 @@ describe("/baselayer API", () => {
         .expect(201);
       base_layer = res.body.data._id;
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("updateRasterLayerImport"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layerId: base_layer,
         layers: created_layer_ids,
@@ -623,9 +589,8 @@ describe("/baselayer API", () => {
 
   test("DELETE /delete-baseLayer-id", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create/Vector"))
-        .set("Authorization", `Bearer ${token}`)
         .field("name", Date())
         .field("type", "Vector")
         .field("vector", "60c3a13fca0cbe039fce0d4f")
@@ -638,9 +603,8 @@ describe("/baselayer API", () => {
       created_layers.push(res.body.data.layer);
     }
     // const created_ids: string[] = created_layers.map(a => a._id)
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-baseLayer-id"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         layers: [created_layers[0]._id],
       })

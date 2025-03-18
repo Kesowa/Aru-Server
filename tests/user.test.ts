@@ -1,11 +1,11 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 import { faker } from "@faker-js/faker";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("tenant/user");
 
 const fakeUser = {
@@ -18,9 +18,8 @@ const fakeUser = {
 
 describe("/user API", () => {
   test("POST /upload-profile-picture", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("upload-profile-picture"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("avatar", "/server/assets/image.png")
       .expect(201);
 
@@ -32,9 +31,8 @@ describe("/user API", () => {
   });
 
   test("POST /create-tenant-user", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create-tenant-user"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         ...fakeUser,
         name: faker.name.fullName(),
@@ -51,9 +49,8 @@ describe("/user API", () => {
   });
 
   test("GET /fetch-all-user", async () => {
-    await request(app)
+    await agent
       .post(full_url("create-tenant-user"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         ...fakeUser,
         name: faker.name.fullName(),
@@ -61,9 +58,8 @@ describe("/user API", () => {
         email: faker.internet.email(),
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("fetch-all-user"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -74,9 +70,8 @@ describe("/user API", () => {
   });
 
   test("GET /generate-userList-csv", async () => {
-    await request(app)
+    await agent
       .post(full_url("create-tenant-user"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         ...fakeUser,
         name: faker.name.fullName(),
@@ -84,9 +79,8 @@ describe("/user API", () => {
         email: faker.internet.email(),
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("generate-userList-csv"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -99,9 +93,8 @@ describe("/user API", () => {
   test("PATCH /edit-user", async () => {
     const created_users: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-tenant-user"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           ...fakeUser,
           name: faker.name.fullName(),
@@ -111,9 +104,8 @@ describe("/user API", () => {
         .expect(201);
       created_users.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("edit-user"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_users[0]._id,
         name: randomUUID(),
@@ -132,9 +124,8 @@ describe("/user API", () => {
   });
 
   test("PATCH /terms-conditions-check", async () => {
-    await request(app)
+    await agent
       .post(full_url("create-tenant-user"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         ...fakeUser,
         name: faker.name.fullName(),
@@ -142,9 +133,8 @@ describe("/user API", () => {
         email: faker.internet.email(),
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("terms-conditions-check"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         terms: "true",
       })
@@ -158,9 +148,8 @@ describe("/user API", () => {
   });
 
   test("POST /terms-insert", async () => {
-    await request(app)
+    await agent
       .post(full_url("create-tenant-user"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         ...fakeUser,
         name: faker.name.fullName(),
@@ -168,9 +157,8 @@ describe("/user API", () => {
         email: faker.internet.email(),
       })
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .post(full_url("terms-insert"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         flag: "go",
       })
@@ -185,9 +173,8 @@ describe("/user API", () => {
   test("DELETE /delete-user", async () => {
     const created_users: any[] = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create-tenant-user"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           ...fakeUser,
           name: faker.name.fullName(),
@@ -197,9 +184,8 @@ describe("/user API", () => {
         .expect(201);
       created_users.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-user"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_users[0]._id,
       })

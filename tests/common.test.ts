@@ -1,16 +1,16 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("common");
 
 describe("/common API", () => {
   test("POST /check-email-available", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("check-email-available"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         email: "test" + Math.floor(Math.random() * 100000 + 1) + "@common.com",
       })

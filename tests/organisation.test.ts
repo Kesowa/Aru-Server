@@ -1,17 +1,16 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { faker } from "@faker-js/faker";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("tenantroot");
 
 describe("/organisation API", () => {
   test("GET /fetch-organisation-details", async () => {
-    const res = await request(app)
+    const res = await agent
       .get(full_url("fetch-organisation-details"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -22,9 +21,8 @@ describe("/organisation API", () => {
   });
 
   test("POST /update-organisation-details", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("update-organisation-details"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: faker.company.name(),
         contactPerson: faker.name.fullName(),
@@ -48,9 +46,8 @@ describe("/organisation API", () => {
   });
 
   test("POST /request-otp-for-email-change", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("request-otp-for-email-change"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         email: faker.internet.email(),
       })
@@ -63,16 +60,14 @@ describe("/organisation API", () => {
   });
 
   test("POST /resend-otp-for-email-change", async () => {
-    await request(app)
+    await agent
       .post(full_url("request-otp-for-email-change"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         email: faker.internet.email(),
       })
       .expect(200);
-    const res = await request(app)
+    const res = await agent
       .post(full_url("resend-otp-for-email-change"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(res.body).toMatchObject({
       status: true,
@@ -82,17 +77,15 @@ describe("/organisation API", () => {
 
   // test("POST /validate-otp-update-email", async () => {
   //     {
-  //         const res = await request(app)
+  //         const res = await agent
   //         .post(full_url("request-otp-for-email-change"))
-  //         .set("Authorization", `Bearer ${token}`)
   //         .send({
   //             email: faker.internet.email()
   //         })
   //         .expect(200);
   //     }
-  //     const res = await request(app)
+  //     const res = await agent
   //         .post(full_url("validate-otp-update-email"))
-  //         .set("Authorization", `Bearer ${token}`)
   //         .send({
   //             otp: Math.floor(Math.random()*1000000).toString()
   //         })

@@ -1,9 +1,9 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { SuperAgentTest } from "supertest";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("alert");
 
 describe("/alert API", () => {
@@ -11,9 +11,8 @@ describe("/alert API", () => {
   let filePath: string = "";
 
   test("POST /upload-alert-image", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("upload-alert-image"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("image", "/server/assets/image.png")
       .expect(201);
 
@@ -27,9 +26,8 @@ describe("/alert API", () => {
   });
 
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionId: "6267dd4b2a2d394080a20848",
         flightId: "6267dd4b2a2d394080a20849",
@@ -57,9 +55,8 @@ describe("/alert API", () => {
   });
 
   test("POST /manual-upload-alert", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("manual-upload-alert"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("image", "/server/assets/image.png")
       .field("missionId", "6267dd4b2a2d394080a20848")
       .field("flightId", "6267dd4b2a2d394080a20849")
@@ -82,9 +79,8 @@ describe("/alert API", () => {
 
   test("GET /get-alert-by-ID", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -99,9 +95,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-alert-by-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_alerts[0]._id,
       })
@@ -116,9 +111,8 @@ describe("/alert API", () => {
 
   test("GET /get-alerts-By-mission-ID", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -133,9 +127,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-alerts-By-mission-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         page: 1,
         limit: 5,
@@ -155,9 +148,8 @@ describe("/alert API", () => {
 
   test("GET /get-alerts-by-location-ID", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -172,9 +164,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-alerts-by-location-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_alerts[0].locationId,
       })
@@ -189,9 +180,8 @@ describe("/alert API", () => {
 
   test("GET /get-alerts-By-location-id-pagination", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -206,9 +196,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-alerts-By-location-id-pagination"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         page: 1,
         limit: 5,
@@ -227,9 +216,8 @@ describe("/alert API", () => {
 
   test("GET /get-number-of-alerts-By-location-ID", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -244,9 +232,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-number-of-alerts-By-location-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: created_alerts[0].locationId,
       })
@@ -262,9 +249,8 @@ describe("/alert API", () => {
 
   test("GET /get-alerts-by-flight-or-location-ID", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -279,9 +265,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res1 = await request(app)
+    const res1 = await agent
       .get(full_url("get-alerts-by-flight-or-location-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         flightID: created_alerts[0].flightId,
       })
@@ -293,9 +278,8 @@ describe("/alert API", () => {
       data: expect.any(Array),
     });
 
-    const res2 = await request(app)
+    const res2 = await agent
       .get(full_url("get-alerts-by-flight-or-location-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         locationID: created_alerts[0].locationId,
       })
@@ -310,9 +294,8 @@ describe("/alert API", () => {
 
   test("GET /get-alert-by-location-ID-and-time", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -327,9 +310,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-alert-by-location-ID-and-time"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         locationID: created_alerts[0].locationId,
         time: "3 days",
@@ -349,9 +331,8 @@ describe("/alert API", () => {
 
   test("GET /get-alerts-by-tenantid", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -366,9 +347,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-alerts-by-tenantid"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         time: "3 days",
       })
@@ -384,9 +364,8 @@ describe("/alert API", () => {
 
   test("GET /get-alerts-by-tenantid-advanced-result", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -401,9 +380,8 @@ describe("/alert API", () => {
         .expect(201);
       created_alerts.push(res.body.data);
     }
-    await request(app)
+    await agent
       .get(full_url("get-alerts-by-tenantid-advanced-result"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         page: 1,
         limit: 5,
@@ -418,9 +396,8 @@ describe("/alert API", () => {
 
   test("DELETE /delete-multiple-alerts", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("manual-upload-alert"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("image", "/server/assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
@@ -436,9 +413,8 @@ describe("/alert API", () => {
       created_alerts.push(res.body.data);
     }
     const created_ids: string[] = created_alerts.map((a) => a._id);
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-multiple-alerts"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_ids,
       })

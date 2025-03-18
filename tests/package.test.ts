@@ -1,17 +1,17 @@
-import { CurriedUrl, LoginSuper } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
-beforeAll(async () => (token = await LoginSuper()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await LoginSuper()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("admin/package");
 
 describe("/package API", () => {
   test("POST /upload-poster", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("upload-poster"))
-      .set("Authorization", `Bearer ${token}`)
       .attach("poster", "/server/assets/image.png")
       .expect(201);
 
@@ -25,16 +25,14 @@ describe("/package API", () => {
   test("POST /create", async () => {
     let filePath: string = "";
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("upload-poster"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("poster", "/server/assets/image.png")
         .expect(201);
       filePath = res.body.file;
     }
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         name: randomUUID(),
         bandwidth: Math.floor(Math.random() * 1000),
@@ -62,16 +60,14 @@ describe("/package API", () => {
   test("GET /fetchall", async () => {
     {
       let filePath: string = "";
-      const res1 = await request(app)
+      const res1 = await agent
         .post(full_url("upload-poster"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("poster", "/server/assets/image.png")
         .expect(201);
       filePath = res1.body.file;
 
-      await request(app)
+      await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           bandwidth: Math.floor(Math.random() * 1000),
@@ -89,9 +85,8 @@ describe("/package API", () => {
         })
         .expect(201);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("fetchall"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -104,16 +99,14 @@ describe("/package API", () => {
   test("GET /fetchactive", async () => {
     {
       let filePath: string = "";
-      const res1 = await request(app)
+      const res1 = await agent
         .post(full_url("upload-poster"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("poster", "/server/assets/image.png")
         .expect(201);
       filePath = res1.body.file;
 
-      await request(app)
+      await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           bandwidth: Math.floor(Math.random() * 1000),
@@ -131,9 +124,8 @@ describe("/package API", () => {
         })
         .expect(201);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("fetchactive"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -147,16 +139,14 @@ describe("/package API", () => {
     const created_packages: string[] = [];
     {
       let filePath: string = "";
-      const res1 = await request(app)
+      const res1 = await agent
         .post(full_url("upload-poster"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("poster", "/server/assets/image.png")
         .expect(201);
       filePath = res1.body.file;
 
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           bandwidth: Math.floor(Math.random() * 1000),
@@ -175,9 +165,8 @@ describe("/package API", () => {
         .expect(201);
       created_packages.push(res.body.data._id);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("edit-package-for-Id"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_packages[0],
         name: randomUUID(),
@@ -206,16 +195,14 @@ describe("/package API", () => {
     const created_packages: string[] = [];
     {
       let filePath: string = "";
-      const res1 = await request(app)
+      const res1 = await agent
         .post(full_url("upload-poster"))
-        .set("Authorization", `Bearer ${token}`)
         .attach("poster", "/server/assets/image.png")
         .expect(201);
       filePath = res1.body.file;
 
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           name: randomUUID(),
           bandwidth: Math.floor(Math.random() * 1000),
@@ -234,9 +221,8 @@ describe("/package API", () => {
         .expect(201);
       created_packages.push(res.body.data._id);
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-package-for-Id"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_packages[0],
       })

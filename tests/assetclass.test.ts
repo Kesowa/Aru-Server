@@ -1,17 +1,17 @@
-import { CurriedUrl, Login, LoginSuper } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 
-let token: string;
+let agent: SuperAgentTest;
+
 const full_url = CurriedUrl("assetclass");
 
 describe("/assetclass API SuperAdmin", () => {
-  beforeAll(async () => (token = await LoginSuper()));
+  beforeAll(async () => (agent = await LoginSuper()));
+  afterAll(async () => Logout(agent));
   const created_assetclasses: any = [];
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .set("userid", "5f12572c3c19462d3673dbe9")
       .send({
         typeName: "Any name",
@@ -30,9 +30,8 @@ describe("/assetclass API SuperAdmin", () => {
 
   test("PATCH /update", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "5f12572c3c19462d3673dbe9")
         .send({
           typeName: "Any name",
@@ -41,9 +40,8 @@ describe("/assetclass API SuperAdmin", () => {
         .expect(201);
       created_assetclasses.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("update"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_assetclasses[0]._id,
         typeName: "New Type Nameeee",
@@ -59,9 +57,8 @@ describe("/assetclass API SuperAdmin", () => {
 
   test("DELETE /delete", async () => {
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .set("userid", "5f12572c3c19462d3673dbe9")
         .send({
           typeName: "Any name",
@@ -70,9 +67,8 @@ describe("/assetclass API SuperAdmin", () => {
         .expect(201);
       created_assetclasses.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_assetclasses[0]._id,
       })
@@ -86,12 +82,11 @@ describe("/assetclass API SuperAdmin", () => {
 });
 
 describe("/assetclass API TenantRoot", () => {
-  beforeAll(async () => (token = await Login()));
+  beforeAll(async () => (agent = await Login()));
   const existing_assetclasses: any = [];
   test("GET /get", async () => {
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -103,9 +98,8 @@ describe("/assetclass API TenantRoot", () => {
   });
 
   test("GET /get-asset-class-by-id", async () => {
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-asset-class-by-id"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         _id: existing_assetclasses[0],
       })

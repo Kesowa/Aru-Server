@@ -1,17 +1,17 @@
-import { CurriedUrl, Login } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("flight");
 
 describe("/flight API", () => {
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         date: new Date().getFullYear() + "-12-12",
         name: randomUUID(),
@@ -31,9 +31,8 @@ describe("/flight API", () => {
   test("POST /edit", async () => {
     let created_flight: any = {};
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           date: new Date().getFullYear() + "-12-12",
           name: randomUUID(),
@@ -45,9 +44,8 @@ describe("/flight API", () => {
       created_flight = res.body.data;
     }
 
-    const res = await request(app)
+    const res = await agent
       .post(full_url("edit"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_flight._id,
         name: randomUUID(),
@@ -72,9 +70,8 @@ describe("/flight API", () => {
   test("POST /mission-specific-view", async () => {
     let created_flight: any = {};
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           date: new Date().getFullYear() + "-12-12",
           name: randomUUID(),
@@ -86,9 +83,8 @@ describe("/flight API", () => {
       created_flight = res.body.data;
     }
 
-    const res = await request(app)
+    const res = await agent
       .post(full_url("mission-specific-view"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionID: created_flight.mission,
       })
@@ -102,9 +98,8 @@ describe("/flight API", () => {
   });
 
   test("GET /all-flights", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         date: new Date().getFullYear() + "-12-12",
         name: randomUUID(),
@@ -114,9 +109,8 @@ describe("/flight API", () => {
       })
       .expect(201);
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("all-flights"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -127,9 +121,8 @@ describe("/flight API", () => {
   });
 
   test("GET /flightswithoutmission", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         date: new Date().getFullYear() + "-12-12",
         name: randomUUID(),
@@ -139,9 +132,8 @@ describe("/flight API", () => {
       })
       .expect(201);
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("flightswithoutmission"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -154,9 +146,8 @@ describe("/flight API", () => {
   test("GET /get-flight-by-location-ID", async () => {
     let created_flight: any = {};
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           date: new Date().getFullYear() + "-12-12",
           name: randomUUID(),
@@ -167,9 +158,8 @@ describe("/flight API", () => {
         .expect(201);
       created_flight = res.body.data;
 
-      await request(app)
+      await agent
         .post(full_url("edit"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           _id: created_flight._id,
           name: randomUUID(),
@@ -185,9 +175,8 @@ describe("/flight API", () => {
         .expect(200);
     }
 
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-flight-by-location-ID"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: "6123317cdaacac04cdb2d805",
       })
@@ -203,9 +192,8 @@ describe("/flight API", () => {
   test("PATCH /assign-pilot", async () => {
     let created_flight: any = {};
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           date: new Date().getFullYear() + "-12-12",
           name: randomUUID(),
@@ -217,9 +205,8 @@ describe("/flight API", () => {
       created_flight = res.body.data;
     }
 
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("assign-pilot"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         flightID: created_flight._id,
         pilotID: "5f12572c3c19462d3673dbe9",
@@ -236,9 +223,8 @@ describe("/flight API", () => {
   test("PATCH /assign-pilot-self", async () => {
     let created_flight: any = {};
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           date: new Date().getFullYear() + "-12-12",
           name: randomUUID(),
@@ -250,9 +236,8 @@ describe("/flight API", () => {
       created_flight = res.body.data;
     }
 
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("assign-pilot-self"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         flightID: created_flight._id,
       })
@@ -268,9 +253,8 @@ describe("/flight API", () => {
   test("POST /delete", async () => {
     let created_flight: any = {};
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           date: new Date().getFullYear() + "-12-12",
           name: randomUUID(),
@@ -282,9 +266,8 @@ describe("/flight API", () => {
       created_flight = res.body.data;
     }
 
-    const res = await request(app)
+    const res = await agent
       .post(full_url("delete"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         _id: created_flight._id,
       })

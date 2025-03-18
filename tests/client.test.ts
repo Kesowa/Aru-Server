@@ -1,10 +1,11 @@
-import { CurriedUrl, Login, clearAllClients } from "../config/utils";
-import request from "supertest";
-import app from "../src/app";
+import { CurriedUrl, Login, Logout, clearAllClients } from "./utils/utils";
+import {SuperAgentTest} from "supertest";
 import { faker } from "@faker-js/faker";
 
-let token: string;
-beforeAll(async () => (token = await Login()));
+let agent: SuperAgentTest;
+
+beforeAll(async () => (agent = await Login()));
+afterAll(async () => Logout(agent));
 const full_url = CurriedUrl("client");
 
 const fake_client = () => ({
@@ -25,9 +26,8 @@ describe("/client API", () => {
   });
 
   test("POST /create", async () => {
-    const res = await request(app)
+    const res = await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send(fake_client())
       .expect(201);
 
@@ -41,16 +41,14 @@ describe("/client API", () => {
   test("PATCH /edit-client-details", async () => {
     const created_clients: any = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send(fake_client())
         .expect(201);
       created_clients.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("edit-client-details"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_clients[0]._id,
         password: faker.internet.password(),
@@ -69,16 +67,14 @@ describe("/client API", () => {
   test("PATCH /insert-client-for-mission", async () => {
     const created_clients: any = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send(fake_client())
         .expect(201);
       created_clients.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("insert-client-for-mission"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionId: "61f3b1e65f915a05cb8885ec",
         clientId: [created_clients[0]._id],
@@ -95,24 +91,21 @@ describe("/client API", () => {
   test("PATCH /remove-client-from-mission", async () => {
     const created_clients: any = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send(fake_client())
         .expect(201);
       created_clients.push(res.body.data);
     }
-    await request(app)
+    await agent
       .patch(full_url("insert-client-for-mission"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionId: "61f3b1e65f915a05cb8885ec",
         clientId: [created_clients[0]._id],
       })
       .expect(200);
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("remove-client-from-mission"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         id: "61f3b1e65f915a05cb8885ec",
         clientId: created_clients[0]._id,
@@ -127,14 +120,12 @@ describe("/client API", () => {
   });
 
   test("GET /get-list-client", async () => {
-    await request(app)
+    await agent
       .post(full_url("create"))
-      .set("Authorization", `Bearer ${token}`)
       .send(fake_client())
       .expect(201);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-list-client"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         page: 1,
         limit: 5,
@@ -153,16 +144,14 @@ describe("/client API", () => {
   test("GET /get-client-by-email", async () => {
     const created_clients: any = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send(fake_client())
         .expect(201);
       created_clients.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-client-by-email"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         email: created_clients[0].email,
       })
@@ -176,9 +165,8 @@ describe("/client API", () => {
   });
 
   test("GET /get-client-mission-details/:missionID", async () => {
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-client-mission-details/61f3b1e65f915a05cb8885ec"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -191,24 +179,21 @@ describe("/client API", () => {
   test("GET /get-mission-list-for-Id", async () => {
     const created_clients: any = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send(fake_client())
         .expect(201);
       created_clients.push(res.body.data);
     }
-    await request(app)
+    await agent
       .patch(full_url("insert-client-for-mission"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionId: "61f3b1e65f915a05cb8885ec",
         clientId: [created_clients[0]._id],
       })
       .expect(200);
-    const res = await request(app)
+    const res = await agent
       .get(full_url("get-mission-list-for-Id"))
-      .set("Authorization", `Bearer ${token}`)
       .query({
         page: "1",
         limit: "1",
@@ -226,9 +211,8 @@ describe("/client API", () => {
   });
 
   test("GET /geneate-client-csv", async () => {
-    const res = await request(app)
+    const res = await agent
       .get(full_url("geneate-client-csv"))
-      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -239,9 +223,8 @@ describe("/client API", () => {
   });
 
   test("PATCH /patch-api-clientarr", async () => {
-    const res = await request(app)
+    const res = await agent
       .patch(full_url("patch-api-clientarr"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         tenantId: "5f204f03b9445726102781a8",
       })
@@ -252,16 +235,14 @@ describe("/client API", () => {
   test("DELETE /delete-client", async () => {
     const created_clients: any = [];
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("create"))
-        .set("Authorization", `Bearer ${token}`)
         .send(fake_client())
         .expect(201);
       created_clients.push(res.body.data);
     }
-    const res = await request(app)
+    const res = await agent
       .delete(full_url("delete-client"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         id: created_clients[0]._id,
       })
@@ -276,9 +257,8 @@ describe("/client API", () => {
 
   test("POST /invite-client-to-mission", async () => {
     const emailID: string = faker.internet.email();
-    const res = await request(app)
+    const res = await agent
       .post(full_url("invite-client-to-mission"))
-      .set("Authorization", `Bearer ${token}`)
       .send({
         missionID: "61f3b1e65f915a05cb8885ec",
         emailID: emailID,
@@ -295,9 +275,8 @@ describe("/client API", () => {
     const emailID: string = faker.internet.email();
     let inviteID: string = "";
     {
-      const res = await request(app)
+      const res = await agent
         .post(full_url("invite-client-to-mission"))
-        .set("Authorization", `Bearer ${token}`)
         .send({
           missionID: "61f3b1e65f915a05cb8885ec",
           emailID: emailID,
@@ -305,9 +284,8 @@ describe("/client API", () => {
         .expect(200);
       inviteID = res.body.data.inviteID;
     }
-    await request(app)
+    await agent
       .get(full_url("register/" + inviteID))
-      .set("Authorization", `Bearer ${token}`)
       .expect(302); // redirects to change password page
   });
 });
