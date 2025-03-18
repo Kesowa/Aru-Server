@@ -5,14 +5,14 @@ import { randomUUID } from "crypto";
 let agent: SuperAgentTest;
 
 beforeAll(async () => (agent = await LoginSuper()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("admin/package");
 
 describe("/package API", () => {
   test("POST /upload-poster", async () => {
     const res = await agent
       .post(full_url("upload-poster"))
-      .attach("poster", "/server/assets/image.png")
+      .attach("poster", "./assets/image.png")
       .expect(201);
 
     expect(res.body).toMatchObject({
@@ -27,7 +27,7 @@ describe("/package API", () => {
     {
       const res = await agent
         .post(full_url("upload-poster"))
-        .attach("poster", "/server/assets/image.png")
+        .attach("poster", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
     }
@@ -62,7 +62,7 @@ describe("/package API", () => {
       let filePath: string = "";
       const res1 = await agent
         .post(full_url("upload-poster"))
-        .attach("poster", "/server/assets/image.png")
+        .attach("poster", "./assets/image.png")
         .expect(201);
       filePath = res1.body.file;
 
@@ -101,7 +101,7 @@ describe("/package API", () => {
       let filePath: string = "";
       const res1 = await agent
         .post(full_url("upload-poster"))
-        .attach("poster", "/server/assets/image.png")
+        .attach("poster", "./assets/image.png")
         .expect(201);
       filePath = res1.body.file;
 
@@ -141,7 +141,7 @@ describe("/package API", () => {
       let filePath: string = "";
       const res1 = await agent
         .post(full_url("upload-poster"))
-        .attach("poster", "/server/assets/image.png")
+        .attach("poster", "./assets/image.png")
         .expect(201);
       filePath = res1.body.file;
 
@@ -197,7 +197,7 @@ describe("/package API", () => {
       let filePath: string = "";
       const res1 = await agent
         .post(full_url("upload-poster"))
-        .attach("poster", "/server/assets/image.png")
+        .attach("poster", "./assets/image.png")
         .expect(201);
       filePath = res1.body.file;
 

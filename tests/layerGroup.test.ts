@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 let agent: SuperAgentTest;
 
 beforeAll(async () => (agent = await Login()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("layergroup");
 
 describe("/layergroup API", () => {
@@ -14,7 +14,7 @@ describe("/layergroup API", () => {
     {
       const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -49,7 +49,7 @@ describe("/layergroup API", () => {
     for (let i = 0; i < 2; i++) {
       const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -94,7 +94,7 @@ describe("/layergroup API", () => {
     {
       const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -138,7 +138,7 @@ describe("/layergroup API", () => {
     {
       const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -182,7 +182,7 @@ describe("/layergroup API", () => {
     {
       const res = await agent
         .post(CurriedUrl("layer")("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")

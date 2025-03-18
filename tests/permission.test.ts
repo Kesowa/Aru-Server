@@ -7,7 +7,7 @@ let agent: SuperAgentTest;
 
 describe("/admin/permission API", () => {
   beforeAll(async () => (agent = await LoginSuper()));
-  afterAll(async () => Logout(agent));
+  afterAll(async () => await Logout(agent));
   const full_url = CurriedUrl("admin/permission");
 
   test("POST /create", async () => {
@@ -61,6 +61,7 @@ describe("/admin/permission API", () => {
 
 describe("/tenantroot/permission API", () => {
   beforeAll(async () => (agent = await Login()));
+  afterAll(async () => await Logout(agent));
   const full_url = CurriedUrl("tenantroot/permission");
 
   test("GET /tenant-permission-list", async () => {

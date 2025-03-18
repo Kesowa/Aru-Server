@@ -1,11 +1,11 @@
-import { CurriedUrl, LoginSuper, Logout } from "../config/utils";
+import { CurriedUrl, LoginSuper, Logout } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
 import { randomUUID } from "crypto";
 import { faker } from "@faker-js/faker";
 
 let agent: SuperAgentTest;
 beforeAll(async () => (agent = await LoginSuper()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("admin/tenant");
 
 const fakeTenant = {
@@ -25,7 +25,7 @@ describe("/tenant API", () => {
   test("POST /upload-avatar", async () => {
     const res = await agent
       .post(full_url("upload-avatar"))
-      .attach("avatar", "/server/assets/image.png")
+      .attach("avatar", "./assets/image.png")
       .expect(201);
 
     expect(res.body).toMatchObject({
@@ -40,7 +40,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
     }
@@ -68,7 +68,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
     }
@@ -97,7 +97,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -144,7 +144,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -177,7 +177,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -214,7 +214,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -252,7 +252,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -288,7 +288,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -319,7 +319,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -350,7 +350,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -382,7 +382,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 
@@ -414,7 +414,7 @@ describe("/tenant API", () => {
     {
       const res = await agent
         .post(full_url("upload-avatar"))
-        .attach("avatar", "/server/assets/image.png")
+        .attach("avatar", "./assets/image.png")
         .expect(201);
       filePath = res.body.file;
 

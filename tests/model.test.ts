@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 let agent: SuperAgentTest;
 
 beforeAll(async () => (agent = await Login()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("model");
 
 describe("/model API", () => {

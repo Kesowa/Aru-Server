@@ -5,7 +5,7 @@ import fs from "fs/promises";
 
 let agent: SuperAgentTest;
 beforeAll(async () => (agent = await Login()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("VOD");
 
 describe("/vod API", () => {
@@ -20,7 +20,7 @@ describe("/vod API", () => {
     const videoMetadata = Buffer.from(metadata.join("-")).toString("base64");
     const filename = videoMetadata + "-video.mp4";
     await fs.copyFile(
-      "/server/assets/video.mp4",
+      "./assets/video.mp4",
       "/server/src/public/vod/" + filename,
     );
     const res = await agent
@@ -45,7 +45,7 @@ describe("/vod API", () => {
       .field("locationID", "6123317cdaacac04cdb2d805") // exists in db
       .field("missionID", "61f3b1e65f915a05cb8885ec") // exists in db
       .field("flightID", "6267dd4b2a2d394080a20849") // exists in db
-      .attach("video", "/server/assets/video.mp4") // doesn't yet exist
+      .attach("video", "./assets/video.mp4") // doesn't yet exist
       .expect(200);
 
     expect(res.body).toMatchObject({
@@ -62,7 +62,7 @@ describe("/vod API", () => {
       .field("locationID", "6123317cdaacac04cdb2d805") // exists in db
       .field("missionID", "61f3b1e65f915a05cb8885ec") // exists in db
       .field("flightID", "6267dd4b2a2d394080a20849") // exists in db
-      .attach("video", "/server/assets/video.mp4") // doesn't yet exist
+      .attach("video", "./assets/video.mp4") // doesn't yet exist
       .expect(200);
     const res = await agent
       .patch(full_url("test-vod-inject"))

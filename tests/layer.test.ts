@@ -6,7 +6,7 @@ let agent: SuperAgentTest;
 
 beforeAll(async () => {
   agent = await Login();
-  afterAll(async () => Logout(agent));
+  afterAll(async () => await Logout(agent));
 });
 const full_url = CurriedUrl("layer");
 
@@ -56,7 +56,7 @@ describe("/layer API", () => {
   test("POST /create/Vector", async () => {
     const res = await agent
       .post(full_url("create/Vector"))
-      .attach("file", "/server/assets/poles.geojson")
+      .attach("file", "./assets/poles.geojson")
       .field("name", randomUUID())
       .field("type", "Vector")
       .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -95,7 +95,7 @@ describe("/layer API", () => {
   test("POST /create/Raster", async () => {
     const res = await agent
       .post(full_url("create/Raster"))
-      .attach("file", "/server/assets/Ortho_25cm.tif")
+      .attach("file", "./assets/Ortho_25cm.tif")
       .field("name", randomUUID())
       .field("type", "Raster")
       .field("raster", "60c3138f4764fb024a3c1a59")
@@ -116,7 +116,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -130,7 +130,7 @@ describe("/layer API", () => {
     }
     const res = await agent
       .post(full_url("upload-file-to-layer"))
-      .attach("file", "/server/assets/image.png")
+      .attach("file", "./assets/image.png")
       .field("layerId", created_layers[0]._id)
       .expect(201);
 
@@ -147,7 +147,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -161,7 +161,7 @@ describe("/layer API", () => {
 
       const res2 = await agent
         .post(full_url("upload-file-to-layer"))
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
       created_layerFiles.push(res2.body.data);
@@ -186,7 +186,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -219,7 +219,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -251,7 +251,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -282,7 +282,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -312,7 +312,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Raster"))
-        .attach("file", "/server/assets/Ortho_25cm.tif")
+        .attach("file", "./assets/Ortho_25cm.tif")
         .field("name", randomUUID())
         .field("type", "Raster")
         .field("raster", "60c3138f4764fb024a3c1a59")
@@ -341,7 +341,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -372,7 +372,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -403,7 +403,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -439,7 +439,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -453,7 +453,7 @@ describe("/layer API", () => {
 
       await agent
         .post(full_url("upload-file-to-layer"))
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
     }
@@ -474,7 +474,7 @@ describe("/layer API", () => {
   test("POST /filter-layer", async () => {
     await agent
       .post(full_url("create/Vector"))
-      .attach("file", "/server/assets/poles.geojson")
+      .attach("file", "./assets/poles.geojson")
       .field("name", randomUUID())
       .field("type", "Vector")
       .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -545,7 +545,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -577,7 +577,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -609,7 +609,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -623,9 +623,9 @@ describe("/layer API", () => {
     }
     const res = await agent
       .patch(full_url("auto-assign-uploaded-image"))
-      .attach("file", "/server/assets/image.png")
-      .attach("file", "/server/assets/image.png")
-      .attach("file", "/server/assets/image.png")
+      .attach("file", "./assets/image.png")
+      .attach("file", "./assets/image.png")
+      .attach("file", "./assets/image.png")
       .field("Id", created_layers[0]._id)
       .field("radius", "100")
       .expect(201);
@@ -642,7 +642,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -656,7 +656,7 @@ describe("/layer API", () => {
 
       const res2 = await agent
         .post(full_url("upload-file-to-layer"))
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
       created_layerFiles.push(res2.body.data);
@@ -679,7 +679,7 @@ describe("/layer API", () => {
   test("POST /pick-to-map-for-layer", async () => {
     const res = await agent
       .post(full_url("pick-to-map-for-layer"))
-      .attach("file", "/server/assets/image.png")
+      .attach("file", "./assets/image.png")
       .field("name", randomUUID())
       .field("type", "Vector")
       .field("vectorId", "60c3a3c5ca0cbe039fce0d64")
@@ -699,7 +699,7 @@ describe("/layer API", () => {
   //     {
   //         const res = await agent
   //         .post(full_url("create/Vector"))
-  //         .attach("file", "/server/assets/poles.geojson")
+  //         .attach("file", "./assets/poles.geojson")
   //         .field("name", randomUUID())
   //         .field("type", "Vector")
   //         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -713,7 +713,7 @@ describe("/layer API", () => {
   //     }
   //     const res = await agent
   //         .patch(full_url("upload-file-geojson"))
-  //         .attach("file", "/server/assets/image.png")
+  //         .attach("file", "./assets/image.png")
   //         .field("layerId", created_layers[0]._id)
   //         .field("sys_id", "abcdefg")
   //         .field("type", "image/png")
@@ -736,7 +736,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -769,7 +769,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -799,7 +799,7 @@ describe("/layer API", () => {
   test("PATCH /add-isReview-to-layerFiles", async () => {
     await agent
       .post(full_url("create/Vector"))
-      .attach("file", "/server/assets/poles.geojson")
+      .attach("file", "./assets/poles.geojson")
       .field("name", randomUUID())
       .field("type", "Vector")
       .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -822,7 +822,7 @@ describe("/layer API", () => {
   test("PATCH /gen_2x_layerfiles", async () => {
     await agent
       .post(full_url("create/Vector"))
-      .attach("file", "/server/assets/poles.geojson")
+      .attach("file", "./assets/poles.geojson")
       .field("name", randomUUID())
       .field("type", "Vector")
       .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -847,7 +847,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -878,7 +878,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -910,7 +910,7 @@ describe("/layer API", () => {
     {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")
@@ -924,7 +924,7 @@ describe("/layer API", () => {
 
       const res2 = await agent
         .post(full_url("upload-file-to-layer"))
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .field("layerId", created_layers[0]._id)
         .expect(201);
       created_layerFiles.push(res2.body.data);
@@ -949,7 +949,7 @@ describe("/layer API", () => {
     for (let i = 1; i <= 2; i++) {
       const res = await agent
         .post(full_url("create/Vector"))
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .field("name", randomUUID())
         .field("type", "Vector")
         .field("vector", "60c3a3c5ca0cbe039fce0d64")

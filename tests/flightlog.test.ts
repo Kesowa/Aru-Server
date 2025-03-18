@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 let agent: SuperAgentTest;
 
 beforeAll(async () => (agent = await Login()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("flightlog");
 
 const sampleGeoFence = {
@@ -26,7 +26,7 @@ describe("/flightlog API", () => {
   test("POST /create", async () => {
     const res = await agent
       .post(full_url("create"))
-      .attach("file", "/server/assets/image.png")
+      .attach("file", "./assets/image.png")
       .field("date", Date())
       .field("time", "21:30:30")
       .field("missionID", "61f3b1e65f915a05cb8885ec")
@@ -52,7 +52,7 @@ describe("/flightlog API", () => {
     {
       const res = await agent
         .post(full_url("create"))
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .field("date", Date())
         .field("time", "21:30:30")
         .field("missionID", "61f3b1e65f915a05cb8885ec")
@@ -86,7 +86,7 @@ describe("/flightlog API", () => {
     {
       const res = await agent
         .post(full_url("create"))
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .field("date", Date())
         .field("time", "21:30:30")
         .field("missionID", "61f3b1e65f915a05cb8885ec")
@@ -121,7 +121,7 @@ describe("/flightlog API", () => {
     {
       const res = await agent
         .post(full_url("create"))
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .field("date", Date())
         .field("time", "21:30:30")
         .field("missionID", "61f3b1e65f915a05cb8885ec")

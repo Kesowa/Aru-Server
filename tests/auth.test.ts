@@ -1,5 +1,5 @@
 import { SuperAgentTest } from "supertest";
-import { Login, Logout } from "../config/utils";
+import { Login, Logout } from "./utils/utils";
 
 describe("/auth API", () => {
   let agent: SuperAgentTest;

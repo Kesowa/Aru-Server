@@ -7,7 +7,7 @@ const full_url = CurriedUrl("assetclass");
 
 describe("/assetclass API SuperAdmin", () => {
   beforeAll(async () => (agent = await LoginSuper()));
-  afterAll(async () => Logout(agent));
+  afterAll(async () => await Logout(agent));
   const created_assetclasses: any = [];
   test("POST /create", async () => {
     const res = await agent
@@ -83,6 +83,7 @@ describe("/assetclass API SuperAdmin", () => {
 
 describe("/assetclass API TenantRoot", () => {
   beforeAll(async () => (agent = await Login()));
+  afterAll(async () => await Logout(agent));
   const existing_assetclasses: any = [];
   test("GET /get", async () => {
     const res = await agent

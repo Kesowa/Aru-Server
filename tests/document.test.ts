@@ -4,7 +4,7 @@ import {SuperAgentTest} from "supertest";
 let agent: SuperAgentTest;
 
 beforeAll(async () => (agent = await Login()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("document");
 
 describe("/document API", () => {
@@ -14,7 +14,7 @@ describe("/document API", () => {
       .field("missionId", "61f3b1e65f915a05cb8885ec")
       .field("folderName", "rawPhotos")
       .field("type", "image/png")
-      .attach("file", "/server/assets/image.png")
+      .attach("file", "./assets/image.png")
       .expect(201);
 
     expect(res.body).toMatchObject({
@@ -32,7 +32,7 @@ describe("/document API", () => {
         .field("missionId", "61f3b1e65f915a05cb8885ec")
         .field("folderName", "rawPhotos")
         .field("type", "image/png")
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .expect(201);
       created_docs.push(res.body.data);
     }
@@ -58,7 +58,7 @@ describe("/document API", () => {
         .field("missionId", "61f3b1e65f915a05cb8885ec")
         .field("folderName", "rawPhotos")
         .field("type", "image/png")
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .expect(201);
       created_docs.push(res.body.data);
     }
@@ -82,7 +82,7 @@ describe("/document API", () => {
       .field("missionId", "61f3b1e65f915a05cb8885ec")
       .field("folderName", "rawPhotos")
       .field("type", "image/png")
-      .attach("file", "/server/assets/image.png")
+      .attach("file", "./assets/image.png")
       .expect(201);
     const res = await agent
       .patch(full_url("update-size-for-exist-doc"))
@@ -102,7 +102,7 @@ describe("/document API", () => {
         .field("missionId", "61f3b1e65f915a05cb8885ec")
         .field("folderName", "rawPhotos")
         .field("type", "image/png")
-        .attach("file", "/server/assets/image.png")
+        .attach("file", "./assets/image.png")
         .expect(201);
       created_doc = res.body.data;
     }

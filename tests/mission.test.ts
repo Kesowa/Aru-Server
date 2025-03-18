@@ -8,7 +8,7 @@ const full_url = CurriedUrl("mission");
 
 describe("/mission API", () => {
   beforeAll(async () => (agent = await Login()));
-  afterAll(async () => Logout(agent));
+  afterAll(async () => await Logout(agent));
 
   test("POST /create", async () => {
     const res = await agent

@@ -5,7 +5,7 @@ import { faker } from "@faker-js/faker";
 
 let agent: SuperAgentTest;
 beforeAll(async () => (agent = await Login()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("tenant/user");
 
 const fakeUser = {
@@ -20,7 +20,7 @@ describe("/user API", () => {
   test("POST /upload-profile-picture", async () => {
     const res = await agent
       .post(full_url("upload-profile-picture"))
-      .attach("avatar", "/server/assets/image.png")
+      .attach("avatar", "./assets/image.png")
       .expect(201);
 
     expect(res.body).toMatchObject({

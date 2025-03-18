@@ -3,7 +3,7 @@ import { CurriedUrl, Login, Logout } from "./utils/utils";
 
 let agent: SuperAgentTest;
 beforeAll(async () => (agent = await Login()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("alert");
 
 describe("/alert API", () => {
@@ -13,7 +13,7 @@ describe("/alert API", () => {
   test("POST /upload-alert-image", async () => {
     const res = await agent
       .post(full_url("upload-alert-image"))
-      .attach("image", "/server/assets/image.png")
+      .attach("image", "./assets/image.png")
       .expect(201);
 
     expect(res.body).toMatchObject({
@@ -57,7 +57,7 @@ describe("/alert API", () => {
   test("POST /manual-upload-alert", async () => {
     const res = await agent
       .post(full_url("manual-upload-alert"))
-      .attach("image", "/server/assets/image.png")
+      .attach("image", "./assets/image.png")
       .field("missionId", "6267dd4b2a2d394080a20848")
       .field("flightId", "6267dd4b2a2d394080a20849")
       .field("locationName", "Address of location")
@@ -81,7 +81,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -113,7 +113,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -150,7 +150,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -182,7 +182,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -218,7 +218,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -251,7 +251,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -296,7 +296,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -333,7 +333,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -366,7 +366,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")
@@ -398,7 +398,7 @@ describe("/alert API", () => {
     {
       const res = await agent
         .post(full_url("manual-upload-alert"))
-        .attach("image", "/server/assets/image.png")
+        .attach("image", "./assets/image.png")
         .field("missionId", "6267dd4b2a2d394080a20848")
         .field("flightId", "6267dd4b2a2d394080a20849")
         .field("locationName", "Address of location")

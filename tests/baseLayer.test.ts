@@ -6,7 +6,7 @@ let agent: SuperAgentTest;
 
 beforeAll(async () => {
   agent = await Login();
-  afterAll(async () => Logout(agent));
+  afterAll(async () => await Logout(agent));
 });
 const full_url = CurriedUrl("baselayer");
 
@@ -64,7 +64,7 @@ describe("/baselayer API", () => {
       .field("inHeritOriginalColorFromFile", "false")
       .field("color", "#000000")
       .field("icon", "")
-      .attach("file", "/server/assets/poles.geojson")
+      .attach("file", "./assets/poles.geojson")
       .expect(201);
 
     expect(res.body).toMatchObject({
@@ -86,7 +86,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#00ff00")
         .field("icon", "")
-        .attach("file", "/server/assets/solar.geojson")
+        .attach("file", "./assets/solar.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
@@ -151,7 +151,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#000000")
         .field("icon", "")
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
@@ -187,7 +187,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#000000")
         .field("icon", "")
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
@@ -217,7 +217,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#00ff00")
         .field("icon", "")
-        .attach("file", "/server/assets/solar.geojson")
+        .attach("file", "./assets/solar.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
@@ -246,7 +246,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#000000")
         .field("icon", "")
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
@@ -275,7 +275,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#000000")
         .field("icon", "")
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
@@ -306,7 +306,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#000000")
         .field("icon", "")
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
     }
@@ -397,7 +397,7 @@ describe("/baselayer API", () => {
     const res = await agent
       .post(full_url("upload-to-update-base-layer/Vector"))
       .field("baseLayer", base_layer)
-      .attach("file", "/server/assets/sampleData.geojson")
+      .attach("file", "./assets/sampleData.geojson")
       .expect(200);
     expect(res.body).toMatchObject({
       success: true,
@@ -465,7 +465,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#000000")
         .field("icon", "")
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
       layer.layerpath = res.body.data.layer.layerpath;
@@ -495,7 +495,7 @@ describe("/baselayer API", () => {
       .field("type", "Raster")
       .field("raster", "60c3138f4764fb024a3c1a59")
       .field("captureDate", "2022-07-29")
-      .attach("file", "/server/assets/Ortho_25cm.tif")
+      .attach("file", "./assets/Ortho_25cm.tif")
       .expect(201);
 
     expect(res.body).toMatchObject({
@@ -513,7 +513,7 @@ describe("/baselayer API", () => {
         .field("type", "Raster")
         .field("raster", "60c3138f4764fb024a3c1a59")
         .field("captureDate", "2022-07-29")
-        .attach("file", "/server/assets/Ortho_25cm.tif")
+        .attach("file", "./assets/Ortho_25cm.tif")
         .expect(201);
       created_layer_ids.push(res.body.data._id);
     }
@@ -543,7 +543,7 @@ describe("/baselayer API", () => {
         .field("type", "Raster")
         .field("raster", "60c3138f4764fb024a3c1a59")
         .field("captureDate", "2022-07-29")
-        .attach("file", "/server/assets/Ortho_25cm.tif")
+        .attach("file", "./assets/Ortho_25cm.tif")
         .expect(201);
       base_layer = res.body.data._id;
       created_layer_ids.push(res.body.data._id);
@@ -551,7 +551,7 @@ describe("/baselayer API", () => {
     const res = await agent
       .patch(full_url("updateRasterLayerUpload/Raster"))
       .field("layerId", base_layer)
-      .attach("file", "/server/assets/Ortho_25cm.tif")
+      .attach("file", "./assets/Ortho_25cm.tif")
       .expect(200);
     expect(res.body).toMatchObject({
       status: true,
@@ -569,7 +569,7 @@ describe("/baselayer API", () => {
         .field("type", "Raster")
         .field("raster", "60c3138f4764fb024a3c1a59")
         .field("captureDate", "2022-07-29")
-        .attach("file", "/server/assets/Ortho_25cm.tif")
+        .attach("file", "./assets/Ortho_25cm.tif")
         .expect(201);
       base_layer = res.body.data._id;
     }
@@ -598,7 +598,7 @@ describe("/baselayer API", () => {
         .field("inHeritOriginalColorFromFile", "false")
         .field("color", "#000000")
         .field("icon", "")
-        .attach("file", "/server/assets/poles.geojson")
+        .attach("file", "./assets/poles.geojson")
         .expect(201);
       created_layers.push(res.body.data.layer);
     }

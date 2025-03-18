@@ -4,7 +4,7 @@ import {SuperAgentTest} from "supertest";
 let agent: SuperAgentTest;
 
 beforeAll(async () => (agent = await Login()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("streamtoken");
 
 describe("/streamtoken API", () => {

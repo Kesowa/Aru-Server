@@ -1,11 +1,11 @@
-import { CurriedUrl, Login, LoginSuper, Logout} from "./utils/utils";
+import { CurriedUrl, LoginSuper, Logout} from "./utils/utils";
 import {SuperAgentTest} from "supertest";
 import { randomUUID } from "crypto";
 
 let agent: SuperAgentTest;
 
 beforeAll(async () => (agent = await LoginSuper()));
-afterAll(async () => Logout(agent));
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("common/missiontype");
 
 describe("/common/missiontype API", () => {
