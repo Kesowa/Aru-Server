@@ -1,5 +1,5 @@
 import { Request, Router } from "express";
-import { Types } from "ts-openapi";
+import { bodySchema, Types } from "ts-openapi";
 
 import openApi from "./openApi";
 import Document from "../../models/document";
@@ -111,8 +111,7 @@ openApi.addPath(
       },
       tags: ["Document API"],
       responses: {
-        200: openApi.declareSchema(
-          "successful response",
+        200: bodySchema(
           Types.Object({
             description: "Successful Operation",
             properties: {
