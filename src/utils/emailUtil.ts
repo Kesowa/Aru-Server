@@ -1,14 +1,17 @@
 import nodemailer from "nodemailer";
 
 import {
+    Mode,
+    MODE,
   SMTP_PASSWORD,
   SMTP_PORT,
   SMTP_SERVER,
   SMTP_USERNAME,
 } from "../constants";
+import { logger } from "../app";
 
 //create transporter
-const transporter = nodemailer.createTransport({
+const transporter = MODE == Mode.Prod ? nodemailer.createTransport({
   host: SMTP_SERVER,
   port: Number(SMTP_PORT) || 25,
   secure: false,
@@ -16,7 +19,11 @@ const transporter = nodemailer.createTransport({
     user: SMTP_USERNAME,
     pass: SMTP_PASSWORD,
   },
-});
+}) : {
+  sendMail: function(mail: any) {
+    logger.info(mail, "Got mail!");
+  }
+};
 
 export const sendMail = async (
   emailTo: string,

@@ -2,6 +2,7 @@ import { CurriedUrl, LoginSuper, Logout } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
 import { randomUUID } from "crypto";
 import { faker } from "@faker-js/faker";
+import { RegisterTenant } from "./utils/tenant";
 
 let agent: SuperAgentTest;
 beforeAll(async () => (agent = await LoginSuper()));
@@ -14,7 +15,7 @@ const fakeTenant = {
   officialWebsite: faker.internet.domainName(),
   gstNumber: Math.floor(Math.random() * 1000),
   billingAddressLine1: faker.address.secondaryAddress(),
-  billingAddressLine2: faker.address.streetName(),
+  billingAddressLine2: faker.address.streetAddress(),
   billingCity: faker.address.cityName(),
   billingDistrict: faker.address.cityName(),
   billingState: faker.address.state(),
@@ -64,31 +65,7 @@ describe("/tenant API", () => {
   });
 
   test("POST /register-tenant", async () => {
-    let filePath: string = "";
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
-    }
-    const res = await agent
-      .post(full_url("register-tenant"))
-      .send({
-        ...fakeTenant,
-        name: faker.name.fullName(),
-        phoneNo: faker.phone.number("8#########"),
-        email: faker.internet.email(),
-        package: "608e7a7ee11f711a34fb0474", // exists in db
-        avatar: filePath,
-        password: randomUUID(),
-      })
-      .expect(200);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "Verification code has been sent to your email.",
-    });
+    await RegisterTenant();
   });
 
   test("POST /resend-verification-code", async () => {
