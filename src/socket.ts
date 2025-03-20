@@ -8,7 +8,24 @@ import { notificationIoController } from "./socketControllers/v1/notificationCon
 
 export let notificationSocket: Namespace;
 export let missionSpecificSocket: Namespace;
+
+function RoomGuard(io: Namespace) {
+  io.use((socket, next) => {
+    const session = socket.request["session"];
+    if (session?.user) {
+      socket.request.log.info("socket.io user authenticated");
+      next();
+    } else {
+      socket.request.log.error("socket.io user invalid");
+      socket.disconnect(true);
+      next(new Error("socket.io user invalid"))
+    }
+  })
+
+}
+
 export const ioHandler = (io: Server) => {
+
   //to stream drone location
   const droneLocationStreamingIo = io.of("/stream/dronelocation");
   droneLocationIoController(droneLocationStreamingIo);
@@ -18,6 +35,7 @@ export const ioHandler = (io: Server) => {
 
   const notificationIo = io.of("/stream/notification");
   notificationSocket = notificationIo;
+  RoomGuard(notificationIo);
   notificationIoController(notificationIo);
 
   const missionIo = io.of("/stream/mission-specific");

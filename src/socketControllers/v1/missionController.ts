@@ -8,7 +8,7 @@ const joinRoomByMissionID = (socket: Socket, next: (err?: any) => void) => {
   const missionID = socket.handshake.query.missionID;
   if (missionID) {
     socket.join(missionID);
-    console.log(
+    console.info(
       `missionID : ${missionID} joined mission specific Socket with sid: ${socket.id}`,
     );
     next();
