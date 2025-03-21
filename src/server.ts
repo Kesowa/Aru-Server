@@ -34,10 +34,20 @@ const worker = async () => {
       methods: ["GET", "POST"],
       credentials: true,
     },
+    cookie: true,
   });
 
   io.engine.use(sessionMiddleware);
-  io.engine.use(loggerMiddleware);
+  io.engine.use((req, res, next) => {
+    const session = req["session"];
+    if (session?.user) {
+      logger.info(session.user, "socket.io user authenticated");
+      next();
+    } else {
+      logger.error("socket.io user invalid");
+      next(new Error("socket.io user invalid"))
+    }
+  });
 
   const amqpConnection = await connect(RABBITMQ_CONNECTION_STRING);
 
