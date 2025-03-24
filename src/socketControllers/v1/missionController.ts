@@ -5,6 +5,11 @@ export const missionIoController = (io: Namespace) => {
 };
 
 const joinRoomByMissionID = (socket: Socket, next: (err?: any) => void) => {
+  const tenantID = socket.request["session"]?.user?.tenant;
+  if (!tenantID) {
+    next(new Error("user not authenticated"));
+    return
+  }
   const missionID = socket.handshake.query.missionID;
   if (missionID) {
     socket.join(missionID);

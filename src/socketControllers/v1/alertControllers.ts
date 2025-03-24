@@ -147,11 +147,16 @@ const alertSocketController = (alertSocket: Namespace) => {
 };
 
 const joinRoomByType = (socket: Socket, next: (err?: any) => void) => {
+  const tenantID = socket.request["session"]?.user?.tenant;
+  if (!tenantID) {
+    next(new Error("user not authenticated"));
+    return
+  }
   if (socket.handshake.query && socket.handshake.query.type == "AI_SERVER") {
     console.log(`AI Registered with ${socket.id}`);
-    socket.join("AI_ROOM");
+    socket.join(`${tenantID}-AI_ROOM`);
   } else {
-    socket.join("CLIENT_ROOM");
+    socket.join(`${tenantID}-CLIENT_ROOM`);
     console.log(`CLIENT Registered with ${socket.id}`);
   }
   next();

@@ -122,30 +122,26 @@ const joinRoomByStreamKey = async (
   socket: Socket,
   next: (err?: any) => void,
 ) => {
+  const tenantID = socket.request["session"]?.user?.tenant;
+  if (!tenantID) {
+    next(new Error("user not authenticated"));
+    return
+  }
   if (socket.handshake.query.type == "MavDrone") {
-    const asset = await Asset.findOne({
-      "assetInfo.UIN": socket.handshake.query.UIN,
-    });
-    const tenantId = asset.tenantID;
-    if (tenantId) {
-      const mav = "mavdrone" + String(tenantId);
-      socket.join(mav);
-      addUser(Drons, { id: String(socket.handshake.query.UIN) });
-      const UIN: string =
-        typeof socket.handshake.query.UIN == "string"
-          ? socket.handshake.query.UIN
-          : socket.handshake.query.UIN[0];
-      drones.set(UIN, socket);
-      console.log(
-        `Drone connected with UIN:${socket.handshake.query.UIN} and sockedId ${socket.id}`,
-      );
-      next();
-    } else {
-      console.log(`Tenant verification failed`);
-      socket.disconnect();
-    }
+    const mav = "mavdrone" + String(tenantID);
+    socket.join(mav);
+    addUser(Drons, { id: String(socket.handshake.query.UIN) });
+    const UIN: string =
+      typeof socket.handshake.query.UIN == "string"
+        ? socket.handshake.query.UIN
+        : socket.handshake.query.UIN[0];
+    drones.set(UIN, socket);
+    console.log(
+      `Drone connected with UIN:${socket.handshake.query.UIN} and sockedId ${socket.id}`,
+    );
+    next();
   } else if (socket.handshake.query.tenantID) {
-    const clientEnt = "client" + String(socket.handshake.query.tenantID);
+    const clientEnt = "client" + String(tenantID);
     socket.join(clientEnt);
     addUser(streamers, { id: socket.id });
     console.log("oiiiiiiii room connected");

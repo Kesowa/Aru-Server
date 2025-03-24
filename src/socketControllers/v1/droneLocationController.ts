@@ -162,12 +162,17 @@ const Auth = (socket: Socket, next: (err?: ExtendedError) => void) => {
 };
 
 const joinRoomByStreamKey = (socket: Socket, next: Function) => {
+  const tenantID = socket.request["session"]?.user?.tenant;
+  if (!tenantID) {
+    next(new Error("user not authenticated"));
+    return
+  }
   const streamKey: string =
     typeof socket.handshake.query.streamKey == "string"
       ? socket.handshake.query.streamKey
       : socket.handshake.query.streamKey[0];
   if (streamKey) {
-    socket.join(streamKey);
+    socket.join(tenantID + "-" + streamKey);
     console.log(
       `streamKey : ${streamKey} joined stream key specific Socket with sid: ${socket.id}`,
     );
