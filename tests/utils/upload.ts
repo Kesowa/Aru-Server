@@ -43,6 +43,7 @@ export async function uploadFile(
   })
 
   expect(uploadRes.status).toBe(204);
+  expect(res.body.data._id).toBeDefined();
 
   return res.body.data._id;
 }
