@@ -1,7 +1,6 @@
 import { Request } from "express";
 
 import assetClassModel from "../../models/assetClass";
-import { notificationSocket } from "../../socket";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { serverError } from "../../utils/requestHelpers";
 
@@ -12,9 +11,6 @@ export const createAssetClass = async (req: Request, res: AuthResponse) => {
     createdBy: res.locals.user._id,
   });
   const dbResp = await assetClass.save();
-  notificationSocket
-    .to(String(res.locals.user.tenantId._id))
-    .emit("CREATE_ASSET", dbResp);
   if (dbResp) {
     return res.status(201).json({
       status: true,
@@ -39,9 +35,6 @@ export const updateAssetClass = async (req: Request, res: AuthResponse) => {
   if (docFound) {
     docFound.typeName = req.body.typeName;
     const savedDoc = await docFound.save();
-    notificationSocket
-      .to(String(res.locals.user.tenantId._id))
-      .emit("UPDATE_ASSET", savedDoc);
     res.json({
       status: true,
       message: "Sucessfully updated the assetClass",
@@ -58,9 +51,6 @@ export const updateAssetClass = async (req: Request, res: AuthResponse) => {
 export const removeAssetClass = async (req: Request, res: AuthResponse) => {
   const deletedDoc = await assetClassModel.findByIdAndDelete(req.body.id);
   if (deletedDoc) {
-    notificationSocket
-      .to(String(res.locals.user.tenantId._id))
-      .emit("DELETE_ASSET", deletedDoc);
     res.json({
       status: true,
       message: "Doc successfully deleted",

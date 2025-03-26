@@ -6,17 +6,28 @@ const USER = {
   password: "fsipl1@3$",
 }
 
-export const Login = async () => {
+const SUPER_USER = {
+  email: "admin@kesowa.com",
+  password: "fsipl1@3$",
+}
+
+async function login(user: { email: string, password: string }) {
   const agent = request.agent(APP_URL);
   await agent
     .post(CurriedUrl("auth")("login"))
-    .send(USER)
+    .send(user)
     .expect(200);
 
   return agent;
 };
 
-export const LoginSuper = Login;
+export async function Login() {
+  return await login(USER);
+};
+
+export async function LoginSuper() {
+  return await login(SUPER_USER);
+};
 
 export const Logout = async (agent: SuperAgentTest) => {
   await agent

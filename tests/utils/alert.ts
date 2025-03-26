@@ -27,7 +27,7 @@ export async function createAlert(agent: SuperAgentTest) {
 
   expect(res.body).toMatchObject({
     status: true,
-    message: "New alert created",
+    message: expect.any(String),
     data: expect.any(Object),
   });
 

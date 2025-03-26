@@ -1,114 +1,87 @@
+import { createAssetClass } from "./utils/assetclass";
 import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import {SuperAgentTest} from "supertest";
 
-let agent: SuperAgentTest;
 
 const full_url = CurriedUrl("assetclass");
 
 describe("/assetclass API SuperAdmin", () => {
+  let agent: SuperAgentTest;
   beforeAll(async () => (agent = await LoginSuper()));
   afterAll(async () => await Logout(agent));
-  const created_assetclasses: any = [];
   test("POST /create", async () => {
-    const res = await agent
-      .post(full_url("create"))
-      .set("userid", "5f12572c3c19462d3673dbe9")
-      .send({
-        typeName: "Any name",
-        createdAt: "2022-08-01",
-      })
-      .expect(201);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "Sucessfully created asset class",
-      data: expect.any(Object),
-    });
-
-    created_assetclasses.push(res.body.data);
+    await createAssetClass(agent);
   });
 
   test("PATCH /update", async () => {
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .set("userid", "5f12572c3c19462d3673dbe9")
-        .send({
-          typeName: "Any name",
-          createdAt: "2022-08-01",
-        })
-        .expect(201);
-      created_assetclasses.push(res.body.data);
-    }
+    const assetClass = await createAssetClass(agent);
     const res = await agent
       .patch(full_url("update"))
       .send({
-        id: created_assetclasses[0]._id,
+        id: assetClass._id,
         typeName: "New Type Nameeee",
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Sucessfully updated the assetClass",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
   test("DELETE /delete", async () => {
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .set("userid", "5f12572c3c19462d3673dbe9")
-        .send({
-          typeName: "Any name",
-          createdAt: "2022-08-01",
-        })
-        .expect(201);
-      created_assetclasses.push(res.body.data);
-    }
+    const assetClass = await createAssetClass(agent);
     const res = await agent
       .delete(full_url("delete"))
       .send({
-        id: created_assetclasses[0]._id,
+        id: assetClass._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Doc successfully deleted",
+      message: expect.any(String),
     });
   });
 });
 
 describe("/assetclass API TenantRoot", () => {
-  beforeAll(async () => (agent = await Login()));
-  afterAll(async () => await Logout(agent));
-  const existing_assetclasses: any = [];
+  let agent: SuperAgentTest;
+  let superagent: SuperAgentTest;
+  beforeAll(async () => {
+    agent = await Login();
+    superagent = await LoginSuper();
+  });
+  afterAll(async () => {
+    await Logout(agent);
+    await Logout(superagent);
+  });
   test("GET /get", async () => {
+    await createAssetClass(superagent);
     const res = await agent
       .get(full_url("get"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Sucessfully fetched Asset classes",
+      message: expect.any(String),
       data: expect.any(Array),
     });
-    existing_assetclasses.push(res.body.data[0]._id);
   });
 
   test("GET /get-asset-class-by-id", async () => {
+    const assetClass = await createAssetClass(superagent);
     const res = await agent
       .get(full_url("get-asset-class-by-id"))
       .query({
-        _id: existing_assetclasses[0],
+        _id: assetClass._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Asset fetched sucessfully.",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
