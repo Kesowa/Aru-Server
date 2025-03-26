@@ -87,6 +87,8 @@ export const logger: Logger = pino({
 export default function app(mongo: Connection) {
   const app: Application = express();
 
+  app.disable("x-powered-by");
+
   const limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
     limit: 250,
@@ -103,6 +105,13 @@ export default function app(mongo: Connection) {
   app.use(
     helmet({
       frameguard: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["none"],
+          frameAncestors: ["none"],
+          formAction: ["self"],
+        }
+      },
     }),
   );
   app.use(
