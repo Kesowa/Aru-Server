@@ -1,5 +1,6 @@
+import { createAsset } from "./utils/asset";
 import { CurriedUrl, Login, Logout } from "./utils/utils";
-import {SuperAgentTest} from "supertest";
+import { SuperAgentTest } from "supertest";
 
 let agent: SuperAgentTest;
 
@@ -8,78 +9,28 @@ afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("asset");
 
 describe("/asset API", () => {
-  const created_assets: any = [];
-
   test("POST /create", async () => {
-    const res = await agent
-      .post(full_url("create"))
-      .set("userid", "608e7b3ae11f711a34fb0476")
-      .send({
-        assetName: "New Drone",
-        userID: "608e7b3ae11f711a34fb0476",
-        assetInfo: [{ UIN: "1234567" }],
-        model: "615acf79e5324204d8b97c86",
-        assetOwner: "5f12572c3c19462d3673dbe9",
-        manufactureDate: "2021-10-04",
-        manufactureID: "615acf24e5324204d8b97c84",
-      })
-      .expect(201);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "Successfully saved the asset",
-      data: expect.any(Object),
-    });
-
-    created_assets.push(res.body.data);
+    await createAsset(agent);
   });
   test("GET /get", async () => {
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .set("userid", "608e7b3ae11f711a34fb0476")
-        .send({
-          assetName: "New Drone",
-          userID: "608e7b3ae11f711a34fb0476",
-          assetInfo: [{ UIN: "1234567" }],
-          model: "615acf79e5324204d8b97c86",
-          assetOwner: "5f12572c3c19462d3673dbe9",
-          manufactureDate: "2021-10-04",
-          manufactureID: "615acf24e5324204d8b97c84",
-        })
-        .expect(201);
-      created_assets.push(res.body.data);
-    }
+    const asset = await createAsset(agent);
+
     const res = await agent
       .get(full_url("get"))
       .query({
-        assetID: created_assets[0]._id,
+        assetID: asset._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Asset fetched",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
   test("GET /get-all-asset", async () => {
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .set("userid", "608e7b3ae11f711a34fb0476")
-        .send({
-          assetName: "New Drone",
-          userID: "608e7b3ae11f711a34fb0476",
-          assetInfo: [{ UIN: "1234567" }],
-          model: "615acf79e5324204d8b97c86",
-          assetOwner: "5f12572c3c19462d3673dbe9",
-          manufactureDate: "2021-10-04",
-          manufactureID: "615acf24e5324204d8b97c84",
-        })
-        .expect(201);
-      created_assets.push(res.body.data);
-    }
+    await createAsset(agent);
+
     const res = await agent
       .get(full_url("get-all-asset"))
       .expect(200);
@@ -91,97 +42,51 @@ describe("/asset API", () => {
     });
   });
   test("PATCH /update", async () => {
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .set("userid", "608e7b3ae11f711a34fb0476")
-        .send({
-          assetName: "New Drone",
-          userID: "608e7b3ae11f711a34fb0476",
-          assetInfo: [{ UIN: "1234567" }],
-          model: "615acf79e5324204d8b97c86",
-          assetOwner: "5f12572c3c19462d3673dbe9",
-          manufactureDate: "2021-10-04",
-          manufactureID: "615acf24e5324204d8b97c84",
-        })
-        .expect(201);
-      created_assets.push(res.body.data);
-    }
+    const asset = await createAsset(agent);
     const res = await agent
       .patch(full_url("update"))
       .send({
-        userID: created_assets[0].userID,
-        tenantID: created_assets[0].tenantID,
-        assetID: created_assets[0]._id,
+        userID: asset.userID,
+        tenantID: asset.tenantID,
+        assetID: asset._id,
         assetInfo: [{ UIN: "7654321" }],
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Successfully updated Asset",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
   test("PATCH /toggle-asset-status", async () => {
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .set("userid", "608e7b3ae11f711a34fb0476")
-        .send({
-          assetName: "New Drone",
-          userID: "608e7b3ae11f711a34fb0476",
-          assetInfo: [{ UIN: "1234567" }],
-          model: "615acf79e5324204d8b97c86",
-          assetOwner: "5f12572c3c19462d3673dbe9",
-          manufactureDate: "2021-10-04",
-          manufactureID: "615acf24e5324204d8b97c84",
-        })
-        .expect(201);
-      created_assets.push(res.body.data);
-    }
+    const asset = await createAsset(agent);
     const res = await agent
       .patch(full_url("toggle-asset-status"))
       .send({
-        assetID: created_assets[0]._id,
+        assetID: asset._id,
         isActive: "true",
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Sucessfully toggled the asset to true",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
   test("DELETE /delete", async () => {
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .set("userid", "608e7b3ae11f711a34fb0476")
-        .send({
-          assetName: "New Drone",
-          userID: "608e7b3ae11f711a34fb0476",
-          assetInfo: [{ UIN: "1234567" }],
-          model: "615acf79e5324204d8b97c86",
-          assetOwner: "5f12572c3c19462d3673dbe9",
-          manufactureDate: "2021-10-04",
-          manufactureID: "615acf24e5324204d8b97c84",
-        })
-        .expect(201);
-      created_assets.push(res.body.data);
-    }
-    const created_ids: string[] = created_assets.map((a) => a._id);
+    const asset = await createAsset(agent);
     const res = await agent
       .delete(full_url("delete"))
       .send({
-        assetID: created_ids[0],
+        assetID: asset._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Asset deleted",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });

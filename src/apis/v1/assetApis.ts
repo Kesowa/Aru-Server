@@ -1,5 +1,5 @@
 import express from "express";
-import { body, header, query } from "express-validator";
+import { body, query } from "express-validator";
 
 import {
   createAsset,
@@ -31,7 +31,6 @@ router.post(
   body("assetName").notEmpty().isString().trim(),
   body("userID").notEmpty().isMongoId(),
   body("assetInfo").exists().isArray(),
-  header("userid").notEmpty().isMongoId(),
   body("model").notEmpty().isMongoId(),
   body("assetOwner").notEmpty().isMongoId(),
   //adding date format
