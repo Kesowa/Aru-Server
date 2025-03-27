@@ -107,9 +107,9 @@ export default function app(mongo: Connection) {
       frameguard: false,
       contentSecurityPolicy: {
         directives: {
-          defaultSrc: ["none"],
-          frameAncestors: ["none"],
-          formAction: ["self"],
+          defaultSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+          formAction: ["'self'"],
         }
       },
     }),
