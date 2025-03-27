@@ -1,8 +1,3 @@
-import mongoose from "mongoose";
-
-import { UserTypes } from "./user";
-import UserGroup from "../models/usergroup";
-
 export enum PERMS {
   ADD_FEATURE = "add_feature",
   ALERT_CREATE = "alert_create",
@@ -223,21 +218,3 @@ export const SUPER_ADMIN_PERMS = <const>[
   PERMS.PACKAGE_DELETE,
   ...TENANT_ROOT_PERMS,
 ];
-
-export const GetPermissions = async (
-  userGroupId: mongoose.Types.ObjectId,
-  userType: UserTypes,
-  tenantId: mongoose.Types.ObjectId,
-) => {
-  let customPermissions: PERMS[] = [];
-  if (userType == "tenant-staff" || userType == "tenant-client") {
-    const usergroup = await UserGroup.findOne({ _id: userGroupId, tenantId });
-    customPermissions = usergroup.permissions;
-  } else if (userType == "tenant-root") {
-    customPermissions = [...TENANT_ROOT_PERMS];
-  } else if (userType == "super-admin") {
-    customPermissions = [...SUPER_ADMIN_PERMS];
-  }
-
-  return customPermissions;
-};

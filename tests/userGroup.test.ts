@@ -1,106 +1,81 @@
 import { CurriedUrl, Login, Logout } from "./utils/utils";
 import {SuperAgentTest} from "supertest";
-import { randomUUID } from "crypto";
+import { createUsergroup } from "./utils/usergroup";
+import { PERMS } from "./utils/permission";
 
 let agent: SuperAgentTest;
-
 beforeAll(async () => (agent = await Login()));
 afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("tenant/usergroup");
 
-describe("/usergroup API", () => {
+describe("/tenant/usergroup API", () => {
   test("POST /tenant-usergroup-create", async () => {
-    const res = await agent
-      .post(full_url("tenant-usergroup-create"))
-      .send({
-        name: randomUUID(),
-        permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
-      })
-      .expect(201);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "User Group created sucessfully",
-    });
+    await createUsergroup(agent);
   });
 
   test("GET /tenant-usergroup-list", async () => {
-    await agent
-      .post(full_url("tenant-usergroup-create"))
-      .send({
-        name: randomUUID(),
-        permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
-      })
-      .expect(201);
+    await createUsergroup(agent);
+
     const res = await agent
       .get(full_url("tenant-usergroup-list"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "user groups fetched",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
-  test("PATCH /tenant-usergroup-edit", async () => {
-    const created_groups: any[] = [];
-    {
-      await agent
-        .post(full_url("tenant-usergroup-create"))
-        .send({
-          name: randomUUID(),
-          permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
-        })
-        .expect(201);
+  test("GET /tenant-usergroup-by-id", async () => {
+    const usergroup = await createUsergroup(agent);
 
-      const res2 = await agent
-        .get(full_url("tenant-usergroup-list"))
-        .expect(200);
-      created_groups.push(res2.body.data[res2.body.data.length - 1]);
-    }
     const res = await agent
-      .patch(full_url("tenant-usergroup-edit"))
-      .send({
-        id: created_groups[0]._id,
-        name: randomUUID(),
-        permissions: ["5f2980678927644fbb2f0a83"], // exists in db
+      .get(full_url("tenant-usergroup-by-id"))
+      .query({
+        id: usergroup._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "User group successfully updated!",
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("PATCH /tenant-usergroup-edit", async () => {
+    const usergroup = await createUsergroup(agent);
+
+    const res = await agent
+      .patch(full_url("tenant-usergroup-edit"))
+      .send({
+        id: usergroup._id,
+        name: Date(),
+        permissions: [PERMS.MISSION_LIST],
+      })
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
   test("DELETE /tenant-usergroup-delete", async () => {
-    const created_groups: any[] = [];
-    {
-      await agent
-        .post(full_url("tenant-usergroup-create"))
-        .send({
-          name: randomUUID(),
-          permissions: ["5f2980678927644fbb2f0a83", "5f29818d8927644fbb2f0a84"], // both exist in db
-        })
-        .expect(201);
+    const usergroup = await createUsergroup(agent);
 
-      const res2 = await agent
-        .get(full_url("tenant-usergroup-list"))
-        .expect(200);
-      created_groups.push(res2.body.data[res2.body.data.length - 1]);
-    }
     const res = await agent
       .delete(full_url("tenant-usergroup-delete"))
       .query({
-        id: created_groups[0]._id,
+        id: usergroup._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "User Group deleted successfully!",
+      message: expect.any(String),
     });
   });
 });

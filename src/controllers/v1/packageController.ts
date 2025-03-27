@@ -2,12 +2,30 @@ import { Request } from "express";
 
 import Package from "../../models/package";
 import Tenant from "../../models/tenant";
-import { IPackage } from "../../schemas/package";
+import UploadTask from "../../models/uploadTask";
 import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { copyFiled } from "../../utils/moveFileUtils";
+import { permPath } from "../../utils/dataUtils";
+import { Directory } from "../../constants";
 //cretae package
 export const createPackage = async (req: Request, res: AuthResponse) => {
+  let posterPath: string;
+  if (req.body.poster) {
+    const fileDoc = await UploadTask.findOne({
+      _id: req.body.poster,
+      // tenant: res.locals.user.tenantId._id, // only super-admin can create packages, and they won't have tenant associated with them
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
+    if (fileDoc) {
+      posterPath = await permPath(
+        Directory.PACKAGE_POSTERS,
+        fileDoc.metadata.objectkey,
+      );
+      await fileDoc.delete();
+    }
+  }
   const pac = new Package({
     name: req.body.name,
     bandwidth: req.body.bandwidth,
@@ -23,24 +41,9 @@ export const createPackage = async (req: Request, res: AuthResponse) => {
     userGroupCount: req.body.userGroupCount,
     createdBy: res.locals.user._id,
     updatedBy: res.locals.user._id,
-    poster: req.body.poster ? req.body.poster : undefined,
+    poster: posterPath,
   });
   const createDoc = await pac.save();
-  if (req.body.poster && createDoc) {
-    copyFiled(
-      req.body.poster,
-      `/images/packagePosters/${req.body.poster.split(/[\\\/]/)[3]}`,
-    );
-  }
-  if (createDoc) {
-    createDoc.poster = `/images/packagePosters/${
-      req.body.poster.split(/[\\\/]/)[3]
-    }`;
-    await createDoc.save();
-  }
-  if (createDoc) {
-    await deletePublicFileUsingPath(req.body.poster);
-  }
   res.status(201).json({
     status: true,
     message: "Package created sucessfully.",
@@ -127,15 +130,10 @@ export const editPackageForId = async (req: Request, res: AuthResponse) => {
 
 export const deletePackageForId = async (req: Request, res: AuthResponse) => {
   const doc = await Package.findOne({ _id: req.body._id });
-  const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId })
-    .populate<{ activePackage: IPackage }>({
-      path: "activePackage",
-      select: "name",
-    })
-    .lean();
-
-  if (doc && tenant) {
-    if (String(tenant.activePackage.name) !== String(doc.name)) {
+  
+  if (doc) {
+    const tenant = await Tenant.findOne({ _id: res.locals.user.tenantId, activePackage: req.body._id });
+    if (!tenant) {
       const result = await Package.findOneAndDelete({
         _id: req.body._id,
       }).lean();

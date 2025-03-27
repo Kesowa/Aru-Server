@@ -289,7 +289,7 @@ export const saveCSV = async (
     fileType: "csv",
     folderName: "root1234",
     filePath: filepath,
-    missionId,
+    [missionId !== "" && "missionId"]: missionId,
     tenantId,
     createdBy: userId,
     updatedBy: userId,

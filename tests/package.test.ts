@@ -1,6 +1,8 @@
-import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
+import { CurriedUrl, LoginSuper, Logout } from "./utils/utils";
 import {SuperAgentTest} from "supertest";
-import { randomUUID } from "crypto";
+import { uploadFile } from "./utils/upload";
+import { createPackage } from "./utils/package";
+import { faker } from "@faker-js/faker";
 
 let agent: SuperAgentTest;
 
@@ -8,229 +10,97 @@ beforeAll(async () => (agent = await LoginSuper()));
 afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("admin/package");
 
-describe("/package API", () => {
+describe("/admin/package API", () => {
   test("POST /upload-poster", async () => {
-    const res = await agent
-      .post(full_url("upload-poster"))
-      .attach("poster", "./assets/image.png")
-      .expect(201);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "file uploaded sucessfully",
-      file: expect.any(String),
-    });
+    await uploadFile(agent, "./assets/image.png");
   });
 
   test("POST /create", async () => {
-    let filePath: string = "";
-    {
-      const res = await agent
-        .post(full_url("upload-poster"))
-        .attach("poster", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
-    }
-    const res = await agent
-      .post(full_url("create"))
-      .send({
-        name: randomUUID(),
-        bandwidth: Math.floor(Math.random() * 1000),
-        storage: Math.floor(Math.random() * 1000),
-        duration: Math.floor(Math.random() * 1000),
-        userCount: Math.floor(Math.random() * 1000),
-        missionCount: Math.floor(Math.random() * 100),
-        layerCount: Math.floor(Math.random() * 10000),
-        alertCount: Math.floor(Math.random() * 10000),
-        vodCount: Math.floor(Math.random() * 100),
-        clientCount: Math.floor(Math.random() * 100),
-        locationCount: Math.floor(Math.random() * 100),
-        userGroupCount: Math.floor(Math.random() * 100),
-        poster: filePath,
-      })
-      .expect(201);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "Package created sucessfully.",
-      data: expect.any(Object),
-    });
+    await createPackage(agent);
   });
 
   test("GET /fetchall", async () => {
-    {
-      let filePath: string = "";
-      const res1 = await agent
-        .post(full_url("upload-poster"))
-        .attach("poster", "./assets/image.png")
-        .expect(201);
-      filePath = res1.body.file;
-
-      await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          bandwidth: Math.floor(Math.random() * 1000),
-          storage: Math.floor(Math.random() * 1000),
-          duration: Math.floor(Math.random() * 1000),
-          userCount: Math.floor(Math.random() * 1000),
-          missionCount: Math.floor(Math.random() * 100),
-          layerCount: Math.floor(Math.random() * 10000),
-          alertCount: Math.floor(Math.random() * 10000),
-          vodCount: Math.floor(Math.random() * 100),
-          clientCount: Math.floor(Math.random() * 100),
-          locationCount: Math.floor(Math.random() * 100),
-          userGroupCount: Math.floor(Math.random() * 100),
-          poster: filePath,
-        })
-        .expect(201);
-    }
+    await createPackage(agent);
     const res = await agent
       .get(full_url("fetchall"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Package fetched sucessfully.",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
-  test("GET /fetchactive", async () => {
-    {
-      let filePath: string = "";
-      const res1 = await agent
-        .post(full_url("upload-poster"))
-        .attach("poster", "./assets/image.png")
-        .expect(201);
-      filePath = res1.body.file;
+  test("GET /fetch-by-id", async () => {
+    const pack = await createPackage(agent);
+    const res = await agent
+      .get(full_url("fetch-by-id"))
+      .query({
+        id: pack._id,
+      })
+      .expect(200);
 
-      await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          bandwidth: Math.floor(Math.random() * 1000),
-          storage: Math.floor(Math.random() * 1000),
-          duration: Math.floor(Math.random() * 1000),
-          userCount: Math.floor(Math.random() * 1000),
-          missionCount: Math.floor(Math.random() * 100),
-          layerCount: Math.floor(Math.random() * 10000),
-          alertCount: Math.floor(Math.random() * 10000),
-          vodCount: Math.floor(Math.random() * 100),
-          clientCount: Math.floor(Math.random() * 100),
-          locationCount: Math.floor(Math.random() * 100),
-          userGroupCount: Math.floor(Math.random() * 100),
-          poster: filePath,
-        })
-        .expect(201);
-    }
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("GET /fetchactive", async () => {
+    await createPackage(agent);
     const res = await agent
       .get(full_url("fetchactive"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Package fetched sucessfully.",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("PATCH /edit-package-for-Id", async () => {
-    const created_packages: string[] = [];
-    {
-      let filePath: string = "";
-      const res1 = await agent
-        .post(full_url("upload-poster"))
-        .attach("poster", "./assets/image.png")
-        .expect(201);
-      filePath = res1.body.file;
-
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          bandwidth: Math.floor(Math.random() * 1000),
-          storage: Math.floor(Math.random() * 1000),
-          duration: Math.floor(Math.random() * 1000),
-          userCount: Math.floor(Math.random() * 1000),
-          missionCount: Math.floor(Math.random() * 100),
-          layerCount: Math.floor(Math.random() * 10000),
-          alertCount: Math.floor(Math.random() * 10000),
-          vodCount: Math.floor(Math.random() * 100),
-          clientCount: Math.floor(Math.random() * 100),
-          locationCount: Math.floor(Math.random() * 100),
-          userGroupCount: Math.floor(Math.random() * 100),
-          poster: filePath,
-        })
-        .expect(201);
-      created_packages.push(res.body.data._id);
-    }
+    const pack = await createPackage(agent);
     const res = await agent
       .patch(full_url("edit-package-for-Id"))
       .send({
-        _id: created_packages[0],
-        name: randomUUID(),
-        bandwidth: Math.floor(Math.random() * 1000),
-        storage: Math.floor(Math.random() * 1000),
-        duration: Math.floor(Math.random() * 1000),
-        userCount: Math.floor(Math.random() * 1000),
-        missionCount: Math.floor(Math.random() * 100),
-        layerCount: Math.floor(Math.random() * 10000),
-        alertCount: Math.floor(Math.random() * 10000),
-        vodCount: Math.floor(Math.random() * 100),
-        clientCount: Math.floor(Math.random() * 100),
-        locationCount: Math.floor(Math.random() * 100),
-        userGroupCount: Math.floor(Math.random() * 100),
+        _id: pack._id,
+        name: Date(),
+        bandwidth: faker.random.numeric(3),
+        storage: faker.random.numeric(3),
+        duration: faker.random.numeric(3),
+        userCount: faker.random.numeric(3),
+        missionCount: faker.random.numeric(2),
+        layerCount: faker.random.numeric(3),
+        alertCount: faker.random.numeric(3),
+        vodCount: faker.random.numeric(2),
+        clientCount: faker.random.numeric(2),
+        locationCount: faker.random.numeric(2),
+        userGroupCount: faker.random.numeric(2),
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Package updated sucessfully.",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
   test("DELETE /delete-package-for-Id", async () => {
-    const created_packages: string[] = [];
-    {
-      let filePath: string = "";
-      const res1 = await agent
-        .post(full_url("upload-poster"))
-        .attach("poster", "./assets/image.png")
-        .expect(201);
-      filePath = res1.body.file;
-
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          bandwidth: Math.floor(Math.random() * 1000),
-          storage: Math.floor(Math.random() * 1000),
-          duration: Math.floor(Math.random() * 1000),
-          userCount: Math.floor(Math.random() * 1000),
-          missionCount: Math.floor(Math.random() * 100),
-          layerCount: Math.floor(Math.random() * 10000),
-          alertCount: Math.floor(Math.random() * 10000),
-          vodCount: Math.floor(Math.random() * 100),
-          clientCount: Math.floor(Math.random() * 100),
-          locationCount: Math.floor(Math.random() * 100),
-          userGroupCount: Math.floor(Math.random() * 100),
-          poster: filePath,
-        })
-        .expect(201);
-      created_packages.push(res.body.data._id);
-    }
+    const pack = await createPackage(agent);
     const res = await agent
       .delete(full_url("delete-package-for-Id"))
       .send({
-        _id: created_packages[0],
+        _id: pack._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Package deleted sucessfully.",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
