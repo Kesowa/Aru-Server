@@ -57,7 +57,7 @@ router.post(
   //adding date format
   body("captureDate").exists().isISO8601().toDate(),
   body("color").trim().default("#000000"),
-  body("icon").optional().isString(),
+  body("icon").optional().notEmpty().trim(), // example: MarkerIcon
   body("inHeritOriginalColorFromFile").notEmpty().trim(),
   validator,
   PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),
@@ -148,7 +148,7 @@ router.post(
 router.patch(
   "/update-base-layer-by-uploaded-layer",
   isAuthenticated,
-  body("filePath").notEmpty(),
+  body("file").notEmpty().isMongoId(),
   body("baseLayer").notEmpty().isMongoId(),
   body("attrMapping").exists().isObject(),
   validator,

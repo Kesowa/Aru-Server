@@ -45,9 +45,9 @@ const sampleGeojsonData = {
   ],
 };
 
-const full_url = CurriedUrl("layer");
+const full_url = CurriedUrl("baselayer");
 
-export async function createLayer(agent: SuperAgentTest) {
+export async function createLayer(agent: SuperAgentTest): Promise<{ layer: Record<string, any>, properties: Record<string, any> }> {
   const fileId = await uploadFile(agent, "./assets/poles.geojson");
   const res = await agent
     .post(full_url("create/Vector"))
@@ -57,10 +57,51 @@ export async function createLayer(agent: SuperAgentTest) {
       vector: "Electric Pole",
       captureDate: "2022-07-29",
       inHeritOriginalColorFromFile: "false",
-      missionId: "61f3b1e65f915a05cb8885ec", // !TODO create mission for this
       color: "#000000",
-      icon: "MarkerIcon",
+      icon: "Icon",
       file: fileId
+    })
+    .expect(201);
+
+  expect(res.body).toMatchObject({
+    status: true,
+    message: expect.any(String),
+    data: expect.any(Object),
+  });
+
+  return res.body.data;
+}
+
+
+export async function createRasterLayer(agent: SuperAgentTest) {
+  const fileId = await uploadFile(agent, "./assets/Ortho_25cm.tif");
+  const res = await agent
+    .post(full_url("create-base-raster-upload/Raster"))
+    .send({
+      name: faker.address.city(),
+      type: "Raster",
+      raster: "ORTHO",
+      captureDate: "2022-07-29",
+      file: fileId,
+    })
+    .expect(201);
+
+  expect(res.body).toMatchObject({
+    status: true,
+    message: expect.any(String),
+    data: expect.any(Object),
+  });
+
+  return res.body.data;
+}
+
+export async function createBaseVectorLayer(agent: SuperAgentTest) {
+  const res = await agent
+    .post(full_url("create-base-vector-layer"))
+    .send({
+      name: faker.address.street(),
+      vectorType: "Zone Boundary",
+      geoJSON: sampleGeojsonData,
     })
     .expect(201);
 

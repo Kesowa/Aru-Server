@@ -678,7 +678,7 @@ export const updateBaseLayerByAttr = async (
   if (req.body.layers) {
     const layerData = await Layer.find(
       {
-        _id: { $in: req.body.layers },
+        _id: { $in: req.body.layers.map(layer => layer.layerId) },
         vector: { $exists: true },
       },
       {
@@ -709,7 +709,7 @@ export const updateBaseLayerByAttr = async (
     const layerIds = layerData.map((layer) => layer._id);
 
     baseLayer.featureCount = clonedGeojson.featureCount;
-    baseLayer.layers = [...baseLayer.layers, ...layerIds];
+    baseLayer.layers = [...(baseLayer.layers ?? []), ...layerIds];
     await baseLayer.save();
 
     await baseLayer.updateFile(clonedGeojson.path, clonedGeojson.size);
@@ -763,14 +763,7 @@ export const uploadLayerToUpdateBaseLayer = async (
     });
   }
 
-  const baseLayer = await Layer.findOne(
-    {
-      _id: req.body.baseLayer,
-    },
-    {
-      layerpath: 1,
-    },
-  );
+  const baseLayer = await Layer.findOne( { _id: req.body.baseLayer, }, );
 
   if (!baseLayer) {
     res.status(404).json({
@@ -837,9 +830,19 @@ export const updateBaseLayerByUploadedFile = async (
   req: Request,
   res: AuthResponse,
 ) => {
-  const objectKey = req.body.filePath;
-
-  const geojson = await readGeoJson(objectKey);
+  const fileDoc = await UploadTask.findOne({
+    _id: req.body.file,
+    tenant: res.locals.user.tenantId._id,
+    createdBy: res.locals.user._id,
+    // status: "started",
+  });
+  if (!fileDoc) {
+    return res.status(404).json({
+      status: false,
+      message: "file does not exist!",
+    })
+  }
+  const geojson = await readGeoJson(fileDoc.metadata.objectkey);
 
   if (geojson == null) {
     return res.json({
@@ -955,7 +958,7 @@ export const updateBaseLayerByUploadedFile = async (
   }
 
   const updatedBaseLayer = await baseLayer.updateFile(newPath, size);
-  await deleteDirFileUsingName(Directory.ROOT, req.body.filePath);
+  await fileDoc.delete();
   res.json({
     success: true,
     message: "Layer has been updated successfully",

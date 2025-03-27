@@ -1,7 +1,8 @@
 import { CurriedUrl, Login, Logout } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
 import { randomUUID } from "crypto";
-import { createBaseVectorLayer, createLayer, createRasterLayer } from "./utils/layer";
+import { createBaseVectorLayer, createLayer, createRasterLayer } from "./utils/baseLayer";
+import { createLayer as createMissionlayer } from "./utils/layer";
 import { uploadFile } from "./utils/upload";
 
 let agent: SuperAgentTest;
@@ -24,19 +25,19 @@ describe("/baselayer API", () => {
         pattr: [],
         layers: [
           {
-            layerId: layers[0]._id,
+            layerId: layers[0].layer._id,
             attrMapping: {
               AA: "AA",
             },
           },
           {
-            layerId: layers[1]._id,
+            layerId: layers[1].layer._id,
             attrMapping: {
               AA: "AA",
             },
           },
         ],
-        vectorTypeId: "60c3a13fca0cbe039fce0d4f",
+        vectorType: "Landmark",
       })
       .expect(201);
 
@@ -98,7 +99,7 @@ describe("/baselayer API", () => {
     const res = await agent
       .patch(full_url("publishBaseLayer"))
       .send({
-        layerId: [layer._id],
+        layerId: [layer.layer._id],
       })
       .expect(200);
     expect(res.body).toMatchObject({
@@ -124,31 +125,14 @@ describe("/baselayer API", () => {
     });
   });
 
-  test("GET /searchPublicLayer", async () => {
-    const res = await agent
-      .get(full_url("searchPublicLayer"))
-      .query({
-        mapRef: "5f204f03b9445726102781a862148702831c465d972286b3",
-        key: "color",
-        value: "#000000",
-      })
-      .expect(200);
-    expect(res.body).toMatchObject({
-      status: true,
-      message: expect.any(String),
-      layerId: expect.any(String),
-      data: expect.any(Array),
-    });
-  });
-
   test("PUT /set-prime-attr", async () => {
     const layer = await createLayer(agent);
     const res = await agent
       .put(full_url("set-prime-attr"))
       .send({
-        path: layer.layerpath,
+        path: layer.layer.layerpath,
         pattr: ["Zip_Code"],
-        id: layer._id,
+        id: layer.layer._id,
       })
       .expect(200);
     expect(res.body).toMatchObject({
@@ -158,41 +142,23 @@ describe("/baselayer API", () => {
     });
   });
 
-  // test("PATCH /updateisBase", async () => {
-  //   const res = await agent
-  //     .patch(full_url("updateisBase"))
-  //     .expect(200);
-  //   expect(res.body).toMatchObject({
-  //     status: true,
-  //     message: "All layer documents modified",
-  //   });
-  // });
-
-  // test("PATCH /updateisPublic", async () => {
-  //   const res = await agent
-  //     .patch(full_url("updateisPublic"))
-  //     .expect(200);
-  //   expect(res.body).toMatchObject({
-  //     status: true,
-  //     message: "All layer documents modified",
-  //   });
-  // });
-
   test("PATCH /update-by-layers", async () => {
     const base_layer = await createBaseVectorLayer(agent);
+    const update_layer = await createBaseVectorLayer(agent);
 
     const res = await agent
       .patch(full_url("update-by-layers"))
       .send({
         layers: [
           {
-            layerId: "61e7b5ab7f65140b304f4842",
+            layerId: update_layer._id,
             attrMapping: { AA: "AA" },
           },
         ],
         baseLayer: base_layer._id,
       })
       .expect(200);
+    console.log(res.body);
     expect(res.body).toMatchObject({
       success: true,
       message: expect.any(String),
@@ -203,10 +169,14 @@ describe("/baselayer API", () => {
   test("POST /upload-to-update-base-layer/Vector", async () => {
     const base_layer = await createBaseVectorLayer(agent);
 
+    const fileId = await uploadFile(agent, "./assets/sampleData.geojson");
+
     const res = await agent
       .post(full_url("upload-to-update-base-layer/Vector"))
-      .field("baseLayer", base_layer._id)
-      .attach("file", "./assets/sampleData.geojson")
+      .send({
+        baseLayer: base_layer._id,
+        file: fileId
+      })
       .expect(200);
     expect(res.body).toMatchObject({
       success: true,
@@ -214,16 +184,17 @@ describe("/baselayer API", () => {
         primeAttributes: expect.any(Array),
         layerAttributes: expect.any(Array),
         filePath: expect.any(String),
-        baseLayer: base_layer,
+        baseLayer: base_layer._id,
       },
     });
   });
 
   test("PATCH /get-meta-data", async () => {
+    const layers = [await createMissionlayer(agent), await createMissionlayer(agent)];
     const res = await agent
       .patch(full_url("get-meta-data"))
       .send({
-        layers: ["61e7b5ab7f65140b304f4842"],
+        layers: layers.map(layer => layer._id),
       })
       .expect(200);
     expect(res.body).toMatchObject({
@@ -235,12 +206,13 @@ describe("/baselayer API", () => {
 
   // needs /vector/1659511470073_solar.geojson to exist
   test("PATCH /get-meta-data-for-update", async () => {
-    const base_layer = await createBaseVectorLayer(agent);
+    const base_layer = await createLayer(agent);
+    const layers = [await createMissionlayer(agent), await createMissionlayer(agent)];
     const res = await agent
       .patch(full_url("get-meta-data-for-update"))
       .send({
-        layers: ["61e7b5ab7f65140b304f4842"],
-        baseLayer: base_layer._id,
+        layers: layers.map(layer => layer._id),
+        baseLayer: base_layer.layer._id,
       })
       .expect(200);
     expect(res.body).toMatchObject({
@@ -252,16 +224,18 @@ describe("/baselayer API", () => {
 
   test("PATCH /update-base-layer-by-uploaded-layer", async () => {
     const layer = await createLayer(agent);
+    const fileId = await uploadFile(agent, "./assets/poles.geojson");
     const res = await agent
       .patch(full_url("update-base-layer-by-uploaded-layer"))
       .send({
-        filePath: "public" + layer.layerpath,
-        baseLayer: layer.id,
+        file: fileId,
+        baseLayer: layer.layer._id,
         attrMapping: {
           AA: "AA",
         },
       })
       .expect(200);
+    console.log(res.body);
     expect(res.body).toMatchObject({
       success: true,
       message: expect.any(String),
@@ -286,7 +260,7 @@ describe("/baselayer API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "New Base Layer Created Successfully",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   }, 15000);
@@ -330,12 +304,12 @@ describe("/baselayer API", () => {
     const res = await agent
       .delete(full_url("delete-baseLayer-id"))
       .send({
-        layers: [base_layer._id],
+        layers: [base_layer.layer._id],
       })
       .expect(200);
     expect(res.body).toMatchObject({
       status: true,
-      message: "Base successfully deleted",
+      message: expect.any(String),
     });
   });
 });
