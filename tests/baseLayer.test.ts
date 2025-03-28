@@ -2,7 +2,7 @@ import { CurriedUrl, Login, Logout } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
 import { randomUUID } from "crypto";
 import { createBaseVectorLayer, createLayer, createRasterLayer } from "./utils/baseLayer";
-import { createLayer as createMissionlayer } from "./utils/layer";
+import { createLayer as createMissionlayer, createRasterLayer as createMissionRasterLayer } from "./utils/layer";
 import { uploadFile } from "./utils/upload";
 
 let agent: SuperAgentTest;
@@ -284,11 +284,11 @@ describe("/baselayer API", () => {
 
   test("PATCH /updateRasterLayerImport", async () => {
     const base_layer = await createRasterLayer(agent);
-    const layers = [await createRasterLayer(agent), await createRasterLayer(agent)];
+    const layers = [await createMissionRasterLayer(agent), await createMissionRasterLayer(agent)];
     const res = await agent
       .patch(full_url("updateRasterLayerImport"))
       .send({
-        layerId: base_layer,
+        layerId: base_layer._id,
         layers: layers,
       })
       .expect(200);
@@ -307,9 +307,11 @@ describe("/baselayer API", () => {
         layers: [base_layer.layer._id],
       })
       .expect(200);
+    console.log(res.body);
     expect(res.body).toMatchObject({
-      status: true,
+      success: true,
       message: expect.any(String),
+      data: expect.any(Array)
     });
   });
 });

@@ -1174,14 +1174,15 @@ export const updateBaseLayerRasterUpload = async (
   //----------TITILER API HAS CHANGED-------------------
   //  Metadata api has been removed
   // instead there is statistics api and info api
-  const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}${fileDoc.metadata.objectkey}`;
+  const metaDataURL = `${TITILER_SERVER}/cog/statistics?url=${TITILER_STATIC}/${fileDoc.metadata.objectkey}`;
   const response = await fetch(metaDataURL, {
     method: "GET",
   });
   const metadata = await response.json();
+  req.log.info(metadata, "LAYER METADATA");
   //-------handle for detail:not found----
-  const minP = metadata["1"]["min"];
-  const maxP = metadata["1"]["max"];
+  const minP = metadata["b1"]["min"];
+  const maxP = metadata["b1"]["max"];
   doc.minp = minP;
   doc.maxp = maxP;
   await doc.save();
