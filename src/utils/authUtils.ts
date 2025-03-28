@@ -8,7 +8,8 @@ import Tenant from "../models/tenant";
 import User from "../models/user";
 import { IPackage } from "../schemas/package";
 import { GetPermissions, PERMS } from "../schemas/permission";
-import { logger } from "../app";
+
+export const iv = "asdasdas";
 
 enum InvalidAuth {
   PACKAGE_EXPIRED,
