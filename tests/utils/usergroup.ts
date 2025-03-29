@@ -6,6 +6,14 @@ import { faker } from "@faker-js/faker";
 const full_url = CurriedUrl("tenant/usergroup");
 
 export async function createUsergroup(agent: SuperAgentTest, name?: string) {
+  if (name) {
+    const checkExistsRes = await agent
+      .get(full_url("tenant-usergroup-list"))
+      .expect(200);
+    const existingUsergroup = checkExistsRes.body.data.find(ug => ug.name === name);
+    if (existingUsergroup) return existingUsergroup;
+  }
+
   const res = await agent
     .post(full_url("tenant-usergroup-create"))
     .send({

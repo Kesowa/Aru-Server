@@ -23,7 +23,6 @@ router.post(
   body("dimensions").exists({ checkFalsy: true }).isObject(),
   body("manufacturerID").notEmpty().isMongoId(),
   body("website").notEmpty().trim(),
-  header("userid").notEmpty().isMongoId(),
   body("props").exists({ checkFalsy: true }).isObject(),
   validator,
   PermissionGuard(PERMS.MODEL_CREATE),
