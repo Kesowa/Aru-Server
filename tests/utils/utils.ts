@@ -1,5 +1,7 @@
 export const APP_URL = "http://localhost:5011";
+export const MONGODB_CONNECTION_STRING = "mongodb://localhost:27017/test";
 import request, { SuperAgentTest } from "supertest";
+import mongoose, { Mongoose } from "mongoose";
 
 const USER = {
   email: "admin@NKDA.com",
@@ -40,3 +42,12 @@ export const clearAllClients = async () => {
 
 export const CurriedUrl = (base: string) => (relative: string) =>
   `/apis/v1/${base}/${relative}`;
+
+export async function ConnectDB() {
+  const mongoClient = await mongoose.connect(MONGODB_CONNECTION_STRING);
+  return mongoClient;
+}
+
+export async function DisconnectDB(mongoClient: Mongoose) {
+  await mongoClient.disconnect();
+}

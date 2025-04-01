@@ -97,7 +97,6 @@ router.post(
 
 router.get(
   "/fetch-active-package-public",
-  PermissionGuard(PERMS.PACKAGE_LIST),
   RobustRunner(fetchActivePackages),
 );
 

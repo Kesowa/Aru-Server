@@ -12,6 +12,7 @@ import Location from "../../models/location";
 import Mission from "../../models/mission";
 import Package from "../../models/package";
 import Tenant from "../../models/tenant";
+import UploadTask from "../../models/uploadTask";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import {
   createTenantLevelrootUser,
@@ -26,9 +27,18 @@ import { IUser } from "../../schemas/user";
 import { IPackage } from "../../schemas/package";
 import newTenant from "../../models/newTenant";
 import { findCount, findSize } from "../../utils/mongoUtils";
+import { permPath } from "../../utils/dataUtils";
+import { Directory } from "../../constants";
 
 //create tenant account
 export const createTenant = async (req: Request, res: AuthResponse) => {
+  const fileDoc = await UploadTask.findOne({
+    _id: req.body.avatar,
+    // tenant: res.locals.user.tenantId._id, // As it could be uploaded by super-admin
+    createdBy: res.locals.user._id,
+    // status: "started",
+  });
+  
   const [existingTenantWithEmail, existingUserWithEmail] = await Promise.all([
     User.findOne({ email: req.body.email }),
     Tenant.findOne({ email: req.body.email }),
@@ -52,10 +62,17 @@ export const createTenant = async (req: Request, res: AuthResponse) => {
       billingPin: req.body.billingPin,
       createdBy: res.locals.user._id,
       updatedBy: res.locals.user._id,
-      avatar: req.body.avatar ? req.body.avatar : undefined,
       isActivated: false,
       isActive: true,
     });
+    if (fileDoc) {
+      const fullPath = await permPath(
+        Directory.TENANT_LOGOS,
+        fileDoc.metadata.objectkey,
+      );
+      tenant.avatar = fullPath;
+      await fileDoc.delete();
+    }
     createTenantLevelrootUser(tenant);
     await tenant.save();
 
@@ -114,7 +131,7 @@ export const createTenantPublicApi = async (
         billingDistrict: req.body.billingDistrict,
         billingState: req.body.billingState,
         billingPin: req.body.billingPin,
-        avatar: req.body.avatar ? req.body.avatar : undefined,
+        // avatar: req.body.avatar ? req.body.avatar : undefined, // avatar file needs to be uploaded to be set as avatar, and uploading file requires authentication, can't be done on a public route
         isActivated: false,
         isActive: false,
         verificationCode: verificationNumber,
@@ -411,7 +428,7 @@ export const addActualSizeToTenant = async (
 };
 
 export const getTenantStats = async (req: Request, res: AuthResponse) => {
-  const data = await Tenant.findOne({ _id: res.locals.user.tenantId._id });
+  const data = await Tenant.findOne({ _id: res.locals.user.tenantId._id }).populate<{ activePackage: IPackage }>("activePackage");
   if (!data) {
     res.status(404).json({
       status: false,

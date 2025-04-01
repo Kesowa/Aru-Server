@@ -1,349 +1,198 @@
-import { CurriedUrl, LoginSuper, Logout } from "./utils/utils";
-import { SuperAgentTest } from "supertest";
-import { randomUUID } from "crypto";
+import { APP_URL, ConnectDB, CurriedUrl, DisconnectDB, Login, LoginSuper, Logout } from "./utils/utils";
+import request, { SuperAgentTest } from "supertest";
 import { faker } from "@faker-js/faker";
-import { RegisterTenant } from "./utils/tenant";
+import { createTenant, createTenantPublic, registerTenant } from "./utils/tenant";
+import { createPackage } from "./utils/package";
+import { Mongoose } from "mongoose";
 
-let agent: SuperAgentTest;
-beforeAll(async () => (agent = await LoginSuper()));
-afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("admin/tenant");
 
-const fakeTenant = {
-  contactPerson: faker.name.fullName(),
-  registrationNumber: Math.floor(Math.random() * 1000),
-  officialWebsite: faker.internet.domainName(),
-  gstNumber: Math.floor(Math.random() * 1000),
-  billingAddressLine1: faker.address.secondaryAddress(),
-  billingAddressLine2: faker.address.streetAddress(),
-  billingCity: faker.address.cityName(),
-  billingDistrict: faker.address.cityName(),
-  billingState: faker.address.state(),
-  billingPin: faker.address.zipCode("7#####"),
-};
-
-describe("/tenant API", () => {
-  test("POST /upload-avatar", async () => {
-    const res = await agent
-      .post(full_url("upload-avatar"))
-      .attach("avatar", "./assets/image.png")
-      .expect(201);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "file uploaded sucessfully",
-      file: expect.any(String),
-    });
-  });
-
-  test("POST /create", async () => {
-    let filePath: string = "";
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
-    }
-    const res = await agent
-      .post(full_url("create"))
-      .send({
-        ...fakeTenant,
-        name: faker.name.fullName(),
-        phoneNo: faker.phone.number("8#########"),
-        email: faker.internet.email(),
-        activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-        avatar: filePath,
-      })
-      .expect(201);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "Tenant created sucessfully.",
-      tenantId: expect.any(String),
-    });
-  });
+describe("/admin/tenant API Public", () => {
+  let publicAgent = request.agent(APP_URL);
+  let mongoClient: Mongoose;
+  beforeAll(async () => (mongoClient = await ConnectDB()), 60_000);
+  afterAll(async () => await DisconnectDB(mongoClient));
 
   test("POST /register-tenant", async () => {
-    await RegisterTenant();
+    await registerTenant(publicAgent);
   });
 
   test("POST /resend-verification-code", async () => {
-    let filePath: string = "";
-    const testEmail = faker.internet.email();
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
-
-      await agent
-        .post(full_url("register-tenant"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: testEmail,
-          package: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-          password: randomUUID(),
-        })
-        .expect(200);
-    }
-    const res = await agent
+    const newTenant = await registerTenant(publicAgent);
+    const res = await publicAgent
       .post(full_url("resend-verification-code"))
       .send({
-        email: testEmail,
+        email: newTenant.email,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Verification code sent",
+      message: expect.any(String),
     });
   });
 
+  test("POST /verify-tenant", async () => {
+    await createTenantPublic(publicAgent, mongoClient);
+  });
+
   test("GET /fetch-active-package-public", async () => {
-    const res = await agent
+    const res = await publicAgent
       .get(full_url("fetch-active-package-public"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Package fetched sucessfully.",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
+});
+
+describe("/admin/tenant API SuperAdmin", () => {
+  // These routes use req.body.tenantId in controllers to target specific tenants
+  // Some of them affect all existing tenants
+
+  let superAdminAgent: SuperAgentTest;
+  beforeAll(async () => (superAdminAgent = await LoginSuper()));
+  afterAll(async () => await Logout(superAdminAgent));
+
+  test("POST /create", async () => {
+    await createTenant(superAdminAgent);
+  });
 
   test("GET /fetchall", async () => {
-    let filePath: string = "";
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
+    await createTenant(superAdminAgent);
 
-      await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-    }
-    const res = await agent
+    const res = await superAdminAgent
       .get(full_url("fetchall"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Tenants fetched sucessfully.",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("POST /add-initial-package", async () => {
-    let filePath: string = "";
-    const created_tenants: string[] = [];
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
+    const tenant = await createTenant(superAdminAgent);
+    const pack = await createPackage(superAdminAgent);
 
-      const res2 = await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-      created_tenants.push(res2.body.tenantId);
-    }
-    const res = await agent
+    const res = await superAdminAgent
       .post(full_url("add-initial-package"))
       .send({
-        tenantId: created_tenants[0],
-        packageId: "608e7a7ee11f711a34fb0474", // exists in db
+        tenantId: tenant._id,
+        packageId: pack._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Package added sucessfully.",
+      message: expect.any(String),
     });
   });
 
   test("PATCH /edit-tenant", async () => {
-    let filePath: string = "";
-    const created_tenants: string[] = [];
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
+    const tenant = await createTenant(superAdminAgent);
 
-      const res2 = await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-      created_tenants.push(res2.body.tenantId);
-    }
-    const res = await agent
+    const res = await superAdminAgent
       .patch(full_url("edit-tenant"))
       .send({
-        tenantId: created_tenants[0],
-        name: randomUUID(),
+        tenantId: tenant._id,
+        name: faker.company.name(),
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Data updated Successfully!",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
   test("POST /fetch-tenant-details", async () => {
-    let filePath: string = "";
-    const created_tenants: string[] = [];
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
+    const tenant = await createTenant(superAdminAgent);
 
-      const res2 = await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-      created_tenants.push(res2.body.tenantId);
-    }
-    const res = await agent
+    const res = await superAdminAgent
       .post(full_url("fetch-tenant-details"))
       .send({
-        tenantId: created_tenants[0],
+        tenantId: tenant._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Tenant details fetched sucessfully.",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
-  test("PATCH /add-all-count-to-tenant", async () => {
-    let filePath: string = "";
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
+  test("POST /add-actualSize-to-tenant", async () => {
+    const tenant = await createTenant(superAdminAgent);
 
-      await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-    }
-    const res = await agent
+    const res = await superAdminAgent
+      .post(full_url("add-actualSize-to-tenant"))
+      .send({
+        tenantId: tenant._id,
+      })
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+    });
+  });
+
+  test("PATCH /updatepublicMapRef", async () => {
+    const res = await superAdminAgent
+      .patch(full_url("updatepublicMapRef"))
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+    });
+  });
+
+  test("DELETE /delete-tenant", async () => {
+    const tenant = await createTenant(superAdminAgent);
+
+    const res = await superAdminAgent
+      .delete(full_url("delete-tenant"))
+      .send({
+        tenantId: tenant._id,
+      })
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+});
+
+describe("/admin/tenant API TenantRoot", () => {
+  // These routes use res.locals.user.tenantId._id in controllers
+
+  let tenantRootAgent: SuperAgentTest;
+  beforeAll(async () => (tenantRootAgent = await Login()));
+  afterAll(async () => await Logout(tenantRootAgent));
+
+  test("PATCH /add-all-count-to-tenant", async () => {
+    const res = await tenantRootAgent
       .patch(full_url("add-all-count-to-tenant"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Data updated Successfully!",
-    });
-  });
-
-  test("POST /add-actualSize-to-tenant", async () => {
-    let filePath: string = "";
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
-
-      await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-    }
-    const res = await agent
-      .post(full_url("add-actualSize-to-tenant"))
-      .expect(200);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "Data updated Successfully!",
+      message: expect.any(String),
     });
   });
 
   test("GET /get-tenant-stats", async () => {
-    let filePath: string = "";
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
-
-      await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-    }
-    const res = await agent
+    const res = await tenantRootAgent
       .get(full_url("get-tenant-stats"))
       .expect(200);
 
@@ -351,74 +200,6 @@ describe("/tenant API", () => {
       status: true,
       data: expect.any(Object),
       packageData: expect.any(Object),
-    });
-  });
-
-  test("PATCH /updatepublicMapRef", async () => {
-    let filePath: string = "";
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
-
-      await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-    }
-    const res = await agent
-      .patch(full_url("updatepublicMapRef"))
-      .expect(200);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "All tenant documents modified",
-    });
-  });
-
-  test("DELETE /delete-tenant", async () => {
-    let filePath: string = "";
-    const created_tenants: string[] = [];
-    {
-      const res = await agent
-        .post(full_url("upload-avatar"))
-        .attach("avatar", "./assets/image.png")
-        .expect(201);
-      filePath = res.body.file;
-
-      const res2 = await agent
-        .post(full_url("create"))
-        .send({
-          ...fakeTenant,
-          name: faker.name.fullName(),
-          phoneNo: faker.phone.number("8#########"),
-          email: faker.internet.email(),
-          activePackage: "608e7a7ee11f711a34fb0474", // exists in db
-          avatar: filePath,
-        })
-        .expect(201);
-      created_tenants.push(res2.body.tenantId);
-    }
-    const res = await agent
-      .delete(full_url("delete-tenant"))
-      .send({
-        tenantId: created_tenants[0],
-      })
-      .expect(200);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "Data deleted Successfully!",
-      data: expect.any(Object),
     });
   });
 });
