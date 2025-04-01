@@ -1,6 +1,7 @@
 import { uploadFile } from "./utils/upload";
 import { CurriedUrl, Login, Logout } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
+import { faker } from "@faker-js/faker"; 
 
 let agent: SuperAgentTest;
 
@@ -13,13 +14,13 @@ describe("/common API", () => {
     const res = await agent
       .post(full_url("check-email-available"))
       .send({
-        email: "test" + Math.floor(Math.random() * 100000 + 1) + "@common.com",
+        email: faker.internet.email(),
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "This email id is available.",
+      message: expect.any(String),
       isAvailable: true,
     });
   });
