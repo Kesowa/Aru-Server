@@ -3,12 +3,12 @@ export const MONGODB_CONNECTION_STRING = "mongodb://localhost:27017/test";
 import request, { SuperAgentTest } from "supertest";
 import mongoose, { Mongoose } from "mongoose";
 
-const USER = {
+export const USER = {
   email: "admin@NKDA.com",
   password: "fsipl1@3$",
 }
 
-const SUPER_USER = {
+export const SUPER_USER = {
   email: "admin@kesowa.com",
   password: "fsipl1@3$",
 }

@@ -199,7 +199,6 @@ export const TENANT_ROOT_PERMS = <const>[
   PERMS.USER_GROUP_CREATE,
   PERMS.USER_GROUP_DELETE,
   PERMS.USER_GROUP_UPDATE,
-  PERMS.TENANT_UPDATE, // to allow them to modify self details, and some routes for syncing counts related info for current tenant also requires this
   ...TENANT_STAFF_PERMS,
 ];
 export const SUPER_ADMIN_PERMS = <const>[

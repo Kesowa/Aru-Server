@@ -156,7 +156,7 @@ router.post(
 router.patch(
   "/add-all-count-to-tenant",
   isAuthenticated,
-  PermissionGuard(PERMS.TENANT_UPDATE),
+  PermissionGuard(PERMS.TENANT_UPDATE, PERMS.TENANT_UPDATE_SELF),
   RobustRunner(addAllCountToTenant),
 );
 router.post(

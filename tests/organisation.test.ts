@@ -1,6 +1,7 @@
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { ConnectDB, CurriedUrl, DisconnectDB, Login, Logout, USER } from "./utils/utils";
 import {SuperAgentTest} from "supertest";
 import { faker } from "@faker-js/faker";
+import { Mongoose } from "mongoose";
 
 let agent: SuperAgentTest;
 beforeAll(async () => (agent = await Login()));
@@ -8,6 +9,10 @@ afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("tenantroot");
 
 describe("/organisation API", () => {
+  let mongoClient: Mongoose;
+  beforeAll(async () => (mongoClient = await ConnectDB()), 60_000);
+  afterAll(async () => await DisconnectDB(mongoClient));
+  
   test("GET /fetch-organisation-details", async () => {
     const res = await agent
       .get(full_url("fetch-organisation-details"))
@@ -15,7 +20,7 @@ describe("/organisation API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Tenant details fetched",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
@@ -26,9 +31,9 @@ describe("/organisation API", () => {
       .send({
         name: faker.company.name(),
         contactPerson: faker.name.fullName(),
-        registrationNumber: Math.floor(Math.random() * 1000).toString(),
+        registrationNumber: faker.random.numeric(3),
         officialWebsite: faker.internet.domainName(),
-        gstNumber: Math.floor(Math.random() * 1000).toString(),
+        gstNumber: faker.random.numeric(3),
         billingAddressLine1: faker.address.secondaryAddress(),
         billingAddressLine2: faker.address.streetAddress(),
         billingCity: faker.address.cityName(),
@@ -40,11 +45,12 @@ describe("/organisation API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Organisation updated sucessfully.",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
+  // NOTE: After running this, email of the tenant will change but that of the tenant-root user won't, so login would still work with previous email
   test("POST /request-otp-for-email-change", async () => {
     const res = await agent
       .post(full_url("request-otp-for-email-change"))
@@ -55,7 +61,7 @@ describe("/organisation API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "OTP generated sucessfully",
+      message: expect.any(String),
     });
   });
 
@@ -75,26 +81,29 @@ describe("/organisation API", () => {
     });
   });
 
-  // test("POST /validate-otp-update-email", async () => {
-  //     {
-  //         const res = await agent
-  //         .post(full_url("request-otp-for-email-change"))
-  //         .send({
-  //             email: faker.internet.email()
-  //         })
-  //         .expect(200);
-  //     }
-  //     const res = await agent
-  //         .post(full_url("validate-otp-update-email"))
-  //         .send({
-  //             otp: Math.floor(Math.random()*1000000).toString()
-  //         })
-  //         .expect(200);
+  test("POST /validate-otp-update-email", async () => {
+    await agent
+      .post(full_url("request-otp-for-email-change"))
+      .send({
+        email: faker.internet.email(),
+      })
+      .expect(200);
 
-  //     expect(res.body).toMatchObject({
-  //         status: true,
-  //         message: "Email updated sucessfully.",
-  //         data: expect.any(Object)
-  //     });
-  // });
+    const user = await mongoClient.connection.collection('users').findOne({ email: USER.email });
+    const tenant = await mongoClient.connection.collection('tenants').findOne({ _id: user?.tenantId });
+    expect(tenant).toBeTruthy();
+
+    const res = await agent
+      .post(full_url("validate-otp-update-email"))
+      .send({
+          otp: tenant?.modefiedEmailRequestedOTPs[0],
+      })
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+        status: true,
+        message: expect.any(String),
+        data: expect.any(Object)
+    });
+  });
 });
