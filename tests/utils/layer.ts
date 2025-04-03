@@ -3,6 +3,8 @@ import { CurriedUrl } from "./utils";
 import { uploadFile } from "./upload";
 import { faker } from "@faker-js/faker";
 
+const full_url = CurriedUrl("layer");
+
 const sampleGeojsonData = {
   type: "FeatureCollection",
   features: [
@@ -18,34 +20,32 @@ const sampleGeojsonData = {
         type: "Polygon",
         coordinates: [
           [
-            {
-              lng: 88.47412616159087,
-              lat: 22.576572985349607,
-            },
-            {
-              lng: 88.47393132628888,
-              lat: 22.57600845615178,
-            },
-            {
-              lng: 88.47422357924162,
-              lat: 22.57593711438538,
-            },
-            {
-              lng: 88.47440161839664,
-              lat: 22.576476829440843,
-            },
-            {
-              lng: 88.47412616159087,
-              lat: 22.576572985349607,
-            },
+            [
+              88.47412616159087,
+              22.576572985349607,
+            ],
+            [
+              88.47393132628888,
+              22.57600845615178,
+            ],
+            [
+              88.47422357924162,
+              22.57593711438538,
+            ],
+            [
+              88.47440161839664,
+              22.576476829440843,
+            ],
+            [
+              88.47412616159087,
+              22.576572985349607,
+            ],
           ],
         ],
       },
     },
   ],
 };
-
-const full_url = CurriedUrl("layer");
 
 export async function createLayer(agent: SuperAgentTest) {
   const fileId = await uploadFile(agent, "./assets/poles.geojson");
@@ -85,6 +85,26 @@ export async function createRasterLayer(agent: SuperAgentTest) {
       captureDate: "2022-07-29",
       file: fileId,
       missionId: "61f3b1e65f915a05cb8885ec", // !TODO create mission for this
+    })
+    .expect(201);
+
+  expect(res.body).toMatchObject({
+    status: true,
+    message: expect.any(String),
+    data: expect.any(Object),
+  });
+
+  return res.body.data;
+}
+
+export async function createVectorLayer(agent: SuperAgentTest) {
+  const res = await agent
+    .post(full_url("create-vector-layer"))
+    .send({
+      name: faker.address.street(),
+      missionId: "61f3b1e65f915a05cb8885ec", // !TODO replace
+      vectorType: "Area Boundary",
+      geoJSON: sampleGeojsonData,
     })
     .expect(201);
 
