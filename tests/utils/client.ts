@@ -2,18 +2,21 @@ import { SuperAgentTest } from "supertest";
 import { CurriedUrl } from "./utils";
 import { uploadFile } from "./upload";
 import { faker } from "@faker-js/faker";
+import { createUsergroup } from "./usergroup";
+import { TENANT_CLIENT_PERMS } from "./permission";
 
 const full_url = CurriedUrl("client");
 
 export async function createClient(agent: SuperAgentTest) {
   const fileId = await uploadFile(agent, "./assets/userAvatars/NKDA_Logo.png");
+  const usergroup = await createUsergroup(agent, undefined, [TENANT_CLIENT_PERMS[0]]);
   const res = await agent
     .post(full_url("create"))
     .send({
       name: faker.name.fullName(),
       email: faker.internet.email(),
       phoneNo: faker.phone.number("8#########"),
-      userGroupId: "6116058af270c9142c1588f2", // !TODO replace with dynamic usergroup
+      userGroupId: usergroup._id,
       userType: "tenant-client",
       country: "India",
       city: "Kolkata",

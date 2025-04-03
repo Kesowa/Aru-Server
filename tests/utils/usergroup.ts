@@ -5,7 +5,7 @@ import { faker } from "@faker-js/faker";
 
 const full_url = CurriedUrl("tenant/usergroup");
 
-export async function createUsergroup(agent: SuperAgentTest, name?: string) {
+export async function createUsergroup(agent: SuperAgentTest, name?: string, permissions?: PERMS[]) {
   if (name) {
     const checkExistsRes = await agent
       .get(full_url("tenant-usergroup-list"))
@@ -18,7 +18,7 @@ export async function createUsergroup(agent: SuperAgentTest, name?: string) {
     .post(full_url("tenant-usergroup-create"))
     .send({
         name: name ?? faker.random.alphaNumeric(6),
-        permissions: [PERMS.MISSION_LIST, PERMS.MISSION_UPDATE],
+        permissions: permissions ?? [PERMS.MISSION_LIST, PERMS.MISSION_UPDATE],
     })
     .expect(201);
 
