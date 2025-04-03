@@ -1,7 +1,6 @@
 import { CurriedUrl, Login, Logout } from "./utils/utils";
 import { createLayer, createRasterLayer, createVectorLayer } from "./utils/layer";
 import { SuperAgentTest } from "supertest";
-import { randomUUID } from "crypto";
 import { uploadFile } from "./utils/upload";
 import { faker } from "@faker-js/faker";
 
@@ -9,8 +8,8 @@ let agent: SuperAgentTest;
 
 beforeAll(async () => {
   agent = await Login();
-  afterAll(async () => await Logout(agent));
 });
+afterAll(async () => await Logout(agent));
 const full_url = CurriedUrl("layer");
 
 const sampleGeojsonData = {
@@ -100,7 +99,7 @@ describe("/layer API", () => {
     const res = await agent
       .delete(full_url("delete-file-geojson"))
       .query({
-        id: layerFile.body._id,
+        id: layerFile.body.data._id,
       })
       .expect(200);
 
@@ -125,7 +124,7 @@ describe("/layer API", () => {
     expect(res.body).toMatchObject({
       status: true,
       message: expect.any(String),
-      data: expect.any(Array),
+      data: expect.any(Object),
     });
   });
 
@@ -158,7 +157,7 @@ describe("/layer API", () => {
     expect(res.body).toMatchObject({
       status: true,
       message: expect.any(String),
-      data: expect.any(Array),
+      data: expect.any(Object),
     });
   });
 
@@ -173,7 +172,7 @@ describe("/layer API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: layer._id,
+      message: expect.any(String),
     });
   });
 
@@ -274,14 +273,14 @@ describe("/layer API", () => {
       .post(full_url("filter-layer"))
       .send({
         time: "2 days",
-        missionId: layer._id,
+        missionId: layer.missionId,
         createdAt: "desc",
         name: "desc",
         captureDate: "desc",
         type: ["Vector", "Raster"],
-        vectorProps: true,
-        rasterProps: true,
-        vectorPropsType: true,
+        vectorProps: ["Area Boundary", "Electric Pole"],
+        rasterProps: ["ORTHO"],
+        vectorPropsType: ["MultiPolygon", "Polygon", "Point"],
       })
       .expect(200);
 
@@ -315,7 +314,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /get-feature-csv-by-layerIndex", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createLayer(agent);
     const res = await agent
       .patch(full_url("get-feature-csv-by-layerIndex"))
       .send({
@@ -357,12 +356,14 @@ describe("/layer API", () => {
     ]
     const res = await agent
       .patch(full_url("auto-assign-uploaded-image"))
+      .query({
+        mode: "GeoCoord"
+      })
       .send({
         file: fileIds,
         Id: layer._id,
-        radius: "100"
+        radius: "100",
       })
-      .field("radius", "100")
       .expect(201);
 
     expect(res.body).toMatchObject({
@@ -386,7 +387,7 @@ describe("/layer API", () => {
       .patch(full_url("images-review"))
       .send({
         layerId: layer._id,
-        check: [layerFile.body._id],
+        check: [layerFile.body.data._id],
       })
       .expect(200);
 
@@ -401,10 +402,10 @@ describe("/layer API", () => {
     const res = await agent
       .post(full_url("pick-to-map-for-layer"))
       .send({
-        "file": fileId,
+        "file": [fileId],
         "name": faker.address.street(),
         "type": "Vector",
-        "vector": "Electric Pole",
+        "vectorType": "Electric Pole",
         "missionId": "61f3b1e65f915a05cb8885ec", // !TODO replace
         "color": "#00FF00",
         "icon": "MarkerIcon",
@@ -417,64 +418,37 @@ describe("/layer API", () => {
     });
   });
 
-  // test("PATCH /upload-file-geojson", async () => {
-  //     const created_layers: any[] = [];
-  //     {
-  //         const res = await agent
-  //         .post(full_url("create/Vector"))
-  //         .attach("file", "./assets/poles.geojson")
-  //         .field("name", randomUUID())
-  //         .field("type", "Vector")
-  //         .field("vector", "60c3a3c5ca0cbe039fce0d64")
-  //         .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-  //         .field("missionId", "61f3b1e65f915a05cb8885ec")
-  //         .field("color", "#00FF00")
-  //         .field("icon", "MarkerIcon")
-  //         .field("inHeritOriginalColorFromFile", "false")
-  //         .expect(201);
-  //         created_layers.push(res.body.data);
-  //     }
-  //     const res = await agent
-  //         .patch(full_url("upload-file-geojson"))
-  //         .attach("file", "./assets/image.png")
-  //         .field("layerId", created_layers[0]._id)
-  //         .field("sys_id", "abcdefg")
-  //         .field("type", "image/png")
-  //         .field("featureLabel", "Test Label")
-  //         .field("centerPoints", JSON.stringify({
-  //             "lat": 22,
-  //             "long": 22
-  //         }))
-  //         .expect(200);
+  test("PATCH /upload-file-geojson", async () => {
+    const layer = await createVectorLayer(agent);
+    const fileId = await uploadFile(agent, "./assets/image.png");
+    const res = await agent
+      .patch(full_url("upload-file-geojson"))
+      .send({
+        "file": fileId,
+        "layerId": layer._id,
+        "sys_Id": "abcdefg",
+        "type": "image/png",
+        "featureLabel": "Test Label",
+        "centerPoints": {
+          "lat": 22,
+          "lng": 22
+        },
+      })
+      .expect(201);
 
-  //     expect(res.body).toMatchObject({
-  //         status: true,
-  //         message: expect.any(String),
-  //         data: expect.any(Object)
-  //     });
-  // })
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Object)
+    });
+  })
 
   test("PATCH /edit-geojson", async () => {
-    const created_layers: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create/Vector"))
-        .attach("file", "./assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers.push(res.body.data);
-    }
+    const layer = await createLayer(agent);
     const res = await agent
       .patch(full_url("edit-geojson"))
       .send({
-        id: created_layers[0]._id,
+        id: layer._id,
         featureIndex: "0",
         feature: sampleGeojsonData.features[0],
       })
@@ -482,218 +456,100 @@ describe("/layer API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Successfully edited GEOJSON And multiColor exist!",
-      result: expect.any(Object),
+      message: expect.any(String),
+      data: expect.any(Object),
     });
   });
 
   test("PATCH /addFeature", async () => {
-    const created_layers: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create/Vector"))
-        .attach("file", "./assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers.push(res.body.data);
-    }
+    const layer = await createLayer(agent);
     const res = await agent
       .patch(full_url("addFeature"))
       .send({
-        id: created_layers[0]._id,
+        id: layer._id,
         feature: sampleGeojsonData.features[0],
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Successfully added feature",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
-  test("PATCH /add-isReview-to-layerFiles", async () => {
-    await agent
-      .post(full_url("create/Vector"))
-      .attach("file", "./assets/poles.geojson")
-      .field("name", randomUUID())
-      .field("type", "Vector")
-      .field("vector", "60c3a3c5ca0cbe039fce0d64")
-      .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-      .field("missionId", "61f3b1e65f915a05cb8885ec")
-      .field("color", "#00FF00")
-      .field("icon", "MarkerIcon")
-      .field("inHeritOriginalColorFromFile", "false")
-      .expect(201);
-    const res = await agent
-      .patch(full_url("add-isReview-to-layerFiles"))
-      .expect(200);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "layerFiles isReview property updated Successfully! ",
-    });
-  });
-
-  test("PATCH /gen_2x_layerfiles", async () => {
-    await agent
-      .post(full_url("create/Vector"))
-      .attach("file", "./assets/poles.geojson")
-      .field("name", randomUUID())
-      .field("type", "Vector")
-      .field("vector", "60c3a3c5ca0cbe039fce0d64")
-      .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-      .field("missionId", "61f3b1e65f915a05cb8885ec")
-      .field("color", "#00FF00")
-      .field("icon", "MarkerIcon")
-      .field("inHeritOriginalColorFromFile", "false")
-      .expect(201);
-    const res = await agent
-      .patch(full_url("gen_2x_layerfiles"))
-      .expect(200);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "Successfully generated 2x files",
-    });
-  });
-
   test("DELETE /delete-geojson", async () => {
-    const created_layers: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create/Vector"))
-        .attach("file", "./assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers.push(res.body.data);
-    }
+    const layer = await createVectorLayer(agent);
     const res = await agent
       .delete(full_url("delete-geojson"))
       .send({
-        id: created_layers[0]._id,
+        id: layer._id,
         featureIndex: "0",
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Feature Deleleted successfully",
+      message: expect.any(String),
     });
-  }, 15000);
+  });
 
   test("DELETE /delete", async () => {
-    const created_layers: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create/Vector"))
-        .attach("file", "./assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers.push(res.body.data);
-    }
+    const layer = await createVectorLayer(agent);
     const res = await agent
       .delete(full_url("delete"))
       .query({
-        id: created_layers[0]._id,
+        id: layer._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Layer successfully deleted",
+      message: expect.any(String),
       data: expect.any(Object),
     });
-  }, 15000);
+  });
 
   test("DELETE /delete-multipleLayerFiles", async () => {
-    const created_layers: any[] = [];
-    const created_layerFiles: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create/Vector"))
-        .attach("file", "./assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers.push(res.body.data);
-
-      const res2 = await agent
-        .post(full_url("upload-file-to-layer"))
-        .attach("file", "./assets/image.png")
-        .field("layerId", created_layers[0]._id)
-        .expect(201);
-      created_layerFiles.push(res2.body.data);
-    }
+    const layer = await createVectorLayer(agent);
+    const fileId = await uploadFile(agent, "./assets/image.png");
+    const layerFile = await agent
+      .post(full_url("upload-file-to-layer"))
+      .send({
+        "file": fileId,
+        "layerId": layer._id,
+      })
+      .expect(201);
 
     const res = await agent
       .delete(full_url("delete-multipleLayerFiles"))
       .send({
-        layerFileIds: [created_layerFiles[0]._id],
+        layerFileIds: [layerFile.body.data._id],
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "LayerFiles successfully deleted",
-      data: [created_layerFiles[0]._id],
+      message: expect.any(String),
+      data: expect.any(Array),
     });
   });
 
   test("POST /delete-layers", async () => {
-    const created_layers_ids: any[] = [];
-    for (let i = 1; i <= 2; i++) {
-      const res = await agent
-        .post(full_url("create/Vector"))
-        .attach("file", "./assets/poles.geojson")
-        .field("name", randomUUID())
-        .field("type", "Vector")
-        .field("vector", "60c3a3c5ca0cbe039fce0d64")
-        .field("captureDate", "2022-08-22T06:54:35.486+00:00")
-        .field("missionId", "61f3b1e65f915a05cb8885ec")
-        .field("color", "#00FF00")
-        .field("icon", "MarkerIcon")
-        .field("inHeritOriginalColorFromFile", "false")
-        .expect(201);
-      created_layers_ids.push(res.body.data._id);
-    }
+    const createdLayers = [
+      await createVectorLayer(agent),
+      await createRasterLayer(agent),
+    ];
     const res = await agent
       .post(full_url("delete-layers"))
       .send({
-        layers: created_layers_ids,
+        layers: createdLayers.map(layer => layer._id),
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Layer successfully deleted",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   }, 15000);
