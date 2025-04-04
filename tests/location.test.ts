@@ -91,21 +91,23 @@ describe("/location API", () => {
   });
 
   test("GET /get-within-by-id", async () => {
-    await createLocation(agent); // "Polygon" location
-    const location = await createLocation(agent, "Point"); // "Point" location that lies within that "Polygon" location
+    const polygonLocation = await createLocation(agent); // "Polygon" location
+    const pointLocation = await createLocation(agent, "Point"); // "Point" location that lies within that "Polygon" location
 
     const res = await agent
       .get(full_url("get-within-by-id"))
       .query({
-        id: location._id,
+        id: polygonLocation._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
       message: expect.any(String),
-      data: expect.any(Object),
+      data: expect.any(Array),
     });
+
+    expect(res.body.data).toContainEqual(pointLocation);
   });
 
   test("DELETE /delete", async () => {

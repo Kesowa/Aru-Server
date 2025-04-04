@@ -120,14 +120,13 @@ export const getwithinLocationByID = async (
     const selectedDoc = await Location.findOne({
       _id: req.query.id,
       tenantId: res.locals.user.tenantId._id,
+      "geometry.type": "Polygon",
     });
     if (selectedDoc) {
       const docs = await Location.find({
         geometry: {
           $geoWithin: {
-            $geometry: {
-              ...selectedDoc.geometry,
-            },
+            $geometry: selectedDoc.geometry,
           },
         },
         tenantId: res.locals.user.tenantId._id,
@@ -251,11 +250,14 @@ export const deleteLocation = async (req: Request, res: AuthResponse) => {
 export const getLocationByLatLong = async (req: Request, res: AuthResponse) => {
   const lat = Number(req.query.lat);
   const long = Number(req.query.long);
-  const locations = await Location.find({
+  const location = await Location.findOne({
     tenantId: new Types.ObjectId(res.locals.user.tenantId._id),
+    geometry: {
+      type: "Point",
+      coordinates: [long, lat],
+    },
   });
-  req.log.info("LOCATIONS: ", locations);
-  const location = locations.find(l => l.geometry.coordinates[0] === long && l.geometry.coordinates[1] === lat );
+  req.log.info("LOCATIONS: ", location);
   if (location) {
     res.json({
       status: true,

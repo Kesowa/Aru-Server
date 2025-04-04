@@ -4,7 +4,7 @@ import { faker } from "@faker-js/faker";
 
 const full_url = CurriedUrl("location");
 
-const coordinates = [
+const PolygonCoordinates = [
   [
     [88.47412616159087, 22.576572985349607],
     [88.47393132628888, 22.57600845615178],
@@ -14,18 +14,23 @@ const coordinates = [
   ],
 ];
 
-export async function createLocation(agent: SuperAgentTest, type?: "Polygon" | "Point") {
+const PointCoordinates = [
+  88.47415981285167,
+  22.576255556278724
+];
+
+export async function createLocation(agent: SuperAgentTest, type: "Polygon" | "Point" = "Polygon") {
   const res = await agent
-        .post(full_url("create"))
-        .send({
-          type: type ?? "Polygon",
-          coordinates: (type === "Point") ? coordinates[0][0] : coordinates,
-          properties: {
-            name: faker.address.streetAddress(),
-          },
-        })
-        .expect(201);
-  
+    .post(full_url("create"))
+    .send({
+      type: type,
+      coordinates: (type === "Point") ? PointCoordinates : PolygonCoordinates,
+      properties: {
+        name: faker.address.streetAddress(),
+      },
+    })
+    .expect(201);
+
   expect(res.body).toMatchObject({
     status: true,
     message: expect.any(String),
