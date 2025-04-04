@@ -21,7 +21,7 @@ router.post(
   "/create",
   isAuthenticated,
   body("type").notEmpty().trim(),
-  body("coordinates").notEmpty().isObject(),
+  body("coordinates").notEmpty().isArray(),
   body("properties").notEmpty().isObject(),
   PermissionGuard(PERMS.LOCATION_CREATE),
   isLocationCount,

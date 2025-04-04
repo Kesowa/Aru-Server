@@ -249,13 +249,13 @@ export const deleteLocation = async (req: Request, res: AuthResponse) => {
 
 // get location for lat,long
 export const getLocationByLatLong = async (req: Request, res: AuthResponse) => {
-  const lat = req.query.lat;
-  const long = req.query.long;
-  const location = await Location.findOne({
-    tenantId: res.locals.user.tenantId._id,
-    "geometry.coordinates.lat": lat,
-    "geometry.coordinates.lng": long,
+  const lat = Number(req.query.lat);
+  const long = Number(req.query.long);
+  const locations = await Location.find({
+    tenantId: new Types.ObjectId(res.locals.user.tenantId._id),
   });
+  req.log.info("LOCATIONS: ", locations);
+  const location = locations.find(l => l.geometry.coordinates[0] === long && l.geometry.coordinates[1] === lat );
   if (location) {
     res.json({
       status: true,
