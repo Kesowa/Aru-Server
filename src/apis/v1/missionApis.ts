@@ -155,8 +155,10 @@ router.patch(
 
 router.get(
   "/autocomplete",
+  isAuthenticated,
   query("query").notEmpty().trim(),
   validator,
+  PermissionGuard(PERMS.MISSION_LIST),
   RobustRunner(autoComplete),
 );
 
@@ -209,7 +211,7 @@ router.post(
   body("id").notEmpty().isMongoId(),
   body("missionType").notEmpty().isMongoId(),
   validator,
-  PermissionGuard(PERMS.MISSION_TYPE_UPDATE, PERMS.MISSION_UPDATE),
+  PermissionGuard(PERMS.MISSION_UPDATE),
   RobustRunner(insertMissionTypeById),
 );
 
