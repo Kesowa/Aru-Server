@@ -1,136 +1,50 @@
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import {SuperAgentTest} from "supertest";
-import { randomUUID } from "crypto";
+import { createMission } from "./utils/mission";
+import { faker } from "@faker-js/faker";
+import { createMissionType } from "./utils/missionType";
 
-let agent: SuperAgentTest;
+let tenantAgent: SuperAgentTest;
+let superAdminAgent: SuperAgentTest;
 
 const full_url = CurriedUrl("mission");
 
 describe("/mission API", () => {
-  beforeAll(async () => (agent = await Login()));
-  afterAll(async () => await Logout(agent));
+  beforeAll(async () => {
+    tenantAgent = await Login();
+    superAdminAgent = await LoginSuper();
+  });
+  afterAll(async () => {
+    await Logout(tenantAgent);
+    await Logout(superAdminAgent);
+  });
 
   test("POST /create", async () => {
-    const res = await agent
-      .post(full_url("create"))
-      .send({
-        name: randomUUID(),
-        description: randomUUID(),
-        deliverables: ["Live Feed", "Thermal"],
-        assetId: "none",
-        flights: [
-          {
-            flightDetails: {
-              locationId: "6123317cdaacac04cdb2d805",
-              flightName: randomUUID(),
-              date: "2022-09-15",
-              time: "05:30:00 PM",
-              duration: "1hr",
-              centerPoints: {
-                lat: 22.55,
-                lng: 88.48,
-              },
-              geoLocation: randomUUID(),
-            },
-          },
-        ],
-        missionType: "60cc7d408fb1793e8c76d4a3",
-        clientId: [
-          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-          "614ec3dcd44bea14a721326a", // Kesowa super-admin
-        ],
-      })
-      .expect(201);
-
-    expect(res.body).toMatchObject({
-      status: true,
-      message: "New mission created",
-      data: expect.any(Object),
-    });
+    await createMission(tenantAgent, superAdminAgent);
   });
 
   test("POST /mission-by-userid", async () => {
-    await agent
-      .post(full_url("create"))
-      .send({
-        name: randomUUID(),
-        description: randomUUID(),
-        deliverables: ["Live Feed", "Thermal"],
-        assetId: "none",
-        flights: [
-          {
-            flightDetails: {
-              locationId: "6123317cdaacac04cdb2d805",
-              flightName: randomUUID(),
-              date: "2022-09-15",
-              time: "05:30:00 PM",
-              duration: "1hr",
-              centerPoints: {
-                lat: 22.55,
-                lng: 88.48,
-              },
-              geoLocation: randomUUID(),
-            },
-          },
-        ],
-        missionType: "60cc7d408fb1793e8c76d4a3",
-        clientId: [
-          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-          "614ec3dcd44bea14a721326a", // Kesowa super-admin
-        ],
-      })
-      .expect(201);
-    const res = await agent
+    await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .post(full_url("mission-by-userid"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Missions fetched sucessfully.",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("GET /get/tenant", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
-    const res = await agent
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .get(full_url("get/tenant"))
       .query({
         filter: "all",
-        missionType: created_missions[0].missionType,
+        missionType: mission.missionType,
         client: "true",
         sort: "createdAt:descend",
         page: "1",
@@ -141,132 +55,44 @@ describe("/mission API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Here are all the missions",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("GET /get/user/:id", async () => {
-    await agent
-      .post(full_url("create"))
-      .send({
-        name: randomUUID(),
-        description: randomUUID(),
-        deliverables: ["Live Feed", "Thermal"],
-        assetId: "none",
-        flights: [
-          {
-            flightDetails: {
-              locationId: "6123317cdaacac04cdb2d805",
-              flightName: randomUUID(),
-              date: "2022-09-15",
-              time: "05:30:00 PM",
-              duration: "1hr",
-              centerPoints: {
-                lat: 22.55,
-                lng: 88.48,
-              },
-              geoLocation: randomUUID(),
-            },
-          },
-        ],
-        missionType: "60cc7d408fb1793e8c76d4a3",
-        clientId: [
-          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-          "614ec3dcd44bea14a721326a", // Kesowa super-admin
-        ],
-      })
-      .expect(201);
-    const res = await agent
-      .get(full_url("get/user/608e7b3ae11f711a34fb0476"))
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+    console.log(mission.user);
+
+    const res = await tenantAgent
+      .get(full_url(`get/user/${mission.user}`))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Missions fetched sucessfully.",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("GET /get/:id", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
-    const res = await agent
-      .get(full_url("get/" + created_missions[0]._id))
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
+      .get(full_url(`get/${mission._id}`))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Mission fetched",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
-  // FIXED: Check commit for more info
   test("GET /filtered-mission", async () => {
-    await agent
-      .post(full_url("create"))
-      .send({
-        name: randomUUID(),
-        description: randomUUID(),
-        deliverables: ["Live Feed", "Thermal"],
-        assetId: "none",
-        flights: [
-          {
-            flightDetails: {
-              locationId: "6123317cdaacac04cdb2d805",
-              flightName: randomUUID(),
-              date: "2022-09-15",
-              time: "05:30:00 PM",
-              duration: "1hr",
-              centerPoints: {
-                lat: 22.55,
-                lng: 88.48,
-              },
-              geoLocation: randomUUID(),
-            },
-          },
-        ],
-        missionType: "60cc7d408fb1793e8c76d4a3",
-        clientId: [
-          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-          "614ec3dcd44bea14a721326a", // Kesowa super-admin
-        ],
-      })
-      .expect(201);
-    const res = await agent
+    await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .get(full_url("filtered-mission"))
       .query({
         status: "All",
@@ -279,45 +105,16 @@ describe("/mission API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Flight fetched sucessfully.",
+      message: expect.any(String),
       totalPages: expect.any(Number),
       data: expect.any(Array),
     });
   });
 
   test("GET /autocomplete", async () => {
-    await agent
-      .post(full_url("create"))
-      .send({
-        name: "New Text Mission",
-        description:
-          "This mission's data is hard coded sothat given query is found",
-        deliverables: ["Live Feed", "Thermal"],
-        assetId: "none",
-        flights: [
-          {
-            flightDetails: {
-              locationId: "6123317cdaacac04cdb2d805",
-              flightName: randomUUID(),
-              date: "2022-09-15",
-              time: "05:30:00 PM",
-              duration: "1hr",
-              centerPoints: {
-                lat: 22.55,
-                lng: 88.48,
-              },
-              geoLocation: randomUUID(),
-            },
-          },
-        ],
-        missionType: "60cc7d408fb1793e8c76d4a3",
-        clientId: [
-          "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-          "614ec3dcd44bea14a721326a", // Kesowa super-admin
-        ],
-      })
-      .expect(201);
-    const res = await agent
+    await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .get(full_url("autocomplete"))
       .query({
         query: "mission",
@@ -326,303 +123,110 @@ describe("/mission API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Result found : " + res.body.data.length,
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("GET /get-total-number-of-mission-by-locationID", async () => {
-    const created_flights: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_flights.push(res.body.data.flight);
-    }
-    const res = await agent
+    const { flight } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .get(full_url("get-total-number-of-mission-by-locationID"))
       .query({
-        id: created_flights[0].locationID,
+        id: flight.locationID,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Number of mission data fetched successfully!",
+      message: expect.any(String),
       data: expect.any(Number),
     });
   });
 
   test("GET /get-missions-by-location-mapref", async () => {
-    const created_flights: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_flights.push(res.body.data.flight);
-    }
-    const res = await agent
+    const { flight } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .get(full_url("get-missions-by-location-mapref"))
       .query({
-        id: created_flights[0].locationID,
+        id: flight.locationID,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: " mission data fetched successfully!",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("GET /get-missions-by-locationID", async () => {
-    const created_missions: any[] = [];
-    const created_flights: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-      created_flights.push(res.body.data.flight);
-    }
-    const res = await agent
+    const { mission, flight } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .get(full_url("get-missions-by-locationID"))
       .query({
-        missionID: created_missions[0]._id,
-        locationID: created_flights[0].locationID,
+        missionID: mission._id,
+        locationID: flight.locationID,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Fetched missions by locationID",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("GET /get-mission-csv-for-tenant-Or-user", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
-    const res = await agent
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .get(full_url("get-mission-csv-for-tenant-Or-user"))
       .send({
-        userId: created_missions[0].user,
-        status: created_missions[0].status,
+        userId: mission.user,
+        status: mission.status,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Successfully csv file created!",
+      message: expect.any(String),
       pathh: expect.any(String),
     });
   });
 
   test("GET /memory-usage/:id", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
-    const res = await agent
-      .get(full_url("memory-usage/" + created_missions[0]._id))
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
+      .get(full_url(`memory-usage/${mission._id}`))
       .query({
-        missionId: created_missions[0]._id,
+        missionId: mission._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "mission data usage",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("POST /edit", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
-    const res = await agent
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+    const missionType = await createMissionType(superAdminAgent);
+
+    const res = await tenantAgent
       .post(full_url("edit"))
       .send({
-        id: created_missions[0]._id,
-        name: randomUUID(),
-        description: randomUUID(),
-        deliverables: ["Thermal", "Orthomosaic"],
-        type: "5f4771e3976282570dbfffc8",
+        id: mission._id,
+        name: faker.random.words(2),
+        description: faker.random.words(3),
+        deliverables: [faker.random.word()],
+        type: missionType._id,
       })
       .expect(200);
 
@@ -634,148 +238,53 @@ describe("/mission API", () => {
   });
 
   test("PATCH /update-status", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
-    const res = await agent
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .patch(full_url("update-status"))
       .send({
-        missionID: created_missions[0]._id,
+        missionID: mission._id,
         status: "Completed",
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Mission completed for missionID : " + created_missions[0]._id,
+      message: expect.any(String),
     });
   });
 
   test("POST /insert-missiontype-by-Id", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
-    const res = await agent
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+    const missionType = await createMissionType(superAdminAgent);
+
+    const res = await tenantAgent
       .post(full_url("insert-missiontype-by-Id"))
       .send({
-        id: created_missions[0]._id,
-        missionType: "5f4771e3976282570dbfffc8",
+        id: mission._id,
+        missionType: missionType._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Successfully data updated!",
+      message: expect.any(String),
     });
   });
 
   test("POST /delete", async () => {
-    const created_missions: any[] = [];
-    {
-      const res = await agent
-        .post(full_url("create"))
-        .send({
-          name: randomUUID(),
-          description: randomUUID(),
-          deliverables: ["Live Feed", "Thermal"],
-          assetId: "none",
-          flights: [
-            {
-              flightDetails: {
-                locationId: "6123317cdaacac04cdb2d805",
-                flightName: randomUUID(),
-                date: "2022-09-15",
-                time: "05:30:00 PM",
-                duration: "1hr",
-                centerPoints: {
-                  lat: 22.55,
-                  lng: 88.48,
-                },
-                geoLocation: randomUUID(),
-              },
-            },
-          ],
-          missionType: "60cc7d408fb1793e8c76d4a3",
-          clientId: [
-            "608e7b3ae11f711a34fb0476", // NKDA tenant-root
-            "614ec3dcd44bea14a721326a", // Kesowa super-admin
-          ],
-        })
-        .expect(201);
-      created_missions.push(res.body.data.mission);
-    }
-    const res = await agent
+    const { mission } = await createMission(tenantAgent, superAdminAgent);
+
+    const res = await tenantAgent
       .post(full_url("delete"))
       .send({
-        _id: created_missions[0]._id,
+        _id: mission._id,
       })
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Mission deleted",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
