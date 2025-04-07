@@ -1,19 +1,25 @@
 import { createAsset } from "./utils/asset";
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
 
 let agent: SuperAgentTest;
-
-beforeAll(async () => (agent = await Login()));
-afterAll(async () => await Logout(agent));
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("asset");
 
 describe("/asset API", () => {
   test("POST /create", async () => {
-    await createAsset(agent);
+    await createAsset(agent, superAdminAgent);
   });
   test("GET /get", async () => {
-    const asset = await createAsset(agent);
+    const asset = await createAsset(agent, superAdminAgent);
 
     const res = await agent
       .get(full_url("get"))
@@ -29,7 +35,7 @@ describe("/asset API", () => {
     });
   });
   test("GET /get-all-asset", async () => {
-    await createAsset(agent);
+    await createAsset(agent, superAdminAgent);
 
     const res = await agent
       .get(full_url("get-all-asset"))
@@ -42,7 +48,7 @@ describe("/asset API", () => {
     });
   });
   test("PATCH /update", async () => {
-    const asset = await createAsset(agent);
+    const asset = await createAsset(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("update"))
       .send({
@@ -60,7 +66,7 @@ describe("/asset API", () => {
     });
   });
   test("PATCH /toggle-asset-status", async () => {
-    const asset = await createAsset(agent);
+    const asset = await createAsset(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("toggle-asset-status"))
       .send({
@@ -76,7 +82,7 @@ describe("/asset API", () => {
     });
   });
   test("DELETE /delete", async () => {
-    const asset = await createAsset(agent);
+    const asset = await createAsset(agent, superAdminAgent);
     const res = await agent
       .delete(full_url("delete"))
       .send({

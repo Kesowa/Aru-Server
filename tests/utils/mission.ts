@@ -10,7 +10,7 @@ const full_url = CurriedUrl("mission");
 
 export async function createMission(tenantAgent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
   const missionType = await createMissionType(superAdminAgent);
-  const asset = await createAsset(tenantAgent);
+  const asset = await createAsset(tenantAgent, superAdminAgent);
   const location = await createLocation(tenantAgent);
   const client = await createClient(tenantAgent);
   const address = faker.address.streetAddress();

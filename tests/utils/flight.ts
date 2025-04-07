@@ -1,16 +1,19 @@
 import { SuperAgentTest } from "supertest";
 import { CurriedUrl } from "./utils";
 import { faker } from "@faker-js/faker";
+import { createMission } from "./mission";
+import { createLocation } from "./location";
 
 const full_url = CurriedUrl("flight");
 
-export async function createFlight(agent: SuperAgentTest) {
+export async function createFlight(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
+  const { mission } = await createMission(agent, superAdminAgent);
   const res = await agent
     .post(full_url("create"))
     .send({
       date: new Date(),
       name: faker.address.street(),
-      mission: "61f3b1e65f915a05cb8885ec",
+      mission: mission._id,
       time: "05:30:00 PM",
       duration: "1hr",
     })
@@ -26,6 +29,7 @@ export async function createFlight(agent: SuperAgentTest) {
 }
 
 export async function updateFlight(agent: SuperAgentTest, flight: any) {
+  const location = await createLocation(agent);
   const res = await agent
     .post(full_url("edit"))
     .send({
@@ -34,7 +38,7 @@ export async function updateFlight(agent: SuperAgentTest, flight: any) {
       date: new Date(),
       time: "06:00:00 PM",
       duration: "2hr",
-      locationId: "5f202f03b9225726102721b8",
+      locationId: location._id,
       centerPoints: {
         lat: 22.55,
         lng: 88.48

@@ -1,35 +1,26 @@
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
-import { randomUUID } from "crypto";
 import { createFlightLog } from "./utils/flightlog";
 
 let agent: SuperAgentTest;
-
-beforeAll(async () => (agent = await Login()));
-afterAll(async () => await Logout(agent));
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("flightlog");
-
-const sampleGeoFence = {
-  polygon: {
-    points: [],
-  },
-  circle: {
-    center: {
-      lat: "22.623449382230135",
-      lng: "88.38970325095323",
-    },
-    area: "4793095.287172079",
-    radius: "617.6523065529672",
-  },
-};
 
 describe("/flightlog API", () => {
   test("POST /create", async () => {
-    await createFlightLog(agent);
+    await createFlightLog(agent, superAdminAgent);
   });
 
   test("GET /get", async () => {
-    const flightlog = await createFlightLog(agent);
+    const flightlog = await createFlightLog(agent, superAdminAgent);
     const res = await agent
       .get(full_url("get"))
       .query({
@@ -44,7 +35,7 @@ describe("/flightlog API", () => {
   });
 
   test("GET /last-flightlog-by-ID", async () => {
-    const flightlog = await createFlightLog(agent);
+    const flightlog = await createFlightLog(agent, superAdminAgent);
     const res = await agent
       .get(full_url("last-flightlog-by-ID"))
       .query({
@@ -60,7 +51,7 @@ describe("/flightlog API", () => {
   });
 
   test("GET /last-flightlog-by-location-ID", async () => {
-    const flightlog = await createFlightLog(agent);
+    const flightlog = await createFlightLog(agent, superAdminAgent);
     const res = await agent
       .get(full_url("last-flightlog-by-location-ID"))
       .query({

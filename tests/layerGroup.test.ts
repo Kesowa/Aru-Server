@@ -1,22 +1,28 @@
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import { createLayer } from "./utils/layer";
 import { SuperAgentTest } from "supertest";
 import { createLayerGroup } from "./utils/layerGroup";
 
 let agent: SuperAgentTest;
-
-beforeAll(async () => (agent = await Login()));
-afterAll(async () => await Logout(agent));
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("layergroup");
 
 describe("/layergroup API", () => {
   test("POST /create", async () => {
-    await createLayerGroup(agent);
+    await createLayerGroup(agent, superAdminAgent);
   });
 
   test("PATCH /edit", async () => {
-    const layers = [await createLayer(agent), await createLayer(agent)];
-    const layerGroup = await createLayerGroup(agent);
+    const layers = [await createLayer(agent, superAdminAgent), await createLayer(agent, superAdminAgent)];
+    const layerGroup = await createLayerGroup(agent, superAdminAgent);
 
     const res = await agent
       .patch(full_url("edit"))
@@ -34,7 +40,7 @@ describe("/layergroup API", () => {
   });
 
   test("GET /fetch", async () => {
-    const layerGroup = await createLayerGroup(agent);
+    const layerGroup = await createLayerGroup(agent, superAdminAgent);
     const res = await agent
       .get(full_url("fetch"))
       .send({
@@ -50,7 +56,7 @@ describe("/layergroup API", () => {
   });
 
   test("DELETE /delete", async () => {
-    const layerGroup = await createLayerGroup(agent);
+    const layerGroup = await createLayerGroup(agent, superAdminAgent);
     const res = await agent
       .delete(full_url("delete"))
       .query({
@@ -66,7 +72,7 @@ describe("/layergroup API", () => {
   });
 
   test("POST /delete-layerId", async () => {
-    const layerGroup = await createLayerGroup(agent);
+    const layerGroup = await createLayerGroup(agent, superAdminAgent);
     const res = await agent
       .post(full_url("delete-layerId"))
       .send({

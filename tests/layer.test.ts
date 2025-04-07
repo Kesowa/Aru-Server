@@ -1,15 +1,20 @@
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import { createLayer, createRasterLayer, createVectorLayer } from "./utils/layer";
 import { SuperAgentTest } from "supertest";
 import { uploadFile } from "./utils/upload";
 import { faker } from "@faker-js/faker";
+import { createMission } from "./utils/mission";
 
 let agent: SuperAgentTest;
-
+let superAdminAgent: SuperAgentTest;
 beforeAll(async () => {
   agent = await Login();
+  superAdminAgent = await LoginSuper();
 });
-afterAll(async () => await Logout(agent));
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("layer");
 
 const sampleGeojsonData = {
@@ -56,19 +61,19 @@ const sampleGeojsonData = {
 
 describe("/layer API", () => {
   test("POST /create/Vector", async () => {
-    await createLayer(agent);
+    await createLayer(agent, superAdminAgent);
   });
 
   test("POST /create-vector-layer", async () => {
-    await createVectorLayer(agent);
+    await createVectorLayer(agent, superAdminAgent);
   });
 
   test("POST /create/Raster", async () => {
-    await createRasterLayer(agent);
+    await createRasterLayer(agent, superAdminAgent);
   }, 15000);
 
   test("POST /upload-file-to-layer", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const fileId = await uploadFile(agent, "./assets/image.png");
     const res = await agent
       .post(full_url("upload-file-to-layer"))
@@ -86,7 +91,7 @@ describe("/layer API", () => {
   });
 
   test("DELETE /delete-file-geojson", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const fileId = await uploadFile(agent, "./assets/image.png");
     const layerFile = await agent
       .post(full_url("upload-file-to-layer"))
@@ -111,7 +116,7 @@ describe("/layer API", () => {
   }, 15000);
 
   test("PATCH /edit-layer", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("edit-layer"))
       .query({ id: layer._id })
@@ -129,7 +134,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /changecolorbyId", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("changecolorbyId"))
       .send({
@@ -146,7 +151,7 @@ describe("/layer API", () => {
   });
 
   test("GET /getbymissionId", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .get(full_url("getbymissionId"))
       .query({
@@ -162,7 +167,7 @@ describe("/layer API", () => {
   });
 
   test("GET /all-layers-for-mission", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .get(full_url("all-layers-for-mission"))
       .query({
@@ -177,7 +182,7 @@ describe("/layer API", () => {
   });
 
   test("GET /getrasterdetailsbyID", async () => {
-    const layer = await createRasterLayer(agent);
+    const layer = await createRasterLayer(agent, superAdminAgent);
     const res = await agent
       .get(full_url("getrasterdetailsbyID"))
       .query({
@@ -193,7 +198,7 @@ describe("/layer API", () => {
   }, 15000);
 
   test("GET /downloadassetbylayerId", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .get(full_url("downloadassetbylayerId"))
       .query({
@@ -209,7 +214,7 @@ describe("/layer API", () => {
   });
 
   test("GET /download-asset-by-Id-to-kml", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .get(full_url("download-asset-by-Id-to-kml"))
       .query({
@@ -225,7 +230,7 @@ describe("/layer API", () => {
   });
 
   test("GET /sort-all-layer", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .get(full_url("sort-all-layer"))
       .query({
@@ -244,7 +249,7 @@ describe("/layer API", () => {
   });
 
   test("GET /fetch-to-be-reviwed-files", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const fileId = await uploadFile(agent, "./assets/image.png");
     await agent
       .post(full_url("upload-file-to-layer"))
@@ -268,7 +273,7 @@ describe("/layer API", () => {
   });
 
   test("POST /filter-layer", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .post(full_url("filter-layer"))
       .send({
@@ -292,7 +297,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /get-feature-by-layerId", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("get-feature-by-layerId"))
       .send({
@@ -314,7 +319,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /get-feature-csv-by-layerIndex", async () => {
-    const layer = await createLayer(agent);
+    const layer = await createLayer(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("get-feature-csv-by-layerIndex"))
       .send({
@@ -331,7 +336,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /assignLayerLabel", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("assignLayerLabel"))
       .send({
@@ -348,7 +353,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /auto-assign-uploaded-image", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const fileIds = [
       await uploadFile(agent, "./assets/image.png"),
       await uploadFile(agent, "./assets/image.png"),
@@ -373,7 +378,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /images-review", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const fileId = await uploadFile(agent, "./assets/image.png");
     const layerFile = await agent
       .post(full_url("upload-file-to-layer"))
@@ -399,6 +404,7 @@ describe("/layer API", () => {
 
   test("POST /pick-to-map-for-layer", async () => {
     const fileId = await uploadFile(agent, "./assets/image.png");
+    const { mission } = await createMission(agent, superAdminAgent);
     const res = await agent
       .post(full_url("pick-to-map-for-layer"))
       .send({
@@ -406,7 +412,7 @@ describe("/layer API", () => {
         "name": faker.address.street(),
         "type": "Vector",
         "vectorType": "Electric Pole",
-        "missionId": "61f3b1e65f915a05cb8885ec", // !TODO replace
+        "missionId": mission._id,
         "color": "#00FF00",
         "icon": "MarkerIcon",
       })
@@ -419,7 +425,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /upload-file-geojson", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const fileId = await uploadFile(agent, "./assets/image.png");
     const res = await agent
       .patch(full_url("upload-file-geojson"))
@@ -444,7 +450,7 @@ describe("/layer API", () => {
   })
 
   test("PATCH /edit-geojson", async () => {
-    const layer = await createLayer(agent);
+    const layer = await createLayer(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("edit-geojson"))
       .send({
@@ -462,7 +468,7 @@ describe("/layer API", () => {
   });
 
   test("PATCH /addFeature", async () => {
-    const layer = await createLayer(agent);
+    const layer = await createLayer(agent, superAdminAgent);
     const res = await agent
       .patch(full_url("addFeature"))
       .send({
@@ -479,7 +485,7 @@ describe("/layer API", () => {
   });
 
   test("DELETE /delete-geojson", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .delete(full_url("delete-geojson"))
       .send({
@@ -495,7 +501,7 @@ describe("/layer API", () => {
   });
 
   test("DELETE /delete", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const res = await agent
       .delete(full_url("delete"))
       .query({
@@ -511,7 +517,7 @@ describe("/layer API", () => {
   });
 
   test("DELETE /delete-multipleLayerFiles", async () => {
-    const layer = await createVectorLayer(agent);
+    const layer = await createVectorLayer(agent, superAdminAgent);
     const fileId = await uploadFile(agent, "./assets/image.png");
     const layerFile = await agent
       .post(full_url("upload-file-to-layer"))
@@ -537,8 +543,8 @@ describe("/layer API", () => {
 
   test("POST /delete-layers", async () => {
     const createdLayers = [
-      await createVectorLayer(agent),
-      await createRasterLayer(agent),
+      await createVectorLayer(agent, superAdminAgent),
+      await createRasterLayer(agent, superAdminAgent),
     ];
     const res = await agent
       .post(full_url("delete-layers"))

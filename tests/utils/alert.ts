@@ -1,18 +1,20 @@
 import { SuperAgentTest } from "supertest";
 import { CurriedUrl } from "./utils";
 import { uploadFile } from "./upload";
+import { createMission } from "./mission";
 
 const full_url = CurriedUrl("alert");
 
-export async function createAlert(agent: SuperAgentTest) {
+export async function createAlert(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
+  const { mission, flight } = await createMission(agent, superAdminAgent);
   const fileId = await uploadFile(agent, "./assets/image.png");
   const res = await agent
     .post(full_url("create"))
     .send({
-      missionId: "6267dd4b2a2d394080a20848",
-      flightId: "6267dd4b2a2d394080a20849",
-      locationName: "Address of location from image telemetry data",
-      locationId: "6123317cdaacac04cdb2d805",
+      missionId: mission._id,
+      flightId: flight._id,
+      locationName: flight.geoLocation,
+      locationId: flight.locationID,
       location: {
         lat: 22,
         long: 23,

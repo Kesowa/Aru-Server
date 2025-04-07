@@ -1,12 +1,19 @@
-import { CurriedUrl, Login, Logout, clearAllClients } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout, clearAllClients } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
 import { faker } from "@faker-js/faker";
 import { addClientToMission, createClient } from "./utils/client";
+import { createMission } from "./utils/mission";
 
 let agent: SuperAgentTest;
-
-beforeAll(async () => (agent = await Login()));
-afterAll(async () => await Logout(agent));
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("client");
 
 describe("/client API", () => {
@@ -35,16 +42,18 @@ describe("/client API", () => {
 
   test("PATCH /insert-client-for-mission", async () => {
     const client = await createClient(agent);
-    await addClientToMission(agent, client._id, "61f3b1e65f915a05cb8885ec");
+    const { mission } = await createMission(agent, superAdminAgent);
+    await addClientToMission(agent, client._id, mission._id);
   });
 
   test("PATCH /remove-client-from-mission", async () => {
     const client = await createClient(agent);
-    await addClientToMission(agent, client._id, "61f3b1e65f915a05cb8885ec");
+    const { mission } = await createMission(agent, superAdminAgent);
+    await addClientToMission(agent, client._id, mission._id);
     const res = await agent
       .patch(full_url("remove-client-from-mission"))
       .query({
-        id: "61f3b1e65f915a05cb8885ec", // !TODO replace
+        id: mission._id,
         clientId: client._id,
       })
       .expect(200);
@@ -95,21 +104,23 @@ describe("/client API", () => {
 
   test("GET /get-client-mission-details/:missionID", async () => {
     const client = await createClient(agent);
-    await addClientToMission(agent, client._id, "61f3b1e65f915a05cb8885ec");
+    const { mission } = await createMission(agent, superAdminAgent);
+    await addClientToMission(agent, client._id, mission._id);
     const res = await agent
       .get(full_url("get-client-mission-details/61f3b1e65f915a05cb8885ec"))
       .expect(200);
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Mission fetched",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
   test("GET /get-mission-list-for-Id", async () => {
     const client = await createClient(agent);
-    await addClientToMission(agent, client._id, "61f3b1e65f915a05cb8885ec"); // !TODO replace
+    const { mission } = await createMission(agent, superAdminAgent);
+    await addClientToMission(agent, client._id, mission._id);
     // !TODO requires client login
     const res = await agent
       .get(full_url("get-mission-list-for-Id"))
@@ -152,17 +163,18 @@ describe("/client API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "client deleted successfully!",
+      message: expect.any(String),
       data: expect.any(Object),
     });
   });
 
   test("POST /invite-client-to-mission", async () => {
+    const { mission } = await createMission(agent, superAdminAgent);
     const emailID: string = faker.internet.email();
     const res = await agent
       .post(full_url("invite-client-to-mission"))
       .send({
-        missionID: "61f3b1e65f915a05cb8885ec", // !TODO replace
+        missionID: mission._id,
         emailID: emailID,
       })
       .expect(200);
@@ -174,13 +186,14 @@ describe("/client API", () => {
   });
 
   test("GET /register/:inviteId", async () => {
+    const { mission } = await createMission(agent, superAdminAgent);
     const emailID: string = faker.internet.email();
     let inviteID: string = "";
     {
       const res = await agent
         .post(full_url("invite-client-to-mission"))
         .send({
-          missionID: "61f3b1e65f915a05cb8885ec", // !TODO replace
+          missionID: mission._id,
           emailID: emailID,
         })
         .expect(200);

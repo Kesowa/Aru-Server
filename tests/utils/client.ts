@@ -38,7 +38,7 @@ export async function addClientToMission(agent: SuperAgentTest, client_id: strin
   const res = await agent
     .patch(full_url("insert-client-for-mission"))
     .send({
-      missionId: mission_id, // !TODO replace
+      missionId: mission_id,
       clientId: [client_id],
     })
     .expect(200);

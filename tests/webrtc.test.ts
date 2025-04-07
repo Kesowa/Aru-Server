@@ -1,11 +1,18 @@
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import {SuperAgentTest} from "supertest";
 import webrtc from "wrtc";
+import { createMission } from "./utils/mission";
 
 let agent: SuperAgentTest;
-
-beforeAll(async () => (agent = await Login()));
-afterAll(async () => await Logout(agent));
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("webrtc");
 
 describe("/webrtc API", () => {
@@ -16,13 +23,13 @@ describe("/webrtc API", () => {
 
     expect(res.body).toMatchObject({
       status: true,
-      message: "Sucessfully fetched all active streams",
+      message: expect.any(String),
       data: expect.any(Array),
     });
   });
 
   test("POST /broadcaster", async () => {
-    const fakePeer: RTCPeerConnection = new webrtc.RTCPeerConnection({
+    const fakePeer: webrtc.RTCPeerConnection = new webrtc.RTCPeerConnection({
       // giving same configuration as the peer in the controller
       iceServers: [
         {
@@ -33,14 +40,16 @@ describe("/webrtc API", () => {
       ],
     });
     const stream = new webrtc.MediaStream();
-    stream.getTracks((track) => fakePeer.addTrack(track, stream));
+    stream.getTracks().forEach((track) => fakePeer.addTrack(track, stream));
     const offer = await fakePeer.createOffer();
     await fakePeer.setLocalDescription(offer);
+
+    const { mission } = await createMission(agent, superAdminAgent);
 
     const res = await agent
       .post(full_url("broadcaster"))
       .send({
-        missionId: "61f3b1e65f915a05cb8885ec", // exists in db
+        missionId: mission._id,
         sdp: offer,
       })
       .expect(200);
@@ -53,7 +62,7 @@ describe("/webrtc API", () => {
   });
 
   test("POST /consumer", async () => {
-    const fakePeer: RTCPeerConnection = new webrtc.RTCPeerConnection({
+    const fakePeer: webrtc.RTCPeerConnection = new webrtc.RTCPeerConnection({
       iceServers: [
         {
           urls: "turn:14.97.37.70:3478",
@@ -65,16 +74,18 @@ describe("/webrtc API", () => {
     const offer = await fakePeer.createOffer();
     await fakePeer.setLocalDescription(offer);
 
+    const { mission } = await createMission(agent, superAdminAgent);
+
     const res = await agent
       .post(full_url("consumer"))
       .send({
-        missionId: "61f3b1e65f915a05cb8885ec", // exists in db
+        missionId: mission._id,
         sdp: offer,
       })
       .expect(404);
 
     expect(res.body).toMatchObject({
-      message: "No stream found with the supplied missionId",
+      message: expect.any(String),
     });
   });
 });

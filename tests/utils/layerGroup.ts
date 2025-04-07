@@ -5,11 +5,11 @@ import { createLayer } from "./layer";
 
 const full_url = CurriedUrl("layergroup");
 
-export async function createLayerGroup(agent: SuperAgentTest) {
+export async function createLayerGroup(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
   const layers = [
-    await createLayer(agent),
-    await createLayer(agent),
-    await createLayer(agent),
+    await createLayer(agent, superAdminAgent),
+    await createLayer(agent, superAdminAgent),
+    await createLayer(agent, superAdminAgent),
   ]
   const res = await agent
     .post(full_url("create"))

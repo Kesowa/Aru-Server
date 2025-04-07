@@ -1,25 +1,31 @@
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import {SuperAgentTest} from "supertest";
 import { createFlight, updateFlight as updateFlight } from "./utils/flight";
 
 let agent: SuperAgentTest;
-
-beforeAll(async () => (agent = await Login()));
-afterAll(async () => await Logout(agent));
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("flight");
 
 describe("/flight API", () => {
   test("POST /create", async () => {
-    await createFlight(agent);
+    await createFlight(agent, superAdminAgent);
   });
 
   test("POST /edit", async () => {
-    const flight = await createFlight(agent);
+    const flight = await createFlight(agent, superAdminAgent);
     await updateFlight(agent, flight);
   });
 
   test("POST /mission-specific-view", async () => {
-    const flight = await createFlight(agent);
+    const flight = await createFlight(agent, superAdminAgent);
     const res = await agent
       .post(full_url("mission-specific-view"))
       .send({
@@ -35,7 +41,7 @@ describe("/flight API", () => {
   });
 
   test("GET /get-flight-by-location-ID", async () => {
-    let flight = await createFlight(agent);
+    let flight = await createFlight(agent, superAdminAgent);
     flight = await updateFlight(agent, flight);
 
     console.log(flight);
@@ -55,7 +61,7 @@ describe("/flight API", () => {
   });
 
   test("PATCH /assign-pilot", async () => {
-    const flight = await createFlight(agent);
+    const flight = await createFlight(agent, superAdminAgent);
 
     const res = await agent
       .patch(full_url("assign-pilot"))
@@ -73,7 +79,7 @@ describe("/flight API", () => {
   });
 
   test("PATCH /assign-pilot-self", async () => {
-    const flight = await createFlight(agent);
+    const flight = await createFlight(agent, superAdminAgent);
 
     const res = await agent
       .patch(full_url("assign-pilot-self"))
@@ -90,7 +96,7 @@ describe("/flight API", () => {
   });
 
   test("POST /delete", async () => {
-    const flight = await createFlight(agent);
+    const flight = await createFlight(agent, superAdminAgent);
 
     const res = await agent
       .post(full_url("delete"))

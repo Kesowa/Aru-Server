@@ -1,19 +1,27 @@
 import { SuperAgentTest } from "supertest";
 import { CurriedUrl } from "./utils";
+import { createUser } from "./user";
+import { faker } from "@faker-js/faker";
+import { createModel } from "./model";
+import { createManufacturer } from "./manufacturer";
 
 const full_url = CurriedUrl("asset");
 
-export async function createAsset(agent: SuperAgentTest) {
-  const res = await agent
+export async function createAsset(tenantAgent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
+  const user = await createUser(tenantAgent);
+  const owner = await createUser(tenantAgent);
+  const model = await createModel(tenantAgent, superAdminAgent);
+  const manufacturer = await createManufacturer(tenantAgent);
+  const res = await tenantAgent
     .post(full_url("create"))
     .send({
-      assetName: "New Drone",
-      userID: "608e7b3ae11f711a34fb0476",
-      assetInfo: [{ UIN: "1234567", serialNo: "3212312" }],
-      model: "615acf79e5324204d8b97c86",
-      assetOwner: "5f12572c3c19462d3673dbe9",
+      assetName: faker.company.name() + " Drone",
+      userID: user._id,
+      assetInfo: [{ UIN: faker.random.numeric(7), serialNo: faker.random.numeric(7) }],
+      model: model._id,
+      assetOwner: owner._id,
       manufactureDate: "2021-10-04",
-      manufactureID: "615acf24e5324204d8b97c84",
+      manufactureID: manufacturer._id,
     })
     .expect(201);
 

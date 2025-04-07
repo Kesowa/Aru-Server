@@ -2,6 +2,7 @@ import { SuperAgentTest } from "supertest";
 import { CurriedUrl } from "./utils";
 import { uploadFile } from "./upload";
 import { faker } from "@faker-js/faker";
+import { createMission } from "./mission";
 
 const full_url = CurriedUrl("layer");
 
@@ -47,7 +48,8 @@ const sampleGeojsonData = {
   ],
 };
 
-export async function createLayer(agent: SuperAgentTest) {
+export async function createLayer(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
+  const { mission } = await createMission(agent, superAdminAgent);
   const fileId = await uploadFile(agent, "./assets/poles.geojson");
   const res = await agent
     .post(full_url("create/Vector"))
@@ -57,7 +59,7 @@ export async function createLayer(agent: SuperAgentTest) {
       vector: "Electric Pole",
       captureDate: "2022-07-29",
       inHeritOriginalColorFromFile: "false",
-      missionId: "61f3b1e65f915a05cb8885ec", // !TODO create mission for this
+      missionId: mission._id,
       color: "#000000",
       icon: "MarkerIcon",
       file: fileId
@@ -74,7 +76,8 @@ export async function createLayer(agent: SuperAgentTest) {
 }
 
 
-export async function createRasterLayer(agent: SuperAgentTest) {
+export async function createRasterLayer(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
+  const { mission } = await createMission(agent, superAdminAgent);
   const fileId = await uploadFile(agent, "./assets/Ortho_25cm.tif");
   const res = await agent
     .post(full_url("create/Raster"))
@@ -84,7 +87,7 @@ export async function createRasterLayer(agent: SuperAgentTest) {
       raster: "ORTHO",
       captureDate: "2022-07-29",
       file: fileId,
-      missionId: "61f3b1e65f915a05cb8885ec", // !TODO create mission for this
+      missionId: mission._id,
     })
     .expect(201);
 
@@ -97,12 +100,13 @@ export async function createRasterLayer(agent: SuperAgentTest) {
   return res.body.data;
 }
 
-export async function createVectorLayer(agent: SuperAgentTest) {
+export async function createVectorLayer(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
+  const { mission } = await createMission(agent, superAdminAgent);
   const res = await agent
     .post(full_url("create-vector-layer"))
     .send({
       name: faker.address.street(),
-      missionId: "61f3b1e65f915a05cb8885ec", // !TODO replace
+      missionId: mission._id,
       vectorType: "Area Boundary",
       geoJSON: sampleGeojsonData,
     })

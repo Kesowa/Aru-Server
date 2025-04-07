@@ -1,11 +1,18 @@
 import { SuperAgentTest } from "supertest";
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import { uploadFile } from "./utils/upload";
 import { createAlert } from "./utils/alert";
 
 let agent: SuperAgentTest;
-beforeAll(async () => (agent = await Login()));
-afterAll(async () => await Logout(agent));
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("alert");
 
 describe("/alert API", () => {
@@ -14,7 +21,7 @@ describe("/alert API", () => {
   });
 
   test("POST /create", async () => {
-    await createAlert(agent);
+    await createAlert(agent, superAdminAgent);
   });
 
   test("POST /manual-upload-alert", async () => {
@@ -42,7 +49,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-alert-by-ID", async () => {
-    const alert = await createAlert(agent);
+    const alert = await createAlert(agent, superAdminAgent);
     const res = await agent
       .get(full_url("get-alert-by-ID"))
       .query({
@@ -58,7 +65,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-alerts-By-mission-ID", async () => {
-    const alert = await createAlert(agent);
+    const alert = await createAlert(agent, superAdminAgent);
     const res = await agent
       .get(full_url("get-alerts-By-mission-ID"))
       .query({
@@ -79,7 +86,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-alerts-by-location-ID", async () => {
-    const alert = await createAlert(agent);
+    const alert = await createAlert(agent, superAdminAgent);
     const res = await agent
       .get(full_url("get-alerts-by-location-ID"))
       .query({
@@ -95,7 +102,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-alerts-By-location-id-pagination", async () => {
-    const alert = await createAlert(agent);
+    const alert = await createAlert(agent, superAdminAgent);
     const res = await agent
       .get(full_url("get-alerts-By-location-id-pagination"))
       .query({
@@ -115,7 +122,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-number-of-alerts-By-location-ID", async () => {
-    const alert = await createAlert(agent);
+    const alert = await createAlert(agent, superAdminAgent);
     const res = await agent
       .get(full_url("get-number-of-alerts-By-location-ID"))
       .query({
@@ -132,7 +139,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-alerts-by-flight-or-location-ID", async () => {
-    const alert = await createAlert(agent);
+    const alert = await createAlert(agent, superAdminAgent);
     const res1 = await agent
       .get(full_url("get-alerts-by-flight-or-location-ID"))
       .query({
@@ -161,7 +168,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-alert-by-location-ID-and-time", async () => {
-    const alert = await createAlert(agent);
+    const alert = await createAlert(agent, superAdminAgent);
     const res = await agent
       .get(full_url("get-alert-by-location-ID-and-time"))
       .query({
@@ -178,7 +185,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-alerts-by-tenantid", async () => {
-    await createAlert(agent);
+    await createAlert(agent, superAdminAgent);
     const res = await agent
       .get(full_url("get-alerts-by-tenantid"))
       .query({
@@ -195,7 +202,7 @@ describe("/alert API", () => {
   });
 
   test("GET /get-alerts-by-tenantid-advanced-result", async () => {
-    const alert = await createAlert(agent);
+    const alert = await createAlert(agent, superAdminAgent);
     await agent
       .get(full_url("get-alerts-by-tenantid-advanced-result"))
       .query({
@@ -211,7 +218,7 @@ describe("/alert API", () => {
   // test("GET /get-alerts-by-mission-mapref", async () => {})
 
   test("DELETE /delete-multiple-alerts", async () => {
-    const alerts = [await createAlert(agent), await createAlert(agent)];
+    const alerts = [await createAlert(agent, superAdminAgent), await createAlert(agent, superAdminAgent)];
     const created_ids: string[] = alerts.map((a) => a._id);
     const res = await agent
       .delete(full_url("delete-multiple-alerts"))

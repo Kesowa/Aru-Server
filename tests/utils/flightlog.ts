@@ -2,6 +2,9 @@ import { SuperAgentTest } from "supertest";
 import { CurriedUrl } from "./utils";
 import { uploadFile } from "./upload";
 import { faker } from "@faker-js/faker";
+import { createMission } from "./mission";
+import { createLocation } from "./location";
+import { createAsset } from "./asset";
 
 const full_url = CurriedUrl("flightlog");
 
@@ -19,7 +22,10 @@ const sampleGeoFence = {
   },
 };
 
-export async function createFlightLog(agent: SuperAgentTest) {
+export async function createFlightLog(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
+  const { mission, flight } = await createMission(agent, superAdminAgent);
+  const asset = await createAsset(agent, superAdminAgent);
+  const location = await createLocation(agent);
   const fileId = await uploadFile(agent, "./assets/image.png");
   const res = await agent
     .post(full_url("create"))
@@ -27,10 +33,10 @@ export async function createFlightLog(agent: SuperAgentTest) {
       "file":  fileId,
       "date":  new Date(),
       "time":  "09:30:30 PM",
-      "missionID":  "61f3b1e65f915a05cb8885ec",
-      "flightID":  "6267dd4b2a2d394080a20849",
-      "assetID":  "610d5eefe16e614280b33476",
-      "locationID":  "6123317cdaacac04cdb2d805",
+      "missionID":  mission._id,
+      "flightID":  flight._id,
+      "assetID":  asset._id,
+      "locationID":  location._id,
       "duration":  "1 hr",
       "location":  "Main Kolkata",
       "pilotName": faker.name.fullName(),

@@ -1,4 +1,4 @@
-import { CurriedUrl, Login, Logout } from "./utils/utils";
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
 import { randomUUID } from "crypto";
 import { createBaseVectorLayer, createLayer, createRasterLayer } from "./utils/baseLayer";
@@ -6,9 +6,15 @@ import { createLayer as createMissionlayer, createRasterLayer as createMissionRa
 import { uploadFile } from "./utils/upload";
 
 let agent: SuperAgentTest;
-
-beforeAll(async () => { agent = await Login(); });
-afterAll(async () => await Logout(agent));
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
 const full_url = CurriedUrl("baselayer");
 
 describe("/baselayer API", () => {
@@ -190,7 +196,7 @@ describe("/baselayer API", () => {
   });
 
   test("PATCH /get-meta-data", async () => {
-    const layers = [await createMissionlayer(agent), await createMissionlayer(agent)];
+    const layers = [await createMissionlayer(agent, superAdminAgent), await createMissionlayer(agent, superAdminAgent)];
     const res = await agent
       .patch(full_url("get-meta-data"))
       .send({
@@ -207,7 +213,7 @@ describe("/baselayer API", () => {
   // needs /vector/1659511470073_solar.geojson to exist
   test("PATCH /get-meta-data-for-update", async () => {
     const base_layer = await createLayer(agent);
-    const layers = [await createMissionlayer(agent), await createMissionlayer(agent)];
+    const layers = [await createMissionlayer(agent, superAdminAgent), await createMissionlayer(agent, superAdminAgent)];
     const res = await agent
       .patch(full_url("get-meta-data-for-update"))
       .send({
@@ -245,7 +251,7 @@ describe("/baselayer API", () => {
 
   test("POST /create-base-raster-upload/Raster", async () => {
     await createRasterLayer(agent);
-  }, 15000);
+  });
 
   // !TODO: Need to fix this dependency on mission data
   test("POST /create-base-raster-import-mission", async () => {
@@ -263,7 +269,7 @@ describe("/baselayer API", () => {
       message: expect.any(String),
       data: expect.any(Object),
     });
-  }, 15000);
+  });
 
   test("PATCH /updateRasterLayerUpload/Raster", async () => {
     const base_layer = await createRasterLayer(agent);
@@ -280,11 +286,11 @@ describe("/baselayer API", () => {
       message: expect.any(String),
       data: expect.any(Object),
     });
-  }, 15000);
+  });
 
   test("PATCH /updateRasterLayerImport", async () => {
     const base_layer = await createRasterLayer(agent);
-    const layers = [await createMissionRasterLayer(agent), await createMissionRasterLayer(agent)];
+    const layers = [await createMissionRasterLayer(agent, superAdminAgent), await createMissionRasterLayer(agent, superAdminAgent)];
     const res = await agent
       .patch(full_url("updateRasterLayerImport"))
       .send({
@@ -297,7 +303,7 @@ describe("/baselayer API", () => {
       message: expect.any(String),
       data: expect.any(Object),
     });
-  }, 15000);
+  });
 
   test("DELETE /delete-baseLayer-id", async () => {
     const base_layer = await createLayer(agent);
