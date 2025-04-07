@@ -3,11 +3,11 @@ import { CurriedUrl } from "./utils";
 import { uploadFile } from "./upload";
 import { createMission } from "./mission";
 import { createLocation } from "./location";
-import { Mongoose, Types } from "mongoose";
+import { CreatedVOD } from "./notification";
 
 const full_url = CurriedUrl("VOD");
 
-export async function createVOD(agent: SuperAgentTest, superAdminAgent: SuperAgentTest, mongoClient: Mongoose) {
+export async function createVOD(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
   const { mission, flight } = await createMission(agent, superAdminAgent);
   const location = await createLocation(agent);
   const fileId = await uploadFile(agent, "./assets/video.mp4");
@@ -27,18 +27,9 @@ export async function createVOD(agent: SuperAgentTest, superAdminAgent: SuperAge
     data: expect.any(Object),
   });
 
-  const vodId = new Types.ObjectId(res.body.data._id);
-  let isProcessed = false;
-  let processedVOD: any;
+  const processedVOD = await CreatedVOD(mission._id, res.body.data._id);
 
-  while(!isProcessed) {
-    processedVOD = await mongoClient.connection.collection('vods').findOne({ _id: vodId });
-    expect(processedVOD).toBeTruthy();
-    isProcessed = (processedVOD?.thumbnail !== "/processing.png");
-    await new Promise(r => setTimeout(r, 1000)); // 1 second wait before re-checking
-  }
-
-  expect(isProcessed).toBe(true);
+  expect(processedVOD).toBeDefined();
 
   return processedVOD;
 }
