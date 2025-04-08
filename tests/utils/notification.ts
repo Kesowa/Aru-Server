@@ -1,5 +1,6 @@
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import { APP_URL } from "./utils";
+import { setInterval } from "timers/promises";
 
 enum Namespace {
   DroneLocation = "/stream/dronelocation",
@@ -43,7 +44,7 @@ enum Mission {
   PROCESS_ZIP_FAILED = "PROCESS_ZIP_FAILED",
   VOD_FETCH = "VOD_FETCH",
   VOD_REMOVED = "VOD_REMOVED",
-  ASSIGNED  = "ASSIGNED SUCESSFULLY",
+  ASSIGNED = "ASSIGNED SUCESSFULLY",
   LAYER_ZIP_START = "LAYER_ZIP_START",
   LAYER_ZIP_COMPLETED = "LAYER_ZIP_COMPLETED",
   LAYER_ZIP_FAILED = "LAYER_ZIP_FAILED",
@@ -63,7 +64,7 @@ enum Mavlink {
   message = "message",
 }
 
-export function Socket(namespace: Namespace, query: Record<string, string> = {}) {
+function NewSocket(namespace: Namespace, query: Record<string, string> = {}) {
   const queryString = "?"
     + Object.entries(query)
       .map(
@@ -74,37 +75,32 @@ export function Socket(namespace: Namespace, query: Record<string, string> = {})
   return socket;
 }
 
-export function CreatedVOD(missionID: string, vodID: string, timeout = 15000) {
-  const socket = Socket(Namespace.Mission, { missionID });
-
-  return new Promise<{ _id: string }>((res, rej) => {
-    const onSuccess = (vod: any) => {
-      if (vod._id === vodID) {
-        cleanup();
-        res(vod);
+function WaitNotify(socket: Socket,) {
+  const events: { event: any; arg: any[]; }[] = [];
+  socket.onAny((event, ...args) => {
+    events.push({ event, arg: args[0] });
+  })
+  return async (predicate: (event: any, arg: any) => boolean, timeout = 15000) => {
+    let count = timeout / 1000;
+    for await (const _ of setInterval(1000)) {
+      count--;
+      if (count < 0) {
+        socket.offAny();
+        socket.disconnect();
+        throw new Error("Timeout waiting for event");
       }
-    };
-
-    const onFail = (vod: any) => {
-      if (vod._id === vodID) {
-        cleanup();
-        rej(vod);
+      const index = events.findIndex(val => predicate(val.event, val.arg));
+      if (index > -1) {
+        socket.offAny();
+        socket.disconnect();
+        return events[index];
       }
-    };
+    }
+  };
+}
 
-    const onTimeout = () => {
-      cleanup();
-      rej(new Error('Timeout waiting for VOD'));
-    };
-
-    const cleanup = () => {
-      socket.off(Mission.PROCESS_VIDEO_FINISHED, onSuccess);
-      socket.off(Mission.REPORT_GENERATION_COMPLETED, onFail);
-      socket.disconnect();
-    };
-
-    socket.on(Event[Namespace.Mission][0], onSuccess);
-    socket.on(Event[Namespace.Mission][1], onFail);
-    setTimeout(onTimeout, timeout);
-  });
+export function CreatedVOD(missionID: string) {
+  const socket = NewSocket(Namespace.Mission, { missionID });
+  const waiter = WaitNotify(socket);
+  return async (vodID: string, timeout = 15000) => await waiter((event, arg) => event == Mission.PROCESS_VIDEO_FINISHED && arg._id == vodID, timeout);
 }

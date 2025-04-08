@@ -11,6 +11,7 @@ export async function createVOD(agent: SuperAgentTest, superAdminAgent: SuperAge
   const { mission, flight } = await createMission(agent, superAdminAgent);
   const location = await createLocation(agent);
   const fileId = await uploadFile(agent, "./assets/video.mp4");
+  const notifier = CreatedVOD(mission._id);
   const res = await agent
     .post(full_url("save-vod-manual"))
     .send({
@@ -27,7 +28,7 @@ export async function createVOD(agent: SuperAgentTest, superAdminAgent: SuperAge
     data: expect.any(Object),
   });
 
-  const processedVOD = await CreatedVOD(mission._id, res.body.data._id);
+  const processedVOD = await notifier(res.body.data._id, 15000);
 
   expect(processedVOD).toBeDefined();
 
