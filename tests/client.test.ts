@@ -1,7 +1,7 @@
 import { CurriedUrl, Login, LoginSuper, Logout, clearAllClients } from "./utils/utils";
 import { SuperAgentTest } from "supertest";
 import { faker } from "@faker-js/faker";
-import { addClientToMission, createClient } from "./utils/client";
+import { addClientToMission, CreateAndLoginClient, createClient } from "./utils/client";
 import { createMission } from "./utils/mission";
 
 let agent: SuperAgentTest;
@@ -118,14 +118,12 @@ describe("/client API", () => {
   });
 
   test("GET /get-mission-list-for-Id", async () => {
-    const client = await createClient(agent);
-    const { mission } = await createMission(agent, superAdminAgent);
-    await addClientToMission(agent, client._id, mission._id);
-    // !TODO requires client login
-    const res = await agent
+    const { client, clientAgent } = await CreateAndLoginClient(agent, superAdminAgent);
+
+    const res = await clientAgent
       .get(full_url("get-mission-list-for-Id"))
       .query({
-        page: "1",
+        page: "0",
         limit: "1",
         status: "All",
         clientId: client._id,
@@ -138,6 +136,8 @@ describe("/client API", () => {
       message: expect.any(String),
       data: expect.any(Array),
     });
+
+    await Logout(clientAgent);
   });
 
   test("GET /geneate-client-csv", async () => {

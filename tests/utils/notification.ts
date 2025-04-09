@@ -76,7 +76,7 @@ function NewSocket(namespace: Namespace, query: Record<string, string> = {}) {
 }
 
 function WaitNotify(socket: Socket,) {
-  const events: { event: any; arg: any[]; }[] = [];
+  const events: { event: any; arg: any; }[] = [];
   socket.onAny((event, ...args) => {
     events.push({ event, arg: args[0] });
   })

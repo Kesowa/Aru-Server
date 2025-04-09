@@ -1,15 +1,16 @@
-import { SuperAgentTest } from "supertest";
-import { CurriedUrl } from "./utils";
+import request, { SuperAgentTest } from "supertest";
+import { APP_URL, CurriedUrl } from "./utils";
 import { uploadFile } from "./upload";
 import { faker } from "@faker-js/faker";
 import { createUsergroup } from "./usergroup";
 import { TENANT_CLIENT_PERMS } from "./permission";
+import { createMission } from "./mission";
 
 const full_url = CurriedUrl("client");
 
 export async function createClient(agent: SuperAgentTest) {
   const fileId = await uploadFile(agent, "./assets/userAvatars/NKDA_Logo.png");
-  const usergroup = await createUsergroup(agent, undefined, [TENANT_CLIENT_PERMS[0]]);
+  const usergroup = await createUsergroup(agent, undefined, [...TENANT_CLIENT_PERMS]);
   const res = await agent
     .post(full_url("create"))
     .send({
@@ -50,4 +51,28 @@ export async function addClientToMission(agent: SuperAgentTest, client_id: strin
   });
 }
 
+export async function CreateAndLoginClient(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
+  const client = await createClient(agent);
+  const newPassword = faker.internet.password();
+  await agent
+    .patch(full_url("edit-client-details"))
+    .send({
+      id: client._id,
+      password: newPassword,
+    })
+    .expect(200);
+  const { mission } = await createMission(agent, superAdminAgent);
+  await addClientToMission(agent, client._id, mission._id);
 
+  const clientAgent = request.agent(APP_URL);
+
+  await clientAgent
+    .post(CurriedUrl("auth")("login"))
+    .send({
+      email: client.email,
+      password: newPassword,
+    })
+    .expect(200);
+
+  return { client, clientAgent };
+}

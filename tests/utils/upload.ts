@@ -16,12 +16,13 @@ export enum DocModel {
 export async function uploadFile(
   agent: SuperAgentTest,
   filePath: string,
+  rename?: string,
 ) {
   const fileBlob = await openAsBlob(filePath);
   const res = await agent
     .post(CurriedUrl("common")("upload-url"))
     .send({
-      name: path.basename(filePath),
+      name: rename ?? path.basename(filePath),
       size: fileBlob.size,
       type: "application/octect-stream",
       model: DocModel.ALERT_IMAGES,

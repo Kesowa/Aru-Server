@@ -25,8 +25,11 @@ const router = express.Router();
 
 router.post(
   "/save-VOD",
-  body("filename").exists().isString().notEmpty(),
+  isAuthenticated,
+  body("file").notEmpty().isMongoId(),
   validator,
+  PermissionGuard(PERMS.VOD_CREATE),
+  isVodCount,
   RobustRunner(saveVOD),
 );
 
