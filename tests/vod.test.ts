@@ -21,7 +21,7 @@ describe("/vod API", () => {
     await createVODStreamKey(agent,superAdminAgent);
   });
 
-  test.skip("POST /save-vod-manual", async () => {
+  test("POST /save-vod-manual", async () => {
     await createVOD(agent, superAdminAgent);
   });
 

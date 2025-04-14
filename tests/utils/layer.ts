@@ -48,18 +48,28 @@ const sampleGeojsonData = {
   ],
 };
 
-export async function createLayer(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
-  const { mission } = await createMission(agent, superAdminAgent);
-  const fileId = await uploadFile(agent, "./assets/poles.geojson");
+export async function createLayer(
+  agent: SuperAgentTest, 
+  superAdminAgent: SuperAgentTest, 
+  missionId?:string, 
+  vector?: string,
+  filePath?: string,
+) {
+  let mission: any;
+  if (!missionId) {
+    const { mission: m } = await createMission(agent, superAdminAgent);
+    mission = m;
+  }
+  const fileId = await uploadFile(agent, filePath ?? "./assets/poles.geojson");
   const res = await agent
     .post(full_url("create/Vector"))
     .send({
       name: faker.address.street(),
       type: "Vector",
-      vector: "Electric Pole",
+      vector: vector ?? "Electric Pole",
       captureDate: "2022-07-29",
       inHeritOriginalColorFromFile: "false",
-      missionId: mission._id,
+      missionId: missionId ?? mission._id,
       color: "#000000",
       icon: "MarkerIcon",
       file: fileId
@@ -76,18 +86,28 @@ export async function createLayer(agent: SuperAgentTest, superAdminAgent: SuperA
 }
 
 
-export async function createRasterLayer(agent: SuperAgentTest, superAdminAgent: SuperAgentTest) {
-  const { mission } = await createMission(agent, superAdminAgent);
-  const fileId = await uploadFile(agent, "./assets/Ortho_25cm.tif");
+export async function createRasterLayer(
+  agent: SuperAgentTest, 
+  superAdminAgent: SuperAgentTest, 
+  missionId?:string, 
+  raster?: string,
+  filePath?: string,
+) {
+  let mission: any;
+  if (!missionId) {
+    const { mission: m } = await createMission(agent, superAdminAgent);
+    mission = m;
+  }
+  const fileId = await uploadFile(agent, filePath ?? "./assets/Ortho_25cm.tif");
   const res = await agent
     .post(full_url("create/Raster"))
     .send({
       name: faker.address.city(),
       type: "Raster",
-      raster: "ORTHO",
+      raster: raster ?? "ORTHO",
       captureDate: "2022-07-29",
       file: fileId,
-      missionId: mission._id,
+      missionId: missionId ?? mission._id,
     })
     .expect(201);
 

@@ -104,3 +104,15 @@ export function CreatedVOD(missionID: string) {
   const waiter = WaitNotify(socket);
   return async (vodID: string, timeout = 15000) => await waiter((event, arg) => event == Mission.PROCESS_VIDEO_FINISHED && arg._id == vodID, timeout);
 }
+
+export function AssignedImage(missionID: string) {
+  const socket = NewSocket(Namespace.Mission, { missionID });
+  const waiter = WaitNotify(socket);
+  return async (timeout = 15000) => await waiter((event, arg) => event == Mission.ASSIGNED, timeout);
+}
+
+export function CreatedReport(missionID: string) {
+  const socket = NewSocket(Namespace.Mission, { missionID });
+  const waiter = WaitNotify(socket);
+  return async (timeout = 15000) => await waiter((event, arg) => event == Mission.REPORT_GENERATION_COMPLETED, timeout);
+}

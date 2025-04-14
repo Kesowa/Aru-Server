@@ -234,7 +234,7 @@ export const receiveReport = async (res: ReportResponse) => {
 
     missionSpecificSocket
       .to(res.metadata.mission_id.toString())
-      .emit("REPORT_GENERATION_COMPLETE", savedDoc);
+      .emit("REPORT_GENERATION_COMPLETED", savedDoc);
   } else {
     logger.error(
       { error: res.error }, // mention plot index in error string from report-service
