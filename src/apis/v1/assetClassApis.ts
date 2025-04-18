@@ -1,5 +1,5 @@
 import express from "express";
-import { body, query, header } from "express-validator";
+import { body, query } from "express-validator";
 
 import {
   createAssetClass,
@@ -20,7 +20,6 @@ router.post(
   body("typeName").notEmpty().isString(),
   //add date regex in isDate()
   body("createdAt").optional().isISO8601().toDate(),
-  header("userid").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.ASSET_CLASS_CREATE),
   RobustRunner(createAssetClass),

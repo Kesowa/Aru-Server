@@ -77,6 +77,7 @@ router.post(
   body("layerGroupId").optional().notEmpty().isMongoId(), // layerGroupId may be null/undefined
   // REGEX
   body("color")
+    .optional()
     .notEmpty()
     .trim()
     .matches(/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/), // hex codes of color, ex: "#FFFFFF" or "#FFF"
@@ -430,7 +431,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  PermissionGuard(PERMS.DOWNLOAD_LAYER),
+  // PermissionGuard(PERMS.DOWNLOAD_LAYER),
   RobustRunner(downloadassetbyIDtoKml),
 );
 

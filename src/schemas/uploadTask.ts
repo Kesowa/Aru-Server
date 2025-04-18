@@ -17,7 +17,7 @@ export type UploadTask = {
   createdAt: Date;
   updatedAt: Date;
   updatedBy: Types.ObjectId;
-  tenant: Types.ObjectId;
+  tenant?: Types.ObjectId;
   metadata: {
     objectkey: string;
     mimetype: string;
@@ -55,7 +55,7 @@ export const UploadTaskSchema = new Schema<UploadTask>(
     },
     tenant: {
       type: Schema.Types.ObjectId,
-      required: true,
+      required: false,
       ref: "tenant",
     },
     metadata: {

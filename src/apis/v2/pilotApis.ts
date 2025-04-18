@@ -1,9 +1,9 @@
 import { Request, Router } from "express";
-import { Types } from "ts-openapi";
+import { bodySchema, Types } from "ts-openapi";
 
 import openApi from "./openApi";
 import User from "../../models/user";
-import { IPermission } from "../../schemas/permission";
+import { PERMS } from "../../schemas/permission";
 import { UserType } from "../../schemas/user";
 import { AuthResponse } from "../../utils/interfaceUtils";
 
@@ -36,7 +36,7 @@ pilotApi.get(
         },
       },
     )
-      .populate<{ userGroupId: { permissions: IPermission[] } }>({
+      .populate<{ userGroupId: { permissions: PERMS[] } }>({
         path: "userGroupId",
         select: "permissions",
         populate: {
@@ -83,8 +83,7 @@ openApi.addPath(
       },
       tags: ["Pilot API"],
       responses: {
-        200: openApi.declareSchema(
-          "successful response",
+        200: bodySchema(
           Types.Object({
             description: "Successful Operation",
             properties: {

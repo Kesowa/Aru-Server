@@ -106,6 +106,12 @@ export function SessionMiddleware(mongo: Connection) {
 export function LoggerMiddleware() {
   return pinoHttp({
     logger,
+    serializers: {
+      req(req) {
+        req.body = req.raw.body;
+        return req;
+      }
+    },
     customLogLevel: function(_, res, err) {
       if (res.statusCode >= 400 && res.statusCode < 500) {
         return "warn";
@@ -121,6 +127,8 @@ export function LoggerMiddleware() {
 
 export default function app(sessionMiddleware: express.RequestHandler, loggerMiddleware: express.RequestHandler) {
   const app: Application = express();
+
+  app.disable("x-powered-by");
 
   const limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
@@ -138,6 +146,13 @@ export default function app(sessionMiddleware: express.RequestHandler, loggerMid
   app.use(
     helmet({
       frameguard: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+          formAction: ["'self'"],
+        }
+      },
     }),
   );
   app.use(

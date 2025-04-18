@@ -58,7 +58,7 @@ export const updateOrganisationInfo = async (
 
     if (fileDoc) {
       const fullPath = await permPath(
-        Directory.USER_AVATARS,
+        Directory.TENANT_LOGOS,
         fileDoc.metadata.objectkey,
       );
       await saveThumbnails(fullPath); // Generate and save thumbnails (optional)

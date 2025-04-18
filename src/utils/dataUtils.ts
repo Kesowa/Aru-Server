@@ -9,11 +9,11 @@ import Fuse from "fuse.js";
 import { Types } from "mongoose";
 import ObjectsToCsv from "objects-to-csv";
 import shp2json from "shpjs";
-import tokml from "tokml";
+import { toKML } from "@placemarkio/tokml";
 import { GeoJson, readGeoJson } from "./geojsonUtils";
 import { Directory } from "../constants";
 
-import { DOMParser } from "xmldom";
+import { DOMParser } from "@xmldom/xmldom";
 
 import { deletePublicFileUsingPath } from "./fileDeleteUtils";
 import {
@@ -98,7 +98,7 @@ export const saveVectorLayer = async (
     feature.geometry.coordinates = truncate(feature, {
       coordinates: 2,
     }).geometry.coordinates;
-    featureTypes.add(feature.geometry.type);
+    featureTypes.add(feature.geometry.type.replace(/^Multi/, "")); // Handles MultiGeometry
   });
   console.log({ featureTypes });
   const stringData = JSON.stringify(geojsonData);
@@ -248,7 +248,7 @@ export const saveAsKML = async (
 ) => {
   const exists = await Document.findOne({ name: filename });
   if (exists) await exists.delete();
-  const kmlData = String(tokml(geojson));
+  const kmlData = toKML(geojson as any);
   const { filepath, size } = await saveFile(
     Directory.VECTOR,
     filename,
@@ -289,7 +289,7 @@ export const saveCSV = async (
     fileType: "csv",
     folderName: "root1234",
     filePath: filepath,
-    missionId,
+    [missionId !== "" && "missionId"]: missionId,
     tenantId,
     createdBy: userId,
     updatedBy: userId,

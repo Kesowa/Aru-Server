@@ -22,7 +22,6 @@ router.post(
   body("nationality").notEmpty().trim(),
   body("website").notEmpty().trim(),
   body("contacts").notEmpty().isArray({ min: 1 }),
-  header("userid").notEmpty().isMongoId(),
   validator,
   PermissionGuard(PERMS.MANUFACTURER_CREATE),
   RobustRunner(createManufacturer),

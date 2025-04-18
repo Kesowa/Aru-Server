@@ -89,8 +89,8 @@ export const fetchAllAlertByFlightorLocationId = async (
 ) => {
   const { flightID, locationID } = req.query;
   const alert = await Alert.find({
-    [flightID && "flightId"]: new Types.ObjectId(String(flightID)),
-    [locationID && "locationId"]: new Types.ObjectId(String(locationID)),
+    [flightID && "flightId"]: flightID,
+    [locationID && "locationId"]: locationID,
     $or: [
       { tenantId: res.locals.user.tenantId._id },
       { createdBy: res.locals.user._id },
@@ -288,7 +288,7 @@ export const fetchAlertsUsePaginationByLocationId = async (
   }
   const result = await Alert.find(
     {
-      locationId: new Types.ObjectId(String(id)),
+      locationId: id,
       $or: [
         { tenantId: res.locals.user.tenantId._id },
         { createdBy: res.locals.user._id },
@@ -434,7 +434,7 @@ export const fetchAllAlertByLocationIdAndTime = async (
   }
   const data = await Alert.find(
     {
-      locationId: new Types.ObjectId(String(req.query.locationID)),
+      locationId: req.query.locationID,
       createdAt: {
         $gte: startTime,
         $lte: endTime,

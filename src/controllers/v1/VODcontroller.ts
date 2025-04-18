@@ -20,19 +20,22 @@ export const saveVOD = async (
     {},
     {},
     {
-      filename: string;
+      file: string;
     }
   >,
   res: AuthResponse,
 ) => {
-  const filename = req.body.filename;
+  const fileDoc = await UploadTask.findOne({
+    _id: req.body.file,
+    tenant: res.locals.user.tenantId._id,
+    createdBy: res.locals.user._id,
+    // status: "started",
+  });
+  const filename = fileDoc.metadata.originalName;
   const streamKey = filename.split("-")[0];
   const temp = Buffer.from(streamKey, "base64").toString();
   const [missionID, flightID, locationID, tenantId] = temp.split("-");
-  req.log.info(
-    "++++++++++++++++++++++++++++SAVING VOD++++++++++++++++++++++++++++++++++++++++++",
-  );
-  req.log.info(missionID + flightID + locationID + tenantId);
+
   if (ARU_INSTANCE == Instance.NKDA) {
     req.log.info("Sending status info to Wipro...");
     setTimeout(() => {
@@ -41,22 +44,40 @@ export const saveVOD = async (
         .catch(console.error);
     }, 10_000);
   }
-  const vodSize = 1; // Size gets updated after processing is completed
-  const VODdoc = new VOD({
-    flightID: flightID,
+
+  const fullPath = await permPath(
+    pathUtils.Directory.VOD,
+    fileDoc.metadata.objectkey,
+  );
+
+  const vod = await new VOD({
+    videoName: fileDoc.metadata.originalName,
     missionID: missionID,
+    flightID: flightID,
     locationID: locationID,
-    videoPath: `/vod/${req.body.filename}.m3u8`,
-    thumbnail: `/vod/${req.body.filename}.jpg`,
-    tenantId: tenantId,
-    videoName: req.body.filename,
-    fileSize: vodSize,
+    videoPath: "/processing.m3u8",
+    thumbnail: "/processing.png",
+    originalFile: fullPath,
+    tenantId: res.locals.user.tenantId._id,
+    isSRT: false,
+    fileSize: fileDoc.metadata.filesize,
+  }).create();
+
+  await transcodeVideo(fullPath, {
+    location_id: locationID ?? null,
+    mission_id: missionID,
+    tenant_id: tenantId,
+    user_id: res.locals.user._id.toString(),
+    flight_id: flightID,
+    video_id: vod._id.toString(),
   });
-  const dbsave = await VODdoc.create();
+
+  await fileDoc.delete();
+
   return res.json({
     status: true,
-    message: `VOD saved with ${dbsave._id.toString()}`,
-    data: dbsave,
+    message: `VOD saved with ${vod._id.toString()}`,
+    data: vod,
   });
 };
 const SortToNum = (qry: string) => {

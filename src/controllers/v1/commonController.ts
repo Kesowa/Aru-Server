@@ -69,19 +69,24 @@ export const createUploadUrl = async (
 ) => {
   // check storage
   const sizeInMb = req.body.size / (1024 * 1024);
-  const tenantPackage = await Tenant.findOne({
-    _id: res.locals.user.tenantId,
-  }).populate<{ activePackage: IPackage }>("activePackage");
-  if (!tenantPackage.activePackage)
-    throw new InvalidPackage(res.locals.user.tenantId._id);
-  if (
-    tenantPackage.activePackage.storage - tenantPackage.storageUsed <
-    sizeInMb
-  ) {
-    res.status(401).json({
-      status: false,
-      message: "insufficient storage available",
-    });
+
+  // super-admin needs to access upload route to upload package posters
+
+  if (res.locals.user.userType !== "super-admin") {
+    const tenantPackage = await Tenant.findOne({
+      _id: res.locals.user.tenantId,
+    }).populate<{ activePackage: IPackage }>("activePackage");
+    if (!tenantPackage.activePackage)
+      throw new InvalidPackage(res.locals.user.tenantId._id);
+    if (
+      tenantPackage.activePackage.storage - tenantPackage.storageUsed <
+      sizeInMb
+    ) {
+      res.status(401).json({
+        status: false,
+        message: "insufficient storage available",
+      });
+    }
   }
 
   const policy = minioClient.newPostPolicy();
@@ -104,13 +109,13 @@ export const createUploadUrl = async (
   policy.setUserMetaData({
     name: req.body.name,
     user: res.locals.user._id.toJSON(),
-    tenant: res.locals.user.tenantId._id.toJSON(),
+    tenant: res.locals.user.tenantId?._id.toJSON() ?? "", // because user could be super-admin
   });
 
   const presignedUrl = await minioClient.presignedPostPolicy(policy);
 
   const uploadTask = await uploadModel.create({
-    tenant: res.locals.user.tenantId._id,
+    tenant: res.locals.user.tenantId?._id,
     createdBy: res.locals.user._id,
     updatedBy: res.locals.user._id,
     docModel: req.body.model,

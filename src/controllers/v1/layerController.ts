@@ -2244,6 +2244,9 @@ export const sys_id_Inject_to_layerfiles = async (
 export const flagFeature = async (
   req: Request<{
     layerID: Types.ObjectId;
+  }, {}, {
+    flag: boolean;
+    featureIndex: number[];
   }>,
   res: AuthResponse,
 ) => {
@@ -2253,9 +2256,9 @@ export const flagFeature = async (
   });
   if (doc) {
     doc.flaggedFeatures = doc.flaggedFeatures.filter(
-      (f) => f != req.body.featureIndex,
+      (f) => !req.body.featureIndex.includes(f),
     ); // both deletion and duplicate entry handled
-    if (req.body.flag) doc.flaggedFeatures.push(req.body.featureIndex);
+    if (req.body.flag) doc.flaggedFeatures.push(...req.body.featureIndex);
 
     if (doc.flaggedFeatures.length === 0) doc.isFlagged = false;
     await doc.save();

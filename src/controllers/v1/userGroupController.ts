@@ -46,6 +46,7 @@ export const createUserGroupforTenant = async (
     res.status(201).json({
       status: true,
       message: "User Group created sucessfully",
+      data: ug,
     });
   }
 };
@@ -69,10 +70,16 @@ export const listUserGroupforTenant = async (
 // Get User Group by ID
 export const getUserGroupbyID = async (req: Request, res: AuthResponse) => {
   const userGroupID = req.query.id;
-  const user_group = await UserGroup.find({
+  const user_group = await UserGroup.findOne({
     _id: userGroupID,
     tenantId: res.locals.user.tenantId._id,
   });
+  if (!user_group) {
+    res.status(404).json({
+      status: false,
+      message: "user group not found",
+    });
+  }
   res.json({
     status: true,
     message: "user group fetched",
