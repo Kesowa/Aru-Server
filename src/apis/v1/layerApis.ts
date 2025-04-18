@@ -431,7 +431,7 @@ router.get(
   isAuthenticated,
   query("id").notEmpty().isMongoId(),
   validator,
-  PermissionGuard(PERMS.DOWNLOAD_LAYER),
+  // PermissionGuard(PERMS.DOWNLOAD_LAYER),
   RobustRunner(downloadassetbyIDtoKml),
 );
 
