@@ -66,25 +66,66 @@ export const logger: Logger = pino({
   transport:
     MODE == Mode.Prod
       ? {
-          target: "pino-loki",
-          options: {
-            batching: true,
-            interval: 5,
-            host: LOGGER_URL,
-            labels: {
-              name: "ARU-Server",
-            },
-          },
-        }
-      : {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
+        target: "pino-loki",
+        options: {
+          batching: true,
+          interval: 5,
+          host: LOGGER_URL,
+          labels: {
+            name: "ARU-Server",
           },
         },
+      }
+      : {
+        target: "pino-pretty",
+        options: {
+          colorize: true,
+        },
+      },
 });
 
-export default function app(mongo: Connection) {
+export function SessionMiddleware(mongo: Connection) {
+  return session({
+    secret: SECRET_KEY,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      client: mongo.getClient(),
+      collectionName: "sessions",
+    }),
+    cookie: {
+      httpOnly: true,
+      secure: MODE == Mode.Prod,
+      maxAge: 1000 * 60 * 60 * 2, // session lasts 2 hours
+      sameSite: "strict",
+    },
+    rolling: true, // Session resets on every request, keeping it active
+  });
+}
+
+export function LoggerMiddleware() {
+  return pinoHttp({
+    logger,
+    serializers: {
+      req(req) {
+        req.body = req.raw.body;
+        return req;
+      }
+    },
+    customLogLevel: function(_, res, err) {
+      if (res.statusCode >= 400 && res.statusCode < 500) {
+        return "warn";
+      } else if (res.statusCode >= 500 || err) {
+        return "error";
+      } else if (res.statusCode >= 300 && res.statusCode < 400) {
+        return "silent";
+      }
+      return "info";
+    },
+  });
+}
+
+export default function app(sessionMiddleware: express.RequestHandler, loggerMiddleware: express.RequestHandler) {
   const app: Application = express();
 
   app.disable("x-powered-by");
@@ -128,36 +169,9 @@ export default function app(mongo: Connection) {
   app.set("views", path.join(__dirname, "views"));
   app.set("view engine", "ejs");
 
-  app.use(
-    session({
-      secret: SECRET_KEY,
-      resave: false,
-      saveUninitialized: false,
-      store: MongoStore.create({
-        client: mongo.getClient(),
-        collectionName: "sessions",
-      }),
-      cookie: {
-        httpOnly: true,
-        secure: MODE == Mode.Prod,
-        maxAge: 1000 * 60 * 60 * 2, // session lasts 2 hours
-        sameSite: "strict",
-      },
-      rolling: true, // Session resets on every request, keeping it active
-    }),
-  );
+  app.use(sessionMiddleware);
 
-  app.use(
-    pinoHttp({
-      logger,
-      serializers: {
-        req(req) {
-          req.body = req.raw.body;
-          return req;
-        }
-      }
-    }),
-  );
+  app.use(loggerMiddleware);
 
   app.use("/apis/v2", routerV2);
 
@@ -197,7 +211,7 @@ export default function app(mongo: Connection) {
   app.use("/apis/v1/report", reportApis);
 
   // 404 route
-  app.use(function (req, res, next) {
+  app.use(function(req, res, next) {
     if (res.headersSent) return;
     req.log.warn("Trying to handle route, god help us all.");
     if (req.url.split("/").includes("raster")) {

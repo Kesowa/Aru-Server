@@ -8,7 +8,9 @@ import { notificationIoController } from "./socketControllers/v1/notificationCon
 
 export let notificationSocket: Namespace;
 export let missionSpecificSocket: Namespace;
+
 export const ioHandler = (io: Server) => {
+
   //to stream drone location
   const droneLocationStreamingIo = io.of("/stream/dronelocation");
   droneLocationIoController(droneLocationStreamingIo);

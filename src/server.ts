@@ -1,10 +1,10 @@
-import http from "http";
+import { createServer } from "node:http";
 
 import { connect } from "amqplib";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
 
-import app, { logger } from "./app";
+import app, { logger, LoggerMiddleware, SessionMiddleware } from "./app";
 import {
   MONGODB_CONNECTION_STRING,
   PORT,
@@ -21,8 +21,11 @@ import { Setup as VodSetup } from "./utils/videoUtils";
 const worker = async () => {
   const mongodb = await mongoose.connect(MONGODB_CONNECTION_STRING);
 
+  const sessionMiddleware = SessionMiddleware(mongodb.connection);
+  const loggerMiddleware = LoggerMiddleware();
+
   //create http server
-  const server = http.createServer(app(mongodb.connection));
+  const server = createServer(app(sessionMiddleware, loggerMiddleware));
 
   //create socket server
   const io = new Server(server, {
@@ -31,6 +34,19 @@ const worker = async () => {
       methods: ["GET", "POST"],
       credentials: true,
     },
+    cookie: true,
+  });
+
+  io.engine.use(sessionMiddleware);
+  io.engine.use((req, res, next) => {
+    const session = req["session"];
+    if (session?.user) {
+      logger.info(session.user, "socket.io user authenticated");
+      next();
+    } else {
+      logger.error("socket.io user invalid");
+      next(new Error("socket.io user invalid"))
+    }
   });
 
   const amqpConnection = await connect(RABBITMQ_CONNECTION_STRING);
@@ -48,6 +64,7 @@ const worker = async () => {
   await ReportSetup(amqpConnection);
 
   io.adapter(createAdapter({ amqpConnection: () => amqpConnection }));
+
   //handle socket.io
   ioHandler(io);
 

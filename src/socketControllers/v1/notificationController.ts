@@ -5,7 +5,7 @@ export const notificationIoController = (io: Namespace) => {
 };
 
 const joinRoomByTenantID = (socket: Socket, next: (err?: any) => void) => {
-  const tenantID = socket.handshake.query.tenantID;
+  const tenantID = socket.request["session"]?.user?.tenant;
   if (tenantID) {
     socket.join(tenantID);
     console.log(
@@ -13,6 +13,7 @@ const joinRoomByTenantID = (socket: Socket, next: (err?: any) => void) => {
     );
     next();
   } else {
+    console.log(socket.request["session"], "No tenantID passed");
     next(new Error("No tenantID passed"));
   }
   next();
