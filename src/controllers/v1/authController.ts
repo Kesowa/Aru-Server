@@ -22,6 +22,10 @@ export const loginUser = async (req: Request, res: AuthResponse) => {
       message: "User doesn't exist",
     });
   }
+  req.log.info({
+    email: user.email,
+    userType: user.userType,
+  }, "USER LOGIN");
   if (!user.isActive) {
     return res.status(401).json({
       status: false,

@@ -9,6 +9,8 @@ import User from "../models/user";
 import { IPackage } from "../schemas/package";
 import { GetPermissions, PERMS } from "../schemas/permission";
 
+export const iv = "asdasdas";
+
 enum InvalidAuth {
   PACKAGE_EXPIRED,
   INVALID_USER,
@@ -19,7 +21,7 @@ enum InvalidAuth {
 const UserSession = zod.object({
   id: zod.string(),
   email: zod.string(),
-  tenant: zod.string(),
+  tenant: zod.string().nullable(),
 });
 
 const Authenticator = async (session: Session) => {
@@ -103,6 +105,12 @@ export function PermissionGuard(...perms: PERMS[]) {
     const missingPerms = perms.filter(
       (perm) => !res.locals.user.customPermissions.includes(perm),
     );
+    req.log.error(
+      {
+        missingPerms,
+        userPerms: res.locals.user.customPermissions
+      },
+      "user has insufficient perms");
     res.status(403).json({
       status: false,
       message: "Permission denied",

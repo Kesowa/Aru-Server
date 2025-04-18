@@ -98,7 +98,7 @@ export const saveVectorLayer = async (
     feature.geometry.coordinates = truncate(feature, {
       coordinates: 2,
     }).geometry.coordinates;
-    featureTypes.add(feature.geometry.type);
+    featureTypes.add(feature.geometry.type.replace(/^Multi/, "")); // Handles MultiGeometry
   });
   console.log({ featureTypes });
   const stringData = JSON.stringify(geojsonData);
@@ -289,7 +289,7 @@ export const saveCSV = async (
     fileType: "csv",
     folderName: "root1234",
     filePath: filepath,
-    missionId,
+    [missionId !== "" && "missionId"]: missionId,
     tenantId,
     createdBy: userId,
     updatedBy: userId,

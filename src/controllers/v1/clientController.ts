@@ -36,12 +36,15 @@ export const createClientformissionGroup = async (
   req: Request,
   res: AuthResponse,
 ) => {
-  const fileDoc = await UploadTask.findOne({
-    _id: req.body.avatar,
-    tenant: res.locals.user.tenantId._id,
-    createdBy: res.locals.user._id,
-    // status: "started",
-  });
+  let fileDoc;
+  if (req.body.avatar) {
+    fileDoc = await UploadTask.findOne({
+      _id: req.body.avatar,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
+  }
   const result = await Usergroup.findOne({
     _id: req.body.userGroupId,
     tenantId: res.locals.user.tenantId._id,
@@ -278,7 +281,7 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
           data: d,
         });
       } else
-        return res.json({
+        return res.status(206).json({
           status: true,
           message: `Your data must be less than equal to ${result.length - 1}`,
           data: result,
@@ -289,19 +292,22 @@ export const getMissionById = async (req: Request, res: AuthResponse) => {
         message: "sorry client expired!",
       });
   } else
-    return res.status(200).json({
+    return res.status(404).json({
       status: false,
       message: "Data does not exist!",
     });
 };
 
 export const editClientDetails = async (req: Request, res: AuthResponse) => {
-  const fileDoc = await UploadTask.findOne({
-    _id: req.body.avatar,
-    tenant: res.locals.user.tenantId._id,
-    createdBy: res.locals.user._id,
-    // status: "started",
-  });
+  let fileDoc;
+  if (req.body.avatar) {
+    fileDoc = await UploadTask.findOne({
+      _id: req.body.avatar,
+      tenant: res.locals.user.tenantId._id,
+      createdBy: res.locals.user._id,
+      // status: "started",
+    });
+  }
   const result = await User.findOne(
     {
       _id: req.body.id,

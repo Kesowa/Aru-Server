@@ -1,0 +1,323 @@
+import { CurriedUrl, Login, LoginSuper, Logout } from "./utils/utils";
+import { SuperAgentTest } from "supertest";
+import { randomUUID } from "crypto";
+import { createBaseVectorLayer, createLayer, createRasterLayer } from "./utils/baseLayer";
+import { createLayer as createMissionlayer, createRasterLayer as createMissionRasterLayer } from "./utils/layer";
+import { uploadFile } from "./utils/upload";
+
+let agent: SuperAgentTest;
+let superAdminAgent: SuperAgentTest;
+beforeAll(async () => {
+  agent = await Login();
+  superAdminAgent = await LoginSuper();
+});
+afterAll(async () => {
+  await Logout(agent);
+  await Logout(superAdminAgent);
+});
+const full_url = CurriedUrl("baselayer");
+
+describe("/baselayer API", () => {
+  test("POST /create/Vector", async () => {
+    await createLayer(agent);
+  });
+
+  test("POST /create-by-layers", async () => {
+    const layers = [await createLayer(agent), await createLayer(agent)];
+    const res = await agent
+      .post(full_url("create-by-layers"))
+      .send({
+        name: "base-test-2",
+        pattr: [],
+        layers: [
+          {
+            layerId: layers[0].layer._id,
+            attrMapping: {
+              AA: "AA",
+            },
+          },
+          {
+            layerId: layers[1].layer._id,
+            attrMapping: {
+              AA: "AA",
+            },
+          },
+        ],
+        vectorType: "Landmark",
+      })
+      .expect(201);
+
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: {
+        _id: expect.any(String),
+      },
+    });
+  });
+
+  test("POST /create-base-vector-layer", async () => {
+    await createBaseVectorLayer(agent);
+  });
+
+  test("GET /fetch/All", async () => {
+    await createLayer(agent);
+    const res = await agent
+      .get(full_url("fetch/All"))
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      success: true,
+      message: expect.any(String),
+      data: expect.any(Array),
+    });
+
+    const res2 = await agent
+      .get(full_url("/fetch/Vector"))
+      .expect(200);
+
+    expect(res2.body).toMatchObject({
+      success: true,
+      message: expect.any(String),
+      data: expect.any(Array),
+    });
+  });
+
+  test("POST /filter-base-layer", async () => {
+    await createLayer(agent);
+    const res = await agent
+      .post(full_url("filter-base-layer"))
+      .send({
+        captureDate: "desc",
+        time: "2 days",
+      })
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Array),
+    });
+  });
+
+  test("PATCH /publishBaseLayer", async () => {
+    const layer = await createLayer(agent);
+    const res = await agent
+      .patch(full_url("publishBaseLayer"))
+      .send({
+        layerId: [layer.layer._id],
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      publicMapRef: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("GET /getallpublicbaselayers", async () => {
+    const res = await agent
+      .get(full_url("getallpublicbaselayers"))
+      .query({
+        mapRef: "5f204f03b9445726102781a862148702831c465d972286b3",
+      })
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Array),
+    });
+  });
+
+  test("PUT /set-prime-attr", async () => {
+    const layer = await createLayer(agent);
+    const res = await agent
+      .put(full_url("set-prime-attr"))
+      .send({
+        path: layer.layer.layerpath,
+        pattr: ["Zip_Code"],
+        id: layer.layer._id,
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({
+      success: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("PATCH /update-by-layers", async () => {
+    const base_layer = await createBaseVectorLayer(agent);
+    const update_layer = await createBaseVectorLayer(agent);
+
+    const res = await agent
+      .patch(full_url("update-by-layers"))
+      .send({
+        layers: [
+          {
+            layerId: update_layer._id,
+            attrMapping: { AA: "AA" },
+          },
+        ],
+        baseLayer: base_layer._id,
+      })
+      .expect(200);
+    console.log(res.body);
+    expect(res.body).toMatchObject({
+      success: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("POST /upload-to-update-base-layer/Vector", async () => {
+    const base_layer = await createBaseVectorLayer(agent);
+
+    const fileId = await uploadFile(agent, "./assets/sampleData.geojson");
+
+    const res = await agent
+      .post(full_url("upload-to-update-base-layer/Vector"))
+      .send({
+        baseLayer: base_layer._id,
+        file: fileId
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({
+      success: true,
+      data: {
+        primeAttributes: expect.any(Array),
+        layerAttributes: expect.any(Array),
+        filePath: expect.any(String),
+        baseLayer: base_layer._id,
+      },
+    });
+  });
+
+  test("PATCH /get-meta-data", async () => {
+    const layers = [await createMissionlayer(agent, superAdminAgent), await createMissionlayer(agent, superAdminAgent)];
+    const res = await agent
+      .patch(full_url("get-meta-data"))
+      .send({
+        layers: layers.map(layer => layer._id),
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Array),
+    });
+  });
+
+  // needs /vector/1659511470073_solar.geojson to exist
+  test("PATCH /get-meta-data-for-update", async () => {
+    const base_layer = await createLayer(agent);
+    const layers = [await createMissionlayer(agent, superAdminAgent), await createMissionlayer(agent, superAdminAgent)];
+    const res = await agent
+      .patch(full_url("get-meta-data-for-update"))
+      .send({
+        layers: layers.map(layer => layer._id),
+        baseLayer: base_layer.layer._id,
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("PATCH /update-base-layer-by-uploaded-layer", async () => {
+    const layer = await createLayer(agent);
+    const fileId = await uploadFile(agent, "./assets/poles.geojson");
+    const res = await agent
+      .patch(full_url("update-base-layer-by-uploaded-layer"))
+      .send({
+        file: fileId,
+        baseLayer: layer.layer._id,
+        attrMapping: {
+          AA: "AA",
+        },
+      })
+      .expect(200);
+    console.log(res.body);
+    expect(res.body).toMatchObject({
+      success: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("POST /create-base-raster-upload/Raster", async () => {
+    await createRasterLayer(agent);
+  });
+
+  // !TODO: Need to fix this dependency on mission data
+  test("POST /create-base-raster-import-mission", async () => {
+    const res = await agent
+      .post(full_url("create-base-raster-import-mission"))
+      .send({
+        name: randomUUID(),
+        layers: ["61eb92375f7a012bcdbbfb2a"],
+        captureDate: "2022-07-28",
+      })
+      .expect(201);
+
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("PATCH /updateRasterLayerUpload/Raster", async () => {
+    const base_layer = await createRasterLayer(agent);
+    const fileId = await uploadFile(agent, "./assets/Ortho_25cm.tif");
+    const res = await agent
+      .patch(full_url("updateRasterLayerUpload/Raster"))
+      .send({
+        layerId: base_layer._id,
+        file: fileId,
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("PATCH /updateRasterLayerImport", async () => {
+    const base_layer = await createRasterLayer(agent);
+    const layers = [await createMissionRasterLayer(agent, superAdminAgent), await createMissionRasterLayer(agent, superAdminAgent)];
+    const res = await agent
+      .patch(full_url("updateRasterLayerImport"))
+      .send({
+        layerId: base_layer._id,
+        layers: layers,
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({
+      status: true,
+      message: expect.any(String),
+      data: expect.any(Object),
+    });
+  });
+
+  test("DELETE /delete-baseLayer-id", async () => {
+    const base_layer = await createLayer(agent);
+    const res = await agent
+      .delete(full_url("delete-baseLayer-id"))
+      .send({
+        layers: [base_layer.layer._id],
+      })
+      .expect(200);
+    console.log(res.body);
+    expect(res.body).toMatchObject({
+      success: true,
+      message: expect.any(String),
+      data: expect.any(Array)
+    });
+  });
+});

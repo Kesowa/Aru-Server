@@ -150,16 +150,12 @@ export default function app(mongo: Connection) {
   app.use(
     pinoHttp({
       logger,
-      customLogLevel: function (_, res, err) {
-        if (res.statusCode >= 400 && res.statusCode < 500) {
-          return "warn";
-        } else if (res.statusCode >= 500 || err) {
-          return "error";
-        } else if (res.statusCode >= 300 && res.statusCode < 400) {
-          return "silent";
+      serializers: {
+        req(req) {
+          req.body = req.raw.body;
+          return req;
         }
-        return "info";
-      },
+      }
     }),
   );
 

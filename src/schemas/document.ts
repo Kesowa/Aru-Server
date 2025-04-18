@@ -28,7 +28,9 @@ export interface IDocument {
   folderName: string; // index
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
-  missionId: mongoose.Types.ObjectId; // index
+  missionId?: mongoose.Types.ObjectId; // index
+  // optional field because, some documents on the platform may not have a mission id. example: csv of clients for a tenant
+  // we need to store those into the database as well, to keep track of their associated files and avoid storage leaks
   tenantId: mongoose.Types.ObjectId; // index
   isFlagged: boolean;
   isThreadExist: boolean;
@@ -79,6 +81,7 @@ const documentSchema = new mongoose.Schema<IDocument>(
     missionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "mission",
+      required: false,
     },
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
