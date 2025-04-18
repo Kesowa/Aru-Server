@@ -1,5 +1,5 @@
 import { Request, Router } from "express";
-import { Types } from "ts-openapi";
+import { bodySchema, Types } from "ts-openapi";
 
 import openApi from "./openApi";
 import Location from "../../models/location";
@@ -110,8 +110,7 @@ openApi.addPath(
       },
       tags: ["Location API"],
       responses: {
-        200: openApi.declareSchema(
-          "successful response",
+        200: bodySchema(
           Types.Object({
             description: "Successful Operation",
             properties: {

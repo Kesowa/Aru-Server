@@ -1,6 +1,6 @@
 import { Request, Router } from "express";
 import { HydratedDocument, PipelineStage } from "mongoose";
-import { Types } from "ts-openapi";
+import { bodySchema, Types } from "ts-openapi";
 
 import openApi from "./openApi";
 import Flight from "../../models/flight";
@@ -94,8 +94,7 @@ openApi.addPath(
       },
       tags: ["Flight API"],
       responses: {
-        200: openApi.declareSchema(
-          "successful response",
+        200: bodySchema(
           Types.Object({
             description: "Successful Operation",
             properties: {

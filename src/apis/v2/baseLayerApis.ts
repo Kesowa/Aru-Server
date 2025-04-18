@@ -1,6 +1,6 @@
 import { Request, Router } from "express";
 import mongoose from "mongoose";
-import { Types } from "ts-openapi";
+import { bodySchema, Types } from "ts-openapi";
 
 import openApi from "./openApi";
 import Alert from "../../models/alert";
@@ -241,8 +241,7 @@ openApi.addPath(
       },
       tags: ["Base Layer API"],
       responses: {
-        200: openApi.declareSchema(
-          "successful response",
+        200: bodySchema(
           Types.Object({
             description: "Successful Operation",
             properties: {
