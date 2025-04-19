@@ -508,7 +508,6 @@ router.get(
   param("tenantId").isMongoId(),
   param("missionId").isMongoId(),
   validator,
-  PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(publicLayerByMissionId),
 );
 export default router;
