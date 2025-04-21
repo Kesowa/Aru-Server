@@ -1,6 +1,6 @@
 import { EventEmitter } from "stream";
 
-import { Connection } from "amqplib";
+import { ChannelModel, Connection } from "amqplib";
 
 import { logger } from "../app";
 import { notificationSocket } from "../socket";
@@ -16,7 +16,7 @@ export const InferEvents = new EventEmitter();
 export const REQ_QUEUE_SFX = ".infer.req";
 export const RES_QUEUE_SFX = ".infer.res";
 
-export async function Setup(conn: Connection) {
+export async function Setup(conn: ChannelModel) {
   for (const queue of inferences) {
     const REQ_QUEUE = queue + REQ_QUEUE_SFX;
     const RES_QUEUE = queue + RES_QUEUE_SFX;

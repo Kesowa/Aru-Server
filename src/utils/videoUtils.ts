@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import path from "path";
 
-import { Connection } from "amqplib";
+import { ChannelModel } from "amqplib";
 import DJISRTParser from "dji_srt_parser";
 
 import * as pathUtils from "./pathUtils";
@@ -16,7 +16,7 @@ export const VODEvents = new EventEmitter();
 export const REQ_QUEUE = "vod.transcode.req";
 export const RES_QUEUE = "vod.transcode.res";
 
-export async function Setup(conn: Connection) {
+export async function Setup(conn: ChannelModel) {
   const reqChannel = await conn.createChannel();
   await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
   const resChannel = await conn.createChannel();

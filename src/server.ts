@@ -19,11 +19,13 @@ import { createAdapter } from "./utils/socket.io-adapter";
 import { Setup as VodSetup } from "./utils/videoUtils";
 
 const worker = async () => {
+  logger.info("Connecting to mongodb");
   const mongodb = await mongoose.connect(MONGODB_CONNECTION_STRING);
 
   const sessionMiddleware = SessionMiddleware(mongodb.connection);
   const loggerMiddleware = LoggerMiddleware();
 
+  logger.info("Creating http server");
   //create http server
   const server = createServer(app(sessionMiddleware, loggerMiddleware));
 
@@ -49,6 +51,7 @@ const worker = async () => {
     }
   });
 
+  logger.info("Connecting to rabbitmq");
   const amqpConnection = await connect(RABBITMQ_CONNECTION_STRING);
 
   // VOD Microservice
@@ -63,11 +66,12 @@ const worker = async () => {
   // Report Microservice
   await ReportSetup(amqpConnection);
 
-  io.adapter(createAdapter({ amqpConnection: () => amqpConnection }));
+  io.adapter(createAdapter({ amqpConnection: () => amqpConnection.connection }));
 
   //handle socket.io
   ioHandler(io);
 
+  logger.info("Starting server");
   server.listen(PORT, () => logger.info(`server listening on port ${PORT}`));
 };
 worker()

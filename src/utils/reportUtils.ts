@@ -1,6 +1,6 @@
 import { EventEmitter } from "stream";
 
-import { Connection } from "amqplib";
+import { ChannelModel, Connection } from "amqplib";
 
 import { logger } from "../app";
 import Document from "../models/document";
@@ -15,7 +15,7 @@ export const PLOT_RES_QUEUE = "report.plot.res";
 export const BLOCK_REQ_QUEUE = "report.block.req";
 export const BLOCK_RES_QUEUE = "report.block.res";
 
-export async function Setup(conn: Connection) {
+export async function Setup(conn: ChannelModel) {
   // for plot report
   const plotReqChannel = await conn.createChannel();
   await plotReqChannel.assertQueue(PLOT_REQ_QUEUE, { durable: true });

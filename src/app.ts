@@ -61,7 +61,7 @@ export const logger: Logger = pino({
     "req.body.password",
     MODE == Mode.Prod ? "req.headers.cookie" : "req.headers",
     "req.body.token",
-    MODE == Mode.Prod ? "res.headers.Set-Cookie" : "res.headers",
+    MODE == Mode.Prod ? "res.headers['set-cookie']" : "res.headers",
   ],
   transport:
     MODE == Mode.Prod

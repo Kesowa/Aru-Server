@@ -1,7 +1,7 @@
 import path from "path";
 import { EventEmitter } from "stream";
 
-import { Connection } from "amqplib";
+import { ChannelModel } from "amqplib";
 
 import { deletePublicFolderUsingPath } from "./fileDeleteUtils";
 import * as pathUtils from "./pathUtils";
@@ -15,7 +15,7 @@ export const LayerEvents = new EventEmitter();
 export const REQ_QUEUE = "file.decompress.req";
 export const RES_QUEUE = "file.decompress.res";
 
-export async function Setup(conn: Connection) {
+export async function Setup(conn: ChannelModel) {
   const reqChannel = await conn.createChannel();
   await reqChannel.assertQueue(REQ_QUEUE, { durable: true });
   const resChannel = await conn.createChannel();
