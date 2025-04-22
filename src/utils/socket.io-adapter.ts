@@ -1,7 +1,7 @@
 import { hostname } from "os";
 import { promisify } from "util";
 
-import { Channel, ConfirmChannel, Connection } from "amqplib";
+import { Channel, ChannelModel, ConfirmChannel } from "amqplib";
 import debugFactory, { Debugger } from "debug";
 import { ReplaySubject, filter, firstValueFrom } from "rxjs";
 import { Namespace } from "socket.io";
@@ -16,7 +16,7 @@ export const enum SidRoomRouting {
 }
 
 export interface AmqpAdapterOptions {
-  amqpConnection: () => Promise<Connection> | Connection;
+  amqpConnection: () => Promise<ChannelModel> | ChannelModel;
   sidRoomRouting?: SidRoomRouting;
   instanceName?: string;
   exchangeName?: string;
@@ -105,7 +105,7 @@ export class AmqpAdapter extends Adapter {
     ack();
   }
 
-  async handleConnection(conn: Connection) {
+  async handleConnection(conn: ChannelModel) {
     conn.on("close", async () => {
       if (this.closed) return;
       this.debug("not closed, reopening");

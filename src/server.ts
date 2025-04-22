@@ -66,7 +66,7 @@ const worker = async () => {
   // Report Microservice
   await ReportSetup(amqpConnection);
 
-  io.adapter(createAdapter({ amqpConnection: () => amqpConnection.connection }));
+  io.adapter(createAdapter({ amqpConnection: () => amqpConnection }));
 
   //handle socket.io
   ioHandler(io);
