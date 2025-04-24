@@ -143,18 +143,7 @@ export default function app(sessionMiddleware: express.RequestHandler, loggerMid
     res.status(200).send();
   });
   app.use(compression());
-  app.use(
-    helmet({
-      frameguard: false,
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'none'"],
-          frameAncestors: ["'none'"],
-          formAction: ["'self'"],
-        }
-      },
-    }),
-  );
+  app.use(helmet());
   app.use(
     cors({
       maxAge: 60 * 60 * 24,
