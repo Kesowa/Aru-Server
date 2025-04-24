@@ -129,6 +129,7 @@ export default function app(sessionMiddleware: express.RequestHandler, loggerMid
   const app: Application = express();
 
   app.disable("x-powered-by");
+  app.use(helmet());
 
   const limiter = rateLimit({
     windowMs: 1 * 60 * 1000,
@@ -143,7 +144,6 @@ export default function app(sessionMiddleware: express.RequestHandler, loggerMid
     res.status(200).send();
   });
   app.use(compression());
-  app.use(helmet());
   app.use(
     cors({
       maxAge: 60 * 60 * 24,
