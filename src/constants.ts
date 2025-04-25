@@ -87,7 +87,7 @@ class CastError extends Error {
   }
 }
 export const PORT = new EnvVar("PORT").toNumeric();
-export const MONGODB_CONNECTION_STRING = new EnvVar("MONGODB_CONNECTION_STRING")
+export const DB_CONNECTION_STRING = new EnvVar("DB_CONNECTION_STRING")
   .isUrl()
   .toString();
 export const SMTP_PASSWORD = new EnvVar("SMTP_PASSWORD").toString();

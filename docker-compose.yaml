@@ -10,7 +10,7 @@ services:
       - ./adapter:/app/adapter:ro
     environment:
       - TZ="Asia/Kolkata"
-      - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/test
+      - DB_CONNECTION_STRING=postgres://postgres:password@localhost:5432/aru
       - S3_ACCESS_KEY=minioadmin
       - S3_SECRET_KEY=minioadmin
       - S3_BUCKET_NAME=aru

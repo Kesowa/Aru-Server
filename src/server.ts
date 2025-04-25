@@ -1,12 +1,11 @@
 import { createServer } from "node:http";
 
 import { connect } from "amqplib";
-import mongoose from "mongoose";
 import { Server } from "socket.io";
 
 import app, { logger, LoggerMiddleware, SessionMiddleware } from "./app";
 import {
-  MONGODB_CONNECTION_STRING,
+  DB_CONNECTION_STRING,
   PORT,
   PUBLIC_SERVER,
   RABBITMQ_CONNECTION_STRING,
@@ -17,10 +16,23 @@ import { Setup as InferSetup } from "./utils/inferUtils";
 import { Setup as ReportSetup } from "./utils/reportUtils";
 import { createAdapter } from "./utils/socket.io-adapter";
 import { Setup as VodSetup } from "./utils/videoUtils";
+import Sequelize from "@sequelize/core";
+import { PostgresDialect } from "@sequelize/postgres";
+import Mission from "./models/mission";
 
 const worker = async () => {
   logger.info("Connecting to mongodb");
-  const mongodb = await mongoose.connect(MONGODB_CONNECTION_STRING);
+  const sequelize = new Sequelize({
+    dialect: PostgresDialect,
+    database: "aru",
+    user: "aru",
+    password: "pass",
+    host: "postgres",
+    port: 5432,
+    ssl: true,
+    // clientMinMessages: "notice",
+    models: [Mission]
+  });
 
   const sessionMiddleware = SessionMiddleware(mongodb.connection);
   const loggerMiddleware = LoggerMiddleware();
