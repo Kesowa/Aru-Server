@@ -24,12 +24,7 @@ const worker = async () => {
   logger.info("Connecting to mongodb");
   const sequelize = new Sequelize({
     dialect: PostgresDialect,
-    database: "aru",
-    user: "aru",
-    password: "pass",
-    host: "postgres",
-    port: 5432,
-    ssl: true,
+    url: DB_CONNECTION_STRING,
     // clientMinMessages: "notice",
     models: [Mission]
   });

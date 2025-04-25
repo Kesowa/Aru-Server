@@ -1,16 +1,15 @@
 import path from "path";
 
 import compression from "compression";
-import MongoStore from "connect-mongo";
 import cors from "cors";
 import errorHandler from "errorhandler";
 import express, { Application } from "express";
 import rateLimit from "express-rate-limit";
 import session from "express-session";
 import helmet from "helmet";
-import { Connection } from "mongoose";
 import pino, { Logger } from "pino";
 import pinoHttp from "pino-http";
+import SequelizeStore from "connect-session-sequelize";
 
 //API imports
 import aimlApis from "./apis/v1/aimlApis";
@@ -54,6 +53,7 @@ import {
   LOGGER_URL,
   ARU_INSTANCE,
 } from "./constants";
+import Sequelize from "@sequelize/core";
 
 export const logger: Logger = pino({
   name: "ARU-" + ARU_INSTANCE,
@@ -84,14 +84,13 @@ export const logger: Logger = pino({
       },
 });
 
-export function SessionMiddleware(mongo: Connection) {
+export function SessionMiddleware(db: Sequelize) {
   return session({
     secret: SECRET_KEY,
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-      client: mongo.getClient(),
-      collectionName: "sessions",
+    store: new (SequelizeStore(session.Store))({
+      db,
     }),
     cookie: {
       httpOnly: true,
