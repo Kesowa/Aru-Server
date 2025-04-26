@@ -1,3 +1,4 @@
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import mongoose from "mongoose";
 import { Types } from "ts-openapi";
 export interface IMission {
@@ -110,4 +111,54 @@ missionSchema.index({
   tenantId: 1,
   status: 1,
 });
-export default missionSchema;
+
+@Entity()
+export default class Mission {
+  @PrimaryGeneratedColumn()
+  _id: number
+
+  @Column()
+  deliverables: string[];
+
+  @Column()
+  status: "Upcoming" | "Live" | "Completed" | "Review"; // index
+
+  @Column()
+  user: string; // index
+
+  @Column()
+  pilotAssigned: string;
+
+  @Column()
+  assetID?: string;
+
+  @Column()
+  name: string;
+
+  @Column()
+  description: string;
+
+  @Column()
+  tenantId: string; // index
+
+  @Column()
+  clientId: string[]; // index
+
+  @Column()
+  missionType: string;
+
+  @Column()
+  invites: string[];
+
+  @Column()
+  createdAt: Date;
+
+  @Column()
+  updatedAt: Date;
+
+  @Column()
+  size: number;
+
+  @Column()
+  isPublic: boolean;
+}

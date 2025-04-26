@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
+import dataSource from "../data-source";
 
-import missionSchema, { IMission } from "../schemas/mission";
+import mission from "../schemas/mission";
 
-const Mission = mongoose.model<IMission>("mission", missionSchema);
+export default dataSource.getRepository(mission);
 
-export default Mission;
