@@ -54,6 +54,8 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
         return query;
       }
 
+      static async updateMany() {} // WILL NOT BE IMPLEMENTED
+
       static async updateOne(filter: FindOptionsWhere<U>, update: U | { $inc: Partial<Record<NumericKeys<U>, number>> }) {
         const entity = await repository.findOne(filter);
         if (!entity) {
