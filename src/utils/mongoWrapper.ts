@@ -1,4 +1,4 @@
-import { Repository, FindOptionsWhere, FindManyOptions, FindOneOptions } from 'typeorm';
+import { Repository, FindOptionsWhere, FindManyOptions, FindOneOptions, DeepPartial } from 'typeorm';
 
 type RelationKeys<T> = {
   [K in keyof T]: T[K] extends object ? K : never
@@ -16,6 +16,8 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
   private __id?: string | number;
   private _single?: boolean;
   private _sort?: Record<string, "ASC" | "DESC">;
+  private _skip?: number;
+  private _take?: number;
 
   constructor(repository: Repository<T>, entity?: T) {
     this.repository = repository;
@@ -28,7 +30,7 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
         super(repository, entity);
       }
 
-      static async create(doc: U) {
+      static async create(doc: DeepPartial<U>) {
         const created = repository.create(doc);
         const saved = await repository.save(created);
         return new BoundWrapper(saved);
@@ -54,14 +56,14 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
         return query;
       }
 
-      static async updateMany() {} // WILL NOT BE IMPLEMENTED
+      static async updateMany() { } // WILL NOT BE IMPLEMENTED
 
       static async updateOne(filter: FindOptionsWhere<U>, update: U | { $inc: Partial<Record<NumericKeys<U>, number>> }) {
         const entity = await repository.findOne(filter);
         if (!entity) {
           return { matchedCount: 0, modifiedCount: 0 }
         }
-        let newUpdate: U;
+        let newUpdate: Partial<U> = {};
         if ("$inc" in update) {
           for (const key in update.$inc) {
             if (typeof entity[key] === "number")
@@ -70,7 +72,7 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
         } else {
           newUpdate = update;
         }
-        const result = await repository.update(entity, newUpdate);
+        const result = await repository.update(entity, newUpdate as U);
         return { matchedCount: result.affected ?? 0, modifiedCount: result.affected ?? 0 };
       }
 
@@ -93,12 +95,22 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
     await this.repository.remove(this.entity);
   }
 
-  sort(sortFields: Record<keyof T | string, 1 | -1>): this {
+  sort(sortFields: Partial<Record<keyof T, 1 | -1>>): this {
     const order: Partial<Record<keyof T, 'ASC' | 'DESC'>> = {};
     for (const key in sortFields) {
       order[key] = sortFields[key] === 1 ? 'ASC' : 'DESC';
     }
     this._sort = order;
+    return this;
+  }
+
+  skip(count: number): this {
+    this._skip = count;
+    return this;
+  }
+
+  limit(count: number): this {
+    this._take = count;
     return this;
   }
 
@@ -114,6 +126,8 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
   async exec(): Promise<any> {
     const relations = this._populatePaths;
     const order = this._sort;
+    const skip = this._skip;
+    const take = this._take;
 
     if (this.__id !== undefined) {
       const found = await this.repository.findOne({ where: { _id: this.__id } as any, relations });
@@ -122,7 +136,7 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
       const found = await this.repository.findOne({ where: this._filter, relations } as FindOneOptions<T>);
       return found ? new (this.constructor as any)(found) : null;
     } else {
-      const found = await this.repository.find({ where: this._filter, relations, order } as FindManyOptions<T>);
+      const found = await this.repository.find({ where: this._filter, relations, order, skip, take } as FindManyOptions<T>);
       return found.map((doc: T) => new (this.constructor as any)(doc));
     }
   }
