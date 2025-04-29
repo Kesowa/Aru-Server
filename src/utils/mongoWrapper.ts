@@ -8,7 +8,11 @@ type NumericKeys<T> = {
   [K in keyof T]: T[K] extends number ? K : never
 }[keyof T];
 
-export default class MongooseLikeWrapper<T extends object, Paths = {}> {
+type Merge<A extends object, B extends object> = Omit<A, keyof B> & B;
+
+type MaybeArray<T, IsArray extends boolean> = IsArray extends true ? T[] : T;
+
+export default class MongooseLikeWrapper<T extends object, IsArray extends boolean> {
   private repository: Repository<T>;
   private entity: T | null = null;
   private _populatePaths: string[] = [];
@@ -16,8 +20,6 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
   private __id?: string | number;
   private _single?: boolean;
   private _sort?: Record<string, "ASC" | "DESC">;
-  private _skip?: number;
-  private _take?: number;
 
   constructor(repository: Repository<T>, entity?: T) {
     this.repository = repository;
@@ -25,7 +27,7 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
   }
 
   static bind<U extends object>(repository: Repository<U>) {
-    const wrapperClass = class BoundWrapper extends MongooseLikeWrapper<U> {
+    const wrapperClass = class BoundWrapper<IsArray extends boolean = false> extends MongooseLikeWrapper<U, IsArray> {
       constructor(entity?: U) {
         super(repository, entity);
       }
@@ -37,7 +39,7 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
       }
 
       static find(filter: FindOptionsWhere<U> = {}) {
-        const query = new BoundWrapper();
+        const query = new BoundWrapper<true>();
         query._filter = filter;
         return query;
       }
@@ -104,30 +106,18 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
     return this;
   }
 
-  skip(count: number): this {
-    this._skip = count;
-    return this;
-  }
-
-  limit(count: number): this {
-    this._take = count;
-    return this;
-  }
-
-  populate<P extends Partial<Record<keyof T, any>>>(path: RelationKeys<T> | string, _subpaths?: string | string[]) {
+  populate<P extends object = {}>(path: RelationKeys<T> | string, _subpaths?: string | string[]) {
     this._populatePaths.push(path as string);
-    return this as MongooseLikeWrapper<T, Paths & P>;
+    return this as any as MongooseLikeWrapper<Merge<T, P>, IsArray>;
   }
 
   lean(): this {
     return this;
   }
 
-  async exec(): Promise<any> {
+  async exec(): Promise<MaybeArray<T, IsArray>> {
     const relations = this._populatePaths;
     const order = this._sort;
-    const skip = this._skip;
-    const take = this._take;
 
     if (this.__id !== undefined) {
       const found = await this.repository.findOne({ where: { _id: this.__id } as any, relations });
@@ -136,13 +126,13 @@ export default class MongooseLikeWrapper<T extends object, Paths = {}> {
       const found = await this.repository.findOne({ where: this._filter, relations } as FindOneOptions<T>);
       return found ? new (this.constructor as any)(found) : null;
     } else {
-      const found = await this.repository.find({ where: this._filter, relations, order, skip, take } as FindManyOptions<T>);
-      return found.map((doc: T) => new (this.constructor as any)(doc));
+      const found = await this.repository.find({ where: this._filter, relations, order } as FindManyOptions<T>);
+      return found.map((doc: T) => new (this.constructor as any)(doc)) as MaybeArray<T, IsArray>;
     }
   }
 
   then<TResult1 = any, TResult2 = never>(
-    onfulfilled?: ((value: any) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+    onfulfilled?: ((value: MaybeArray<T, IsArray>) => TResult1 | PromiseLike<TResult1>) | undefined | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
   ): Promise<TResult1 | TResult2> {
     return this.exec().then(onfulfilled, onrejected);
