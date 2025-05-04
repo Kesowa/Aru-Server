@@ -672,16 +672,30 @@ export const clientCsv = async (req: Request, res: AuthResponse) => {
 };
 
 export const getListClient = async (req: Request, res: AuthResponse) => {
+  const {
+    name,
+    email,
+    phoneNo,
+    country,
+    city,
+  } = req.query;
   const page = Number(req.query.page) - 1;
   const limit = Number(req.query.limit);
   const [sortBy, order] = (req.query.sort?.toString() || "name:desc").split(
     ":",
   );
 
-  const results = await User.find({
+  const query = {
     tenantId: res.locals.user.tenantId._id,
     userType: "tenant-client",
-  })
+    [name && "name"]: { $regex: name, $options: 'i' },
+    [email && "email"]: email,
+    [phoneNo && "phoneNo"]: phoneNo,
+    [country && "country"]: { $regex: country, $options: 'i' },
+    [city && "city"]: { $regex: city, $options: 'i' },
+  };
+
+  const results = await User.find(query)
     .populate<{ createdBy: IUser }>({ path: "createdBy", select: "name" })
     .sort({ [sortBy]: order as SortOrder })
     .skip(limit * page)
@@ -693,14 +707,13 @@ export const getListClient = async (req: Request, res: AuthResponse) => {
       message: "No Client Found",
     });
   }
-  const tenant = await Tenant.findById(res.locals.user.tenantId._id, {
-    actualClientCount: 1,
-  });
+  // queries the database and fetches the count only, not the data, so should be optimal even though kinda repetative
+  const total = await User.count(query);
   return res.json({
     status: true,
     message: "Data fetched successfully!",
     data: results,
-    total: tenant.actualClientCount,
+    total,
   });
 };
 
