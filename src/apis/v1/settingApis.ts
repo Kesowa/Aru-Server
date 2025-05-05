@@ -1,11 +1,10 @@
 import { Router } from "express";
 
 import { getSettings } from "../../controllers/v1/settingController";
-import { isAuthenticated } from "../../utils/authUtils";
 
 const router = Router();
 
-router.get("/url", isAuthenticated, (req, res, next) => {
+router.get("/url", (req, res, next) => {
   res.json(getSettings());
 });
 
