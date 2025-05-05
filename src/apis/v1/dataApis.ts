@@ -23,7 +23,7 @@ dataRouter.post(
   "/thermal/table",
   body("id").isString().notEmpty(),
   body("doc").isString().notEmpty().isIn(["alert", "document"]),
-  body("table").isArray().notEmpty(),
+  body("table").isArray(), // can be empty, in case user deleted all points and submitted the form
   validator,
   isAuthenticated,
   RobustRunner(createThermalTable),
