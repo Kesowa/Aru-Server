@@ -1,4 +1,4 @@
-import { bearerAuth, OpenApi } from "ts-openapi";
+import { cookieAuth, OpenApi } from "ts-openapi";
 
 import { API_SERVER } from "../../constants";
 
@@ -20,7 +20,7 @@ openApi.setLicense(
   "https://dummy.io/terms/", // API terms of service
 );
 
-openApi.declareSecurityScheme("bearerSecurity", bearerAuth());
-openApi.addGlobalSecurityScheme("bearerSecurity");
+openApi.declareSecurityScheme("cookieAuth", cookieAuth("connect.sid"));
+openApi.addGlobalSecurityScheme("cookieAuth");
 
 export default openApi;

@@ -1,5 +1,5 @@
 import { Request, Router } from "express";
-import { bodySchema, Types } from "ts-openapi";
+import { Types } from "ts-openapi";
 
 import openApi from "./openApi";
 import LayerGroup from "../../models/layerGroup";
@@ -75,7 +75,7 @@ openApi.addPath(
       },
       tags: ["Layer Group API"],
       responses: {
-        200: bodySchema(
+        200: openApi.declareSchema("Response Body",
           Types.Object({
             description: "Successful Operation",
             properties: {

@@ -52,7 +52,7 @@ routerV2.use(
   OpenApiValidator.middleware({
     apiSpec: "/tmp/openapi.json",
     validateRequests: true,
-    // validateResponses: true,
+    validateResponses: false,
   }),
 );
 

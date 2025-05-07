@@ -1,5 +1,5 @@
 import { Request, Router } from "express";
-import { bodySchema, Types } from "ts-openapi";
+import { Types } from "ts-openapi";
 
 import openApi from "./openApi";
 import Mission from "../../models/mission";
@@ -24,6 +24,7 @@ missionApi.get(
         populate: string[];
         locationId?: string;
         status?: string;
+        missionType?: string;
       };
     },
     res: AuthResponse,
@@ -40,6 +41,7 @@ missionApi.get(
       populate,
       locationId,
       status,
+      missionType,
     } = req.query;
     const data = await Mission.find(
       {
@@ -49,6 +51,7 @@ missionApi.get(
         [pilotId && "pilotId"]: pilotId,
         [locationId && "locationId"]: locationId,
         [status && "status"]: status,
+        [missionType && "missionType"]: missionType,
         [timespan?.length && "createdAt"]: {
           $gte: timespan?.[0],
           $lte: timespan?.[1],
@@ -107,11 +110,12 @@ openApi.addPath(
           createdBy: Types.String(),
           pilotId: Types.String(),
           status: Types.String(),
+          missionType: Types.String(),
         },
       },
       tags: ["Mission API"],
       responses: {
-        200: bodySchema(
+        200: openApi.declareSchema("Response Body",
           Types.Object({
             description: "Successful Operation",
             properties: {
