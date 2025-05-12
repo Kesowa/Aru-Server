@@ -16,6 +16,15 @@ const checkUrl = (val: string) => {
   return true;
 };
 const castUrl = (val: string) => new URL(val);
+const checkBool = (val: string) => val == "true" || val == "false";
+const castBool = (val: string) => {
+  if (val == "true")
+    return true
+  else if (val == "false")
+    return false
+  else
+    throw new Error("value is not a boolean");
+};
 
 class EnvVar {
   key: string;
@@ -33,6 +42,9 @@ class EnvVar {
   isEnum(e: Record<string, string>) {
     return this.check(checkEnum(e));
   }
+  isBool() {
+    return this.check(checkBool);
+  }
   toUrl() {
     return this.cast(castUrl);
   }
@@ -44,6 +56,9 @@ class EnvVar {
   }
   toNumeric() {
     return this.cast(Number);
+  }
+  toBool() {
+    return this.cast(castBool);
   }
   check(fn: (val: string) => boolean) {
     try {
@@ -152,3 +167,4 @@ export const S3_ACCESS_KEY = new EnvVar("S3_ACCESS_KEY").toString();
 export const S3_SECRET_KEY = new EnvVar("S3_SECRET_KEY").toString();
 export const S3_BUCKET_NAME = new EnvVar("S3_BUCKET_NAME").toString();
 export const S3_ENDPOINT = new EnvVar("S3_ENDPOINT").toString();
+export const RATE_LIMIT = new EnvVar("RATE_LIMIT").isBool().toBool();
