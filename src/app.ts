@@ -20,6 +20,7 @@ import assetClassApis from "./apis/v1/assetClassApis";
 import authApis from "./apis/v1/authApis";
 import clientApis from "./apis/v1/clientApis";
 import commonApis from "./apis/v1/commonApis";
+import iconApis from "./apis/v1/iconApis";
 import packageApis from "./apis/v1/packageApis";
 import tenantApis from "./apis/v1/tenantApis";
 import organisationApis from "./apis/v1/organisationApis";
@@ -198,6 +199,7 @@ export default function app(sessionMiddleware: express.RequestHandler, loggerMid
   app.use("/apis/v1/thread", threadApis);
   app.use("/apis/v1/data", dataApis);
   app.use("/apis/v1/report", reportApis);
+  app.use("/apis/v1/icon", iconApis);
 
   // 404 route
   app.use(function(req, res, next) {
