@@ -29,6 +29,7 @@ import {
 
 import * as pathUtils from "./pathUtils";
 import Document from "../models/document";
+import { VectorStyle, VectorStyleType } from "./layerUtils";
 
 const getFlagColor = (geojson: GeoJson) => {
   const colorSet = new Set(
@@ -54,7 +55,14 @@ export const saveVectorLayer = async (
     color: "#666",
     inheritColor: false,
   },
+  styling?: VectorStyleType,
 ) => {
+  let parsedStyling: VectorStyleType | null = null;
+  if (styling) {
+    const parsed = VectorStyle.safeParse(styling);
+    if (parsed.success)
+      parsedStyling = parsed.data;
+  };
   const targetPath = pathUtils.docPath(
     pathUtils.Directory.VECTOR,
     randomUUID() + ".geojson",
@@ -77,6 +85,10 @@ export const saveVectorLayer = async (
     geojsonData = layer;
   }
   if (!geojsonData) return null;
+
+  if (parsedStyling) {
+    geojsonData.styling = parsedStyling;
+  };
 
   geojsonData.features.forEach(
     (feature) =>

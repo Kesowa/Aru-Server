@@ -80,7 +80,9 @@ export const createLayer = async (req: Request, res: AuthResponse) => {
         icon: req.body.icon,
         color: req.body.color,
         inheritColor: req.body.inHeritOriginalColorFromFile,
-      });
+      },
+        req.body.properties,
+      );
 
       if (vectorLayer == undefined) {
         res.status(400).json({
@@ -730,7 +732,7 @@ export const downloadassetbyID = async (req: Request, res: AuthResponse) => {
 export const createVectorLayer = async (req: Request, res: AuthResponse) => {
   const vectorLayer = await saveVectorLayer(req.body.geoJSON, {
     inheritColor: true,
-  });
+  }, req.body.properties);
   const layer = await new Layer({
     name: req.body.name,
     type: "Vector",

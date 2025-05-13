@@ -6,6 +6,19 @@ import { deleteObj, readToString } from "./objectStorage";
 import layerModel from "../models/layer";
 import layerGroupModel from "../models/layerGroup";
 import { vectorProps } from "../schemas/vectorprops";
+import zod from "zod";
+
+export const VectorStyle = zod.object({
+  lineStyle: zod.string().optional(),
+  lineWidth: zod.string().optional(),
+  fill: zod.string().optional(),
+  texture: zod.string().optional(),
+  opacity: zod.string().optional(),
+  borderWidth: zod.string().optional(),
+  borderStyle: zod.string().optional()
+})
+
+export type VectorStyleType = zod.infer<typeof VectorStyle>;
 
 type createMixedLayerGroupInput = {
   name: string;
