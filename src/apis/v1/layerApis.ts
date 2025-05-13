@@ -84,7 +84,7 @@ router.post(
     .matches(/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/), // hex codes of color, ex: "#FFFFFF" or "#FFF"
   body("icon").optional().notEmpty().trim(), // example: MarkerIcon
   body("inHeritOriginalColorFromFile").optional().notEmpty().toBoolean(),
-  body("properties").optional().isObject().custom((obj) => VectorStyle.safeParse(obj).success),
+  body("styling").optional().isObject().custom((obj) => VectorStyle.safeParse(obj).success),
   validator,
   PermissionGuard(PERMS.UPLOAD_LAYER),
   isLayerCount,
@@ -284,7 +284,7 @@ router.post(
       Object.values(vectorProps).includes(value as vectorProps),
     ),
   body("geoJSON").exists().isObject(), // use sample geojson made in baselayer tests for testing this too
-  body("properties").optional().isObject().custom((obj) => VectorStyle.safeParse(obj).success),
+  body("styling").optional().isObject().custom((obj) => VectorStyle.safeParse(obj).success),
   validator,
   PermissionGuard(PERMS.UPLOAD_LAYER),
   isLayerCount,
