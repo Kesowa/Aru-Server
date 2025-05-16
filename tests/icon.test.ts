@@ -29,16 +29,37 @@ describe("/icon API", () => {
 
     const res = await agent
       .get(full_url("list"))
-      .send({
-        name: icons[0].name,
-        tags: ["lorem"],
-      })
       .expect(200);
     expect(res.body).toMatchObject({
       status: true,
       data: expect.any(Array),
     });
     expect(res.body.data.length).toBeGreaterThanOrEqual(icons.length);
+
+    const resName = await agent
+      .get(full_url("list"))
+      .query({
+        name: icons[0].name.slice(null, 3),
+      })
+      .expect(200);
+    expect(resName.body).toMatchObject({
+      status: true,
+      data: expect.any(Array),
+    });
+    expect(resName.body.data.length).toBeGreaterThanOrEqual(1);
+
+    const resNameTag = await agent
+      .get(full_url("list"))
+      .query({
+        name: icons[0].name.slice(null, 3),
+        tags: ["lorem"]
+      })
+      .expect(200);
+    expect(resNameTag.body).toMatchObject({
+      status: true,
+      data: expect.any(Array),
+    });
+    expect(resNameTag.body.data.length).toBeGreaterThanOrEqual(1);
   });
 
   test("DELETE /:iconID", async () => {

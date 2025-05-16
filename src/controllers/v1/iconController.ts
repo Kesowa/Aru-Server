@@ -63,9 +63,12 @@ export const listIcon = async (
   req: Request,
   res: AuthResponse,
 ) => {
+  let escapedString = "";
+  if (typeof req.query.name == "string")
+    escapedString = escapeRegex(req.query.name);
   const icons = await Icon.find({
     tenantId: res.locals.user.tenantId._id,
-    [req.query.name && "name"]: req.query.name,
+    [req.query.name && "name"]: { $regex: escapedString, $options: "i" },
     [req.query.tags && "tags"]: { $in: req.query.tags },
   });
 
