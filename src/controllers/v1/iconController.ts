@@ -65,7 +65,7 @@ export const listIcon = async (
 ) => {
   const icons = await Icon.find({
     tenantId: res.locals.user.tenantId._id,
-    [req.query.name && "name"]: escapeRegex(req.body.name),
+    [req.query.name && "name"]: req.query.name,
     [req.query.tags && "tags"]: { $in: req.query.tags },
   });
 

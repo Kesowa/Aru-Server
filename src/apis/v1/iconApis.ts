@@ -14,8 +14,8 @@ router.get(
   "/list",
   isAuthenticated,
 
-  query("name").optional({ checkFalsy: true }).isString().isLength({ min: 3, max: 32}),
-  query("tags").optional({ checkFalsy: true }).isArray({ min: 1, max: 4 }),
+  query("name").optional({ checkFalsy: true }).isString().isLength({ min: 3, max: 32 }),
+  query("tags").optional({ checkFalsy: true }).customSanitizer(value => Array.isArray(value) ? value : [value]).isArray({ min: 1, max: 4 }),
 
   validator,
   PermissionGuard(PERMS.LAYER_LIST),
