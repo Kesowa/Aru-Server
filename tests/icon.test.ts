@@ -62,6 +62,18 @@ describe("/icon API", () => {
     expect(resNameTag.body.data.length).toBeGreaterThanOrEqual(1);
   });
 
+  test("GET /:iconID", async () => {
+    const icon = await createIcon(agent);
+
+    const res = await agent
+      .get(full_url(icon._id))
+      .expect(200);
+
+    expect(res.body).toMatchObject({
+      status: true,
+    });
+
+  });
   test("DELETE /:iconID", async () => {
     const icon = await createIcon(agent);
     const res = await agent

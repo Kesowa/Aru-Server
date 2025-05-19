@@ -78,6 +78,29 @@ export const listIcon = async (
   });
 }
 
+export const getIcon = async (
+  req: Request,
+  res: AuthResponse,
+) => {
+  const icon = await Icon.findOne({
+    tenantId: res.locals.user.tenantId._id,
+    _id: req.params.iconID,
+  });
+
+  if (!icon) {
+    res.status(404).json({
+      status: false,
+      message: "icon not found",
+    });
+    return
+  };
+
+  res.json({
+    status: true,
+    data: icon,
+  });
+}
+
 export const deleteIcon = async (
   req: Request,
   res: AuthResponse,

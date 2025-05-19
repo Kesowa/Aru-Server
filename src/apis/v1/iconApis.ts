@@ -5,7 +5,7 @@ import { PERMS } from "../../schemas/permission";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
 
-import { createIcon, listIcon, deleteIcon } from "../../controllers/v1/iconController";
+import { createIcon, listIcon, deleteIcon, getIcon } from "../../controllers/v1/iconController";
 
 
 const router = express.Router();
@@ -20,6 +20,16 @@ router.get(
   validator,
   PermissionGuard(PERMS.LAYER_LIST),
   RobustRunner(listIcon),
+)
+
+router.get(
+  "/:iconID",
+  isAuthenticated,
+
+  param("iconID").notEmpty().isMongoId(),
+  validator,
+  PermissionGuard(PERMS.LAYER_LIST),
+  RobustRunner(getIcon),
 )
 
 router.post(
