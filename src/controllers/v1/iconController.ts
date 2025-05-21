@@ -6,6 +6,7 @@ import { Directory } from "../../constants";
 import Icon from "../../models/icon";
 import { readToBuffer } from "../../utils/objectStorage";
 import sharp from "sharp";
+import { escapeRegex } from "../../utils/sanitization";
 
 export const createIcon = async (
   req: Request,
@@ -55,9 +56,6 @@ export const createIcon = async (
     data: icon,
   })
 }
-
-const escapeRegex = (str: string): string =>
-  str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape special regex characters
 
 export const listIcon = async (
   req: Request,

@@ -43,6 +43,7 @@ describe("/mission API", () => {
     const res = await tenantAgent
       .get(full_url("get/tenant"))
       .query({
+        name: mission.name.slice(null, 4),
         filter: "all",
         missionType: mission.missionType,
         client: "true",
@@ -62,7 +63,6 @@ describe("/mission API", () => {
 
   test("GET /get/user/:id", async () => {
     const { mission } = await createMission(tenantAgent, superAdminAgent);
-    console.log(mission.user);
 
     const res = await tenantAgent
       .get(full_url(`get/user/${mission.user}`))
