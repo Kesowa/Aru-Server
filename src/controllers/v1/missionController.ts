@@ -23,6 +23,7 @@ import { IMissionType } from "../../schemas/missonType";
 import { IInvite } from "../../schemas/invite";
 import { ILocation } from "../../schemas/location";
 import MissionType from "../../models/missionType";
+import { escapeRegex } from "../../utils/sanitization";
 
 //create flight controller
 type CreateMission = {
@@ -323,6 +324,9 @@ export const fetchAllMissionsForTenant = async (
   const { client, filter, missionType, searchFilters, sort } = req.query;
   const isClient = res.locals.user.userType === "tenant-client";
 
+  let escapedString = "";
+  if (typeof req.query.name == "string")
+    escapedString = escapeRegex(req.query.name);
   const populate: any[] = [
     {
       path: "user",
@@ -356,6 +360,7 @@ export const fetchAllMissionsForTenant = async (
 
   const query = {
     tenantId: res.locals.user.tenantId._id,
+    [req.query.name && "name"]: { $regex: escapedString, $options: "i" },
     [missionType && "missionType"]: missionType,
     [filter && filter !== "all" && "status"]: filter,
     [client && "clientId"]: { $exists: true },

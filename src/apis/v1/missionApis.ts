@@ -91,6 +91,7 @@ router.post(
 router.get(
   "/get/tenant",
   isAuthenticated,
+  query("name").optional({ checkFalsy: true }).isString(),
   query("filter").notEmpty().trim(), // mission status, like: Live, Completed, Review, etc., and "all" for all status
   query("missionType").optional().isMongoId(),
   query("client").optional().isBoolean(),

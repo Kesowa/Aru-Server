@@ -32,6 +32,7 @@ import { vectorProps } from "../../schemas/vectorprops";
 import { isAuthenticated, PermissionGuard } from "../../utils/authUtils";
 import { isLayerCount } from "../../utils/countPermission";
 import { validator, RobustRunner } from "../../utils/requestHelpers";
+import { VectorStyle } from "../../utils/layerUtils";
 
 const router = express.Router();
 
@@ -59,6 +60,7 @@ router.post(
   body("color").trim().default("#000000"),
   body("icon").optional().notEmpty().trim(), // example: MarkerIcon
   body("inHeritOriginalColorFromFile").notEmpty().trim(),
+  body("styling").optional().isObject().custom((obj) => VectorStyle.safeParse(obj).success),
   validator,
   PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),
   isLayerCount,
@@ -224,6 +226,7 @@ router.post(
       Object.values(vectorProps).includes(value as vectorProps),
     ),
   body("geoJSON").exists().isObject(),
+  body("styling").optional().isObject().custom((obj) => VectorStyle.safeParse(obj).success),
   validator,
   //not added validation for geoJSON
   PermissionGuard(PERMS.CAN_CREATE_BASE_LAYER),

@@ -186,7 +186,7 @@ export const createVectorBaseLayer = async (
       icon: req.body.icon,
       color: req.body.color,
       inheritColor: req.body.inHeritOriginalColorFromFile,
-    });
+    }, req.body.styling);
 
     if (vectorLayer == undefined) {
       res.status(400).json({
@@ -1295,7 +1295,7 @@ export const createBaseVectorLayer = async (
 ) => {
   const vectorLayer = await saveVectorLayer(req.body.geoJSON, {
     inheritColor: true,
-  });
+  }, req.body.styling);
   const layer = await new Layer({
     name: req.body.name,
     type: "Vector",

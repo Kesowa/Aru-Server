@@ -7,6 +7,7 @@ import { Directory } from "../constants";
 import { saveFile } from "./dataUtils";
 import { readToString } from "./objectStorage";
 import Layer from "../models/layer";
+import { VectorStyleType } from "./layerUtils";
 
 type Properties = {
   SL_NO: number;
@@ -38,6 +39,7 @@ export type Point = {
 export interface GeoJson<FeatureType = Feature<Point, Properties>> {
   type: string;
   name: string;
+  styling?: VectorStyleType;
   features: FeatureType[];
 }
 
