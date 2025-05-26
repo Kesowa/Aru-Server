@@ -5,7 +5,6 @@ import MongoStore from "connect-mongo";
 import cors from "cors";
 import errorHandler from "errorhandler";
 import express, { Application } from "express";
-import rateLimit from "express-rate-limit";
 import session from "express-session";
 import helmet from "helmet";
 import { Connection } from "mongoose";
@@ -55,6 +54,7 @@ import {
   LOGGER_URL,
   ARU_INSTANCE,
 } from "./constants";
+import { RateLimiter } from "./utils/rateLimit";
 
 export const logger: Logger = pino({
   name: "ARU-" + ARU_INSTANCE,
@@ -132,12 +132,7 @@ export default function app(sessionMiddleware: express.RequestHandler, loggerMid
   app.disable("x-powered-by");
   app.use(helmet());
 
-  const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    limit: 250,
-    standardHeaders: "draft-7",
-    legacyHeaders: false,
-  });
+  const limiter = RateLimiter(250);
 
   app.use(limiter);
 

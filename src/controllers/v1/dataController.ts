@@ -100,7 +100,7 @@ const checkFloat = (num) => typeof num == "number";
 const colorReg = /^#[0-9a-f]{3,6}$/i;
 const checkColor = (color) => typeof color == "string" && colorReg.test(color);
 const checkTable = (table) => {
-  if (Array.isArray(table) && table.length > 0) {
+  if (Array.isArray(table)) { // table can be empty, in case user deleted all points and submitted the form
     const correct = table.every(
       ({ x, y, temp, color, label }) =>
         checkUint(x) &&

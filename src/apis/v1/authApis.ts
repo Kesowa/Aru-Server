@@ -1,5 +1,4 @@
 import express from "express";
-import rateLimit from "express-rate-limit";
 import { body, param } from "express-validator";
 
 import {
@@ -12,14 +11,10 @@ import {
 } from "../../controllers/v1/authController";
 import { isAuthenticated, shouldLinkSend } from "../../utils/authUtils";
 import { RobustRunner, validator } from "../../utils/requestHelpers";
+import { RateLimiter } from "../../utils/rateLimit";
 const router = express.Router();
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 50,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-});
+const limiter = RateLimiter(50);
 
 //++++++++++++++++++++ user login Api +++++++++++++++++++++++++++++
 router.post(

@@ -85,6 +85,11 @@ router.get(
   query("page").default(1).isInt({ min: 1 }).toInt(),
   query("limit").default(10).isInt({ max: 100 }).toInt(),
   query("sort").optional(), // String of format "<field>:<asce or desc>", like "name:desc"
+  query("name").optional().trim(),
+  query("email").optional().trim(),
+  query("phoneNo").optional().trim(),
+  query("country").optional().trim(),
+  query("city").optional().trim(),
   validator,
   PermissionGuard(PERMS.CLIENT_LIST),
   RobustRunner(getListClient),
