@@ -1,5 +1,5 @@
 import { Request, Router } from "express";
-import { bodySchema, Types } from "ts-openapi";
+import { Types } from "ts-openapi";
 
 import openApi from "./openApi";
 import flightLog from "../../models/flightLog";
@@ -91,7 +91,7 @@ openApi.addPath(
       },
       tags: ["Flight Log API"],
       responses: {
-        200: bodySchema(
+        200: openApi.declareSchema("Response Body",
           Types.Object({
             description: "Successful Operation",
             properties: {

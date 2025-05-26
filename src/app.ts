@@ -11,6 +11,7 @@ import helmet from "helmet";
 import { Connection } from "mongoose";
 import pino, { Logger } from "pino";
 import pinoHttp from "pino-http";
+import cookieParser from "cookie-parser";
 
 //API imports
 import aimlApis from "./apis/v1/aimlApis";
@@ -162,6 +163,7 @@ export default function app(sessionMiddleware: express.RequestHandler, loggerMid
 
   app.use(loggerMiddleware);
 
+  app.use(cookieParser());
   app.use("/apis/v2", routerV2);
 
   //connecting APIs routes
