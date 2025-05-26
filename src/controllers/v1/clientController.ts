@@ -31,6 +31,7 @@ import { deletePublicFileUsingPath } from "../../utils/fileDeleteUtils";
 import { saveThumbnails } from "../../utils/imageUtils";
 import { AuthResponse } from "../../utils/interfaceUtils";
 import { generateResetPasswordToken } from "../../utils/resetPasswordUtils";
+import { escapeRegex } from "../../utils/sanitization";
 
 export const createClientformissionGroup = async (
   req: Request,
@@ -688,11 +689,11 @@ export const getListClient = async (req: Request, res: AuthResponse) => {
   const query = {
     tenantId: res.locals.user.tenantId._id,
     userType: "tenant-client",
-    [name && "name"]: { $regex: name, $options: 'i' },
+    [name && "name"]: { $regex: escapeRegex(name as string), $options: 'i' },
     [email && "email"]: email,
     [phoneNo && "phoneNo"]: phoneNo,
-    [country && "country"]: { $regex: country, $options: 'i' },
-    [city && "city"]: { $regex: city, $options: 'i' },
+    [country && "country"]: { $regex: escapeRegex(country as string), $options: 'i' },
+    [city && "city"]: { $regex: escapeRegex(city as string), $options: 'i' },
   };
 
   const results = await User.find(query)
