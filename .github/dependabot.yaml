@@ -6,3 +6,4 @@ updates:
     schedule:
       interval: "weekly"
     package-ecosystem: "npm"
+    target-branch: "dev"
