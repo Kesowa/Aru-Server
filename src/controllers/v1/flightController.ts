@@ -16,6 +16,7 @@ export const createFlight = async (req: Request, res: AuthResponse) => {
       time,
       duration,
       geoFence = undefined,
+      pilotID = null 
     } = req.body;
 
     const newFlight = new Flight({
@@ -25,6 +26,7 @@ export const createFlight = async (req: Request, res: AuthResponse) => {
       time,
       duration,
       geoFence,
+      pilotID,
       client: res.locals.user._id,
       tenant: res.locals.user.tenantId,
     });
