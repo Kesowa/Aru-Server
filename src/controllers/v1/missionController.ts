@@ -33,74 +33,51 @@ type CreateMission = {
   assetID: string | undefined;
   missionType: string;
   clientId: string[] | undefined;
-  flights: {
-    "0": {
-      flightDetails: {
-        locationId: string;
-        date: string;
-        time: string;
-        flightName: string;
-        duration: string;
-        geoLocation: string;
-        centerPoints: {
-          lat: number;
-          lng: number;
-        };
-      };
-      geoFence: {
-        circle: {} | null;
-        polygon: {
-          area: number;
-          length: number;
-          points: {
-            lat: number;
-            lng: number;
-          }[];
-        } | null;
-      };
+  flights: Array<{
+    flightDetails: {
+      locationId: string | "none";
+      date: string;
+      time: string;
+      flightName: string;
+      duration: string;
+      geoLocation: string;
+      centerPoints: { lat: number; lng: number };
+      pilotID?: string | null;   // <-- new optional pilotID field
     };
-    assetID: string | undefined;
-  };
+    geoFence: {
+      circle: {} | null;
+      polygon: { area: number; length: number; points: Array<{ lat: number; lng: number }> } | null;
+    };
+  }>;
 };
 export const createMission = async (
   req: Request<{}, {}, CreateMission>,
   res: AuthResponse,
 ) => {
-  const { name, description, deliverables, assetID, flights } = req.body;
+  const { name, description, deliverables, assetID, flights, missionType, clientId } = req.body;
 
-  const data = { name };
-  if (deliverables) {
-    data["deliverables"] = deliverables;
-  }
+  // 1. Build mission data
+  const missionData: any = { name };
+  if (deliverables)   missionData.deliverables = deliverables;
+  if (description)    missionData.description = description;
+  if (assetID && assetID !== "none") missionData.assetID = assetID;
+  missionData.missionType = missionType;
+  if (clientId) missionData.clientId = clientId;
 
-  if (description) {
-    data["description"] = description;
-  }
-
-  if (assetID !== "none") {
-    data["assetID"] = assetID;
-  }
-  // Create a new mission
   const newMission = new Mission({
-    ...data,
+    ...missionData,
     user: res.locals.user._id,
     tenantId: res.locals.user.tenantId,
-    missionType: req.body.missionType,
-    clientId: req.body.clientId,
   });
   const mission = await newMission.save();
-  const tenant = await Tenant.findOne({
-    _id: res.locals.user.tenantId,
-  });
-  if (mission && tenant.actualMissionCount >= 0) {
-    await Tenant.updateOne(
-      { _id: res.locals.user.tenantId },
-      { $inc: { actualMissionCount: 1 } },
-    );
-  }
-  // Mission id to store with flight
-  const missionId = mission._id;
 
+  // 2. Increment tenant mission count
+  await Tenant.updateOne(
+    { _id: res.locals.user.tenantId },
+    { $inc: { actualMissionCount: 1 } }
+  );
+
+  // 3. Extract flight details, including pilotID
   const {
     flightDetails: {
       locationId,
@@ -110,78 +87,53 @@ export const createMission = async (
       duration,
       geoLocation,
       centerPoints,
+      pilotID = null,    // <-- default to null if not provided
     },
     geoFence = undefined,
   } = flights[0];
 
-  const flightData = {
+  // 4. Build flight data
+  const flightData: any = {
     name: flightName,
     date,
     time,
     duration,
     geoFence,
     geoLocation,
-    mission: missionId,
+    mission: mission._id,
     client: res.locals.user._id,
     tenant: res.locals.user.tenantId,
     centerPoints,
+    pilotID,   // <-- include pilot assignment
   };
-
-  if (assetID !== "none") {
-    flightData["assetID"] = assetID;
+  if (assetID && assetID !== "none") {
+    flightData.assetID = assetID;
   }
-
-  if (geoFence) {
-    if (geoFence.circle) {
-      flightData["geoFence"] = {
-        circle: {
-          ...geoFence.circle,
-        },
-        polygon: null,
-      };
-    } else if (geoFence.polygon) {
-      flightData["geoFence"] = {
-        polygon: {
-          ...geoFence.polygon,
-        },
-        circle: null,
-      };
-    }
-  }
-
   if (locationId !== "none") {
-    flightData["locationID"] = locationId;
+    flightData.locationID = locationId;
   } else {
     const newLocation = await Location.create({
-      geometry: {
-        type: "Point",
-        coordinates: {
-          lng: centerPoints.lng,
-          lat: centerPoints.lat,
-        },
-      },
-      properties: {
-        name: geoLocation,
-      },
-      tenantId: res.locals.user.tenantId._id,
+      geometry: { type: "Point", coordinates: { lng: centerPoints.lng, lat: centerPoints.lat } },
+      properties: { name: geoLocation },
+      tenantId: res.locals.user.tenantId,
     });
-    flightData["locationID"] = newLocation._id;
+    flightData.locationID = newLocation._id;
   }
 
+  // 5. Save flight
   const newFlight = new Flight(flightData);
-
   const flight = await newFlight.save();
-  const tenantId = res.locals.user.tenantId._id;
+
+  // 6. Notify via socket
   notificationSocket
-    .to(tenantId.toString())
+    .to(res.locals.user.tenantId.toString())
     .emit("MISSION_ADDED", { mission, flight });
-  res.status(201).json({
+
+  // 7. Respond
+  return res.status(201).json({
     status: true,
-    message: "New mission created",
-    data: {
-      mission,
-      flight,
-    },
+    message: "New mission and flight created",
+    data: { mission, flight },
   });
 };
 

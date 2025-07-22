@@ -14,7 +14,10 @@ import { AuthResponse } from "../../utils/interfaceUtils";
 import * as pathUtils from "../../utils/pathUtils";
 import { transcodeVideo } from "../../utils/videoUtils";
 import { WiproInterface } from "../../utils/wipro";
-
+import {
+  deleteDirFileUsingName,
+  deletePublicFileUsingPath,
+} from "../../utils/fileDeleteUtils";
 export const saveVOD = async (
   req: Request<
     {},
@@ -340,33 +343,37 @@ export const removeVOD = async (req: Request, res: AuthResponse) => {
     _id: Id,
     tenantId: res.locals.user.tenantId._id,
   });
-  if (doc) {
-    // check if processed vod
-    if (
-      doc.videoPath &&
-      doc.videoPath !== "/processing.m3u8" &&
-      doc.thumbnail &&
-      doc.thumbnail !== "/processing.png"
-    ) {
-      await doc.delete();
-      missionSpecificSocket.to(String(doc.missionID)).emit("VOD_REMOVED", doc);
-      res.status(200).json({
-        status: true,
-        message: "Successfully deleted _id:" + Id.toString(),
-        data: doc,
-      });
-    } else {
-      res.status(400).json({
-        status: false,
-        message: "Cannot delete un-processed VOD",
-      });
-    }
-  } else {
-    res.status(404).json({
+  if (!doc) {
+    return res.status(404).json({
       status: false,
-      message: "VOD of _id:" + Id.toString() + " doesnt exist",
+      message: `VOD of _id:${Id} doesn’t exist`,
     });
+ }
+  // helper to strip leading slash
+  const normalizeKey = (p: string) => (p.startsWith("/") ? p.slice(1) : p);
+
+  // delete the original .mp4, the HLS manifest, the thumbnail, etc
+  if (doc.originalFile) {
+    await deletePublicFileUsingPath(normalizeKey(doc.originalFile));
   }
+  if (doc.videoPath) {
+    await deletePublicFileUsingPath(normalizeKey(doc.videoPath));
+  }
+  if (doc.thumbnail) {
+    await deletePublicFileUsingPath(normalizeKey(doc.thumbnail));
+  }
+
+  // now delete the Mongo record
+  await doc.deleteOne();
+
+  // notify any live clients
+  missionSpecificSocket.to(String(doc.missionID)).emit("VOD_REMOVED", doc);
+
+  return res.status(200).json({
+    status: true,
+    message: `Successfully deleted VOD ${Id}`,
+    data: doc,
+  });
 };
 
 //Delete Multiple VOD Entries
