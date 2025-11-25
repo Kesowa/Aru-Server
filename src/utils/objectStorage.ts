@@ -98,10 +98,15 @@ export const deleteDir = async (dirKey: string) => {
     keyPath(dirKey),
     true,
   );
-  entries.on("data", async function (obj) {
-    await deleteObj(obj.name);
-  });
-  await finished(entries);
+  const batch = new Array<string>();
+  for await (const obj of entries) {
+    batch.push(obj.name);
+    if (batch.length > 10) {
+      await Promise.all(batch.map(deleteObj));
+      batch.length = 0;
+    }
+  }
+  await Promise.all(batch.map(deleteObj));
 };
 
 export const uploadFile = async (src: string, dest: string) => {
