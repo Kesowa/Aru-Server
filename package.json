@@ -103,7 +103,7 @@
     "pino-pretty": "^9.4.0",
     "razorpay": "^2.8.4",
     "rxjs": "^7.8.1",
-    "sharp": "^0.31.3",
+    "sharp": "^0.35.4",
     "shpjs": "^4.0.4",
     "socket.io": "^4.7.5",
     "socket.io-adapter": "^2.5.5",
