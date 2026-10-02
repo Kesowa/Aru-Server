@@ -93,7 +93,7 @@
     "fuse.js": "^7.0.0",
     "helmet": "^3.23.3",
     "minio": "^8.0.0",
-    "moment": "^2.29.4",
+    "moment": "^2.31.0",
     "mongoose": "^6.4.6",
     "node-fetch": "^2.6.7",
     "nodemailer": "^6.4.11",
