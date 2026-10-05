@@ -57,20 +57,20 @@ RabbitMQ and a dedicated worker picks it up — see
 
 ## Layout
 
-| Path | Contents |
-| --- | --- |
-| `src/app.ts` | Express application, middleware, session and logging setup |
-| `src/server.ts` | process entry point |
-| `src/socket.ts`, `src/socketControllers/` | WebSocket handling for live telemetry and video state |
-| `src/controllers/v1/` | HTTP route handlers, one per domain — around 35 of them |
-| `src/models/` | Mongoose schemas |
-| `src/schemas/` | request validation |
-| `src/pipelines/` | MongoDB aggregation pipelines |
-| `src/apis/` | clients for external and sibling services |
-| `src/utils/` | object storage, FTP, mail, and other shared helpers |
-| `src/views/` | server-rendered templates, chiefly email |
-| `aru-common/` | **private submodule** — types and schemas shared with the client |
-| `mongo-init.js` | seed data for a development database |
+| Path                                      | Contents                                                         |
+| ----------------------------------------- | ---------------------------------------------------------------- |
+| `src/app.ts`                              | Express application, middleware, session and logging setup       |
+| `src/server.ts`                           | process entry point                                              |
+| `src/socket.ts`, `src/socketControllers/` | WebSocket handling for live telemetry and video state            |
+| `src/controllers/v1/`                     | HTTP route handlers, one per domain — around 35 of them          |
+| `src/models/`                             | Mongoose schemas                                                 |
+| `src/schemas/`                            | request validation                                               |
+| `src/pipelines/`                          | MongoDB aggregation pipelines                                    |
+| `src/apis/`                               | clients for external and sibling services                        |
+| `src/utils/`                              | object storage, FTP, mail, and other shared helpers              |
+| `src/views/`                              | server-rendered templates, chiefly email                         |
+| `aru-common/`                             | **private submodule** — types and schemas shared with the client |
+| `mongo-init.js`                           | seed data for a development database                             |
 
 ## Running it
 
@@ -103,25 +103,25 @@ Every variable below is read through `EnvVar` in `src/constants.ts`, which
 **throws at startup if a required variable is missing** — the server fails fast
 rather than running half-configured.
 
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | HTTP listen port |
-| `MODE` | `development` or `production`; controls cookie `secure` and log format |
-| `MONGODB_CONNECTION_STRING` | MongoDB connection URI |
-| `SECRET_KEY` | **session cookie signing secret** — see the warning below |
-| `API_SERVER`, `PUBLIC_SERVER` | this server's own URL, and the client's public origin |
-| `ARU_INSTANCE` | tenant identifier for this deployment |
-| `S3_ENDPOINT`, `S3_BUCKET_NAME`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` | object storage |
-| `CDN_URL` | public base URL for stored assets |
-| `TITILER_SERVER`, `TITILER_PUBLIC`, `TITILER_STATIC` | raster tile service, internal and public |
-| `RTMP_PUBLIC`, `LIVE_URL` | live video ingest and playback |
-| `FTP_HOST_DEV`, `FTP_HOST_PROD`, `FTP_PORT`, `FTP_USERNAME`, `FTP_PASSWORD` | FTP endpoint drones upload to |
-| `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` | outbound mail |
-| `MAP_KEY` | Google Maps API key for server-side geocoding and static maps |
-| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | payments |
-| `SEQ_URL`, `SEQ_KEY` | structured log sink |
-| `AIML_SERVER` | inference service endpoint |
-| `RESET_PASSWORD_TOKEN_EXPIRE` | password-reset token lifetime, in seconds |
+| Variable                                                                    | Purpose                                                                |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `PORT`                                                                      | HTTP listen port                                                       |
+| `MODE`                                                                      | `development` or `production`; controls cookie `secure` and log format |
+| `MONGODB_CONNECTION_STRING`                                                 | MongoDB connection URI                                                 |
+| `SECRET_KEY`                                                                | **session cookie signing secret** — see the warning below              |
+| `API_SERVER`, `PUBLIC_SERVER`                                               | this server's own URL, and the client's public origin                  |
+| `ARU_INSTANCE`                                                              | tenant identifier for this deployment                                  |
+| `S3_ENDPOINT`, `S3_BUCKET_NAME`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`           | object storage                                                         |
+| `CDN_URL`                                                                   | public base URL for stored assets                                      |
+| `TITILER_SERVER`, `TITILER_PUBLIC`, `TITILER_STATIC`                        | raster tile service, internal and public                               |
+| `RTMP_PUBLIC`, `LIVE_URL`                                                   | live video ingest and playback                                         |
+| `FTP_HOST_DEV`, `FTP_HOST_PROD`, `FTP_PORT`, `FTP_USERNAME`, `FTP_PASSWORD` | FTP endpoint drones upload to                                          |
+| `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`                | outbound mail                                                          |
+| `MAP_KEY`                                                                   | Google Maps API key for server-side geocoding and static maps          |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`                                    | payments                                                               |
+| `SEQ_URL`, `SEQ_KEY`                                                        | structured log sink                                                    |
+| `AIML_SERVER`                                                               | inference service endpoint                                             |
+| `RESET_PASSWORD_TOKEN_EXPIRE`                                               | password-reset token lifetime, in seconds                              |
 
 ### `SECRET_KEY` is security-critical
 
