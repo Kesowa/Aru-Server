@@ -3,3 +3,29 @@ dist/
 src/public
 public/
 src/**/*.js
+
+# Local configuration — never commit a populated env file
+.env
+.env.local
+server.env
+*.env.local
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+.jest-cache/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Analysis output
+report/
