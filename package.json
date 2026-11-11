@@ -92,7 +92,7 @@
     "express-validator": "^6.6.0",
     "fuse.js": "^7.0.0",
     "helmet": "^3.23.3",
-    "minio": "^8.0.0",
+    "minio": "^8.0.7",
     "moment": "^2.29.4",
     "mongoose": "^6.4.6",
     "node-fetch": "^2.6.7",
